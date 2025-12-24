@@ -1,0 +1,75 @@
+from django.conf import settings
+from apps.core.models import User
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Import the shared task from tasks.py (to avoid circular dependency issues, import inside functions if needed)
+# However, usually tasks are imported at module level if valid.
+# Ideally, email_utils should just disable the async implementation here OR import it.
+
+def get_email_settings():
+    """
+    Get email settings from admin user preferences.
+    """
+    try:
+        admin = User.objects.filter(role='admin').first()
+        from_name = getattr(settings, 'SITE_NAME', 'StudioSync')
+        from_email_address = settings.DEFAULT_FROM_EMAIL
+        
+        smtp_config = {}
+        
+        if admin and admin.preferences and 'technical' in admin.preferences:
+            tech_settings = admin.preferences['technical']
+            from_name = tech_settings.get('smtp_from_name', from_name)
+            custom_from = tech_settings.get('smtp_from_email')
+            if custom_from:
+                from_email_address = custom_from
+                
+            # Extract SMTP settings for the connection
+            smtp_config = {
+                'host': tech_settings.get('smtp_host'),
+                'port': tech_settings.get('smtp_port'),
+                'username': tech_settings.get('smtp_username'),
+                'password': tech_settings.get('smtp_password'),
+                'use_tls': tech_settings.get('smtp_use_tls', True)
+            }
+            # Heuristic for implicit SSL
+            if str(smtp_config.get('port')) == '465':
+                smtp_config['use_tls'] = False
+                smtp_config['use_ssl'] = True
+        
+        return {
+            'from_name': from_name,
+            'from_email': from_email_address,
+            'smtp_config': smtp_config
+        }
+    except Exception as e:
+        logger.error(f"Error getting email settings: {str(e)}")
+        return {
+            'from_name': getattr(settings, 'SITE_NAME', 'StudioSync'),
+            'from_email': settings.DEFAULT_FROM_EMAIL,
+            'smtp_config': {} # Return empty dict to use default settings
+        }
+
+def send_welcome_email(user_email, first_name):
+    """
+    Trigger the async welcome email task.
+    """
+    from apps.core.tasks import send_email_async
+    
+    subject = "Welcome to StudioSync! 🎵"
+    context = {
+        'first_name': first_name,
+        'user_email': user_email, 
+        'dashboard_url': 'http://localhost:3000/login' # TODO: Make dynamic
+    }
+    # Call the Celery task
+    send_email_async.delay(subject, user_email, 'emails/welcome_email.html', context)
+    return True
+
+def send_test_email(recipient_email, from_name='StudioSync'):
+    """
+    Send a test email (synchronous for immediate feedback).
+    """
+    pass

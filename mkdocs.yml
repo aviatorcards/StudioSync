@@ -1,0 +1,88 @@
+site_name: StudioSync
+site_description: Documentation for the StudioSync SaaS platform.
+site_author: Tristan
+
+theme:
+  name: material
+  logo: assets/logo_clean.png
+  favicon: assets/logo_clean.png
+  palette: 
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: orange
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: orange
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+    - content.action.edit
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Features & Modules:
+      - Overview: architecture.md
+      - Core System:
+          - User Management: modules/core.md
+          - Notifications: NOTIFICATION_SYSTEM.md
+          - GDPR & Privacy: GDPR_COMPLIANCE.md
+          - Appearance & UI: APPEARANCE_SYSTEM.md
+          - Settings Status: SETTINGS_STATUS.md
+      - Students & Families:
+          - Student Management: modules/students.md
+          - Teacher Bio Pages: TEACHER_BIO_PAGES.md
+          - Profile Improvements: PROFILE_UX_IMPROVEMENTS.md
+      - Lessons & Calendar:
+          - Lessons Overview: modules/lessons.md
+          - Calendar Privacy: CALENDAR_PRIVACY_GUIDE.md
+      - Inventory & Equipment:
+          - Inventory Management: modules/inventory.md
+          - Checkout System: INVENTORY_CHECKOUT_SYSTEM.md
+          - Value Tracking: INVENTORY_VALUE_ENHANCEMENT.md
+      - Resources & Library:
+          - Resource Management: modules/resources.md
+          - Knowledge Base Vision: RESOURCES_KNOWLEDGE_BASE_VISION.md
+      - Billing & Payments:
+          - Billing Overview: modules/billing.md
+          - Billing System: BILLING.md
+      - Communication:
+          - Messaging: MESSAGING.md
+          - Messaging Overview: modules/messaging.md
+      - Studio Builder:
+          - Studio Builder Vision: STUDIO_BUILDER.md
+  - Development:
+      - API Reference: api.md
+      - Database Schema: database.md
+      - Project Roadmap: ROADMAP.md
+      - Technical Status: SETTINGS_COMPLETE.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+extra_css:
+  - stylesheets/extra.css

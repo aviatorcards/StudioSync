@@ -1,0 +1,66 @@
+# Simple Docker setup using SQLite (no external database needed)
+# Usage: docker-compose -f docker-compose.simple.yml up
+
+services:
+  # Django Backend with SQLite
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./backend:/app
+      - sqlite_data:/app/data  # Persist SQLite database
+    ports:
+      - "8000:8000"
+    environment:
+      DEBUG: "True"
+      SECRET_KEY: dev-secret-key-change-in-production
+      SQLITE_DB_PATH: /app/data/db.sqlite3
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/admin/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    develop:
+      watch:
+        - action: sync
+          path: ./backend
+          target: /app
+          ignore:
+            - venv/
+            - __pycache__/
+        - action: rebuild
+          path: ./backend/requirements.txt
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    command: sh -c "chmod +x node_modules/.bin/next && npm run dev"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api
+    depends_on:
+      backend:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend
+          target: /app
+          ignore:
+            - node_modules/
+            - .next/
+        - action: rebuild
+          path: ./frontend/package.json
+
+volumes:
+  sqlite_data:  # Persists the SQLite database between restarts

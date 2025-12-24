@@ -1,0 +1,25 @@
+{% extends "emails/base.html" %}
+
+{% block content %}
+<div class="greeting">Hello {{ first_name }}! 👋</div>
+
+<p>We're thrilled to have you join our music community! Your account has been created successfully.</p>
+
+<div class="info-box">
+    <strong>Your Login Email:</strong> {{ user_email }}
+</div>
+
+<h3>What you can do now:</h3>
+<ul>
+    <li>📅 Schedule and manage your lessons</li>
+    <li>🎯 Track your progress and set goals</li>
+    <li>📚 Access learning resources and materials</li>
+    <li>👥 Connect with instructors and fellow students</li>
+</ul>
+
+<div style="text-align: center;">
+    <a href="{{ dashboard_url }}" class="button">Log In to Dashboard</a>
+</div>
+
+<p>If you have any questions or need assistance, our support team is here to help!</p>
+{% endblock %}

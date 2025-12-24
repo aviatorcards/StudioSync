@@ -1,0 +1,116 @@
+"""
+Resource models - Resource for file/media management
+"""
+from django.db import models
+from django.utils import timezone
+import uuid
+
+from apps.core.models import Studio, User, Student
+
+
+class Resource(models.Model):
+    """
+    Digital or physical resources (sheet music, recordings, instruments, etc.)
+    """
+    RESOURCE_TYPE_CHOICES = [
+        ('pdf', 'PDF Document'),
+        ('audio', 'Audio File'),
+        ('video', 'Video File'),
+        ('image', 'Image'),
+        ('physical', 'Physical Item'),
+        ('link', 'External Link'),
+        ('other', 'Other'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    studio = models.ForeignKey(Studio, on_delete=models.CASCADE, related_name='resources')
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='uploaded_resources')
+    
+    # Resource details
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    resource_type = models.CharField(max_length=20, choices=RESOURCE_TYPE_CHOICES)
+    
+    # File information (for digital resources)
+    file = models.FileField(upload_to='resources/%Y/%m/', null=True, blank=True)
+    file_size = models.BigIntegerField(null=True, blank=True) # Automatically set if accessed via file property, but useful for caching
+    mime_type = models.CharField(max_length=100, blank=True)
+    
+    # External link (for link type)
+    external_url = models.URLField(blank=True)
+    
+    # Organization
+    tags = models.JSONField(default=list, blank=True)
+    category = models.CharField(max_length=100, blank=True)
+    
+    # Physical item tracking
+    is_physical_item = models.BooleanField(default=False)
+    quantity_total = models.IntegerField(default=1)
+    quantity_available = models.IntegerField(default=1)
+    
+    # Checkout information
+    is_lendable = models.BooleanField(default=False)
+    checkout_duration_days = models.IntegerField(default=14)
+    
+    # Visibility
+    is_public = models.BooleanField(default=False)  # Visible to all students
+    shared_with_students = models.ManyToManyField(Student, blank=True, related_name='shared_resources')
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'resources'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['resource_type']),
+            models.Index(fields=['studio', 'is_public']),
+        ]
+    
+    def __str__(self):
+        return self.title
+
+
+class ResourceCheckout(models.Model):
+    """
+    Track checkout/lending of physical items
+    """
+    STATUS_CHOICES = [
+        ('checked_out', 'Checked Out'),
+        ('returned', 'Returned'),
+        ('overdue', 'Overdue'),
+        ('lost', 'Lost'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    resource = models.ForeignKey(Resource, on_delete=models.CASCADE, related_name='checkouts')
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='resource_checkouts')
+    
+    # Checkout details
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='checked_out')
+    checked_out_at = models.DateTimeField(default=timezone.now)
+    due_date = models.DateField()
+    returned_at = models.DateTimeField(null=True, blank=True)
+    
+    # Notes
+    checkout_notes = models.TextField(blank=True)
+    return_notes = models.TextField(blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'resource_checkouts'
+        ordering = ['-checked_out_at']
+    
+    def __str__(self):
+        return f"{self.resource.title} - {self.student.user.get_full_name()}"
+    
+    @property
+    def is_overdue(self):
+        """Check if checkout is overdue"""
+        if self.status == 'returned':
+            return False
+        return timezone.now().date() > self.due_date

@@ -80,7 +80,9 @@ class Lesson(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     studio = models.ForeignKey(Studio, on_delete=models.CASCADE, related_name='lessons')
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='lessons')
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='lessons')
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='lessons', null=True, blank=True)
+    band = models.ForeignKey('core.Band', on_delete=models.CASCADE, related_name='lessons', null=True, blank=True)
+    room = models.ForeignKey('inventory.PracticeRoom', on_delete=models.SET_NULL, null=True, blank=True, related_name='lessons')
     
     # Lesson details
     lesson_type = models.CharField(max_length=20, choices=LESSON_TYPE_CHOICES, default='private')
@@ -139,7 +141,8 @@ class Lesson(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.student.user.get_full_name()} - {self.scheduled_start.strftime('%Y-%m-%d %H:%M')}"
+        subject = self.student.user.get_full_name() if self.student else (self.band.name if self.band else "Unknown")
+        return f"{subject} - {self.scheduled_start.strftime('%Y-%m-%d %H:%M')}"
     
     @property
     def duration_minutes(self):

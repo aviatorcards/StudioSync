@@ -247,6 +247,30 @@ export function useResources(params?: any) {
     return { resources, loading, refetch: fetchResources }
 }
 
+export function useRooms(params?: any) {
+    const [rooms, setRooms] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+
+    const fetchRooms = async () => {
+        try {
+            const response = await api.get('/inventory/rooms/', { params })
+            const data = response.data.results || response.data
+            setRooms(Array.isArray(data) ? data : [])
+        } catch (err) {
+            console.error(err)
+            toast.error('Failed to load rooms')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        fetchRooms()
+    }, [JSON.stringify(params)])
+
+    return { rooms, loading, refresh: fetchRooms }
+}
+
 export function useLessonPlans(params?: any) {
     const [plans, setPlans] = useState<any[]>([])
     const [loading, setLoading] = useState(true)

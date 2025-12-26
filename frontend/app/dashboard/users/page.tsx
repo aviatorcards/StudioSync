@@ -6,7 +6,10 @@ import { useUser } from '@/contexts/UserContext'
 import { useUsers, useTeachers } from '@/hooks/useDashboardData'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
-import { X, Loader2, UserPlus, Music, Link as LinkIcon, Edit, UserCog, Trash2 } from 'lucide-react'
+import {
+    X, Loader2, UserPlus, Music, Link as LinkIcon, Edit, UserCog, Trash2,
+    Search, ChevronLeft, ChevronRight, Users as UsersIcon, Mail, Shield
+} from 'lucide-react'
 
 export default function UsersPage() {
     const { currentUser } = useUser()
@@ -25,7 +28,6 @@ export default function UsersPage() {
         last_name: '',
         role: 'student',
         is_active: true,
-        // Profile specific
         band_ids: [] as string[],
         family_id: '',
         specialties: [] as string[],
@@ -34,16 +36,15 @@ export default function UsersPage() {
 
     const [newSpecialty, setNewSpecialty] = useState('')
 
-    // Close on Escape
+    // Filter state
+    const [filterRole, setFilterRole] = useState('all')
+    const [searchQuery, setSearchQuery] = useState('')
+    const [page, setPage] = useState(1)
+
+    // Reset page on filter change
     useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') setIsUserModalOpen(false)
-        }
-        if (isUserModalOpen) {
-            window.addEventListener('keydown', handleEscape)
-            return () => window.removeEventListener('keydown', handleEscape)
-        }
-    }, [isUserModalOpen])
+        setPage(1)
+    }, [filterRole, searchQuery])
 
     // Derived: all unique specialties from all teachers
     const allInstruments = Array.from(new Set(
@@ -61,6 +62,16 @@ export default function UsersPage() {
         }
         fetchBands()
     }, [])
+
+    // Main Users Data (Paginated)
+    const { users, meta, loading, refresh } = useUsers({
+        page,
+        role: filterRole !== 'all' ? filterRole : undefined,
+        search: searchQuery
+    })
+
+    // Fetch Parents separate for Dropdown
+    const { users: parentOptions } = useUsers({ role: 'parent' })
 
     const handleOpenModal = (user: any = null) => {
         if (user) {
@@ -98,7 +109,6 @@ export default function UsersPage() {
         setIsSubmitting(true)
         try {
             if (selectedUser) {
-                // Update User info
                 const { data: updatedUser } = await api.patch(`/core/users/${selectedUser.id}/`, {
                     first_name: formData.first_name,
                     last_name: formData.last_name,
@@ -106,26 +116,17 @@ export default function UsersPage() {
                     is_active: formData.is_active
                 })
 
-                // If student, update related data
                 if (formData.role === 'student' || updatedUser.role === 'student') {
-                    // Note: In a real app, you'd wrap these in a single transaction or batch endpoint
-
-                    // Bands: Clear and re-assign (simplification for this demo)
-                    // Currently we only have assign_to_band. Let's just use what we have.
                     if (formData.band_ids.length > 0) {
-                        // For this demo, we'll just assign the first one or logic for multiple if backend supports it
-                        // Since we have parallel assignments, we'll just do it for the selected ones
                         for (const bId of formData.band_ids) {
                             await api.post(`/core/users/${updatedUser.id}/assign_to_band/`, { band_id: bId })
                         }
                     }
 
-                    // Family link
                     if (formData.family_id) {
                         await api.post(`/core/users/${updatedUser.id}/link_family/`, { parent_id: formData.family_id })
                     }
 
-                    // Instrument
                     if (formData.instrument && updatedUser.student_profile?.id) {
                         await api.patch(`/core/students/${updatedUser.student_profile.id}/`, {
                             instrument: formData.instrument
@@ -133,7 +134,6 @@ export default function UsersPage() {
                     }
                 }
 
-                // If teacher, update specialties
                 if (formData.role === 'teacher' && updatedUser.teacher_profile?.id) {
                     await api.patch(`/core/teachers/${updatedUser.teacher_profile.id}/`, {
                         specialties: formData.specialties
@@ -156,13 +156,11 @@ export default function UsersPage() {
     }
 
     const handleDeleteUser = async (userId: string, userName: string) => {
-        // Prevent deleting yourself
         if (userId === currentUser?.id) {
             toast.error("You cannot delete your own account!")
             return
         }
 
-        // Confirm deletion
         if (!confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
             return
         }
@@ -177,41 +175,20 @@ export default function UsersPage() {
         }
     }
 
-    // Filter state
-    const [filterRole, setFilterRole] = useState('all')
-    const [searchQuery, setSearchQuery] = useState('')
-    const [page, setPage] = useState(1)
-
-    // Reset page on filter change
-    useEffect(() => {
-        setPage(1)
-    }, [filterRole, searchQuery])
-
-    // Main Users Data (Paginated)
-    const { users, meta, loading, refresh } = useUsers({
-        page,
-        role: filterRole !== 'all' ? filterRole : undefined,
-        search: searchQuery
-    })
-
-    // Fetch Parents separate for Dropdown (limited to page 1 for now, but focused)
-    const { users: parentOptions } = useUsers({ role: 'parent' })
-
     const getRoleBadge = (role: string) => {
         const styles: Record<string, string> = {
-            admin: 'bg-purple-100 text-purple-800',
-            teacher: 'bg-blue-100 text-blue-800 border-blue-200',
-            student: 'bg-green-100 text-green-800 border-green-200',
-            parent: 'bg-orange-100 text-orange-800 border-orange-200',
+            admin: 'bg-purple-50 text-purple-700 border-purple-200',
+            teacher: 'bg-blue-50 text-blue-700 border-blue-200',
+            student: 'bg-green-50 text-green-700 border-green-200',
+            parent: 'bg-orange-50 text-orange-700 border-orange-200',
         }
         return (
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${styles[role] || 'bg-gray-100 text-gray-800 border-gray-200'}`}>
-                {role === 'teacher' ? 'instructor' : role}
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border ${styles[role] || 'bg-gray-50 text-gray-700 border-gray-200'}`}>
+                {role === 'teacher' ? 'Instructor' : role.charAt(0).toUpperCase() + role.slice(1)}
             </span>
         )
     }
 
-    // Pagination helpers
     const PAGE_SIZE = 20
     const totalPages = Math.ceil((meta?.count || 0) / PAGE_SIZE)
     const hasNext = !!meta?.next
@@ -219,8 +196,8 @@ export default function UsersPage() {
 
     if (loading && users.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-20 animate-pulse">
-                <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
+            <div className="flex flex-col items-center justify-center py-20">
+                <Loader2 className="w-10 h-10 text-[#F39C12] animate-spin mb-4" />
                 <p className="text-gray-500 font-medium">Loading users...</p>
             </div>
         )
@@ -228,139 +205,195 @@ export default function UsersPage() {
 
     return (
         <>
-            <div className="max-w-7xl mx-auto px-4 pb-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Users</h1>
-                        <p className="text-lg text-gray-500 mt-2">Manage all system users, roles, and profiles.</p>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Users</h1>
+                        <p className="text-sm text-gray-600 mt-1">Manage system users and roles</p>
                     </div>
                     <button
                         onClick={() => handleOpenModal()}
-                        className="flex items-center justify-center gap-2 px-6 py-3 bg-[#2C3E50] text-white rounded-xl hover:bg-[#34495E] transition-all hover:scale-105 shadow-lg active:scale-95 font-bold"
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#2C3E50] text-white rounded-lg hover:bg-[#34495E] transition-colors font-medium shadow-sm"
                     >
                         <UserPlus className="w-5 h-5" />
-                        <span>Add New User</span>
+                        <span>Add User</span>
                     </button>
                 </div>
 
-                {/* Main Content Card */}
-                <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-                    <div className="p-6 bg-gray-50/50 border-b flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <div className="p-2 bg-white border rounded-xl shadow-sm">
-                                <select
-                                    value={filterRole}
-                                    onChange={(e) => setFilterRole(e.target.value)}
-                                    className="bg-transparent border-none text-sm font-semibold text-gray-700 focus:ring-0 cursor-pointer"
-                                >
-                                    <option value="all">All Roles</option>
-                                    <option value="student">Students</option>
-                                    <option value="teacher">Instructors</option>
-                                    <option value="parent">Parents</option>
-                                    <option value="admin">Administrators</option>
-                                </select>
+                {/* Stats */}
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="bg-white rounded-lg border border-gray-200 p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-medium text-gray-600 uppercase">Total Users</p>
+                                <p className="text-2xl font-bold text-gray-900 mt-1">{meta?.count || 0}</p>
                             </div>
-                        </div>
-                        <div className="relative w-full md:w-96">
-                            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                                <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
+                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <UsersIcon className="w-5 h-5 text-blue-600" />
                             </div>
-                            <input
-                                type="text"
-                                placeholder="Search by name or email..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm"
-                            />
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead>
-                                <tr className="bg-white border-b border-gray-100">
-                                    <th className="px-8 py-5 text-[11px] font-black text-gray-400 uppercase tracking-widest">User Details</th>
-                                    <th className="px-8 py-5 text-[11px] font-black text-gray-400 uppercase tracking-widest text-center">Role</th>
-                                    <th className="px-8 py-5 text-[11px] font-black text-gray-400 uppercase tracking-widest">Membership & Family</th>
-                                    <th className="px-8 py-5 text-[11px] font-black text-gray-400 uppercase tracking-widest text-center">Status</th>
-                                    <th className="px-8 py-5 text-[11px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
+                    <div className="bg-white rounded-lg border border-gray-200 p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-medium text-gray-600 uppercase">Students</p>
+                                <p className="text-2xl font-bold text-green-600 mt-1">
+                                    {users.filter((u: any) => u.role === 'student').length}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                <UserCog className="w-5 h-5 text-green-600" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-lg border border-gray-200 p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-medium text-gray-600 uppercase">Instructors</p>
+                                <p className="text-2xl font-bold text-blue-600 mt-1">
+                                    {users.filter((u: any) => u.role === 'teacher').length}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <Music className="w-5 h-5 text-blue-600" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-lg border border-gray-200 p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-medium text-gray-600 uppercase">Active</p>
+                                <p className="text-2xl font-bold text-gray-900 mt-1">
+                                    {users.filter((u: any) => u.is_active).length}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Filters */}
+                <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4">
+                    {/* Role Filter Tabs */}
+                    <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2">
+                        {[
+                            { value: 'all', label: 'All Users' },
+                            { value: 'student', label: 'Students' },
+                            { value: 'teacher', label: 'Instructors' },
+                            { value: 'parent', label: 'Parents' },
+                            { value: 'admin', label: 'Admins' }
+                        ].map(({ value, label }) => (
+                            <button
+                                key={value}
+                                onClick={() => setFilterRole(value)}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                                    filterRole === value
+                                        ? 'bg-gray-900 text-white'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                            >
+                                {label}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Search */}
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Search by name or email..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2C3E50] focus:border-transparent outline-none"
+                        />
+                    </div>
+                </div>
+
+                {/* Users List */}
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    {/* Desktop Table */}
+                    <div className="hidden md:block overflow-x-auto">
+                        <table className="w-full">
+                            <thead className="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-50 border-b border-gray-50">
+                            <tbody className="divide-y divide-gray-200">
                                 {users.length > 0 ? users.map((user: any) => (
-                                    <tr key={user.id} className="hover:bg-gray-50/80 transition-all group">
-                                        <td className="px-8 py-6">
-                                            <div className="flex items-center space-x-4">
-                                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-50 border border-gray-200 flex items-center justify-center text-gray-700 font-bold overflow-hidden shadow-sm group-hover:shadow-md transition-all group-hover:-translate-y-0.5">
+                                    <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-700 font-bold overflow-hidden">
                                                     {user.avatar ? (
-                                                        <img src={user.avatar} alt={user.full_name || "User avatar"} className="w-full h-full object-cover" />
+                                                        <img src={user.avatar} alt={user.full_name} className="w-full h-full object-cover" />
                                                     ) : (
                                                         (user.first_name || user.email)[0].toUpperCase()
                                                     )}
                                                 </div>
-                                                <div>
-                                                    <div className="text-base font-bold text-gray-900 leading-tight">
+                                                <div className="min-w-0">
+                                                    <div className="font-semibold text-gray-900 truncate">
                                                         {user.full_name || `${user.first_name} ${user.last_name}`}
                                                     </div>
-                                                    <div className="text-sm text-gray-500 font-medium">{user.email}</div>
+                                                    <div className="text-sm text-gray-500 truncate">{user.email}</div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-8 py-6 text-center">
+                                        <td className="px-6 py-4">
                                             {getRoleBadge(user.role)}
                                         </td>
-                                        <td className="px-8 py-6">
-                                            {user.role === 'student' ? (
-                                                <div className="space-y-2">
-                                                    {user.student_profile?.bands && Array.isArray(user.student_profile.bands) && user.student_profile.bands.length > 0 ? (
-                                                        <div className="flex flex-wrap gap-1.5">
-                                                            {user.student_profile.bands.map((b: any) => (
-                                                                <span key={b.id} className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-100 shadow-sm">
-                                                                    <Music className="w-2.5 h-2.5 mr-1" />
-                                                                    {b.name}
-                                                                </span>
-                                                            ))}
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-xs text-gray-300 font-semibold italic">Solo Trainee</span>
-                                                    )}
-                                                    {user.student_profile?.family_id && (
-                                                        <div className="flex items-center gap-1.5 p-1 bg-orange-50/50 rounded-lg w-fit border border-orange-100">
-                                                            <div className="w-5 h-5 bg-orange-100 rounded-md flex items-center justify-center">
-                                                                <LinkIcon className="w-3 h-3 text-orange-600" />
-                                                            </div>
-                                                            <span className="text-[10px] text-orange-700 font-bold uppercase tracking-tighter">Family Linked</span>
-                                                        </div>
+                                        <td className="px-6 py-4">
+                                            {user.role === 'student' && user.student_profile?.bands?.length > 0 ? (
+                                                <div className="flex flex-wrap gap-1">
+                                                    {user.student_profile.bands.slice(0, 2).map((b: any) => (
+                                                        <span key={b.id} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-teal-50 text-teal-700 border border-teal-100">
+                                                            <Music className="w-3 h-3 mr-1" />
+                                                            {b.name}
+                                                        </span>
+                                                    ))}
+                                                    {user.student_profile.bands.length > 2 && (
+                                                        <span className="text-xs text-gray-500">+{user.student_profile.bands.length - 2}</span>
                                                     )}
                                                 </div>
                                             ) : (
-                                                <span className="text-[10px] text-gray-300 font-bold uppercase tracking-widest">—</span>
+                                                <span className="text-sm text-gray-400">—</span>
                                             )}
                                         </td>
-                                        <td className="px-8 py-6 text-center">
-                                            <div className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest ${user.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                                <div className={`w-1.5 h-1.5 rounded-full mr-2 ${user.is_active ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                                                {user.is_active ? 'Active' : 'Offline'}
-                                            </div>
+                                        <td className="px-6 py-4 text-center">
+                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                                                user.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                            }`}>
+                                                <div className={`w-1.5 h-1.5 rounded-full mr-1.5 ${user.is_active ? 'bg-green-500' : 'bg-red-500'}`} />
+                                                {user.is_active ? 'Active' : 'Inactive'}
+                                            </span>
                                         </td>
-                                        <td className="px-8 py-6 text-right">
+                                        <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => handleOpenModal(user)}
-                                                    className="p-3 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-2xl transition-all active:scale-90"
+                                                    className="p-2 text-gray-400 hover:text-[#2C3E50] hover:bg-gray-100 rounded-lg transition-colors"
                                                     title="Edit User"
                                                 >
-                                                    <Edit className="w-5 h-5" />
+                                                    <Edit className="w-4 h-4" />
                                                 </button>
                                                 {user.id !== currentUser?.id && (
                                                     <button
                                                         onClick={() => handleDeleteUser(user.id, user.full_name || `${user.first_name} ${user.last_name}`)}
-                                                        className="p-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-2xl transition-all active:scale-90"
+                                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                         title="Delete User"
                                                     >
-                                                        <Trash2 className="w-5 h-5" />
+                                                        <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 )}
                                             </div>
@@ -368,12 +401,10 @@ export default function UsersPage() {
                                     </tr>
                                 )) : (
                                     <tr>
-                                        <td colSpan={5} className="px-8 py-20 text-center">
-                                            <div className="flex flex-col items-center gap-3">
-                                                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
-                                                    <UserCog className="w-8 h-8 text-gray-300" />
-                                                </div>
-                                                <p className="text-gray-400 font-bold text-lg">No users found matching your criteria</p>
+                                        <td colSpan={5} className="px-6 py-12 text-center">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <UserCog className="w-12 h-12 text-gray-300" />
+                                                <p className="text-gray-500 font-medium">No users found</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -381,105 +412,186 @@ export default function UsersPage() {
                             </tbody>
                         </table>
                     </div>
-                    {/* Footer / Pagination */}
-                    <div className="p-8 bg-gray-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">
-                            Displaying {users.length} of {meta?.count || 0} Users
-                        </p>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setPage(p => Math.max(1, p - 1))}
-                                disabled={!hasPrevious}
-                                className="px-4 py-2 text-sm font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Previous
-                            </button>
-                            <span className="px-4 py-2 text-sm font-bold text-white bg-primary rounded-xl shadow-md cursor-default">
-                                {page} / {totalPages || 1}
-                            </span>
-                            <button
-                                onClick={() => setPage(p => p + 1)}
-                                disabled={!hasNext}
-                                className="px-4 py-2 text-sm font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Next
-                            </button>
-                        </div>
+
+                    {/* Mobile Cards */}
+                    <div className="md:hidden divide-y divide-gray-200">
+                        {users.length > 0 ? users.map((user: any) => (
+                            <div key={user.id} className="p-4 space-y-3">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-gray-700 font-bold shrink-0 overflow-hidden">
+                                            {user.avatar ? (
+                                                <img src={user.avatar} alt={user.full_name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                (user.first_name || user.email)[0].toUpperCase()
+                                            )}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <h3 className="font-semibold text-gray-900 truncate">
+                                                {user.full_name || `${user.first_name} ${user.last_name}`}
+                                            </h3>
+                                            <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2 shrink-0 ml-2">
+                                        <button
+                                            onClick={() => handleOpenModal(user)}
+                                            className="p-2 text-gray-400 hover:text-[#2C3E50] hover:bg-gray-100 rounded-lg"
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                        </button>
+                                        {user.id !== currentUser?.id && (
+                                            <button
+                                                onClick={() => handleDeleteUser(user.id, user.full_name || `${user.first_name} ${user.last_name}`)}
+                                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                    <div>
+                                        <p className="text-gray-500 text-xs mb-1">Role</p>
+                                        {getRoleBadge(user.role)}
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-500 text-xs mb-1">Status</p>
+                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                            user.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                        }`}>
+                                            <div className={`w-1.5 h-1.5 rounded-full mr-1.5 ${user.is_active ? 'bg-green-500' : 'bg-red-500'}`} />
+                                            {user.is_active ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {user.role === 'student' && user.student_profile?.bands?.length > 0 && (
+                                    <div>
+                                        <p className="text-gray-500 text-xs mb-1">Bands</p>
+                                        <div className="flex flex-wrap gap-1">
+                                            {user.student_profile.bands.map((b: any) => (
+                                                <span key={b.id} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-teal-50 text-teal-700 border border-teal-100">
+                                                    <Music className="w-3 h-3 mr-1" />
+                                                    {b.name}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )) : (
+                            <div className="p-12 text-center">
+                                <UserCog className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                                <p className="text-gray-500 font-medium">No users found</p>
+                            </div>
+                        )}
                     </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <div className="border-t border-gray-200 px-4 py-3 flex items-center justify-between">
+                            <div className="text-sm text-gray-600">
+                                Showing {users.length} of {meta?.count || 0} users
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                                    disabled={!hasPrevious}
+                                    className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                </button>
+                                <div className="px-4 py-2 border border-gray-300 rounded-lg font-medium text-sm">
+                                    {page} / {totalPages}
+                                </div>
+                                <button
+                                    onClick={() => setPage(p => p + 1)}
+                                    disabled={!hasNext}
+                                    className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <ChevronRight className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Comprehensive User Modal */}
+            {/* User Modal */}
             {isUserModalOpen && (
                 <div
-                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-300 antialiased"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
                     onClick={() => setIsUserModalOpen(false)}
                 >
                     <div
-                        className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in slide-in-from-top-4 duration-300 ring-1 ring-black/5 border border-white/20"
+                        className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="px-10 py-8 bg-[#2C3E50] text-white flex items-center justify-between ring-1 ring-white/10 shrink-0">
+                        <div className="px-6 py-4 bg-[#2C3E50] text-white flex items-center justify-between shrink-0">
                             <div>
-                                <h2 className="text-2xl font-black">{selectedUser ? 'Edit Profile' : 'New User'}</h2>
-                                <p className="text-white/60 text-xs font-semibold uppercase tracking-widest mt-0.5">
-                                    {selectedUser ? 'Modify credentials & assignments' : 'Grant system access'}
+                                <h2 className="text-lg font-bold">{selectedUser ? 'Edit User' : 'New User'}</h2>
+                                <p className="text-white/70 text-xs mt-0.5">
+                                    {selectedUser ? 'Update user information' : 'Create a new user account'}
                                 </p>
                             </div>
-                            <button onClick={() => setIsUserModalOpen(false)} className="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors">
-                                <X className="w-6 h-6" />
+                            <button
+                                onClick={() => setIsUserModalOpen(false)}
+                                className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center transition-colors"
+                            >
+                                <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
-                            <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="flex-1 overflow-y-auto p-6">
+                            <form onSubmit={handleSubmit} className="space-y-4">
                                 {/* Basic Info */}
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">First Name</label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
                                         <input
                                             type="text"
                                             required
                                             value={formData.first_name}
                                             onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-900 transition-all"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2C3E50] focus:border-transparent outline-none"
                                             placeholder="Jane"
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Last Name</label>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
                                         <input
                                             type="text"
                                             required
                                             value={formData.last_name}
                                             onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-900 transition-all"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2C3E50] focus:border-transparent outline-none"
                                             placeholder="Smith"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Email Address</label>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                                     <input
                                         type="email"
                                         required
                                         disabled={!!selectedUser}
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-900 disabled:opacity-50 transition-all"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2C3E50] focus:border-transparent outline-none disabled:bg-gray-100"
                                         placeholder="jane.smith@example.com"
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">System Role</label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
                                         <select
                                             value={formData.role}
                                             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-900 appearance-none bg-no-repeat bg-[right_1rem_center]"
-                                            style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%236B7280\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundSize: '1.25rem' }}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2C3E50] focus:border-transparent outline-none"
                                         >
                                             <option value="student">Student</option>
                                             <option value="teacher">Instructor</option>
@@ -487,9 +599,9 @@ export default function UsersPage() {
                                             <option value="admin">Administrator</option>
                                         </select>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Account Status</label>
-                                        <div className="flex items-center gap-4 px-4 py-3 bg-gray-50 rounded-2xl h-[52px]">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                        <div className="flex items-center h-[42px] px-3 bg-gray-50 rounded-lg">
                                             <label className="relative inline-flex items-center cursor-pointer">
                                                 <input
                                                     type="checkbox"
@@ -499,172 +611,141 @@ export default function UsersPage() {
                                                 />
                                                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
                                             </label>
-                                            <span className="text-sm font-bold text-gray-700">{formData.is_active ? 'Active' : 'Disabled'}</span>
+                                            <span className="ml-3 text-sm font-medium text-gray-700">
+                                                {formData.is_active ? 'Active' : 'Inactive'}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Specific Assignments for Students */}
-                                {(formData.role === 'student') && (
-                                    <div className="p-6 bg-primary/5 rounded-[2rem] space-y-6 border border-primary/10 animate-in slide-in-from-top-2 duration-500">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <UserCog className="w-4 h-4 text-primary" />
-                                            <h3 className="text-xs font-black text-primary uppercase tracking-widest">Student Customization</h3>
-                                        </div>
+                                {/* Student Fields */}
+                                {formData.role === 'student' && (
+                                    <div className="p-4 bg-green-50 rounded-lg border border-green-100 space-y-4">
+                                        <h3 className="text-sm font-bold text-green-900">Student Details</h3>
 
-                                        <div className="space-y-4">
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Primary Instrument</label>
-                                                <select
-                                                    value={formData.instrument}
-                                                    onChange={(e) => setFormData({ ...formData, instrument: e.target.value })}
-                                                    className="w-full px-4 py-3 bg-white border-2 border-primary/10 rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-900 appearance-none bg-no-repeat bg-[right_1rem_center]"
-                                                    style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%236B7280\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundSize: '1.25rem' }}
-                                                >
-                                                    <option value="">Select an instrument...</option>
-                                                    {allInstruments.map(inst => (
-                                                        <option key={inst} value={inst}>{inst}</option>
-                                                    ))}
-                                                    {/* Fallback if no instruments exist/selected */}
-                                                    {!allInstruments.includes(formData.instrument) && formData.instrument && (
-                                                        <option value={formData.instrument}>{formData.instrument}</option>
-                                                    )}
-                                                </select>
-                                                <p className="text-[9px] text-gray-400 italic">Available instruments are defined by instructor specialties.</p>
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Band Membership</label>
-                                                <select
-                                                    multiple
-                                                    value={formData.band_ids}
-                                                    onChange={(e) => {
-                                                        const values = Array.from(e.target.selectedOptions, option => option.value)
-                                                        setFormData({ ...formData, band_ids: values })
-                                                    }}
-                                                    className="w-full px-4 py-3 bg-white border-2 border-primary/10 rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-900 min-h-[100px]"
-                                                >
-                                                    {bands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                                                </select>
-                                                <p className="text-[9px] text-gray-400 italic">Hold Ctrl/Cmd to select multiple bands</p>
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Link Parent/Guardian</label>
-                                                <select
-                                                    value={formData.family_id}
-                                                    onChange={(e) => setFormData({ ...formData, family_id: e.target.value })}
-                                                    className="w-full px-4 py-3 bg-white border-2 border-primary/10 rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-900 appearance-none bg-no-repeat bg-[right_1rem_center]"
-                                                    style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%23E67E22\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundSize: '1.25rem' }}
-                                                >
-                                                    <option value="">No linked parent</option>
-                                                    {parentOptions.map((p: any) => <option key={p.id} value={p.id}>{p.full_name || p.email}</option>)}
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Specific Assignments for Teachers */}
-                                {(formData.role === 'teacher') && (
-                                    <div className="p-6 bg-blue-50 rounded-[2rem] space-y-6 border border-blue-100 animate-in slide-in-from-top-2 duration-500">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <Music className="w-4 h-4 text-blue-600" />
-                                            <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest">Instructor Specialties</h3>
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            <div className="flex flex-wrap gap-2">
-                                                {formData.specialties.map(spec => (
-                                                    <span key={spec} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold flex items-center gap-1 group">
-                                                        {spec}
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setFormData({ ...formData, specialties: formData.specialties.filter(s => s !== spec) })}
-                                                            className="hover:text-blue-900 transition-colors"
-                                                        >
-                                                            <X size={12} />
-                                                        </button>
-                                                    </span>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Instrument</label>
+                                            <select
+                                                value={formData.instrument}
+                                                onChange={(e) => setFormData({ ...formData, instrument: e.target.value })}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                                            >
+                                                <option value="">Select instrument...</option>
+                                                {allInstruments.map(inst => (
+                                                    <option key={inst} value={inst}>{inst}</option>
                                                 ))}
-                                                {formData.specialties.length === 0 && (
-                                                    <p className="text-[10px] text-gray-400 italic">No specialties added yet.</p>
-                                                )}
-                                            </div>
+                                            </select>
+                                        </div>
 
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    value={newSpecialty}
-                                                    onChange={(e) => setNewSpecialty(e.target.value)}
-                                                    onKeyPress={(e) => {
-                                                        if (e.key === 'Enter') {
-                                                            e.preventDefault();
-                                                            const trimmed = newSpecialty.trim();
-                                                            if (!trimmed) return;
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Bands (Hold Ctrl/Cmd for multiple)</label>
+                                            <select
+                                                multiple
+                                                value={formData.band_ids}
+                                                onChange={(e) => {
+                                                    const values = Array.from(e.target.selectedOptions, option => option.value)
+                                                    setFormData({ ...formData, band_ids: values })
+                                                }}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none min-h-[100px]"
+                                            >
+                                                {bands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                                            </select>
+                                        </div>
 
-                                                            // Normalize to Title Case
-                                                            const formatted = trimmed.replace(
-                                                                /\w\S*/g,
-                                                                (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-                                                            );
-
-                                                            if (formData.specialties.some(s => s.toLowerCase() === formatted.toLowerCase())) {
-                                                                toast.error('This specialty is already listed');
-                                                                return;
-                                                            }
-
-                                                            setFormData({ ...formData, specialties: [...formData.specialties, formatted] });
-                                                            setNewSpecialty('');
-                                                        }
-                                                    }}
-                                                    placeholder="e.g. Jazz Piano"
-                                                    className="flex-1 px-4 py-2 bg-white border border-blue-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const trimmed = newSpecialty.trim();
-                                                        if (!trimmed) return;
-
-                                                        // Normalize to Title Case
-                                                        const formatted = trimmed.replace(
-                                                            /\w\S*/g,
-                                                            (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-                                                        );
-
-                                                        if (formData.specialties.some(s => s.toLowerCase() === formatted.toLowerCase())) {
-                                                            toast.error('This specialty is already listed');
-                                                            return;
-                                                        }
-
-                                                        setFormData({ ...formData, specialties: [...formData.specialties, formatted] });
-                                                        setNewSpecialty('');
-                                                    }}
-                                                    className="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-sm"
-                                                >
-                                                    Add
-                                                </button>
-                                            </div>
-                                            <p className="text-[9px] text-blue-400 italic font-medium">Instruments added here will be available for student enrollment.</p>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Parent/Guardian</label>
+                                            <select
+                                                value={formData.family_id}
+                                                onChange={(e) => setFormData({ ...formData, family_id: e.target.value })}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                                            >
+                                                <option value="">No linked parent</option>
+                                                {parentOptions.map((p: any) => <option key={p.id} value={p.id}>{p.full_name || p.email}</option>)}
+                                            </select>
                                         </div>
                                     </div>
                                 )}
 
-                                <div className="pt-4 flex gap-4">
+                                {/* Teacher Fields */}
+                                {formData.role === 'teacher' && (
+                                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 space-y-4">
+                                        <h3 className="text-sm font-bold text-blue-900">Instructor Specialties</h3>
+
+                                        <div className="flex flex-wrap gap-2">
+                                            {formData.specialties.map(spec => (
+                                                <span key={spec} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium flex items-center gap-1">
+                                                    {spec}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormData({ ...formData, specialties: formData.specialties.filter(s => s !== spec) })}
+                                                        className="hover:text-blue-900"
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
+
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={newSpecialty}
+                                                onChange={(e) => setNewSpecialty(e.target.value)}
+                                                onKeyPress={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault()
+                                                        const trimmed = newSpecialty.trim()
+                                                        if (!trimmed) return
+                                                        const formatted = trimmed.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())
+                                                        if (!formData.specialties.includes(formatted)) {
+                                                            setFormData({ ...formData, specialties: [...formData.specialties, formatted] })
+                                                            setNewSpecialty('')
+                                                        }
+                                                    }
+                                                }}
+                                                placeholder="e.g. Jazz Piano"
+                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const trimmed = newSpecialty.trim()
+                                                    if (!trimmed) return
+                                                    const formatted = trimmed.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())
+                                                    if (!formData.specialties.includes(formatted)) {
+                                                        setFormData({ ...formData, specialties: [...formData.specialties, formatted] })
+                                                        setNewSpecialty('')
+                                                    }
+                                                }}
+                                                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                                            >
+                                                Add
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="flex gap-3 pt-4">
                                     <button
                                         type="button"
                                         onClick={() => setIsUserModalOpen(false)}
-                                        className="flex-1 px-8 py-4 border-2 border-gray-100 rounded-2xl font-black text-xs uppercase tracking-widest text-gray-400 hover:bg-gray-50 transition-all active:scale-95"
+                                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={isSubmitting}
-                                        className="flex-[2] px-8 py-4 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-primary/90 transition-all shadow-xl hover:shadow-primary/20 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3"
+                                        className="flex-1 px-4 py-2 bg-[#2C3E50] text-white rounded-lg font-medium hover:bg-[#34495E] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                                     >
-                                        {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : (selectedUser ? 'Save Changes' : 'Create Account')}
+                                        {isSubmitting ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                Saving...
+                                            </>
+                                        ) : (
+                                            selectedUser ? 'Update User' : 'Create User'
+                                        )}
                                     </button>
                                 </div>
                             </form>
@@ -673,27 +754,5 @@ export default function UsersPage() {
                 </div>
             )}
         </>
-    )
-}
-
-function Users(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
     )
 }

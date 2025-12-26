@@ -10,12 +10,14 @@ class LessonListSerializer(serializers.ModelSerializer):
     student_name = serializers.CharField(source='student.user.get_full_name', read_only=True)
     teacher_name = serializers.CharField(source='teacher.user.get_full_name', read_only=True)
     student_instrument = serializers.CharField(source='student.instrument', read_only=True)
+    band_name = serializers.CharField(source='band.name', read_only=True)
+    room_name = serializers.CharField(source='room.name', read_only=True)
     duration_minutes = serializers.IntegerField(read_only=True)
     
     class Meta:
         model = Lesson
         fields = [
-            'id', 'student_name', 'teacher_name', 'student_instrument',
+            'id', 'student_name', 'teacher_name', 'student_instrument', 'band_name', 'room_name',
             'lesson_type', 'status', 'scheduled_start', 'scheduled_end',
             'duration_minutes', 'location', 'is_online', 'online_meeting_url',
             'summary', 'is_paid'
@@ -26,6 +28,8 @@ class LessonDetailSerializer(serializers.ModelSerializer):
     """Detailed serializer for single lesson view"""
     student = serializers.SerializerMethodField()
     teacher = serializers.SerializerMethodField()
+    band = serializers.SerializerMethodField()
+    room = serializers.SerializerMethodField()
     duration_minutes = serializers.IntegerField(read_only=True)
     
     class Meta:
@@ -33,6 +37,8 @@ class LessonDetailSerializer(serializers.ModelSerializer):
         fields = '__all__'
     
     def get_student(self, obj):
+        if not obj.student:
+            return None
         return {
             'id': str(obj.student.id),
             'name': obj.student.user.get_full_name(),
@@ -46,6 +52,22 @@ class LessonDetailSerializer(serializers.ModelSerializer):
             'name': obj.teacher.user.get_full_name(),
         }
 
+    def get_band(self, obj):
+        if not obj.band:
+            return None
+        return {
+            'id': str(obj.band.id),
+            'name': obj.band.name,
+        }
+    
+    def get_room(self, obj):
+        if not obj.room:
+            return None
+        return {
+            'id': str(obj.room.id),
+            'name': obj.room.name,
+        }
+
 
 class LessonCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating/updating lessons"""
@@ -53,10 +75,16 @@ class LessonCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
         fields = [
-            'studio', 'teacher', 'student', 'lesson_type', 'status',
+            'studio', 'teacher', 'student', 'band', 'room', 'lesson_type', 'status',
             'scheduled_start', 'scheduled_end', 'location', 'is_online',
             'online_meeting_url', 'rate', 'summary'
         ]
+
+    def validate(self, data):
+        """Ensure either student, band, or room is provided"""
+        if not data.get('student') and not data.get('band') and not data.get('room'):
+            raise serializers.ValidationError("Either a student, band, or room must be selected for the lesson.")
+        return data
 
 
 class StudentGoalSerializer(serializers.ModelSerializer):

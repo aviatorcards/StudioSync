@@ -154,25 +154,25 @@ export default function LessonsPage() {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-20 animate-pulse">
-                <Loader2 className="w-10 h-10 text-[#F39C12] animate-spin mb-4" />
+                <Loader2 className="w-10 h-10 text-[#1ABC9C] animate-spin mb-4" />
                 <p className="text-gray-500 font-bold tracking-[0.2em] uppercase text-xs">Loading Lessons...</p>
             </div>
         )
     }
 
     return (
-        <div className="max-w-7xl mx-auto px-4 pb-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-12 space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Page Header */}
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tight">Lessons & Plans</h1>
-                    <p className="text-lg text-gray-500 mt-2 font-medium">Manage schedules, attendance, and lesson plans.</p>
+                    <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">Lessons & Plans</h1>
+                    <p className="text-base sm:text-lg text-gray-500 mt-2 font-medium">Manage schedules, attendance, and lesson plans.</p>
                 </div>
                 <div className="flex flex-wrap gap-3">
                     {currentUser && ['admin', 'teacher'].includes(currentUser.role) && (
                         <button
                             onClick={() => setShowPlanModal(true)}
-                            className="px-5 py-3 bg-[#F39C12] text-white rounded-xl hover:bg-[#E67E22] transition-all shadow-lg text-sm font-bold flex items-center gap-2 hover:scale-105 active:scale-95"
+                            className="px-4 sm:px-5 py-2.5 sm:py-3 bg-[#1ABC9C] text-white rounded-xl hover:bg-[#16A085] transition-all shadow-lg text-sm font-bold flex items-center gap-2 hover:scale-105 active:scale-95 w-full sm:w-auto justify-center"
                         >
                             <Plus className="w-4 h-4" />
                             Create Lesson Plan
@@ -182,35 +182,35 @@ export default function LessonsPage() {
             </div>
 
             {/* Filters & Controls */}
-            <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-xl space-y-6">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-[2rem] border border-gray-100 shadow-xl space-y-4 sm:space-y-6">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
                     {/* View & Status Toggles */}
-                    <div className="flex flex-wrap gap-4 items-center">
+                    <div className="flex flex-wrap gap-3 sm:gap-4 items-center w-full lg:w-auto">
                         {/* View Toggle */}
-                        <div className="flex bg-gray-50 rounded-xl p-1.5 border border-gray-100">
+                        <div className="flex bg-gray-50 rounded-xl p-1 sm:p-1.5 border border-gray-100 flex-1 sm:flex-initial">
                             <button
                                 onClick={() => setViewMode('all')}
-                                className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex-1 sm:flex-initial ${viewMode === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                             >
                                 All Lessons
                             </button>
                             <button
                                 onClick={() => setViewMode('my_lessons')}
-                                className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'my_lessons' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex-1 sm:flex-initial ${viewMode === 'my_lessons' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                             >
                                 My Students
                             </button>
                         </div>
 
-                        <div className="h-8 w-px bg-gray-200 hidden sm:block"></div>
+                        <div className="h-8 w-px bg-gray-200 hidden lg:block"></div>
 
                         {/* Status Filter */}
-                        <div className="flex p-1.5 bg-gray-50 rounded-xl border border-gray-100 overflow-x-auto">
+                        <div className="flex p-1 sm:p-1.5 bg-gray-50 rounded-xl border border-gray-100 overflow-x-auto w-full lg:w-auto">
                             {['all', 'scheduled', 'completed', 'cancelled'].map(status => (
                                 <button
                                     key={status}
                                     onClick={() => setFilterStatus(status)}
-                                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${filterStatus === status
+                                    className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all whitespace-nowrap flex-1 sm:flex-initial ${filterStatus === status
                                         ? 'bg-white text-gray-900 shadow-sm'
                                         : 'text-gray-500 hover:text-gray-700'
                                         }`}
@@ -222,13 +222,13 @@ export default function LessonsPage() {
                     </div>
 
                     {/* Search & Dates */}
-                    <div className="flex flex-col sm:flex-row gap-3">
-                        <div className="relative">
-                            <Search className="w-4 h-4 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                        <div className="relative flex-1 sm:flex-initial">
+                            <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
                             <input
                                 type="text"
-                                placeholder="Search students or teachers..."
-                                className="pl-11 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#F39C12] focus:border-transparent outline-none w-full sm:w-72 font-medium shadow-sm"
+                                placeholder="Search..."
+                                className="pl-9 sm:pl-11 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#1ABC9C] focus:border-transparent outline-none w-full sm:w-64 font-medium shadow-sm"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -236,7 +236,7 @@ export default function LessonsPage() {
                         <div className="flex items-center gap-2">
                             <input
                                 type="date"
-                                className="px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#F39C12] outline-none font-medium shadow-sm"
+                                className="px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#1ABC9C] outline-none font-medium shadow-sm w-full"
                                 value={dateRange.start}
                                 onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
                             />
@@ -246,7 +246,7 @@ export default function LessonsPage() {
             </div>
 
             {/* Data Table */}
-            <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-2xl overflow-hidden">
+            <div className="bg-white rounded-xl sm:rounded-[2.5rem] border border-gray-100 shadow-2xl overflow-hidden">
                 {/* Desktop Table View */}
                 <div className="hidden md:block overflow-x-auto">
                     <table className="w-full">
@@ -263,7 +263,7 @@ export default function LessonsPage() {
                                                 setSelectedLessons(currentItems.map(l => l.id))
                                             }
                                         }}
-                                        className="rounded border-gray-300 text-[#F39C12] focus:ring-[#F39C12] w-4 h-4"
+                                        className="rounded border-gray-300 text-[#1ABC9C] focus:ring-[#1ABC9C] w-4 h-4"
                                     />
                                 </th>
                                 <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] whitespace-nowrap">Date & Time</th>
@@ -288,7 +288,7 @@ export default function LessonsPage() {
                                                     type="checkbox"
                                                     checked={selectedLessons.includes(lesson.id)}
                                                     onChange={() => toggleLesson(lesson.id)}
-                                                    className="rounded border-gray-300 text-[#F39C12] focus:ring-[#F39C12] w-4 h-4"
+                                                    className="rounded border-gray-300 text-[#1ABC9C] focus:ring-[#1ABC9C] w-4 h-4"
                                                 />
                                             </td>
                                             <td className="px-6 py-5 whitespace-nowrap">
@@ -373,7 +373,7 @@ export default function LessonsPage() {
                                         type="checkbox"
                                         checked={selectedLessons.includes(lesson.id)}
                                         onChange={() => toggleLesson(lesson.id)}
-                                        className="rounded border-gray-300 text-[#F39C12] focus:ring-[#F39C12] w-5 h-5"
+                                        className="rounded border-gray-300 text-[#1ABC9C] focus:ring-[#1ABC9C] w-5 h-5"
                                     />
                                 </div>
 
@@ -418,27 +418,27 @@ export default function LessonsPage() {
                 </div>
 
                 {/* Pagination */}
-                <div className="p-6 border-t border-gray-100 bg-gray-50/30 flex items-center justify-between">
-                    <div className="text-sm text-gray-600 font-semibold">
-                        Showing <span className="font-black text-gray-900">{filteredLessons.length > 0 ? startIndex + 1 : 0}</span> to <span className="font-black text-gray-900">{Math.min(startIndex + itemsPerPage, filteredLessons.length)}</span> of <span className="font-black text-gray-900">{filteredLessons.length}</span> results
+                <div className="p-4 sm:p-6 border-t border-gray-100 bg-gray-50/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="text-xs sm:text-sm text-gray-600 font-semibold text-center sm:text-left">
+                        <span className="font-black text-gray-900">{filteredLessons.length > 0 ? startIndex + 1 : 0}</span> to <span className="font-black text-gray-900">{Math.min(startIndex + itemsPerPage, filteredLessons.length)}</span> of <span className="font-black text-gray-900">{filteredLessons.length}</span>
                     </div>
                     <div className="flex space-x-2">
                         <button
                             onClick={() => handlePageChange(currentPage - 1)}
                             disabled={currentPage === 1}
-                            className="p-2.5 border border-gray-200 rounded-xl bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-90 shadow-sm"
+                            className="p-2 sm:p-2.5 border border-gray-200 rounded-xl bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-90 shadow-sm"
                         >
-                            <ChevronLeft className="w-4 h-4" />
+                            <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </button>
-                        <span className="px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-black text-gray-700 shadow-sm">
-                            Page {currentPage} of {totalPages || 1}
+                        <span className="px-3 sm:px-5 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl text-xs sm:text-sm font-black text-gray-700 shadow-sm whitespace-nowrap">
+                            {currentPage} / {totalPages || 1}
                         </span>
                         <button
                             onClick={() => handlePageChange(currentPage + 1)}
                             disabled={currentPage === totalPages || totalPages === 0}
-                            className="p-2.5 border border-gray-200 rounded-xl bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-90 shadow-sm"
+                            className="p-2 sm:p-2.5 border border-gray-200 rounded-xl bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-90 shadow-sm"
                         >
-                            <ChevronRight className="w-4 h-4" />
+                            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </button>
                     </div>
                 </div>
@@ -463,14 +463,14 @@ export default function LessonsPage() {
                             <div className="flex gap-4">
                                 <button
                                     onClick={() => setPlanType('individual')}
-                                    className={`flex-1 py-4 px-4 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all ${planType === 'individual' ? 'border-[#F39C12] bg-orange-50 text-[#F39C12]' : 'border-gray-200 hover:border-gray-300 text-gray-600'}`}
+                                    className={`flex-1 py-4 px-4 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all ${planType === 'individual' ? 'border-[#1ABC9C] bg-teal-50 text-[#1ABC9C]' : 'border-gray-200 hover:border-gray-300 text-gray-600'}`}
                                 >
                                     <User className="w-7 h-7" />
                                     <span className="font-black text-sm">Individual</span>
                                 </button>
                                 <button
                                     onClick={() => setPlanType('group')}
-                                    className={`flex-1 py-4 px-4 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all ${planType === 'group' ? 'border-[#F39C12] bg-orange-50 text-[#F39C12]' : 'border-gray-200 hover:border-gray-300 text-gray-600'}`}
+                                    className={`flex-1 py-4 px-4 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all ${planType === 'group' ? 'border-[#1ABC9C] bg-teal-50 text-[#1ABC9C]' : 'border-gray-200 hover:border-gray-300 text-gray-600'}`}
                                 >
                                     <Users className="w-7 h-7" />
                                     <span className="font-black text-sm">Class / Group</span>
@@ -482,7 +482,7 @@ export default function LessonsPage() {
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
                                         {planType === 'individual' ? 'Select Student' : 'Select Group'}
                                     </label>
-                                    <select className="w-full px-5 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#F39C12] outline-none font-bold text-gray-900 text-sm">
+                                    <select className="w-full px-5 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#1ABC9C] outline-none font-bold text-gray-900 text-sm">
                                         <option value="">Select...</option>
                                         {planType === 'individual' ? (
                                             students.map((student: any) => {
@@ -502,12 +502,12 @@ export default function LessonsPage() {
 
                                 <div>
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Lesson Topic / Goal</label>
-                                    <input type="text" className="w-full px-5 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#F39C12] outline-none font-bold text-gray-900 text-sm" placeholder="e.g. Major Scales, Rhythm Basics" />
+                                    <input type="text" className="w-full px-5 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#1ABC9C] outline-none font-bold text-gray-900 text-sm" placeholder="e.g. Major Scales, Rhythm Basics" />
                                 </div>
 
                                 <div>
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Activities & Notes</label>
-                                    <textarea rows={4} className="w-full px-5 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#F39C12] outline-none font-bold text-gray-900 text-sm" placeholder="Outline the lesson plan..."></textarea>
+                                    <textarea rows={4} className="w-full px-5 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#1ABC9C] outline-none font-bold text-gray-900 text-sm" placeholder="Outline the lesson plan..."></textarea>
                                 </div>
                             </div>
                         </div>
@@ -524,7 +524,7 @@ export default function LessonsPage() {
                                     alert('Lesson plan created!')
                                     setShowPlanModal(false)
                                 }}
-                                className="flex-[2] px-8 py-4 bg-[#F39C12] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#E67E22] transition-all shadow-xl active:scale-95"
+                                className="flex-[2] px-8 py-4 bg-[#1ABC9C] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#16A085] transition-all shadow-xl active:scale-95"
                             >
                                 Save Plan
                             </button>

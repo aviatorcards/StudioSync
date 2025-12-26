@@ -1,6 +1,9 @@
 'use client'
 
-import { BarChart3, TrendingUp, Users, Download, Calendar, DollarSign, Loader2, FileText, Info } from 'lucide-react'
+import {
+    BarChart3, TrendingUp, Users, Download, Calendar, DollarSign,
+    Loader2, FileText, Info, FileSpreadsheet, FileDown
+} from 'lucide-react'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
 import { useState } from 'react'
@@ -14,7 +17,7 @@ export default function ReportsPage() {
             title: 'Financial Summary',
             description: 'Income, expenses, and outstanding invoices overview.',
             icon: DollarSign,
-            color: 'from-green-100 to-green-50',
+            color: 'bg-green-50',
             iconColor: 'text-green-600',
             borderColor: 'border-green-200',
             lastGenerated: 'Today, 9:00 AM'
@@ -24,7 +27,7 @@ export default function ReportsPage() {
             title: 'Attendance Report',
             description: 'Student attendance rates, cancellations, and make-ups.',
             icon: Calendar,
-            color: 'from-blue-100 to-blue-50',
+            color: 'bg-blue-50',
             iconColor: 'text-blue-600',
             borderColor: 'border-blue-200',
             lastGenerated: 'Yesterday'
@@ -34,7 +37,7 @@ export default function ReportsPage() {
             title: 'Student Progress',
             description: 'Goal completion rates and retention statistics.',
             icon: TrendingUp,
-            color: 'from-purple-100 to-purple-50',
+            color: 'bg-purple-50',
             iconColor: 'text-purple-600',
             borderColor: 'border-purple-200',
             lastGenerated: 'Last Week'
@@ -44,7 +47,7 @@ export default function ReportsPage() {
             title: 'Student Directory',
             description: 'Full list of students with contact info and status.',
             icon: Users,
-            color: 'from-orange-100 to-orange-50',
+            color: 'bg-orange-50',
             iconColor: 'text-orange-600',
             borderColor: 'border-orange-200',
             lastGenerated: 'Live Data'
@@ -54,7 +57,7 @@ export default function ReportsPage() {
             title: 'Instructor Directory',
             description: 'List of all instructors, rates, and specialties.',
             icon: Users,
-            color: 'from-pink-100 to-pink-50',
+            color: 'bg-pink-50',
             iconColor: 'text-pink-600',
             borderColor: 'border-pink-200',
             lastGenerated: 'Live Data'
@@ -64,14 +67,14 @@ export default function ReportsPage() {
             title: 'All Users',
             description: 'System-wide user export including roles and access.',
             icon: Users,
-            color: 'from-cyan-100 to-cyan-50',
+            color: 'bg-cyan-50',
             iconColor: 'text-cyan-600',
             borderColor: 'border-cyan-200',
             lastGenerated: 'Live Data'
         }
     ]
 
-    const handleDownload = async (reportId: string) => {
+    const handleDownloadCSV = async (reportId: string) => {
         setDownloading(reportId)
         try {
             const response = await api.get(`/core/reports/export/?type=${reportId}`, {
@@ -85,7 +88,7 @@ export default function ReportsPage() {
             document.body.appendChild(link)
             link.click()
             link.parentNode?.removeChild(link)
-            toast.success('Report downloaded')
+            toast.success('CSV report downloaded')
         } catch (error) {
             console.error('Download failed', error)
             toast.error('Failed to download report')
@@ -94,61 +97,237 @@ export default function ReportsPage() {
         }
     }
 
+    const handleDownloadExcel = async (reportId: string) => {
+        setDownloading(`${reportId}-excel`)
+        try {
+            // Fetch the data from API
+            const response = await api.get(`/core/reports/export/?type=${reportId}`)
+            const data = response.data
+
+            // Create a new workbook
+            const workbook = new ExcelJS.Workbook()
+            workbook.creator = 'StudioSync'
+            workbook.created = new Date()
+
+            const worksheet = workbook.addWorksheet(reportId.replace(/-/g, ' ').toUpperCase())
+
+            // Configure based on report type
+            if (reportId === 'students' || reportId === 'teachers' || reportId === 'users') {
+                // Example for user-based reports
+                worksheet.columns = [
+                    { header: 'Name', key: 'name', width: 25 },
+                    { header: 'Email', key: 'email', width: 30 },
+                    { header: 'Role', key: 'role', width: 15 },
+                    { header: 'Status', key: 'status', width: 12 },
+                    { header: 'Joined', key: 'joined', width: 15 }
+                ]
+
+                // Style the header row
+                worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }
+                worksheet.getRow(1).fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FF2C3E50' }
+                }
+                worksheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' }
+                worksheet.getRow(1).height = 25
+
+                // Add data rows (mock data for now - replace with actual API data)
+                if (Array.isArray(data)) {
+                    data.forEach((item: any) => {
+                        worksheet.addRow({
+                            name: item.full_name || `${item.first_name} ${item.last_name}`,
+                            email: item.email,
+                            role: item.role,
+                            status: item.is_active ? 'Active' : 'Inactive',
+                            joined: item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A'
+                        })
+                    })
+                }
+            } else if (reportId === 'financial') {
+                worksheet.columns = [
+                    { header: 'Date', key: 'date', width: 15 },
+                    { header: 'Description', key: 'description', width: 35 },
+                    { header: 'Category', key: 'category', width: 20 },
+                    { header: 'Amount', key: 'amount', width: 15 },
+                    { header: 'Status', key: 'status', width: 12 }
+                ]
+
+                worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }
+                worksheet.getRow(1).fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FF27AE60' }
+                }
+                worksheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' }
+                worksheet.getRow(1).height = 25
+
+                // Add financial data if available
+                if (Array.isArray(data)) {
+                    data.forEach((item: any) => {
+                        worksheet.addRow(item)
+                    })
+                }
+            } else if (reportId === 'attendance') {
+                worksheet.columns = [
+                    { header: 'Student', key: 'student', width: 25 },
+                    { header: 'Total Lessons', key: 'total', width: 15 },
+                    { header: 'Attended', key: 'attended', width: 15 },
+                    { header: 'Cancelled', key: 'cancelled', width: 15 },
+                    { header: 'Attendance %', key: 'percentage', width: 15 }
+                ]
+
+                worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }
+                worksheet.getRow(1).fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FF3498DB' }
+                }
+                worksheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' }
+                worksheet.getRow(1).height = 25
+            }
+
+            // Add borders to all cells
+            worksheet.eachRow((row, rowNumber) => {
+                row.eachCell((cell) => {
+                    cell.border = {
+                        top: { style: 'thin', color: { argb: 'FFD3D3D3' } },
+                        left: { style: 'thin', color: { argb: 'FFD3D3D3' } },
+                        bottom: { style: 'thin', color: { argb: 'FFD3D3D3' } },
+                        right: { style: 'thin', color: { argb: 'FFD3D3D3' } }
+                    }
+                })
+            })
+
+            // Generate Excel file
+            const buffer = await workbook.xlsx.writeBuffer()
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+            const url = window.URL.createObjectURL(blob)
+            const link = document.createElement('a')
+            link.href = url
+            link.download = `${reportId}_report_${new Date().toISOString().split('T')[0]}.xlsx`
+            document.body.appendChild(link)
+            link.click()
+            link.parentNode?.removeChild(link)
+
+            toast.success('Excel report downloaded')
+        } catch (error) {
+            console.error('Excel download failed', error)
+            toast.error('Failed to download Excel report')
+        } finally {
+            setDownloading(null)
+        }
+    }
+
     return (
-        <div className="max-w-7xl mx-auto px-4 pb-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tight">Reports & Analytics</h1>
-                    <p className="text-lg text-gray-500 mt-2 font-medium">Business insights and performance metrics.</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Reports & Analytics</h1>
+                    <p className="text-sm text-gray-600 mt-1">Export business insights and performance metrics</p>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+                    <BarChart3 className="w-5 h-5 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-900">{reports.length} Reports Available</span>
                 </div>
             </div>
 
             {/* Reports Grid */}
-            <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-2xl overflow-hidden">
-                <div className="px-8 py-6 border-b border-gray-100 bg-gray-50/30">
-                    <h2 className="font-black text-gray-900 text-xl">Available Reports</h2>
-                    <p className="text-sm text-gray-500 font-medium mt-1">Export data for analysis and record-keeping</p>
-                </div>
-                <div className="divide-y divide-gray-50">
-                    {reports.map((report) => (
-                        <div key={report.id} className="p-8 flex items-start justify-between hover:bg-gray-50/50 transition-all group">
-                            <div className="flex items-start gap-6 flex-1">
-                                <div className={`w-16 h-16 bg-gradient-to-br ${report.color} rounded-2xl flex items-center justify-center border ${report.borderColor} shadow-inner group-hover:rotate-12 transition-transform`}>
-                                    <report.icon className={`w-8 h-8 ${report.iconColor}`} />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="font-black text-gray-900 text-lg mb-2 group-hover:text-[#F39C12] transition-colors">{report.title}</h3>
-                                    <p className="text-sm text-gray-600 mb-3 font-medium">{report.description}</p>
-                                    <div className="flex items-center gap-2 text-xs text-gray-400 font-semibold">
-                                        <div className="w-1.5 h-1.5 bg-gray-300 rounded-full"></div>
-                                        <span>Last generated: {report.lastGenerated}</span>
-                                    </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {reports.map((report) => (
+                    <div
+                        key={report.id}
+                        className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5 hover:shadow-md transition-shadow"
+                    >
+                        <div className="flex items-start gap-4">
+                            {/* Icon */}
+                            <div className={`w-12 h-12 ${report.color} rounded-lg flex items-center justify-center border ${report.borderColor} shrink-0`}>
+                                <report.icon className={`w-6 h-6 ${report.iconColor}`} />
+                            </div>
+
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-gray-900 mb-1">{report.title}</h3>
+                                <p className="text-sm text-gray-600 mb-2">{report.description}</p>
+                                <div className="flex items-center gap-2 text-xs text-gray-500">
+                                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                                    <span>{report.lastGenerated}</span>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="mt-4 flex flex-wrap gap-2">
                             <button
-                                onClick={() => handleDownload(report.id)}
+                                onClick={() => handleDownloadCSV(report.id)}
                                 disabled={downloading === report.id}
-                                className="flex items-center gap-2 px-6 py-3 text-sm font-black text-gray-700 bg-white border-2 border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50 transition-all shadow-sm active:scale-90 uppercase tracking-wider"
+                                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors"
                             >
-                                {downloading === report.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                                {downloading === report.id ? 'Exporting...' : 'Export CSV'}
+                                {downloading === report.id ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span className="hidden sm:inline">Exporting...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <FileDown className="w-4 h-4" />
+                                        <span>CSV</span>
+                                    </>
+                                )}
+                            </button>
+
+                            <button
+                                onClick={() => handleDownloadExcel(report.id)}
+                                disabled={downloading === `${report.id}-excel`}
+                                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                            >
+                                {downloading === `${report.id}-excel` ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span className="hidden sm:inline">Exporting...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <FileSpreadsheet className="w-4 h-4" />
+                                        <span>Excel</span>
+                                    </>
+                                )}
                             </button>
                         </div>
-                    ))}
-                </div>
+                    </div>
+                ))}
             </div>
 
             {/* Info Card */}
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-[2rem] p-8 flex items-start gap-6 shadow-lg">
-                <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center border border-blue-200 flex-shrink-0">
-                    <Info className="w-7 h-7 text-blue-600" />
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-5 flex items-start gap-4">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center border border-blue-200 shrink-0">
+                    <Info className="w-5 h-5 text-blue-600" />
                 </div>
-                <div>
-                    <h3 className="text-lg font-black text-blue-900 mb-2">Need custom reports?</h3>
-                    <p className="text-sm text-blue-700 font-semibold leading-relaxed">
-                        We are building more advanced analytics. Contact support to request specific data points or custom report formats.
+                <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-bold text-blue-900 mb-1">Need custom reports?</h3>
+                    <p className="text-sm text-blue-700 leading-relaxed">
+                        We're building more advanced analytics. Contact support to request specific data points or custom report formats.
                     </p>
+                </div>
+            </div>
+
+            {/* Export Info */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">Export Formats</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-600">
+                    <div className="flex items-start gap-2">
+                        <FileDown className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
+                        <div>
+                            <strong className="text-gray-900">CSV:</strong> Simple text format, compatible with all spreadsheet apps
+                        </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                        <FileSpreadsheet className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
+                        <div>
+                            <strong className="text-gray-900">Excel:</strong> Rich formatting with styled headers and borders
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

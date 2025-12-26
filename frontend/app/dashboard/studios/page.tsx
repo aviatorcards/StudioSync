@@ -505,7 +505,31 @@ export default function StudiosPage() {
 
     // Case 2: Studio Exists -> Editor View
     return (
-        <div className="flex h-[calc(100vh-theme(spacing.24))] -m-8 flex-col">
+        <>
+            {/* Mobile Desktop-Only Notice */}
+            <div className="md:hidden">
+                <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg p-4 shadow-lg border-2 border-orange-600">
+                    <div className="flex items-start gap-3">
+                        <div className="shrink-0 w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-sm mb-1">Desktop Required</h3>
+                            <p className="text-xs text-white/90 leading-relaxed">
+                                The Studio Designer requires a desktop or laptop computer. Please use a larger screen for the full layout editor.
+                            </p>
+                            <p className="text-xs text-white/70 mt-2 italic">
+                                (Yes, even an old Sun SPARC workstation will do!)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Desktop Content */}
+            <div className="hidden md:flex h-[calc(100vh-theme(spacing.24))] -m-8 flex-col">
             {/* Toolbar Header */}
             <div className="h-16 bg-white border-b border-gray-200 px-6 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-4">
@@ -697,6 +721,7 @@ export default function StudiosPage() {
                     )}
                 </main>
             </div>
-        </div>
+            </div>
+        </>
     )
 }

@@ -20,14 +20,24 @@
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
+    --success: 171 77% 43%;
+    --success-foreground: 210 40% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 262 83% 58%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
     
     /* Appearance Settings */
     --primary-color: #F39C12;
     --base-font-size: 16px;
+
+    /* Dynamic Color Scheme Variables */
+    --color-primary: #F39C12;
+    --color-primary-hover: #E67E22;
+    --color-primary-light: #FEF5E7;
+    --color-primary-dark: #D68910;
   }
 
   .dark {
@@ -47,6 +57,10 @@
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
+    --success: 171 77% 25%;
+    --success-foreground: 210 40% 98%;
+    --warning: 38 92% 30%;
+    --warning-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 262 83% 58%;
@@ -125,4 +139,59 @@ h1, h2, h3, h4, h5, h6 {
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Dynamic Color Overrides - Maps hardcoded #F39C12 to CSS variables */
+.bg-\[\#F39C12\] {
+  background-color: var(--color-primary) !important;
+}
+
+.hover\:bg-\[\#E67E22\]:hover {
+  background-color: var(--color-primary-hover) !important;
+}
+
+.text-\[\#F39C12\] {
+  color: var(--color-primary) !important;
+}
+
+.hover\:text-\[\#E67E22\]:hover {
+  color: var(--color-primary-hover) !important;
+}
+
+.border-\[\#F39C12\] {
+  border-color: var(--color-primary) !important;
+}
+
+.focus\:ring-\[\#F39C12\/20\]:focus {
+  --tw-ring-color: var(--color-primary);
+  --tw-ring-opacity: 0.2;
+}
+
+.focus\:border-\[\#F39C12\]:focus {
+  border-color: var(--color-primary) !important;
+}
+
+/* Loader Animation Color */
+.text-\[\#F39C12\].animate-spin {
+  color: var(--color-primary) !important;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }

@@ -20,6 +20,7 @@ import {
     Clock,
     CheckCircle2
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 interface Lesson {
     id: string
@@ -170,13 +171,13 @@ export default function LessonsPage() {
                 </div>
                 <div className="flex flex-wrap gap-3">
                     {currentUser && ['admin', 'teacher'].includes(currentUser.role) && (
-                        <button
+                        <Button
                             onClick={() => setShowPlanModal(true)}
-                            className="px-4 sm:px-5 py-2.5 sm:py-3 bg-[#1ABC9C] text-white rounded-xl hover:bg-[#16A085] transition-all shadow-lg text-sm font-bold flex items-center gap-2 hover:scale-105 active:scale-95 w-full sm:w-auto justify-center"
+                            className="gap-2 w-full sm:w-auto"
                         >
                             <Plus className="w-4 h-4" />
                             Create Lesson Plan
-                        </button>
+                        </Button>
                     )}
                 </div>
             </div>
@@ -188,18 +189,22 @@ export default function LessonsPage() {
                     <div className="flex flex-wrap gap-3 sm:gap-4 items-center w-full lg:w-auto">
                         {/* View Toggle */}
                         <div className="flex bg-gray-50 rounded-xl p-1 sm:p-1.5 border border-gray-100 flex-1 sm:flex-initial">
-                            <button
+                            <Button
+                                variant={viewMode === 'all' ? 'secondary' : 'ghost'}
+                                size="sm"
                                 onClick={() => setViewMode('all')}
-                                className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex-1 sm:flex-initial ${viewMode === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                className={`flex-1 sm:flex-initial ${viewMode === 'all' ? 'bg-white shadow-sm' : 'text-gray-500'}`}
                             >
                                 All Lessons
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                                variant={viewMode === 'my_lessons' ? 'secondary' : 'ghost'}
+                                size="sm"
                                 onClick={() => setViewMode('my_lessons')}
-                                className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex-1 sm:flex-initial ${viewMode === 'my_lessons' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                className={`flex-1 sm:flex-initial ${viewMode === 'my_lessons' ? 'bg-white shadow-sm' : 'text-gray-500'}`}
                             >
                                 My Students
-                            </button>
+                            </Button>
                         </div>
 
                         <div className="h-8 w-px bg-gray-200 hidden lg:block"></div>
@@ -207,16 +212,15 @@ export default function LessonsPage() {
                         {/* Status Filter */}
                         <div className="flex p-1 sm:p-1.5 bg-gray-50 rounded-xl border border-gray-100 overflow-x-auto w-full lg:w-auto">
                             {['all', 'scheduled', 'completed', 'cancelled'].map(status => (
-                                <button
+                                <Button
                                     key={status}
+                                    variant={filterStatus === status ? 'secondary' : 'ghost'}
+                                    size="sm"
                                     onClick={() => setFilterStatus(status)}
-                                    className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all whitespace-nowrap flex-1 sm:flex-initial ${filterStatus === status
-                                        ? 'bg-white text-gray-900 shadow-sm'
-                                        : 'text-gray-500 hover:text-gray-700'
-                                        }`}
+                                    className={`whitespace-nowrap flex-1 sm:flex-initial ${filterStatus === status ? 'bg-white shadow-sm' : 'text-gray-500'}`}
                                 >
                                     {status.charAt(0).toUpperCase() + status.slice(1)}
-                                </button>
+                                </Button>
                             ))}
                         </div>
                     </div>
@@ -288,7 +292,7 @@ export default function LessonsPage() {
                                                     type="checkbox"
                                                     checked={selectedLessons.includes(lesson.id)}
                                                     onChange={() => toggleLesson(lesson.id)}
-                                                    className="rounded border-gray-300 text-[#1ABC9C] focus:ring-[#1ABC9C] w-4 h-4"
+                                                    className="rounded border-gray-300 text-primary focus:ring-primary w-4 h-4"
                                                 />
                                             </td>
                                             <td className="px-6 py-5 whitespace-nowrap">
@@ -326,9 +330,13 @@ export default function LessonsPage() {
                                                 {getStatusBadge(lesson.status)}
                                             </td>
                                             <td className="px-6 py-5 text-right whitespace-nowrap">
-                                                <button className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-all active:scale-90">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="text-gray-400 hover:text-gray-600"
+                                                >
                                                     <MoreHorizontal className="w-5 h-5" />
-                                                </button>
+                                                </Button>
                                             </td>
                                         </tr>
                                     )
@@ -373,7 +381,7 @@ export default function LessonsPage() {
                                         type="checkbox"
                                         checked={selectedLessons.includes(lesson.id)}
                                         onChange={() => toggleLesson(lesson.id)}
-                                        className="rounded border-gray-300 text-[#1ABC9C] focus:ring-[#1ABC9C] w-5 h-5"
+                                        className="rounded border-gray-300 text-primary focus:ring-primary w-5 h-5"
                                     />
                                 </div>
 
@@ -401,9 +409,13 @@ export default function LessonsPage() {
                                         </div>
                                         {lesson.teacher_name}
                                     </div>
-                                    <button className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-all active:scale-90">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-gray-400 hover:text-gray-600"
+                                    >
                                         <MoreHorizontal className="w-5 h-5" />
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
                         )
@@ -423,23 +435,25 @@ export default function LessonsPage() {
                         <span className="font-black text-gray-900">{filteredLessons.length > 0 ? startIndex + 1 : 0}</span> to <span className="font-black text-gray-900">{Math.min(startIndex + itemsPerPage, filteredLessons.length)}</span> of <span className="font-black text-gray-900">{filteredLessons.length}</span>
                     </div>
                     <div className="flex space-x-2">
-                        <button
+                        <Button
+                            variant="outline"
+                            size="icon"
                             onClick={() => handlePageChange(currentPage - 1)}
                             disabled={currentPage === 1}
-                            className="p-2 sm:p-2.5 border border-gray-200 rounded-xl bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-90 shadow-sm"
                         >
-                            <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        </button>
-                        <span className="px-3 sm:px-5 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl text-xs sm:text-sm font-black text-gray-700 shadow-sm whitespace-nowrap">
+                            <ChevronLeft className="w-4 h-4" />
+                        </Button>
+                        <span className="px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-black text-gray-700 shadow-sm whitespace-nowrap flex items-center">
                             {currentPage} / {totalPages || 1}
                         </span>
-                        <button
+                        <Button
+                            variant="outline"
+                            size="icon"
                             onClick={() => handlePageChange(currentPage + 1)}
                             disabled={currentPage === totalPages || totalPages === 0}
-                            className="p-2 sm:p-2.5 border border-gray-200 rounded-xl bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-90 shadow-sm"
                         >
-                            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        </button>
+                            <ChevronRight className="w-4 h-4" />
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -453,28 +467,35 @@ export default function LessonsPage() {
                                 <h3 className="text-3xl font-black tracking-tight">Create Lesson Plan</h3>
                                 <p className="text-white/60 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Design Your Curriculum</p>
                             </div>
-                            <button onClick={() => setShowPlanModal(false)} className="w-12 h-12 rounded-2xl hover:bg-white/10 flex items-center justify-center transition-colors">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setShowPlanModal(false)}
+                                className="bg-white/10 hover:bg-white/20 text-white shadow-none"
+                            >
                                 <X className="w-7 h-7" />
-                            </button>
+                            </Button>
                         </div>
 
                         <div className="p-10 space-y-6">
                             {/* Plan Type Selection */}
                             <div className="flex gap-4">
-                                <button
+                                <Button
                                     onClick={() => setPlanType('individual')}
-                                    className={`flex-1 py-4 px-4 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all ${planType === 'individual' ? 'border-[#1ABC9C] bg-teal-50 text-[#1ABC9C]' : 'border-gray-200 hover:border-gray-300 text-gray-600'}`}
+                                    variant={planType === 'individual' ? 'default' : 'outline'}
+                                    className={`flex-1 h-24 flex-col gap-3 ${planType === 'individual' ? 'bg-primary/10 border-primary text-primary hover:bg-primary/20' : ''}`}
                                 >
                                     <User className="w-7 h-7" />
                                     <span className="font-black text-sm">Individual</span>
-                                </button>
-                                <button
+                                </Button>
+                                <Button
                                     onClick={() => setPlanType('group')}
-                                    className={`flex-1 py-4 px-4 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all ${planType === 'group' ? 'border-[#1ABC9C] bg-teal-50 text-[#1ABC9C]' : 'border-gray-200 hover:border-gray-300 text-gray-600'}`}
+                                    variant={planType === 'group' ? 'default' : 'outline'}
+                                    className={`flex-1 h-24 flex-col gap-3 ${planType === 'group' ? 'bg-primary/10 border-primary text-primary hover:bg-primary/20' : ''}`}
                                 >
                                     <Users className="w-7 h-7" />
                                     <span className="font-black text-sm">Class / Group</span>
-                                </button>
+                                </Button>
                             </div>
 
                             <div className="space-y-5">
@@ -482,7 +503,7 @@ export default function LessonsPage() {
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
                                         {planType === 'individual' ? 'Select Student' : 'Select Group'}
                                     </label>
-                                    <select className="w-full px-5 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#1ABC9C] outline-none font-bold text-gray-900 text-sm">
+                                    <select className="w-full px-5 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-900 text-sm">
                                         <option value="">Select...</option>
                                         {planType === 'individual' ? (
                                             students.map((student: any) => {
@@ -502,32 +523,33 @@ export default function LessonsPage() {
 
                                 <div>
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Lesson Topic / Goal</label>
-                                    <input type="text" className="w-full px-5 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#1ABC9C] outline-none font-bold text-gray-900 text-sm" placeholder="e.g. Major Scales, Rhythm Basics" />
+                                    <input type="text" className="w-full px-5 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-900 text-sm" placeholder="e.g. Major Scales, Rhythm Basics" />
                                 </div>
 
                                 <div>
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Activities & Notes</label>
-                                    <textarea rows={4} className="w-full px-5 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#1ABC9C] outline-none font-bold text-gray-900 text-sm" placeholder="Outline the lesson plan..."></textarea>
+                                    <textarea rows={4} className="w-full px-5 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-900 text-sm" placeholder="Outline the lesson plan..."></textarea>
                                 </div>
                             </div>
                         </div>
 
                         <div className="px-10 pb-10 flex gap-4">
-                            <button
+                            <Button
+                                variant="outline"
                                 onClick={() => setShowPlanModal(false)}
-                                className="flex-1 px-8 py-4 border-2 border-gray-100 rounded-2xl font-black text-xs uppercase tracking-widest text-gray-400 hover:bg-gray-50 transition-all active:scale-95"
+                                className="flex-1"
                             >
                                 Cancel
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 onClick={() => {
                                     alert('Lesson plan created!')
                                     setShowPlanModal(false)
                                 }}
-                                className="flex-[2] px-8 py-4 bg-[#1ABC9C] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#16A085] transition-all shadow-xl active:scale-95"
+                                className="flex-[2]"
                             >
                                 Save Plan
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>

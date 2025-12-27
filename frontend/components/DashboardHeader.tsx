@@ -8,6 +8,7 @@ import { Settings, Bell, Search, LogOut, User, GraduationCap, FileText, BookOpen
 import { Logo } from '@/components/Logo'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
+import { Button } from '@/components/ui/button'
 
 interface Notification {
     id: string
@@ -128,13 +129,15 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
         <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
             <div className="flex items-center justify-between px-4 md:px-8 py-3 md:py-4">
                 {/* Mobile Menu Button */}
-                <button
+                <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={onMenuClick}
-                    className="md:hidden p-2 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors mr-2"
+                    className="md:hidden mr-2 text-gray-600"
                     aria-label="Open menu"
                 >
                     <Menu className="w-6 h-6" />
-                </button>
+                </Button>
 
                 {/* Left: Page Title */}
                 <div className="flex-1 min-w-0">
@@ -147,26 +150,30 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
                     {/* Utility Icons */}
                     <div className="flex items-center space-x-1 md:space-x-2">
                         <div className="relative" ref={notificationRef}>
-                            <button
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => setShowNotifications(!showNotifications)}
-                                className="p-2 hover:bg-gray-100 rounded-lg relative text-gray-500"
+                                className="relative text-gray-500"
                             >
                                 <Bell className="w-5 h-5" />
                                 {unreadCount > 0 && (
                                     <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
                                 )}
-                            </button>
+                            </Button>
 
                             {showNotifications && (
                                 <div className="absolute right-0 mt-2 w-80 bg-white border rounded-lg shadow-lg z-50 animate-in fade-in zoom-in-95 duration-200 ring-1 ring-black/5 antialiased">
                                     <div className="p-3 border-b flex justify-between items-center bg-gray-50/50">
                                         <h3 className="font-semibold text-sm">Notifications</h3>
-                                        <button
+                                        <Button
+                                            variant="link"
+                                            size="sm"
                                             onClick={markAllAsRead}
-                                            className="text-xs text-primary hover:underline cursor-pointer"
+                                            className="h-auto p-0 text-xs text-primary hover:underline cursor-pointer shadow-none"
                                         >
                                             Mark all read
-                                        </button>
+                                        </Button>
                                     </div>
                                     <div className="max-h-[300px] overflow-y-auto">
                                         {notifications.map((notification) => (
@@ -202,21 +209,22 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
                             <google-cast-launcher style={{ width: '20px', height: '20px', opacity: 0.6 }}></google-cast-launcher>
                         </div>
 
-                        <button className="hidden sm:block p-2 hover:bg-gray-100 rounded-lg text-gray-500">
+                        <Button variant="ghost" size="icon" className="hidden sm:block text-gray-500">
                             <Search className="w-5 h-5" />
-                        </button>
+                        </Button>
 
                         <Link href="/dashboard/settings" className="hidden sm:block">
-                            <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-500">
+                            <Button variant="ghost" size="icon" className="text-gray-500">
                                 <Settings className="w-5 h-5" />
-                            </button>
+                            </Button>
                         </Link>
 
                         {/* User Menu */}
                         <div className="relative">
-                            <button
+                            <Button
+                                variant="ghost"
                                 onClick={() => setShowUserMenu(!showUserMenu)}
-                                className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-lg group transition-colors"
+                                className="flex items-center space-x-2 h-auto p-2 hover:bg-gray-100 rounded-lg group transition-colors"
                             >
                                 {currentUser?.avatar ? (
                                     <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-gray-200 group-hover:ring-gray-300 transition-all">
@@ -240,7 +248,7 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
                                 <div className={`text-gray-400 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`}>
                                     ▼
                                 </div>
-                            </button>
+                            </Button>
 
                             {/* Dropdown Menu */}
                             {showUserMenu && (
@@ -310,18 +318,19 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
 
                                         {/* Logout */}
                                         <div className="p-2 bg-gray-50/50">
-                                            <button
+                                            <Button
+                                                variant="ghost"
                                                 onClick={() => {
                                                     setShowUserMenu(false)
                                                     logout()
                                                 }}
-                                                className="w-full flex items-center justify-between px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-all group border border-transparent hover:border-red-100"
+                                                className="w-full flex items-center justify-between px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-all group border border-transparent hover:border-red-100 h-auto"
                                             >
                                                 <span className="flex items-center gap-2">
                                                     <LogOut className="w-4 h-4" />
                                                     <span>Log Out</span>
                                                 </span>
-                                            </button>
+                                            </Button>
                                         </div>
                                     </div>
                                 </>

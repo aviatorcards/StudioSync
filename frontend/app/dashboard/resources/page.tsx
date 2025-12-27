@@ -250,19 +250,19 @@ export default function ResourcesPage() {
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Resource Library</h1>
-                    <p className="text-sm text-gray-600 mt-1">Upload and manage teaching materials</p>
-                </div>
-                <button
-                    onClick={() => setShowUploadModal(true)}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-[#F39C12] text-white rounded-lg hover:bg-[#E67E22] transition-colors font-medium shadow-sm"
-                >
-                    <Upload className="w-4 h-4" />
-                    Upload Resource
-                </button>
+            <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Resource Library</h1>
+                <p className="text-sm text-gray-600 mt-1">Upload and manage teaching materials</p>
             </div>
+
+            {/* Upload Button */}
+            <button
+                onClick={() => setShowUploadModal(true)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#F39C12] text-white rounded-lg hover:bg-[#E67E22] transition-colors font-medium shadow-sm"
+            >
+                <Upload className="w-5 h-5" />
+                Upload Resource
+            </button>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">

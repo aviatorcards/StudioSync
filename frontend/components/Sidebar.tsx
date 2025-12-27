@@ -26,6 +26,7 @@ import {
     Music,
     X
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 // Portal component for mobile menu to break out of parent stacking contexts
 const MobileSidebarPortal = ({ children }: { children: React.ReactNode }) => {
@@ -247,14 +248,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         >
                             {/* Close button */}
                             <div className="absolute top-4 right-4 z-10">
-                                <button
-                                    type="button"
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={onClose}
-                                    className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                                    className="bg-white/10 hover:bg-white/20 text-white shadow-none"
                                     aria-label="Close menu"
                                 >
                                     <X className="w-5 h-5" />
-                                </button>
+                                </Button>
                             </div>
 
                             <SidebarContent />

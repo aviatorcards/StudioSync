@@ -10,6 +10,7 @@ import {
     Printer, Plus, Link, X, ChevronLeft, ChevronRight,
     Calendar as CalendarIcon, Clock, Info, RefreshCw, Loader2
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 // --- Types ---
 interface LessonBooking {
@@ -164,7 +165,7 @@ export default function SchedulePage() {
     if (lessonsLoading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-in fade-in duration-500">
-                <Loader2 className="w-10 h-10 text-[#1ABC9C] animate-spin" />
+                <Loader2 className="w-10 h-10 text-primary animate-spin" />
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Synchronizing Schedule...</p>
             </div>
         )
@@ -188,55 +189,61 @@ export default function SchedulePage() {
                     <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">Schedule</h1>
                     <p className="text-gray-500 font-medium max-w-lg">Orchestrate your weekly lesson calendar.</p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3 no-print">
-                    <button
+                <div className="grid grid-cols-4 gap-2 sm:gap-3 no-print">
+                    <Button
+                        variant="outline"
+                        size="icon"
                         onClick={() => refetchLessons()}
-                        className="p-3 bg-white border border-gray-200 text-gray-500 rounded-xl hover:bg-gray-50 transition-all shadow-sm active:scale-95"
                         title="Refresh"
+                        className="w-full"
                     >
                         <RefreshCw className={`w-4 h-4 ${lessonsLoading ? 'animate-spin' : ''}`} />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                        variant="outline"
                         onClick={() => setUse24Hour(!use24Hour)}
-                        className="px-4 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all text-sm font-bold flex items-center gap-2 shadow-sm active:scale-95"
+                        className="gap-2 w-full"
                     >
                         <Clock className="w-4 h-4" />
-                        {use24Hour ? '24h' : '12h'}
-                    </button>
-                    <button
+                        <span className="hidden sm:inline">{use24Hour ? '24h' : '12h'}</span>
+                    </Button>
+                    <Button
+                        variant="outline"
                         onClick={() => setShowSubscribeModal(true)}
-                        className="px-5 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all shadow-sm text-sm font-bold flex items-center gap-2 active:scale-95"
+                        className="gap-2 w-full"
                     >
                         <Link className="w-4 h-4" />
                         <span className="hidden sm:inline">Subscribe</span>
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         onClick={handlePrint}
-                        className="px-5 py-3 bg-[#2C3E50] text-white rounded-xl hover:bg-[#34495E] transition-all shadow-lg text-sm font-bold flex items-center gap-2 active:scale-95"
+                        className="bg-[#2C3E50] hover:bg-[#34495E] text-white gap-2 w-full"
                     >
                         <Printer className="w-4 h-4" />
                         <span className="hidden sm:inline">Print</span>
-                    </button>
+                    </Button>
                     {['admin', 'teacher', 'student'].includes(currentUser?.role || '') && (
-                        <button
+                        <Button
                             onClick={() => setShowBookingModal(true)}
-                            className="px-6 py-3 bg-[#1ABC9C] text-white rounded-xl hover:bg-[#16A085] transition-all shadow-lg text-sm font-bold flex items-center gap-2 active:scale-95 hover:scale-105"
+                            className="gap-2 hover:scale-105 col-span-4 w-full"
                         >
                             <Plus className="w-4 h-4" />
                             New Booking
-                        </button>
+                        </Button>
                     )}
                 </div>
             </header>
 
             {/* Week Navigation */}
             <div className="flex justify-between items-center bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-sm no-print">
-                <button
+                <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={previousWeek}
-                    className="p-3 hover:bg-gray-100 rounded-xl transition-all text-gray-600 active:scale-90"
+                    className="text-gray-600"
                 >
                     <ChevronLeft className="w-6 h-6" />
-                </button>
+                </Button>
                 <div className="text-center">
                     <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
                         {format(weekStart, 'MMMM yyyy')}
@@ -245,12 +252,14 @@ export default function SchedulePage() {
                         {format(weekStart, 'MMM d')} — {format(addDays(weekStart, 6), 'MMM d')}
                     </p>
                 </div>
-                <button
+                <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={nextWeek}
-                    className="p-3 hover:bg-gray-100 rounded-xl transition-all text-gray-600 active:scale-90"
+                    className="text-gray-600"
                 >
                     <ChevronRight className="w-6 h-6" />
-                </button>
+                </Button>
             </div>
 
             {/* Print Header */}
@@ -271,10 +280,10 @@ export default function SchedulePage() {
                                 </th>
                                 {weekDays.map((day, idx) => (
                                     <th key={idx} className={`px-4 py-4 text-center min-w-[140px] border-b border-gray-100 ${idx < 6 ? 'border-r' : ''}`}>
-                                        <div className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isSameDay(day, new Date()) ? 'text-[#1ABC9C]' : 'text-gray-400'}`}>
+                                        <div className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isSameDay(day, new Date()) ? 'text-primary' : 'text-gray-400'}`}>
                                             {format(day, 'EEE')}
                                         </div>
-                                        <div className={`text-2xl font-black ${isSameDay(day, new Date()) ? 'text-[#1ABC9C]' : 'text-gray-900'}`}>
+                                        <div className={`text-2xl font-black ${isSameDay(day, new Date()) ? 'text-primary' : 'text-gray-900'}`}>
                                             {format(day, 'd')}
                                         </div>
                                     </th>
@@ -298,7 +307,7 @@ export default function SchedulePage() {
                                                                 key={lesson.id}
                                                                 className={`
                                                                     p-2 rounded-lg border-l-[3px] shadow-sm hover:shadow-md transition-all cursor-pointer group/card
-                                                                    ${lesson.status === 'scheduled' ? 'bg-[#1ABC9C]/10 border-[#1ABC9C] hover:bg-[#1ABC9C]/20' : ''}
+                                                                    ${lesson.status === 'scheduled' ? 'bg-primary/10 border-primary hover:bg-primary/20' : ''}
                                                                     ${lesson.status === 'completed' ? 'bg-gray-100 border-gray-400' : ''}
                                                                     ${lesson.status === 'cancelled' ? 'bg-red-50 border-red-400' : ''}
                                                                 `}
@@ -349,19 +358,21 @@ export default function SchedulePage() {
                                 <h2 className="text-2xl font-black tracking-tight">New Booking</h2>
                                 <p className="text-white/60 text-xs font-bold uppercase tracking-widest mt-1">Schedule a Lesson</p>
                             </div>
-                            <button
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => setShowBookingModal(false)}
-                                className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-colors"
+                                className="bg-white/10 hover:bg-white/20 text-white shadow-none"
                             >
                                 <X className="w-5 h-5" />
-                            </button>
+                            </Button>
                         </div>
 
                         <form onSubmit={handleBooking} className="p-8 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
                             {/* Booking Mode Selector */}
                             <div className="flex p-1 bg-gray-50 rounded-2xl border border-gray-100 mb-2">
                                 {(['individual', 'band', 'event'] as const).map((mode) => (
-                                    <button
+                                    <Button
                                         key={mode}
                                         type="button"
                                         onClick={() => {
@@ -370,15 +381,12 @@ export default function SchedulePage() {
                                             if (mode === 'individual') setNewBooking(prev => ({ ...prev, lesson_type: 'private' }))
                                             if (mode === 'event') setNewBooking(prev => ({ ...prev, lesson_type: 'workshop' }))
                                         }}
-                                        className={`
-                                            flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all
-                                            ${bookingMode === mode
-                                                ? 'bg-[#2C3E50] text-white shadow-md'
-                                                : 'text-gray-400 hover:text-gray-600 hover:bg-white/50'}
-                                        `}
+                                        variant={bookingMode === mode ? 'default' : 'ghost'}
+                                        size="sm"
+                                        className={`flex-1 text-[10px] uppercase tracking-widest ${bookingMode === mode ? 'bg-[#2C3E50] hover:bg-[#34495E]' : 'text-gray-400'}`}
                                     >
                                         {mode}
-                                    </button>
+                                    </Button>
                                 ))}
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -393,7 +401,7 @@ export default function SchedulePage() {
                                                 required
                                                 value={newBooking.band}
                                                 onChange={(e) => setNewBooking({ ...newBooking, band: e.target.value, student: '' })}
-                                                className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[#1ABC9C] rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                                className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
                                             >
                                                 <option value="">Select Band...</option>
                                                 {bands.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -403,7 +411,7 @@ export default function SchedulePage() {
                                                 required
                                                 value={newBooking.student}
                                                 onChange={(e) => setNewBooking({ ...newBooking, student: e.target.value, band: '' })}
-                                                className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[#1ABC9C] rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                                className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
                                             >
                                                 <option value="">Select Student...</option>
                                                 {students.map((s: any) => <option key={s.id} value={s.id}>{s.name || s.user?.email || 'Student'}</option>)}
@@ -421,7 +429,7 @@ export default function SchedulePage() {
                                                         setNewBooking({ ...newBooking, band: val, student: '' })
                                                     }
                                                 }}
-                                                className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[#1ABC9C] rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                                className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
                                             >
                                                 <option value="">No specific student/band</option>
                                                 <optgroup label="Students">
@@ -440,7 +448,7 @@ export default function SchedulePage() {
                                             required
                                             value={newBooking.teacher}
                                             onChange={(e) => setNewBooking({ ...newBooking, teacher: e.target.value })}
-                                            className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[#1ABC9C] rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                            className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
                                         >
                                             <option value="">Select Instructor...</option>
                                             {teachers.map((t: any) => <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>)}
@@ -479,7 +487,7 @@ export default function SchedulePage() {
                                             required
                                             value={newBooking.time}
                                             onChange={(e) => setNewBooking({ ...newBooking, time: e.target.value })}
-                                            className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[#1ABC9C] rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                            className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
                                         >
                                             {timeOptions.map(t => <option key={t} value={t}>{formatTime(t)}</option>)}
                                         </select>
@@ -520,19 +528,20 @@ export default function SchedulePage() {
                         </form>
 
                         <div className="p-6 border-t border-gray-100 bg-gray-50 flex gap-3">
-                            <button
+                            <Button
+                                variant="outline"
                                 onClick={() => setShowBookingModal(false)}
-                                className="flex-1 py-3.5 border-2 border-gray-200 text-gray-500 font-black text-xs uppercase tracking-widest rounded-xl hover:bg-gray-100 transition-all"
+                                className="flex-1"
                             >
                                 Cancel
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 onClick={handleBooking}
                                 disabled={bookingLoading}
-                                className="flex-[2] py-3.5 bg-[#1ABC9C] text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-[#16A085] transition-all shadow-md active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="flex-[2] gap-2"
                             >
                                 {bookingLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Booking'}
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -547,12 +556,14 @@ export default function SchedulePage() {
                                 <h2 className="text-2xl font-black tracking-tight">Subscribe</h2>
                                 <p className="text-white/60 text-xs font-bold uppercase tracking-widest mt-1">Sync Calendar</p>
                             </div>
-                            <button
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => setShowSubscribeModal(false)}
-                                className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-colors"
+                                className="bg-white/10 hover:bg-white/20 text-white shadow-none"
                             >
                                 <X className="w-5 h-5" />
-                            </button>
+                            </Button>
                         </div>
 
                         <div className="p-8 space-y-6">
@@ -568,26 +579,27 @@ export default function SchedulePage() {
                                         value="http://localhost:8000/api/calendar/my/lessons.ics"
                                         className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-mono text-gray-600 outline-none"
                                     />
-                                    <button
+                                    <Button
+                                        variant="outline"
                                         onClick={() => {
                                             navigator.clipboard.writeText("http://localhost:8000/api/calendar/my/lessons.ics")
                                             toast.success("Copied!")
                                         }}
-                                        className="px-4 py-3 bg-white border border-gray-200 rounded-xl font-bold text-gray-700 hover:bg-gray-50 transition-all text-sm"
                                     >
                                         Copy
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
                         </div>
 
                         <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end">
-                            <button
+                            <Button
+                                variant="secondary"
                                 onClick={() => setShowSubscribeModal(false)}
-                                className="px-8 py-3.5 bg-gray-200 text-gray-600 font-black text-xs uppercase tracking-widest rounded-xl hover:bg-gray-300 transition-all"
+                                className="px-8"
                             >
                                 Close
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>

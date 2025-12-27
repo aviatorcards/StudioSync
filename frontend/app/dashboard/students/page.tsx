@@ -12,8 +12,10 @@ import {
     Search, Filter, ChevronRight,
     GraduationCap, User, Calendar,
     MoreHorizontal, Mail, Phone,
-    CheckCircle2, XCircle, AlertCircle
+    CheckCircle2, XCircle, AlertCircle,
+    Plus
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 // --- Types ---
 interface TeacherProfile {
@@ -41,7 +43,7 @@ interface StudentData {
 }
 
 // --- Helper Functions ---
-const getTeacherName = (student: StudentData): string => {
+const getTeacherName = (student: StudentData, teachers: any[]): string => {
     // 1. Try explicit teacher name field
     if (student.teacher_name) return student.teacher_name
 
@@ -53,7 +55,15 @@ const getTeacherName = (student: StudentData): string => {
         }
     }
 
-    // 3. Fallbacks
+    // 3. Try primary_teacher ID from the teachers list
+    if (typeof student.primary_teacher === 'string') {
+        const teacher = teachers.find((t: any) => t.id === student.primary_teacher)
+        if (teacher) {
+            return `${teacher.first_name} ${teacher.last_name}`
+        }
+    }
+
+    // 4. Fallbacks
     return 'Unassigned'
 }
 
@@ -65,6 +75,12 @@ const getNextLessonDate = (student: StudentData): Date | null => {
 const formatDate = (date: Date | null): string => {
     if (!date) return 'Not Scheduled'
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+const getStudentColor = (student: any) => {
+    if (!student.is_active) return '#EF4444' // red for inactive
+    // Use CSS variable for primary color (respects user's color scheme preference)
+    return 'var(--color-primary, #1ABC9C)'
 }
 
 export default function StudentsPage() {
@@ -165,45 +181,41 @@ export default function StudentsPage() {
     if (loading && students.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-in fade-in duration-500">
-                <Loader2 className="w-10 h-10 text-[#1ABC9C] animate-spin" />
+                <Loader2 className="w-10 h-10 animate-spin" style={{ color: 'var(--color-primary, #1ABC9C)' }} />
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Loading Roster...</p>
             </div>
         )
     }
 
     return (
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* --- Header Section --- */}
-            <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4">
-                <div className="space-y-2">
-                    <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
-                        Students
-                    </h1>
-                    <p className="text-gray-500 font-medium max-w-lg">
-                        Manage enrollments, track progress, and organize your studio roster.
-                    </p>
+        <div className="max-w-7xl mx-auto px-4 pb-8 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+                <div>
+                    <h1 className="text-xl md:text-4xl font-black text-gray-900 tracking-tight">Students</h1>
+                    <p className="text-xs md:text-lg text-gray-500 mt-0.5 md:mt-2 font-medium">Manage enrollments, track progress, and organize your studio roster.</p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <button
+                <div className="flex flex-wrap gap-2">
+                    <Button
                         onClick={() => router.push('/dashboard/students/add')}
-                        className="flex items-center gap-2 px-5 py-3 bg-[#1ABC9C] hover:bg-[#16A085] text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-bold text-sm active:scale-95"
+                        size="sm"
+                        className="gap-2 w-full sm:w-auto"
                     >
-                        <UserPlus className="w-4 h-4" />
-                        <span className="hidden sm:inline">Add Student</span>
-                        <span className="sm:hidden">Add</span>
-                    </button>
+                        <Plus className="w-3.5 h-3.5" />
+                        Add Student
+                    </Button>
                 </div>
-            </header>
+            </div>
 
             {/* --- Filters & Controls --- */}
             <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
                 <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 no-scrollbar">
-                    <div className="flex items-center border border-gray-200 rounded-xl px-3 py-2 bg-gray-50/50 hover:bg-white transition-colors">
-                        <Filter className="w-4 h-4 text-gray-400 mr-2" />
+                    <div className="flex gap-2">
                         <select
                             value={filterInstrument}
                             onChange={(e) => setFilterInstrument(e.target.value)}
-                            className="bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 cursor-pointer outline-none min-w-[140px]"
+                            className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm appearance-none pr-8 bg-no-repeat bg-right"
+                            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`, backgroundPosition: 'right 0.5rem center', backgroundSize: '1.25em 1.25em' }}
                         >
                             <option value="all">All Instruments</option>
                             {allInstruments.map(inst => <option key={inst} value={inst}>{inst}</option>)}
@@ -211,26 +223,25 @@ export default function StudentsPage() {
                     </div>
 
                     {currentUser?.role === 'teacher' && (
-                        <button
+                        <Button
+                            variant={showAllStudents ? 'secondary' : 'outline'}
+                            size="sm"
                             onClick={() => setShowAllStudents(!showAllStudents)}
-                            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border whitespace-nowrap ${showAllStudents
-                                ? 'bg-gray-800 text-white border-gray-800'
-                                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                                }`}
+                            className="whitespace-nowrap text-xs"
                         >
                             {showAllStudents ? 'All Students' : 'My Students'}
-                        </button>
+                        </Button>
                     )}
                 </div>
 
-                <div className="relative w-full md:w-80">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                     <input
                         type="text"
                         placeholder="Search by name or email..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1ABC9C] transition-all"
+                        className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm"
                     />
                 </div>
             </div>
@@ -255,8 +266,8 @@ export default function StudentsPage() {
                                 <tr key={student.id} className="hover:bg-gray-50/50 transition-all group">
                                     <td className="px-8 py-5">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-600 font-black text-lg shadow-inner">
-                                                {(student.name || "?")[0].toUpperCase()}
+                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-sm shadow-md flex-shrink-0">
+                                                {(student.user?.first_name?.[0] || '') + (student.user?.last_name?.[0] || '')}
                                             </div>
                                             <div>
                                                 <div className="font-bold text-gray-900">{student.name}</div>
@@ -284,7 +295,7 @@ export default function StudentsPage() {
                                             </div>
                                             <div className="flex flex-col">
                                                 <span className="text-sm font-bold text-gray-700">
-                                                    {getTeacherName(student)}
+                                                    {getTeacherName(student, teachers)}
                                                 </span>
                                             </div>
                                         </div>
@@ -295,12 +306,14 @@ export default function StudentsPage() {
                                         </span>
                                     </td>
                                     <td className="px-8 py-5 text-right">
-                                        <button
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
                                             onClick={() => handleOpenEdit(student)}
-                                            className="p-2 text-gray-400 hover:text-[#1ABC9C] hover:bg-teal-50 rounded-xl transition-all active:scale-95"
+                                            className="text-gray-400 hover:text-primary hover:bg-primary/5"
                                         >
                                             <Edit className="w-4 h-4" />
-                                        </button>
+                                        </Button>
                                     </td>
                                 </tr>
                             )) : (
@@ -319,90 +332,87 @@ export default function StudentsPage() {
                     </table>
                 </div>
 
-                {/* Mobile Cards (Redesigned) */}
-                <div className="lg:hidden p-4 space-y-4">
-                    {students.length > 0 ? students.map((student: any) => (
-                        <div key={student.id} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm space-y-4 relative overflow-hidden">
-                            {/* Accent Bar */}
-                            <div className={`absolute top-0 left-0 w-1.5 h-full ${student.is_active ? 'bg-[#1ABC9C]' : 'bg-red-400'}`} />
-
-                            <div className="flex items-start justify-between pl-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700 font-black text-lg">
-                                        {(student.name || "?")[0].toUpperCase()}
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-gray-900 leading-tight">{student.name}</h3>
-                                        <p className="text-xs text-gray-500 font-medium truncate max-w-[150px]">{student.email}</p>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => handleOpenEdit(student)}
-                                    className="p-2 bg-gray-50 text-gray-400 rounded-lg hover:text-[#1ABC9C]"
-                                >
-                                    <Edit className="w-4 h-4" />
-                                </button>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3 pl-3">
-                                <div className="p-3 bg-gray-50 rounded-xl space-y-1">
-                                    <div className="flex items-center gap-1.5 text-xs font-black text-gray-400 uppercase tracking-widest">
-                                        <User className="w-3 h-3" />
-                                        Teacher
-                                    </div>
-                                    <p className="text-xs font-bold text-gray-800 truncate">
-                                        {getTeacherName(student)}
-                                    </p>
-                                </div>
-                                <div className="p-3 bg-gray-50 rounded-xl space-y-1">
-                                    <div className="flex items-center gap-1.5 text-xs font-black text-gray-400 uppercase tracking-widest">
-                                        <Calendar className="w-3 h-3" />
-                                        Next
-                                    </div>
-                                    <p className="text-xs font-bold text-gray-800 truncate">
-                                        {formatDate(getNextLessonDate(student))}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="pl-3 flex items-center gap-2 pt-1">
-                                {renderStatusBadge(student.is_active)}
-                                {student.instrument && (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-blue-50 text-blue-600 border border-blue-100">
-                                        <Music className="w-3 h-3" />
-                                        {student.instrument}
-                                    </span>
+                {/* Mobile List View (Compact) */}
+                <div className="md:hidden space-y-0 bg-white rounded-xl border border-gray-100 shadow-md overflow-hidden">
+                    {students.length > 0 ? students.map((student: any, index: number) => (
+                        <div
+                            key={student.id}
+                            className="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0"
+                            style={{ borderLeftWidth: '3px', borderLeftColor: getStudentColor(student) }}
+                        >
+                            {/* Avatar */}
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-xs shadow-sm flex-shrink-0">
+                                {student.first_name?.[0] && student.last_name?.[0] ? (
+                                    <>{student.first_name[0]}{student.last_name[0]}</>
+                                ) : (
+                                    <User className="w-4 h-4" />
                                 )}
                             </div>
+
+                            {/* Main Info */}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-0.5">
+                                    <h3 className="text-sm font-bold text-gray-900 truncate">
+                                        {student.first_name && student.last_name
+                                            ? `${student.first_name} ${student.last_name}`
+                                            : student.name || student.email || 'Unknown Student'
+                                        }
+                                    </h3>
+                                    {renderStatusBadge(student.is_active)}
+                                </div>
+                                <div className="flex items-center gap-3 text-[10px] text-gray-500 font-medium">
+                                    {student.instrument && (
+                                        <span className="inline-flex items-center gap-1">
+                                            <Music className="w-2.5 h-2.5" />
+                                            {student.instrument}
+                                        </span>
+                                    )}
+                                    <span className="inline-flex items-center gap-1">
+                                        <User className="w-2.5 h-2.5" />
+                                        {getTeacherName(student, teachers)}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Action Button */}
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleOpenEdit(student)}
+                                className="text-gray-400 hover:text-primary h-8 w-8 flex-shrink-0"
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </Button>
                         </div>
                     )) : (
-                        <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
-                            <GraduationCap className="w-12 h-12 text-gray-200" />
-                            <p className="text-gray-400 font-bold">No students found matching your filters.</p>
+                        <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
+                            <GraduationCap className="w-10 h-10 text-gray-200" />
+                            <p className="text-gray-400 text-sm font-bold">No students found matching your filters.</p>
                         </div>
                     )}
                 </div>
 
                 {/* Pagination */}
-                <div className="p-6 border-t border-gray-50 flex items-center justify-between bg-gray-50/30">
+                <div className="p-3 border-t border-gray-50 flex items-center justify-between bg-gray-50/30">
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest hidden sm:block">
                         Page {page} of {Math.max(1, Math.ceil((meta?.count || 0) / 20))}
                     </p>
                     <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
-                        <button
+                        <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => setPage(p => Math.max(1, p - 1))}
                             disabled={!meta?.previous}
-                            className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600 disabled:opacity-50 hover:bg-gray-50 transition-colors"
                         >
                             Previous
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                            size="sm"
                             onClick={() => setPage(p => p + 1)}
                             disabled={!meta?.next}
-                            className="px-4 py-2 bg-[#1ABC9C] text-white rounded-xl text-xs font-bold hover:bg-[#16A085] disabled:opacity-50 disabled:hover:bg-[#1ABC9C] transition-colors"
                         >
                             Next
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -417,12 +427,14 @@ export default function StudentsPage() {
                                 <h2 className="text-2xl font-black tracking-tight">{formData.first_name} {formData.last_name}</h2>
                                 <p className="text-white/60 text-xs font-bold uppercase tracking-widest mt-1">Edit Student Details</p>
                             </div>
-                            <button
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => setIsEditModalOpen(false)}
-                                className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-colors"
+                                className="bg-white/10 hover:bg-white/20 text-white shadow-none"
                             >
                                 <X className="w-5 h-5" />
-                            </button>
+                            </Button>
                         </div>
 
                         {/* Modal Body */}
@@ -434,7 +446,7 @@ export default function StudentsPage() {
                                         required
                                         value={formData.first_name}
                                         onChange={e => setFormData({ ...formData, first_name: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[#1ABC9C] rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -443,7 +455,7 @@ export default function StudentsPage() {
                                         required
                                         value={formData.last_name}
                                         onChange={e => setFormData({ ...formData, last_name: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[#1ABC9C] rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
                                     />
                                 </div>
                                 <div className="space-y-2 md:col-span-2">
@@ -453,7 +465,7 @@ export default function StudentsPage() {
                                         required
                                         value={formData.email}
                                         onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[#1ABC9C] rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
                                     />
                                 </div>
                             </div>
@@ -466,7 +478,7 @@ export default function StudentsPage() {
                                     <select
                                         value={formData.instrument}
                                         onChange={e => setFormData({ ...formData, instrument: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[#1ABC9C] rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
                                     >
                                         <option value="">Select Instrument...</option>
                                         {allInstruments.map(i => <option key={i} value={i}>{i}</option>)}
@@ -477,7 +489,7 @@ export default function StudentsPage() {
                                     <select
                                         value={formData.skill_level}
                                         onChange={e => setFormData({ ...formData, skill_level: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[#1ABC9C] rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
                                     >
                                         <option value="Beginner">Beginner</option>
                                         <option value="Intermediate">Intermediate</option>
@@ -490,7 +502,7 @@ export default function StudentsPage() {
                                     <select
                                         value={formData.primary_teacher}
                                         onChange={e => setFormData({ ...formData, primary_teacher: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[#1ABC9C] rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
                                     >
                                         <option value="">Unassigned</option>
                                         {teachers.map((t: any) => (
@@ -508,7 +520,7 @@ export default function StudentsPage() {
                                                 onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
                                                 className="sr-only peer"
                                             />
-                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1ABC9C]"></div>
+                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                                         </label>
                                         <span className="text-sm font-bold text-gray-700">
                                             {formData.is_active ? 'Active' : 'Inactive'}
@@ -520,19 +532,20 @@ export default function StudentsPage() {
 
                         {/* Modal Footer */}
                         <div className="p-6 border-t border-gray-100 bg-gray-50 flex gap-3">
-                            <button
+                            <Button
+                                variant="outline"
                                 onClick={() => setIsEditModalOpen(false)}
-                                className="flex-1 py-3.5 border-2 border-gray-200 text-gray-500 font-black text-xs uppercase tracking-widest rounded-xl hover:bg-gray-100 transition-all"
+                                className="flex-1"
                             >
                                 Cancel
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 onClick={handleSubmit}
                                 disabled={isSubmitting}
-                                className="flex-[2] py-3.5 bg-[#1ABC9C] text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-[#16A085] transition-all shadow-md active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="flex-[2] gap-2"
                             >
                                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>

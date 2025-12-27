@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { CheckCircle2, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 
 export default function PaymentSuccessPage() {
     const searchParams = useSearchParams()
@@ -26,12 +27,11 @@ export default function PaymentSuccessPage() {
                 </p>
 
                 <div className="pt-4">
-                    <Link
-                        href="/dashboard/billing"
-                        className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-[#1ABC9C] hover:bg-[#16a085] transition-colors w-full"
-                    >
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Back to Billing
+                    <Link href="/dashboard/billing" className="w-full">
+                        <Button className="w-full">
+                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            Back to Billing
+                        </Button>
                     </Link>
                 </div>
             </div>

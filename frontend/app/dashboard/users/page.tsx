@@ -292,11 +292,10 @@ export default function UsersPage() {
                             <button
                                 key={value}
                                 onClick={() => setFilterRole(value)}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                                    filterRole === value
+                                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${filterRole === value
                                         ? 'bg-gray-900 text-white'
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
+                                    }`}
                             >
                                 {label}
                             </button>
@@ -371,9 +370,8 @@ export default function UsersPage() {
                                             )}
                                         </td>
                                         <td className="px-6 py-4 text-center">
-                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                                                user.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                                            }`}>
+                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${user.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                                }`}>
                                                 <div className={`w-1.5 h-1.5 rounded-full mr-1.5 ${user.is_active ? 'bg-green-500' : 'bg-red-500'}`} />
                                                 {user.is_active ? 'Active' : 'Inactive'}
                                             </span>
@@ -413,78 +411,69 @@ export default function UsersPage() {
                         </table>
                     </div>
 
-                    {/* Mobile Cards */}
-                    <div className="md:hidden divide-y divide-gray-200">
-                        {users.length > 0 ? users.map((user: any) => (
-                            <div key={user.id} className="p-4 space-y-3">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-gray-700 font-bold shrink-0 overflow-hidden">
-                                            {user.avatar ? (
-                                                <img src={user.avatar} alt={user.full_name} className="w-full h-full object-cover" />
-                                            ) : (
-                                                (user.first_name || user.email)[0].toUpperCase()
-                                            )}
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <h3 className="font-semibold text-gray-900 truncate">
-                                                {user.full_name || `${user.first_name} ${user.last_name}`}
-                                            </h3>
-                                            <p className="text-sm text-gray-500 truncate">{user.email}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-2 shrink-0 ml-2">
-                                        <button
-                                            onClick={() => handleOpenModal(user)}
-                                            className="p-2 text-gray-400 hover:text-[#2C3E50] hover:bg-gray-100 rounded-lg"
-                                        >
-                                            <Edit className="w-4 h-4" />
-                                        </button>
-                                        {user.id !== currentUser?.id && (
-                                            <button
-                                                onClick={() => handleDeleteUser(user.id, user.full_name || `${user.first_name} ${user.last_name}`)}
-                                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                    {/* Mobile List View (Compact) */}
+                    <div className="md:hidden space-y-0 bg-white rounded-xl border border-gray-100 shadow-md overflow-hidden">
+                        {users.length > 0 ? users.map((user: any) => {
+                            // Determine border color based on role
+                            const getRoleColor = (role: string) => {
+                                const colors: Record<string, string> = {
+                                    admin: '#A855F7',      // purple
+                                    teacher: '#3B82F6',    // blue
+                                    student: '#10B981',    // green
+                                    parent: '#F97316',     // orange
+                                }
+                                return colors[role] || '#6B7280' // gray fallback
+                            }
+
+                            return (
+                                <div
+                                    key={user.id}
+                                    className="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0"
+                                    style={{ borderLeftWidth: '3px', borderLeftColor: getRoleColor(user.role) }}
+                                >
+                                    {/* Avatar */}
+                                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-xs shadow-sm flex-shrink-0">
+                                        {user.avatar ? (
+                                            <img src={user.avatar} alt={user.full_name} className="w-full h-full object-cover rounded-full" />
+                                        ) : (
+                                            (user.first_name?.[0] || user.email?.[0] || '?').toUpperCase()
                                         )}
                                     </div>
-                                </div>
 
-                                <div className="grid grid-cols-2 gap-3 text-sm">
-                                    <div>
-                                        <p className="text-gray-500 text-xs mb-1">Role</p>
-                                        {getRoleBadge(user.role)}
-                                    </div>
-                                    <div>
-                                        <p className="text-gray-500 text-xs mb-1">Status</p>
-                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                            user.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                                        }`}>
-                                            <div className={`w-1.5 h-1.5 rounded-full mr-1.5 ${user.is_active ? 'bg-green-500' : 'bg-red-500'}`} />
-                                            {user.is_active ? 'Active' : 'Inactive'}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {user.role === 'student' && user.student_profile?.bands?.length > 0 && (
-                                    <div>
-                                        <p className="text-gray-500 text-xs mb-1">Bands</p>
-                                        <div className="flex flex-wrap gap-1">
-                                            {user.student_profile.bands.map((b: any) => (
-                                                <span key={b.id} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-teal-50 text-teal-700 border border-teal-100">
-                                                    <Music className="w-3 h-3 mr-1" />
-                                                    {b.name}
-                                                </span>
-                                            ))}
+                                    {/* Main Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-0.5">
+                                            <h3 className="text-sm font-bold text-gray-900 truncate">
+                                                {user.full_name || `${user.first_name} ${user.last_name}`}
+                                            </h3>
+                                            {getRoleBadge(user.role)}
+                                        </div>
+                                        <div className="flex items-center gap-3 text-[10px] text-gray-500 font-medium">
+                                            <span className="inline-flex items-center gap-1 truncate">
+                                                <Mail className="w-2.5 h-2.5 flex-shrink-0" />
+                                                <span className="truncate">{user.email}</span>
+                                            </span>
+                                            <span className={`inline-flex items-center gap-1 flex-shrink-0 ${user.is_active ? 'text-green-600' : 'text-red-600'
+                                                }`}>
+                                                <div className={`w-1.5 h-1.5 rounded-full ${user.is_active ? 'bg-green-500' : 'bg-red-500'}`} />
+                                                {user.is_active ? 'Active' : 'Inactive'}
+                                            </span>
                                         </div>
                                     </div>
-                                )}
-                            </div>
-                        )) : (
-                            <div className="p-12 text-center">
-                                <UserCog className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                                <p className="text-gray-500 font-medium">No users found</p>
+
+                                    {/* Action Button */}
+                                    <button
+                                        onClick={() => handleOpenModal(user)}
+                                        className="text-gray-400 hover:text-primary h-8 w-8 flex items-center justify-center flex-shrink-0 transition-colors"
+                                    >
+                                        <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            )
+                        }) : (
+                            <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
+                                <UserCog className="w-10 h-10 text-gray-200" />
+                                <p className="text-gray-400 text-sm font-bold">No users found</p>
                             </div>
                         )}
                     </div>

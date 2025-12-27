@@ -5,6 +5,7 @@ import { useUser } from '@/contexts/UserContext'
 import { Mail, Lock, Loader2, AlertCircle, ArrowRight } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
 export default function LoginPage() {
     const { login } = useUser()
@@ -168,23 +169,26 @@ export default function LoginPage() {
                                 </Link>
                             </div>
 
-                            <button
+
+
+                            <Button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
+                                variant="gradient"
+                                className="w-full h-12"
                             >
                                 {isLoading ? (
                                     <>
-                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
                                         Signing in...
                                     </>
                                 ) : (
                                     <>
                                         Sign in
-                                        <ArrowRight className="w-5 h-5" />
+                                        <ArrowRight className="w-5 h-5 ml-2" />
                                     </>
                                 )}
-                            </button>
+                            </Button>
                         </form>
 
                         <div className="mt-6 text-center text-sm text-gray-500">

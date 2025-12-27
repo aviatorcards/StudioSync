@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import MetricCard from '@/components/MetricCard'
-import AlertBanner from '@/components/AlertBanner'
 import { useUser } from '@/contexts/UserContext'
 import { useDashboardStats } from '@/hooks/useDashboardData'
 import { useSettings } from '@/hooks/useSettings'
@@ -25,14 +23,16 @@ import {
     rectSortingStrategy
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, Eye, EyeOff, TrendingUp, Users, DollarSign as DollarSignIcon } from 'lucide-react'
+import {
+    GripVertical, Eye, EyeOff, TrendingUp, Users, DollarSign as DollarSignIcon,
+    Calendar, GraduationCap, Music, Loader2, Settings, X, Check
+} from 'lucide-react'
 import { RevenueChart } from '@/components/charts/RevenueChart'
 import { StudentGrowthChart } from '@/components/charts/StudentGrowthChart'
 import { AttendanceChart } from '@/components/charts/AttendanceChart'
 import { DashboardSkeleton } from '@/components/SkeletonLoader'
 
 // --- Types ---
-
 type WidgetId =
     | 'total_students' | 'weekly_lessons' | 'monthly_revenue' | 'active_teachers' | 'unpaid_invoices' | 'avg_attendance' | 'new_enquiries'
     | 'next_lesson' | 'practice_goal' | 'balance_due'
@@ -66,8 +66,55 @@ const DEFAULT_WIDGETS: Record<string, WidgetConfig[]> = {
     ]
 }
 
-// --- Sortable Widget Component ---
+// --- Metric Card Component ---
+interface MetricCardProps {
+    title: string
+    value: string | number
+    subtitle?: string
+    trend?: { value: string; positive: boolean }
+    icon: React.ReactNode
+    color?: 'blue' | 'green' | 'purple' | 'orange' | 'red'
+    onClick?: () => void
+    className?: string
+}
 
+function MetricCard({ title, value, subtitle, trend, icon, color = 'blue', onClick, className }: MetricCardProps) {
+    const colorClasses = {
+        blue: 'from-blue-500 to-cyan-500',
+        green: 'from-emerald-500 to-teal-500',
+        purple: 'from-purple-500 to-indigo-500',
+        orange: 'from-orange-500 to-amber-500',
+        red: 'from-red-500 to-pink-500'
+    }
+
+    return (
+        <div
+            onClick={onClick}
+            className={`bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-all ${onClick ? 'cursor-pointer hover:scale-[1.02]' : ''} ${className || ''}`}
+        >
+            <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{title}</p>
+                    <div className="flex items-baseline gap-2">
+                        <h3 className="text-3xl font-black text-gray-900">{value}</h3>
+                        {subtitle && <span className="text-sm font-bold text-gray-400">{subtitle}</span>}
+                    </div>
+                </div>
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center text-white shadow-md`}>
+                    {icon}
+                </div>
+            </div>
+            {trend && (
+                <div className={`flex items-center gap-1.5 text-xs font-bold ${trend.positive ? 'text-emerald-600' : 'text-red-600'}`}>
+                    <span>{trend.positive ? '↑' : '↓'}</span>
+                    <span>{trend.value}</span>
+                </div>
+            )}
+        </div>
+    )
+}
+
+// --- Sortable Widget Component ---
 interface SortableWidgetProps {
     widget: WidgetConfig
     children: React.ReactNode
@@ -95,25 +142,25 @@ function SortableWidget({ widget, children, isEditing, onToggleVisibility }: Sor
     if (!widget.visible && !isEditing) return null
 
     return (
-        <div ref={setNodeRef} style={style} className={`relative group ${!widget.visible ? 'opacity-50 grayscale border-dashed border-2' : ''}`}>
+        <div ref={setNodeRef} style={style} className={`relative group ${!widget.visible ? 'opacity-50 grayscale' : ''}`}>
             {children}
 
             {isEditing && (
-                <div className="absolute top-2 right-2 flex items-center space-x-1 z-20">
+                <div className="absolute top-2 right-2 flex items-center gap-2 z-20">
                     <button
                         onClick={(e) => {
                             e.stopPropagation()
                             onToggleVisibility(widget.id)
                         }}
-                        className={`p-1.5 rounded-md shadow-sm border text-gray-600 transition-colors ${widget.visible ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 hover:bg-gray-200'}`}
+                        className={`p-2 rounded-lg shadow-md border transition-all ${widget.visible ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 hover:bg-gray-200'}`}
                         title={widget.visible ? "Hide Widget" : "Show Widget"}
                     >
-                        {widget.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                        {widget.visible ? <Eye className="w-4 h-4 text-gray-600" /> : <EyeOff className="w-4 h-4 text-gray-400" />}
                     </button>
                     <div
                         {...attributes}
                         {...listeners}
-                        className="p-1.5 bg-white rounded-md shadow-sm border hover:bg-gray-50 text-gray-600 cursor-grab active:cursor-grabbing"
+                        className="p-2 bg-white rounded-lg shadow-md border hover:bg-gray-50 text-gray-600 cursor-grab active:cursor-grabbing"
                     >
                         <GripVertical className="w-4 h-4" />
                     </div>
@@ -124,7 +171,6 @@ function SortableWidget({ widget, children, isEditing, onToggleVisibility }: Sor
 }
 
 // --- Main Page Component ---
-
 export default function DashboardPage() {
     const router = useRouter()
     const { currentUser } = useUser()
@@ -132,7 +178,6 @@ export default function DashboardPage() {
     const { stats, loading, error } = useDashboardStats()
 
     // State
-    const [showAlert, setShowAlert] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
     const [widgets, setWidgets] = useState<WidgetConfig[]>([])
 
@@ -144,18 +189,12 @@ export default function DashboardPage() {
 
     // Load initial state
     useEffect(() => {
-        // Banner check
-        const isDismissed = localStorage.getItem('dashboard_welcome_dismissed')
-        if (!isDismissed) setShowAlert(true)
-
-        // Preferences check
         const role = currentUser?.role || 'admin'
         const roleDefaults = DEFAULT_WIDGETS[role] || DEFAULT_WIDGETS.admin
 
         if (currentUser && currentUser.preferences && currentUser.preferences.dashboard_layout) {
             const savedLayout = currentUser.preferences.dashboard_layout as WidgetConfig[]
             if (Array.isArray(savedLayout)) {
-                // Merge new defaults
                 const mergedWidgets = roleDefaults.map(def => {
                     const existing = savedLayout.find(s => s.id === def.id)
                     return existing || def
@@ -168,11 +207,6 @@ export default function DashboardPage() {
             setWidgets(roleDefaults)
         }
     }, [currentUser])
-
-    const handleDismissBanner = () => {
-        setShowAlert(false)
-        localStorage.setItem('dashboard_welcome_dismissed', 'true')
-    }
 
     const handleSaveLayout = async () => {
         setIsEditing(false)
@@ -204,15 +238,14 @@ export default function DashboardPage() {
     }
 
     // --- Loading / Error States ---
-
     if (loading) {
         return <DashboardSkeleton />
     }
 
     if (error || !stats) {
         return (
-            <div className="max-w-7xl mx-auto px-4 pt-12">
-                <div className="p-6 bg-red-50 text-red-600 rounded-xl border border-red-200">
+            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-12">
+                <div className="p-6 bg-red-50 text-red-600 rounded-2xl border border-red-200">
                     <h3 className="font-bold text-lg mb-2">Error Loading Dashboard</h3>
                     <p>Unable to load dashboard data. Please try refreshing the page.</p>
                 </div>
@@ -220,7 +253,7 @@ export default function DashboardPage() {
         )
     }
 
-    // Mock data for charts - In production, this would come from the API
+    // Mock data for charts
     const revenueData = [
         { month: 'Jan', revenue: 12000 },
         { month: 'Feb', revenue: 14500 },
@@ -246,7 +279,6 @@ export default function DashboardPage() {
         { name: 'Canceled', value: 12 },
     ]
 
-    // --- UI Structure ---
     const overview = stats.overview
 
     // Widgets mapped by ID
@@ -259,7 +291,7 @@ export default function DashboardPage() {
                 subtitle="students"
                 trend={{ value: String(overview.total_students?.trend || ''), positive: !!overview.total_students?.positive }}
                 color="blue"
-                icon="👥"
+                icon={<Users className="w-6 h-6" />}
                 onClick={() => !isEditing && router.push('/dashboard/students')}
                 className={isEditing ? 'pointer-events-none' : ''}
             />
@@ -271,7 +303,7 @@ export default function DashboardPage() {
                 subtitle="scheduled"
                 trend={{ value: String(overview.weekly_lessons?.trend || ''), positive: !!overview.weekly_lessons?.positive }}
                 color="green"
-                icon="📆"
+                icon={<Calendar className="w-6 h-6" />}
                 onClick={() => !isEditing && router.push('/dashboard/schedule')}
                 className={isEditing ? 'pointer-events-none' : ''}
             />
@@ -283,7 +315,7 @@ export default function DashboardPage() {
                 subtitle="USD"
                 trend={{ value: String(overview.monthly_revenue?.trend || ''), positive: !!overview.monthly_revenue?.positive }}
                 color="green"
-                icon="💵"
+                icon={<DollarSignIcon className="w-6 h-6" />}
                 onClick={() => !isEditing && router.push('/dashboard/billing')}
                 className={isEditing ? 'pointer-events-none' : ''}
             />
@@ -294,8 +326,8 @@ export default function DashboardPage() {
                 value={overview.active_teachers?.value || 0}
                 subtitle="instructors"
                 trend={{ value: String(overview.active_teachers?.trend || ''), positive: !!overview.active_teachers?.positive }}
-                color="blue"
-                icon="👨‍🏫"
+                color="purple"
+                icon={<GraduationCap className="w-6 h-6" />}
                 onClick={() => !isEditing && router.push('/dashboard/teachers')}
                 className={isEditing ? 'pointer-events-none' : ''}
             />
@@ -307,7 +339,7 @@ export default function DashboardPage() {
                 subtitle="overdue"
                 trend={{ value: String(overview.unpaid_invoices?.trend || ''), positive: !!overview.unpaid_invoices?.positive }}
                 color="red"
-                icon="⚠️"
+                icon={<DollarSignIcon className="w-6 h-6" />}
                 onClick={() => !isEditing && router.push('/dashboard/billing')}
                 className={isEditing ? 'pointer-events-none' : ''}
             />
@@ -316,10 +348,10 @@ export default function DashboardPage() {
             <MetricCard
                 title="Avg Attendance"
                 value={overview.avg_attendance?.value || '0%'}
-                subtitle="high engagement"
+                subtitle="engagement"
                 trend={{ value: String(overview.avg_attendance?.trend || ''), positive: !!overview.avg_attendance?.positive }}
                 color="blue"
-                icon="📈"
+                icon={<TrendingUp className="w-6 h-6" />}
                 className={isEditing ? 'pointer-events-none' : ''}
             />
         ),
@@ -329,8 +361,8 @@ export default function DashboardPage() {
                 value={overview.new_enquiries?.value || 0}
                 subtitle="new leads"
                 trend={{ value: String(overview.new_enquiries?.trend || ''), positive: !!overview.new_enquiries?.positive }}
-                color="yellow"
-                icon="📨"
+                color="orange"
+                icon={<Music className="w-6 h-6" />}
                 className={isEditing ? 'pointer-events-none' : ''}
             />
         ),
@@ -340,9 +372,9 @@ export default function DashboardPage() {
             <MetricCard
                 title="My Students"
                 value={overview.my_students?.value || 0}
-                subtitle="active students"
+                subtitle="active"
                 color="blue"
-                icon="🎓"
+                icon={<Users className="w-6 h-6" />}
                 onClick={() => !isEditing && router.push('/dashboard/students')}
                 className={isEditing ? 'pointer-events-none' : ''}
             />
@@ -351,9 +383,9 @@ export default function DashboardPage() {
             <MetricCard
                 title="Today's Schedule"
                 value={overview.lessons_today?.value || 0}
-                subtitle="lessons remaining"
+                subtitle="lessons"
                 color="green"
-                icon="📅"
+                icon={<Calendar className="w-6 h-6" />}
                 onClick={() => !isEditing && router.push('/dashboard/schedule')}
                 className={isEditing ? 'pointer-events-none' : ''}
             />
@@ -362,9 +394,9 @@ export default function DashboardPage() {
             <MetricCard
                 title="Hours This Month"
                 value={overview.hours_taught?.value || 0}
-                subtitle="teaching hours"
-                color="blue"
-                icon="⏱️"
+                subtitle="hours"
+                color="purple"
+                icon={<TrendingUp className="w-6 h-6" />}
                 className={isEditing ? 'pointer-events-none' : ''}
             />
         ),
@@ -376,7 +408,7 @@ export default function DashboardPage() {
                 value={overview.next_lesson?.value || 'None'}
                 subtitle={overview.next_lesson?.label || ''}
                 color="blue"
-                icon="🎹"
+                icon={<Music className="w-6 h-6" />}
                 className={isEditing ? 'pointer-events-none' : ''}
             />
         ),
@@ -387,7 +419,7 @@ export default function DashboardPage() {
                 subtitle={overview.practice_goal?.label || 'days this week'}
                 trend={String(overview.practice_goal?.value || '').includes('100') ? { value: 'Goal Achieved!', positive: true } : { value: 'Keep it up!', positive: true }}
                 color="green"
-                icon="🎵"
+                icon={<Check className="w-6 h-6" />}
                 className={isEditing ? 'pointer-events-none' : ''}
             />
         ),
@@ -397,7 +429,7 @@ export default function DashboardPage() {
                 value={overview.balance_due?.value || '$0.00'}
                 subtitle={overview.balance_due?.label || 'All paid up!'}
                 color={String(overview.balance_due?.value || '').includes('$0') ? "blue" : "red"}
-                icon="💰"
+                icon={<DollarSignIcon className="w-6 h-6" />}
                 onClick={() => !isEditing && router.push('/dashboard/billing')}
                 className={isEditing ? 'pointer-events-none' : ''}
             />
@@ -405,49 +437,58 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto px-4 pb-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Alert Banners */}
-            {showAlert && (
-                <AlertBanner
-                    type="info"
-                    message={`Welcome back, ${currentUser?.first_name || 'Admin'}! Live dashboard data is ready.`}
-                    actionLabel="Dismiss"
-                    onAction={handleDismissBanner}
-                    onDismiss={handleDismissBanner}
-                />
-            )}
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Header */}
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4">
+                <div className="space-y-2">
+                    <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">Dashboard</h1>
+                    <p className="text-gray-500 font-medium max-w-lg">
+                        Welcome back, {currentUser?.first_name || 'User'}! Here's your studio overview.
+                    </p>
+                </div>
+                <div className="flex items-center gap-3">
+                    {isEditing ? (
+                        <>
+                            <button
+                                onClick={() => {
+                                    setIsEditing(false)
+                                    const role = currentUser?.role || 'admin'
+                                    setWidgets(DEFAULT_WIDGETS[role] || DEFAULT_WIDGETS.admin)
+                                }}
+                                className="px-5 py-3 bg-white border-2 border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-all font-bold text-sm active:scale-95"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSaveLayout}
+                                className="px-5 py-3 bg-primary text-white rounded-xl hover:bg-primary-hover transition-all font-bold text-sm shadow-lg active:scale-95"
+                            >
+                                Save Layout
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            onClick={() => setIsEditing(true)}
+                            className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-all font-bold text-sm shadow-sm active:scale-95"
+                        >
+                            <Settings className="w-4 h-4" />
+                            Customize
+                        </button>
+                    )}
+                </div>
+            </header>
 
-            {/* Customization Controls */}
-            <div className="flex justify-end">
-                {isEditing ? (
-                    <div className="flex items-center gap-3 animate-in fade-in">
-                        <span className="text-xs text-gray-500 font-semibold">Drag to reorder • Toggle eye to hide</span>
-                        <button
-                            onClick={() => {
-                                setIsEditing(false);
-                                const role = currentUser?.role || 'admin';
-                                setWidgets(DEFAULT_WIDGETS[role] || DEFAULT_WIDGETS.admin);
-                            }}
-                            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-bold text-sm active:scale-95"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handleSaveLayout}
-                            className="px-4 py-2 bg-[#F39C12] text-white rounded-xl hover:bg-[#E67E22] transition-all font-bold text-sm shadow-lg active:scale-95"
-                        >
-                            Save Layout
-                        </button>
+            {/* Editing Instructions */}
+            {isEditing && (
+                <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-center gap-3 animate-in fade-in duration-300">
+                    <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
+                        <Settings className="w-5 h-5 text-blue-600" />
                     </div>
-                ) : (
-                    <button
-                        onClick={() => setIsEditing(true)}
-                        className="text-xs text-gray-400 hover:text-gray-700 hover:underline flex items-center transition-colors font-semibold"
-                    >
-                        <span className="mr-1">⚙️</span> Customize Layout
-                    </button>
-                )}
-            </div>
+                    <p className="text-sm font-medium text-blue-800">
+                        <strong>Customization Mode:</strong> Drag cards to reorder, toggle visibility with the eye icon.
+                    </p>
+                </div>
+            )}
 
             {/* Draggable Grid */}
             <DndContext
@@ -459,7 +500,7 @@ export default function DashboardPage() {
                     items={widgets.map(w => w.id)}
                     strategy={rectSortingStrategy}
                 >
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {widgets.map((widget) => (
                             <SortableWidget
                                 key={widget.id}
@@ -474,19 +515,12 @@ export default function DashboardPage() {
                 </SortableContext>
             </DndContext>
 
-            {/* Data Visualization Section - Only for admin and teacher */}
+            {/* Analytics Section - Admin & Teacher Only */}
             {(currentUser?.role === 'admin' || currentUser?.role === 'teacher') && (
                 <div className="space-y-6">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5 }}
-                        className="flex items-center justify-between"
-                    >
-                        <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                            Analytics Overview
-                        </h2>
-                    </motion.div>
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-2xl font-black text-gray-900 tracking-tight">Analytics Overview</h2>
+                    </div>
 
                     {/* Charts Grid */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -500,9 +534,9 @@ export default function DashboardPage() {
                             <div className="flex items-center justify-between mb-6">
                                 <div>
                                     <h3 className="text-lg font-bold text-gray-900">Revenue Trend</h3>
-                                    <p className="text-sm text-gray-600">Last 6 months</p>
+                                    <p className="text-sm text-gray-500 font-medium">Last 6 months</p>
                                 </div>
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center shadow-md">
                                     <DollarSignIcon className="w-6 h-6 text-white" />
                                 </div>
                             </div>
@@ -521,9 +555,9 @@ export default function DashboardPage() {
                             <div className="flex items-center justify-between mb-6">
                                 <div>
                                     <h3 className="text-lg font-bold text-gray-900">Student Growth</h3>
-                                    <p className="text-sm text-gray-600">Monthly enrollment</p>
+                                    <p className="text-sm text-gray-500 font-medium">Monthly enrollment</p>
                                 </div>
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-md">
                                     <Users className="w-6 h-6 text-white" />
                                 </div>
                             </div>
@@ -542,9 +576,9 @@ export default function DashboardPage() {
                             <div className="flex items-center justify-between mb-6">
                                 <div>
                                     <h3 className="text-lg font-bold text-gray-900">Lesson Attendance</h3>
-                                    <p className="text-sm text-gray-600">This month breakdown</p>
+                                    <p className="text-sm text-gray-500 font-medium">This month breakdown</p>
                                 </div>
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-md">
                                     <TrendingUp className="w-6 h-6 text-white" />
                                 </div>
                             </div>
@@ -556,30 +590,30 @@ export default function DashboardPage() {
                 </div>
             )}
 
-            {/* Role Specific Content */}
+            {/* Recent Activity */}
+            {(currentUser?.role === 'admin' || currentUser?.role === 'teacher') && (
+                <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
+                    <h3 className="text-2xl font-black text-gray-900 mb-6">Recent Activity</h3>
+                    <ActivityList activities={stats.recent_activity} />
+                </div>
+            )}
+
+            {/* Student Specific Content */}
             {currentUser?.role === 'student' && (
-                <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-xl">
+                <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
                     <h3 className="text-2xl font-black text-gray-900 mb-6">Current Assignments</h3>
                     <div className="space-y-4">
-                        <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                        <div className="p-6 bg-gray-50 rounded-xl border border-gray-100">
                             <h4 className="font-bold text-gray-900 mb-2">Recent Lessons</h4>
                             <p className="text-sm text-gray-600 mb-4 font-medium">Visit your lessons page to see full notes and assignments.</p>
                             <button
                                 onClick={() => router.push('/dashboard/lessons')}
-                                className="text-sm text-[#F39C12] font-bold hover:text-[#E67E22] transition-colors flex items-center gap-1"
+                                className="text-sm text-primary font-bold hover:text-primary-hover transition-colors flex items-center gap-1"
                             >
                                 View All Lessons →
                             </button>
                         </div>
                     </div>
-                </div>
-            )}
-
-            {/* Recent Activity */}
-            {(currentUser?.role === 'admin' || currentUser?.role === 'teacher') && (
-                <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-xl">
-                    <h3 className="text-2xl font-black text-gray-900 mb-6">Recent Activity</h3>
-                    <ActivityList activities={stats.recent_activity} />
                 </div>
             )}
         </div>
@@ -592,7 +626,7 @@ function ActivityList({ activities }: { activities: any[] }) {
         return (
             <div className="flex flex-col items-center justify-center py-12">
                 <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center border-2 border-dashed border-gray-200 mb-4">
-                    <span className="text-2xl">📋</span>
+                    <Calendar className="w-8 h-8 text-gray-300" />
                 </div>
                 <p className="text-sm text-gray-400 font-semibold">No recent activity found.</p>
             </div>
@@ -601,11 +635,11 @@ function ActivityList({ activities }: { activities: any[] }) {
     return (
         <div className="space-y-3">
             {activities.map((activity) => (
-                <div key={activity.id} className="flex items-center justify-between py-4 px-5 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-gray-100 transition-colors">
+                <div key={activity.id} className="flex items-center justify-between py-4 px-5 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
                     <div className="flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${activity.type === 'success' ? 'bg-green-100 text-green-600' :
-                                activity.type === 'warning' ? 'bg-yellow-100 text-yellow-600' :
-                                    'bg-blue-100 text-blue-600'
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${activity.type === 'success' ? 'bg-emerald-100 text-emerald-600' :
+                            activity.type === 'warning' ? 'bg-amber-100 text-amber-600' :
+                                'bg-blue-100 text-blue-600'
                             }`}>
                             <span className="text-lg font-bold">
                                 {activity.type === 'success' ? '✓' : activity.type === 'warning' ? '⚠' : 'ℹ'}
@@ -621,4 +655,3 @@ function ActivityList({ activities }: { activities: any[] }) {
         </div>
     )
 }
-

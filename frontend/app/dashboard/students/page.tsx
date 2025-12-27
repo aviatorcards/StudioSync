@@ -7,7 +7,7 @@ import { useStudents, useTeachers } from '@/hooks/useDashboardData'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
 import {
-    X, Loader2, UserPlus, Music,
+    Loader2, UserPlus, Music,
     Link as LinkIcon, Edit, UserCog,
     Search, Filter, ChevronRight,
     GraduationCap, User, Calendar,
@@ -16,6 +16,7 @@ import {
     Plus
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
 
 // --- Types ---
 interface TeacherProfile {
@@ -419,26 +420,17 @@ export default function StudentsPage() {
 
             {/* --- Edit Modal (Overhaul) --- */}
             {isEditModalOpen && selectedStudent && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-2xl rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-                        {/* Modal Header */}
-                        <div className="bg-[#2C3E50] px-8 py-6 flex items-center justify-between text-white">
-                            <div>
-                                <h2 className="text-2xl font-black tracking-tight">{formData.first_name} {formData.last_name}</h2>
-                                <p className="text-white/60 text-xs font-bold uppercase tracking-widest mt-1">Edit Student Details</p>
-                            </div>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setIsEditModalOpen(false)}
-                                className="bg-white/10 hover:bg-white/20 text-white shadow-none"
-                            >
-                                <X className="w-5 h-5" />
-                            </Button>
-                        </div>
-
-                        {/* Modal Body */}
-                        <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                <Dialog
+                    open={isEditModalOpen}
+                    onOpenChange={setIsEditModalOpen}
+                    size="md"
+                >
+                    <DialogHeader
+                        title={`${formData.first_name} ${formData.last_name}`}
+                        subtitle="Edit Student Details"
+                    />
+                    <DialogContent>
+                        <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-xs font-black text-gray-400 uppercase tracking-widest">First Name</label>
@@ -529,26 +521,24 @@ export default function StudentsPage() {
                                 </div>
                             </div>
                         </form>
-
-                        {/* Modal Footer */}
-                        <div className="p-6 border-t border-gray-100 bg-gray-50 flex gap-3">
-                            <Button
-                                variant="outline"
-                                onClick={() => setIsEditModalOpen(false)}
-                                className="flex-1"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                onClick={handleSubmit}
-                                disabled={isSubmitting}
-                                className="flex-[2] gap-2"
-                            >
-                                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
-                            </Button>
-                        </div>
-                    </div>
-                </div>
+                    </DialogContent>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsEditModalOpen(false)}
+                            className="flex-1"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleSubmit}
+                            disabled={isSubmitting}
+                            className="flex-[2] gap-2"
+                        >
+                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
+                        </Button>
+                    </DialogFooter>
+                </Dialog>
             )}
         </div>
     )

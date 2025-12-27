@@ -22,6 +22,8 @@ import {
     Plus,
     ExternalLink
 } from 'lucide-react'
+import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 
 type ResourceType = 'pdf' | 'audio' | 'video' | 'image' | 'link' | 'other'
 
@@ -299,7 +301,7 @@ export default function ResourcesPage() {
                         placeholder="Search resources..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12]"
+                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                     />
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
@@ -417,19 +419,16 @@ export default function ResourcesPage() {
 
             {/* Upload Modal */}
             {showUploadModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                            <h2 className="text-xl font-bold text-gray-900">Upload Resource</h2>
-                            <button
-                                onClick={() => setShowUploadModal(false)}
-                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        <div className="p-6 space-y-4">
+                <Dialog
+                    open={showUploadModal}
+                    onOpenChange={setShowUploadModal}
+                    size="md"
+                >
+                    <DialogHeader
+                        title="Upload Resource"
+                        subtitle="Share Materials & Content"
+                    />
+                    <DialogContent className="space-y-4">
                             {/* Resource Type */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -442,7 +441,7 @@ export default function ResourcesPage() {
                                             onClick={() => setUploadForm(prev => ({ ...prev, resource_type: type }))}
                                             className={`p-3 border rounded-lg text-xs font-medium capitalize transition-colors ${
                                                 uploadForm.resource_type === type
-                                                    ? 'border-[#F39C12] bg-[#F39C12]/10 text-[#F39C12]'
+                                                    ? 'border-primary bg-primary/10 text-primary'
                                                     : 'border-gray-200 hover:bg-gray-50'
                                             }`}
                                         >
@@ -466,7 +465,7 @@ export default function ResourcesPage() {
                                         value={uploadForm.external_url}
                                         onChange={(e) => setUploadForm(prev => ({ ...prev, external_url: e.target.value }))}
                                         placeholder="https://example.com"
-                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12]"
+                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                                     />
                                 </div>
                             ) : (
@@ -480,7 +479,7 @@ export default function ResourcesPage() {
                                         onDrop={handleDrop}
                                         className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
                                             isDragging
-                                                ? 'border-[#F39C12] bg-[#F39C12]/5'
+                                                ? 'border-primary bg-primary/5'
                                                 : 'border-gray-300 hover:border-gray-400'
                                         }`}
                                     >
@@ -512,12 +511,12 @@ export default function ResourcesPage() {
                                                 <p className="text-gray-600 mb-2">
                                                     Drag and drop your file here, or
                                                 </p>
-                                                <button
+                                                <Button
                                                     onClick={() => fileInputRef.current?.click()}
-                                                    className="px-4 py-2 bg-[#F39C12] text-white rounded-lg hover:bg-[#E67E22] transition-colors font-medium"
+                                                    type="button"
                                                 >
                                                     Browse Files
-                                                </button>
+                                                </Button>
                                             </>
                                         )}
                                     </div>
@@ -534,7 +533,7 @@ export default function ResourcesPage() {
                                     value={uploadForm.title}
                                     onChange={(e) => setUploadForm(prev => ({ ...prev, title: e.target.value }))}
                                     placeholder="Resource title"
-                                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12]"
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                                 />
                             </div>
 
@@ -548,7 +547,7 @@ export default function ResourcesPage() {
                                     onChange={(e) => setUploadForm(prev => ({ ...prev, description: e.target.value }))}
                                     placeholder="Add a description..."
                                     rows={3}
-                                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12]"
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                                 />
                             </div>
 
@@ -562,38 +561,36 @@ export default function ResourcesPage() {
                                     value={uploadForm.category}
                                     onChange={(e) => setUploadForm(prev => ({ ...prev, category: e.target.value }))}
                                     placeholder="e.g., Sheet Music, Practice Tracks"
-                                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12]"
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                                 />
                             </div>
-                        </div>
-
-                        <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
-                            <button
-                                onClick={() => setShowUploadModal(false)}
-                                className="px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleUpload}
-                                disabled={uploading}
-                                className="px-6 py-2 bg-[#F39C12] text-white rounded-lg hover:bg-[#E67E22] transition-colors font-medium disabled:opacity-50 flex items-center gap-2"
-                            >
-                                {uploading ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        Uploading...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Upload className="w-4 h-4" />
-                                        Upload
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                    </DialogContent>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowUploadModal(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleUpload}
+                            disabled={uploading}
+                            className="gap-2"
+                        >
+                            {uploading ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Uploading...
+                                </>
+                            ) : (
+                                <>
+                                    <Upload className="w-4 h-4" />
+                                    Upload
+                                </>
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </Dialog>
             )}
         </div>
     )

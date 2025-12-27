@@ -11,6 +11,7 @@ import {
     Calendar as CalendarIcon, Clock, Info, RefreshCw, Loader2
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
 
 // --- Types ---
 interface LessonBooking {
@@ -32,19 +33,7 @@ export default function SchedulePage() {
     const [use24Hour, setUse24Hour] = useState(false)
     const [bookingLoading, setBookingLoading] = useState(false)
 
-    // Close on Escape
-    useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                setShowBookingModal(false)
-                setShowSubscribeModal(false)
-            }
-        }
-        if (showBookingModal || showSubscribeModal) {
-            window.addEventListener('keydown', handleEscape)
-            return () => window.removeEventListener('keydown', handleEscape)
-        }
-    }, [showBookingModal, showSubscribeModal])
+    // ESC key handling is now managed by Dialog component
 
     // Data Fetching
     const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 })
@@ -217,7 +206,17 @@ export default function SchedulePage() {
                     </Button>
                     <Button
                         onClick={handlePrint}
-                        className="bg-[#2C3E50] hover:bg-[#34495E] text-white gap-2 w-full"
+                        className="gap-2 w-full"
+                        style={{
+                            backgroundColor: 'var(--color-primary-dark)',
+                            color: 'white'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.opacity = '0.9'
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.opacity = '1'
+                        }}
                     >
                         <Printer className="w-4 h-4" />
                         <span className="hidden sm:inline">Print</span>
@@ -349,26 +348,17 @@ export default function SchedulePage() {
             </div>
 
             {/* Booking Modal */}
-            {showBookingModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-2xl rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-                        {/* Header */}
-                        <div className="bg-[#2C3E50] px-8 py-6 flex items-center justify-between text-white">
-                            <div>
-                                <h2 className="text-2xl font-black tracking-tight">New Booking</h2>
-                                <p className="text-white/60 text-xs font-bold uppercase tracking-widest mt-1">Schedule a Lesson</p>
-                            </div>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setShowBookingModal(false)}
-                                className="bg-white/10 hover:bg-white/20 text-white shadow-none"
-                            >
-                                <X className="w-5 h-5" />
-                            </Button>
-                        </div>
-
-                        <form onSubmit={handleBooking} className="p-8 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
+            <Dialog
+                open={showBookingModal}
+                onOpenChange={setShowBookingModal}
+                size="md"
+            >
+                <DialogHeader
+                    title="New Booking"
+                    subtitle="Schedule a Lesson"
+                />
+                <DialogContent>
+                    <form onSubmit={handleBooking} className="space-y-6">
                             {/* Booking Mode Selector */}
                             <div className="flex p-1 bg-gray-50 rounded-2xl border border-gray-100 mb-2">
                                 {(['individual', 'band', 'event'] as const).map((mode) => (
@@ -383,7 +373,11 @@ export default function SchedulePage() {
                                         }}
                                         variant={bookingMode === mode ? 'default' : 'ghost'}
                                         size="sm"
-                                        className={`flex-1 text-[10px] uppercase tracking-widest ${bookingMode === mode ? 'bg-[#2C3E50] hover:bg-[#34495E]' : 'text-gray-400'}`}
+                                        className={`flex-1 text-[10px] uppercase tracking-widest ${bookingMode !== mode ? 'text-gray-400' : ''}`}
+                                        style={bookingMode === mode ? {
+                                            backgroundColor: 'var(--color-primary-dark)',
+                                            color: 'white'
+                                        } : undefined}
                                     >
                                         {mode}
                                     </Button>
@@ -460,7 +454,7 @@ export default function SchedulePage() {
                                     <select
                                         value={newBooking.room}
                                         onChange={(e) => setNewBooking({ ...newBooking, room: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[#3498DB] rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
                                     >
                                         <option value="">Select Room...</option>
                                         {rooms.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
@@ -477,7 +471,7 @@ export default function SchedulePage() {
                                         required
                                         value={newBooking.date}
                                         onChange={(e) => setNewBooking({ ...newBooking, date: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[#F39C12] rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -506,7 +500,7 @@ export default function SchedulePage() {
                                         step="15"
                                         value={newBooking.duration}
                                         onChange={(e) => setNewBooking({ ...newBooking, duration: parseInt(e.target.value) })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[#F39C12] rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -514,7 +508,7 @@ export default function SchedulePage() {
                                     <select
                                         value={newBooking.lesson_type}
                                         onChange={(e) => setNewBooking({ ...newBooking, lesson_type: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[#2C3E50] rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary-dark rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
                                     >
                                         <option value="private">Private Lesson</option>
                                         <option value="group">Group Lesson / Band</option>
@@ -525,48 +519,37 @@ export default function SchedulePage() {
                                     </select>
                                 </div>
                             </div>
-                        </form>
-
-                        <div className="p-6 border-t border-gray-100 bg-gray-50 flex gap-3">
-                            <Button
-                                variant="outline"
-                                onClick={() => setShowBookingModal(false)}
-                                className="flex-1"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                onClick={handleBooking}
-                                disabled={bookingLoading}
-                                className="flex-[2] gap-2"
-                            >
-                                {bookingLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Booking'}
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
+                    </form>
+                </DialogContent>
+                <DialogFooter>
+                    <Button
+                        variant="outline"
+                        onClick={() => setShowBookingModal(false)}
+                        className="flex-1"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleBooking}
+                        disabled={bookingLoading}
+                        className="flex-[2] gap-2"
+                    >
+                        {bookingLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Booking'}
+                    </Button>
+                </DialogFooter>
+            </Dialog>
 
             {/* Subscribe Modal */}
-            {showSubscribeModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-                        <div className="bg-[#2C3E50] px-8 py-6 flex items-center justify-between text-white">
-                            <div>
-                                <h2 className="text-2xl font-black tracking-tight">Subscribe</h2>
-                                <p className="text-white/60 text-xs font-bold uppercase tracking-widest mt-1">Sync Calendar</p>
-                            </div>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setShowSubscribeModal(false)}
-                                className="bg-white/10 hover:bg-white/20 text-white shadow-none"
-                            >
-                                <X className="w-5 h-5" />
-                            </Button>
-                        </div>
-
-                        <div className="p-8 space-y-6">
+            <Dialog
+                open={showSubscribeModal}
+                onOpenChange={setShowSubscribeModal}
+                size="sm"
+            >
+                <DialogHeader
+                    title="Subscribe"
+                    subtitle="Sync Calendar"
+                />
+                <DialogContent className="space-y-6">
                             <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex gap-3">
                                 <Info className="w-5 h-5 text-blue-600 shrink-0" />
                                 <p className="text-sm text-blue-800 font-medium">Use this link to subscribe in your calendar app (Google Calendar, iCal, etc).</p>
@@ -590,20 +573,17 @@ export default function SchedulePage() {
                                     </Button>
                                 </div>
                             </div>
-                        </div>
-
-                        <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end">
-                            <Button
-                                variant="secondary"
-                                onClick={() => setShowSubscribeModal(false)}
-                                className="px-8"
-                            >
-                                Close
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
+                </DialogContent>
+                <DialogFooter>
+                    <Button
+                        variant="secondary"
+                        onClick={() => setShowSubscribeModal(false)}
+                        className="px-8"
+                    >
+                        Close
+                    </Button>
+                </DialogFooter>
+            </Dialog>
         </div>
     )
 }

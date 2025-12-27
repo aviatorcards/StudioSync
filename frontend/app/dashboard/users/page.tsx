@@ -10,6 +10,8 @@ import {
     X, Loader2, UserPlus, Music, Link as LinkIcon, Edit, UserCog, Trash2,
     Search, ChevronLeft, ChevronRight, Users as UsersIcon, Mail, Shield
 } from 'lucide-react'
+import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 
 export default function UsersPage() {
     const { currentUser } = useUser()
@@ -310,7 +312,7 @@ export default function UsersPage() {
                             placeholder="Search by name or email..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2C3E50] focus:border-transparent outline-none"
+                            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-dark focus:border-transparent outline-none"
                         />
                     </div>
                 </div>
@@ -510,31 +512,17 @@ export default function UsersPage() {
 
             {/* User Modal */}
             {isUserModalOpen && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-                    onClick={() => setIsUserModalOpen(false)}
+                <Dialog
+                    open={isUserModalOpen}
+                    onOpenChange={setIsUserModalOpen}
+                    size="md"
                 >
-                    <div
-                        className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="px-6 py-4 bg-[#2C3E50] text-white flex items-center justify-between shrink-0">
-                            <div>
-                                <h2 className="text-lg font-bold">{selectedUser ? 'Edit User' : 'New User'}</h2>
-                                <p className="text-white/70 text-xs mt-0.5">
-                                    {selectedUser ? 'Update user information' : 'Create a new user account'}
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => setIsUserModalOpen(false)}
-                                className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center transition-colors"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto p-6">
-                            <form onSubmit={handleSubmit} className="space-y-4">
+                    <DialogHeader
+                        title={selectedUser ? 'Edit User' : 'New User'}
+                        subtitle={selectedUser ? 'Update user information' : 'Create a new user account'}
+                    />
+                    <DialogContent>
+                        <form onSubmit={handleSubmit} className="space-y-4">
                                 {/* Basic Info */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
@@ -544,7 +532,7 @@ export default function UsersPage() {
                                             required
                                             value={formData.first_name}
                                             onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2C3E50] focus:border-transparent outline-none"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-dark focus:border-transparent outline-none"
                                             placeholder="Jane"
                                         />
                                     </div>
@@ -555,7 +543,7 @@ export default function UsersPage() {
                                             required
                                             value={formData.last_name}
                                             onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2C3E50] focus:border-transparent outline-none"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-dark focus:border-transparent outline-none"
                                             placeholder="Smith"
                                         />
                                     </div>
@@ -569,7 +557,7 @@ export default function UsersPage() {
                                         disabled={!!selectedUser}
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2C3E50] focus:border-transparent outline-none disabled:bg-gray-100"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-dark focus:border-transparent outline-none disabled:bg-gray-100"
                                         placeholder="jane.smith@example.com"
                                     />
                                 </div>
@@ -580,7 +568,7 @@ export default function UsersPage() {
                                         <select
                                             value={formData.role}
                                             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2C3E50] focus:border-transparent outline-none"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-dark focus:border-transparent outline-none"
                                         >
                                             <option value="student">Student</option>
                                             <option value="teacher">Instructor</option>
@@ -714,33 +702,32 @@ export default function UsersPage() {
                                     </div>
                                 )}
 
-                                <div className="flex gap-3 pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsUserModalOpen(false)}
-                                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={isSubmitting}
-                                        className="flex-1 px-4 py-2 bg-[#2C3E50] text-white rounded-lg font-medium hover:bg-[#34495E] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                                    >
-                                        {isSubmitting ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 animate-spin" />
-                                                Saving...
-                                            </>
-                                        ) : (
-                                            selectedUser ? 'Update User' : 'Create User'
-                                        )}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                        </form>
+                    </DialogContent>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsUserModalOpen(false)}
+                            className="flex-1"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleSubmit}
+                            disabled={isSubmitting}
+                            className="flex-1 gap-2"
+                        >
+                            {isSubmitting ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Saving...
+                                </>
+                            ) : (
+                                selectedUser ? 'Update User' : 'Create User'
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </Dialog>
             )}
         </>
     )

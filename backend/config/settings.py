@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'apps.messaging',
     'apps.inventory',
     'apps.notifications',
+    'apps.feature_flags',
 ]
 
 MIDDLEWARE = [
@@ -71,6 +72,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'apps.feature_flags.middleware.FeatureFlagMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'

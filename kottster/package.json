@@ -10,8 +10,8 @@
     "test": "jest"
   },
   "dependencies": {
-    "@kottster/server": "^1.0.0",
-    "@kottster/ui": "^1.0.0",
+    "@kottster/server": "^3.4.7",
+    "@kottster/react": "^3.4.7",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.11.3",

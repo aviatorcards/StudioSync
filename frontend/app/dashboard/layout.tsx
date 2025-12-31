@@ -8,6 +8,8 @@ import { ThemeProvider } from '@/components/ThemeProvider'
 import { AppearanceProvider } from '@/contexts/AppearanceContext'
 import { CommandPalette } from '@/components/CommandPalette'
 import ColorSchemeProvider from '@/components/ColorSchemeProvider'
+import { FeatureFlagsProvider } from '@/contexts/FeatureFlagsContext'
+import { FeatureFlagDebugger } from '@/components/FeatureFlagDebugger'
 
 export default function DashboardLayout({
     children,
@@ -26,10 +28,11 @@ export default function DashboardLayout({
 
     return (
         <AuthGuard>
-            <ThemeProvider>
-                <AppearanceProvider>
-                    <ColorSchemeProvider>
-                        <div className="flex h-screen bg-gray-50 overflow-x-hidden">
+            <FeatureFlagsProvider>
+                <ThemeProvider>
+                    <AppearanceProvider>
+                        <ColorSchemeProvider>
+                            <div className="flex h-screen bg-gray-50 overflow-x-hidden">
                             {/* Sidebar */}
                             <Sidebar isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
 
@@ -46,10 +49,14 @@ export default function DashboardLayout({
 
                             {/* Global Command Palette */}
                             <CommandPalette />
-                        </div>
-                    </ColorSchemeProvider>
-                </AppearanceProvider>
-            </ThemeProvider>
+
+                            {/* Feature Flag Debugger (dev only) */}
+                            <FeatureFlagDebugger />
+                            </div>
+                        </ColorSchemeProvider>
+                    </AppearanceProvider>
+                </ThemeProvider>
+            </FeatureFlagsProvider>
         </AuthGuard>
     )
 }

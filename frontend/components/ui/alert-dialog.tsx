@@ -95,11 +95,11 @@ export function AlertDialog({
       <DialogHeader title={title} />
       <DialogContent>
         <div className="flex items-start gap-4">
-          <div className={`flex-shrink-0 w-12 h-12 rounded-full ${config.bgColor} flex items-center justify-center`}>
-            <Icon className={`w-6 h-6 ${config.iconColor}`} />
+          <div className={`flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full ${config.bgColor} flex items-center justify-center`}>
+            <Icon className={`w-5 h-5 md:w-6 md:h-6 ${config.iconColor}`} />
           </div>
           <div className="flex-1">
-            <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+            <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
               {message}
             </p>
           </div>

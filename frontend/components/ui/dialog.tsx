@@ -65,10 +65,10 @@ function useDialogContext() {
 // ============================================================================
 
 const sizeClasses = {
-  sm: 'max-w-md',
-  md: 'max-w-2xl',
-  lg: 'max-w-4xl',
-  xl: 'max-w-6xl',
+  sm: 'max-w-[95vw] md:max-w-md',
+  md: 'max-w-[95vw] md:max-w-2xl',
+  lg: 'max-w-[95vw] md:max-w-4xl',
+  xl: 'max-w-[95vw] md:max-w-6xl',
 }
 
 // ============================================================================
@@ -174,7 +174,7 @@ export function Dialog({
   return (
     <DialogContext.Provider value={{ open, onOpenChange }}>
       <div
-        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+        className="fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
         onClick={handleBackdropClick}
         role="dialog"
         aria-modal="true"
@@ -182,7 +182,7 @@ export function Dialog({
         <div
           ref={contentRef}
           className={cn(
-            'bg-background w-full rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300',
+            'bg-background w-full rounded-xl md:rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300',
             sizeClasses[size]
           )}
           onClick={(e) => e.stopPropagation()}
@@ -218,19 +218,19 @@ export function DialogHeader({
   return (
     <div
       className={cn(
-        'bg-primary-dark px-8 py-6 flex items-center justify-between text-white',
+        'bg-primary-dark px-4 md:px-8 py-4 md:py-6 flex items-center justify-between text-white',
         className
       )}
       style={{
         backgroundColor: 'var(--color-primary-dark)',
       }}
     >
-      <div className="flex-1">
-        <h2 className="text-2xl font-black tracking-tight" id="dialog-title">
+      <div className="flex-1 min-w-0">
+        <h2 className="text-lg md:text-2xl font-black tracking-tight truncate" id="dialog-title">
           {title}
         </h2>
         {subtitle && (
-          <p className="text-white/60 text-xs font-bold uppercase tracking-widest mt-1">
+          <p className="text-white/60 text-[10px] md:text-xs font-bold uppercase tracking-widest mt-0.5 md:mt-1">
             {subtitle}
           </p>
         )}
@@ -240,10 +240,10 @@ export function DialogHeader({
           variant="ghost"
           size="icon"
           onClick={handleClose}
-          className="bg-white/10 hover:bg-white/20 text-white shadow-none ml-4 flex-shrink-0"
+          className="bg-white/10 hover:bg-white/20 text-white shadow-none ml-2 md:ml-4 flex-shrink-0 h-10 w-10 md:h-11 md:w-11 active:scale-95"
           aria-label="Close dialog"
         >
-          <X className="w-5 h-5" />
+          <X className="w-5 h-5 md:w-6 md:h-6" />
         </Button>
       )}
     </div>
@@ -258,7 +258,7 @@ export function DialogContent({ children, className }: DialogContentProps) {
   return (
     <div
       className={cn(
-        'p-8 max-h-[80vh] overflow-y-auto custom-scrollbar',
+        'p-4 md:p-8 max-h-[70vh] md:max-h-[80vh] overflow-y-auto custom-scrollbar',
         className
       )}
       id="dialog-description"
@@ -276,7 +276,7 @@ export function DialogFooter({ children, className }: DialogFooterProps) {
   return (
     <div
       className={cn(
-        'p-6 border-t border-gray-100 bg-gray-50 dark:bg-gray-900 dark:border-gray-800 flex gap-3 justify-end',
+        'p-4 md:p-6 border-t border-gray-100 bg-gray-50 dark:bg-gray-900 dark:border-gray-800 flex flex-col md:flex-row gap-2 md:gap-3 md:justify-end',
         className
       )}
     >

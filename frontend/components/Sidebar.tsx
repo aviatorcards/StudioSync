@@ -24,7 +24,8 @@ import {
     Package,
     FileText,
     Music,
-    X
+    X,
+    Flag
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -127,6 +128,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             items: [
                 { name: 'Studios', href: '/dashboard/studios', icon: Building2, roles: ['admin'] },
                 { name: 'Users', href: '/dashboard/users', icon: UserCog, roles: ['admin'] },
+                { name: 'Feature Flags', href: '/dashboard/feature-flags', icon: Flag, roles: ['admin'] },
             ],
         },
         {

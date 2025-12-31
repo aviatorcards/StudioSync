@@ -33,6 +33,14 @@ app.get('/health', (req, res) => {
 // Protected routes (require JWT authentication)
 app.use('/api', validateJWT);
 
+// Import API routes
+import featureFlagsRouter from './routes/featureFlags';
+import usersRouter from './routes/users';
+import studiosRouter from './routes/studios';
+import teachersRouter from './routes/teachers';
+import studentsRouter from './routes/students';
+import lessonsRouter from './routes/lessons';
+
 // API routes
 app.get('/api/status', (req, res) => {
   res.json({
@@ -41,6 +49,14 @@ app.get('/api/status', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+// Resource routes
+app.use('/api/feature-flags', featureFlagsRouter);
+app.use('/api/users', usersRouter);
+app.use('/api/studios', studiosRouter);
+app.use('/api/teachers', teachersRouter);
+app.use('/api/students', studentsRouter);
+app.use('/api/lessons', lessonsRouter);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

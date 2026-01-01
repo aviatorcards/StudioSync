@@ -22,7 +22,7 @@ import {
     Plus,
     ExternalLink
 } from 'lucide-react'
-import Modal from '@/components/ui/dialog'
+import Modal from '@/components/Modal'
 import { Button } from '@/components/ui/button'
 
 type ResourceType = 'pdf' | 'audio' | 'video' | 'image' | 'link' | 'other'

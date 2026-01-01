@@ -16,7 +16,7 @@ import {
     Plus
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import Modal from '@/components/ui/dialog'
+import Modal from '@/components/Modal'
 
 // --- Types ---
 interface TeacherProfile {

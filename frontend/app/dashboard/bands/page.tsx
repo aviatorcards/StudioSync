@@ -9,7 +9,7 @@ import {
 import { useUsers } from '@/hooks/useDashboardData'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
-import Modal from '@/components/ui/dialog'
+import Modal from '@/components/Modal'
 import { Button } from '@/components/ui/button'
 
 export default function BandsPage() {

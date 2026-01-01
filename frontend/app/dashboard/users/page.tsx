@@ -10,7 +10,7 @@ import {
     X, Loader2, UserPlus, Music, Link as LinkIcon, Edit, UserCog, Trash2,
     Search, ChevronLeft, ChevronRight, Users as UsersIcon, Mail, Shield
 } from 'lucide-react'
-import Modal from '@/components/ui/dialog'
+import Modal from '@/components/Modal'
 import { Button } from '@/components/ui/button'
 
 export default function UsersPage() {

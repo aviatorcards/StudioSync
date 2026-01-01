@@ -199,7 +199,7 @@ export default function UsersPage() {
     if (loading && users.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-20">
-                <Loader2 className="w-10 h-10 text-[#F39C12] animate-spin mb-4" />
+                <Loader2 className="w-10 h-10 text-[var(--color-primary)] animate-spin mb-4" />
                 <p className="text-gray-500 font-medium">Loading users...</p>
             </div>
         )
@@ -211,7 +211,7 @@ export default function UsersPage() {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Users</h1>
+                        <h1 className="text-2xl md:text-4xl font-bold text-gray-900">Users</h1>
                         <p className="text-sm text-gray-600 mt-1">Manage system users and roles</p>
                     </div>
                     <button

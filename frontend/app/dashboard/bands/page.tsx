@@ -152,7 +152,7 @@ export default function BandsPage() {
             {/* Header Section */}
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4">
                 <div className="space-y-2">
-                    <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">Bands & Groups</h1>
+                    <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">Bands & Groups</h1>
                     <p className="text-gray-500 font-medium max-w-lg">Orchestrate your musical ensembles and performance groups.</p>
                 </div>
                 <button

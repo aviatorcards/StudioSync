@@ -81,7 +81,7 @@ const formatDate = (date: Date | null): string => {
 const getStudentColor = (student: any) => {
     if (!student.is_active) return '#EF4444' // red for inactive
     // Use CSS variable for primary color (respects user's color scheme preference)
-    return 'var(--color-primary, #1ABC9C)'
+    return 'var(--color-primary, #A0522D)'
 }
 
 export default function StudentsPage() {
@@ -182,7 +182,7 @@ export default function StudentsPage() {
     if (loading && students.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-in fade-in duration-500">
-                <Loader2 className="w-10 h-10 animate-spin" style={{ color: 'var(--color-primary, #1ABC9C)' }} />
+                <Loader2 className="w-10 h-10 animate-spin" style={{ color: 'var(--color-primary, #A0522D)' }} />
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Loading Roster...</p>
             </div>
         )
@@ -193,7 +193,7 @@ export default function StudentsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
                 <div>
-                    <h1 className="text-xl md:text-4xl font-black text-gray-900 tracking-tight">Students</h1>
+                    <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">Students</h1>
                     <p className="text-xs md:text-lg text-gray-500 mt-0.5 md:mt-2 font-medium">Manage enrollments, track progress, and organize your studio roster.</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -333,62 +333,83 @@ export default function StudentsPage() {
                     </table>
                 </div>
 
-                {/* Mobile List View (Compact) */}
-                <div className="md:hidden space-y-0 bg-white rounded-xl border border-gray-100 shadow-md overflow-hidden">
-                    {students.length > 0 ? students.map((student: any, index: number) => (
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-3">
+                    {students.length > 0 ? students.map((student: any) => (
                         <div
                             key={student.id}
-                            className="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0"
-                            style={{ borderLeftWidth: '3px', borderLeftColor: getStudentColor(student) }}
+                            className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm"
+                            style={{ borderLeftWidth: '4px', borderLeftColor: getStudentColor(student) }}
                         >
-                            {/* Avatar */}
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-xs shadow-sm flex-shrink-0">
-                                {student.first_name?.[0] && student.last_name?.[0] ? (
-                                    <>{student.first_name[0]}{student.last_name[0]}</>
-                                ) : (
-                                    <User className="w-4 h-4" />
+                            {/* Header - Gray background with ID and Status */}
+                            <div className="bg-gray-50 px-4 py-3 flex items-center justify-between border-b border-gray-100">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-sm shadow-sm flex-shrink-0">
+                                        {student.first_name?.[0] && student.last_name?.[0] ? (
+                                            <>{student.first_name[0]}{student.last_name[0]}</>
+                                        ) : (
+                                            <User className="w-5 h-5" />
+                                        )}
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-medium text-gray-500">Student</p>
+                                        <p className="font-bold text-gray-900 text-sm">
+                                            {student.first_name && student.last_name
+                                                ? `${student.first_name} ${student.last_name}`
+                                                : student.name || student.email || 'Unknown Student'
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+                                {renderStatusBadge(student.is_active)}
+                            </div>
+
+                            {/* Body - White background with key-value pairs */}
+                            <div className="px-4 py-3 space-y-2">
+                                {student.email && (
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-600">Email:</span>
+                                        <span className="font-medium text-gray-900 truncate ml-2">{student.email}</span>
+                                    </div>
+                                )}
+                                {student.instrument && (
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-600">Instrument:</span>
+                                        <span className="font-medium text-gray-900">{student.instrument}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-600">Teacher:</span>
+                                    <span className="font-medium text-gray-900">{getTeacherName(student, teachers)}</span>
+                                </div>
+                                {student.lesson_count !== undefined && (
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-600">Lessons:</span>
+                                        <span className="font-medium text-gray-900">{student.lesson_count}</span>
+                                    </div>
                                 )}
                             </div>
 
-                            {/* Main Info */}
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-0.5">
-                                    <h3 className="text-sm font-bold text-gray-900 truncate">
-                                        {student.first_name && student.last_name
-                                            ? `${student.first_name} ${student.last_name}`
-                                            : student.name || student.email || 'Unknown Student'
-                                        }
-                                    </h3>
-                                    {renderStatusBadge(student.is_active)}
-                                </div>
-                                <div className="flex items-center gap-3 text-[10px] text-gray-500 font-medium">
-                                    {student.instrument && (
-                                        <span className="inline-flex items-center gap-1">
-                                            <Music className="w-2.5 h-2.5" />
-                                            {student.instrument}
-                                        </span>
-                                    )}
-                                    <span className="inline-flex items-center gap-1">
-                                        <User className="w-2.5 h-2.5" />
-                                        {getTeacherName(student, teachers)}
-                                    </span>
-                                </div>
+                            {/* Actions - Light gray background with buttons */}
+                            <div className="bg-gray-50 px-4 py-3 flex gap-2 border-t border-gray-100">
+                                <button
+                                    onClick={() => handleOpenEdit(student)}
+                                    className="flex-1 px-4 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors text-sm font-medium active:scale-95"
+                                >
+                                    Edit Student
+                                </button>
+                                <button
+                                    onClick={() => window.location.href = `/dashboard/students/${student.id}`}
+                                    className="px-4 py-2.5 border border-gray-200 text-gray-700 rounded-lg hover:bg-white transition-colors text-sm font-medium active:scale-95"
+                                >
+                                    View
+                                </button>
                             </div>
-
-                            {/* Action Button */}
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleOpenEdit(student)}
-                                className="text-gray-400 hover:text-primary h-8 w-8 flex-shrink-0"
-                            >
-                                <ChevronRight className="w-4 h-4" />
-                            </Button>
                         </div>
                     )) : (
-                        <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
-                            <GraduationCap className="w-10 h-10 text-gray-200" />
-                            <p className="text-gray-400 text-sm font-bold">No students found matching your filters.</p>
+                        <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
+                            <GraduationCap className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                            <p className="text-gray-500 font-medium">No students found matching your filters.</p>
                         </div>
                     )}
                 </div>

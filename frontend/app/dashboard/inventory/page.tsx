@@ -128,7 +128,7 @@ export default function InventoryPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
                 <div>
-                    <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 tracking-tight">Inventory</h1>
+                    <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">Inventory</h1>
                     <p className="text-[10px] sm:text-xs md:text-sm text-gray-500 mt-0.5 font-medium uppercase tracking-wide">Manage your studio equipment</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -137,7 +137,7 @@ export default function InventoryPage() {
                             setEditingItem(null)
                             setShowAddModal(true)
                         }}
-                        className="w-full sm:w-auto px-4 py-2 bg-[#F39C12] text-white rounded-lg hover:bg-[#E67E22] transition-all shadow-md text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 active:scale-95"
+                        className="w-full sm:w-auto px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-hover)] transition-all shadow-md text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 active:scale-95"
                     >
                         <Plus className="w-4 h-4" />
                         <span>Add Item</span>
@@ -187,7 +187,7 @@ export default function InventoryPage() {
                                             : 'text-gray-500 hover:text-gray-700'
                                             }`}
                                     >
-                                        <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#F39C12]' : 'text-gray-400'}`} />
+                                        <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[var(--color-primary)]' : 'text-gray-400'}`} />
                                         {cat.label}
                                     </button>
                                 )
@@ -202,7 +202,7 @@ export default function InventoryPage() {
                             <input
                                 type="text"
                                 placeholder="Search..."
-                                className="w-full sm:w-64 pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#F39C12] outline-none font-medium transition-shadow shadow-sm"
+                                className="w-full sm:w-64 pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[var(--color-primary)] outline-none font-medium transition-shadow shadow-sm"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -232,7 +232,7 @@ export default function InventoryPage() {
                                 <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center text-[#F39C12] font-bold">
+                                            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center text-[var(--color-primary)] font-bold">
                                                 {item.name[0]}
                                             </div>
                                             <div className="font-medium text-gray-900">{item.name}</div>
@@ -259,7 +259,7 @@ export default function InventoryPage() {
                                     <td className="px-6 py-4 whitespace-nowrap text-right">
                                         <button
                                             onClick={() => setEditingItem(item)}
-                                            className="text-gray-400 hover:text-[#F39C12] transition-colors"
+                                            className="text-gray-400 hover:text-[var(--color-primary)] transition-colors"
                                         >
                                             <Edit className="w-5 h-5" />
                                         </button>
@@ -285,7 +285,7 @@ export default function InventoryPage() {
                         <div key={item.id} className="p-4 space-y-3">
                             <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-3 flex-1">
-                                    <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center text-[#F39C12] font-bold text-lg shrink-0">
+                                    <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center text-[var(--color-primary)] font-bold text-lg shrink-0">
                                         {item.name[0]}
                                     </div>
                                     <div className="min-w-0">
@@ -295,7 +295,7 @@ export default function InventoryPage() {
                                 </div>
                                 <button
                                     onClick={() => setEditingItem(item)}
-                                    className="text-gray-400 hover:text-[#F39C12] p-2 shrink-0"
+                                    className="text-gray-400 hover:text-[var(--color-primary)] p-2 shrink-0"
                                 >
                                     <Edit className="w-5 h-5" />
                                 </button>
@@ -393,7 +393,7 @@ export default function InventoryPage() {
                                     <input
                                         type="text"
                                         defaultValue={editingItem?.name}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F39C12] focus:border-transparent outline-none"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
                                         placeholder="e.g. Yamaha Piano"
                                     />
                                 </div>
@@ -403,7 +403,7 @@ export default function InventoryPage() {
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                                         <select
                                             defaultValue={editingItem?.category || 'instrument'}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F39C12] focus:border-transparent outline-none"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
                                         >
                                             <option value="instrument">Instrument</option>
                                             <option value="equipment">Equipment</option>
@@ -416,7 +416,7 @@ export default function InventoryPage() {
                                         <input
                                             type="number"
                                             defaultValue={editingItem?.quantity || 1}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F39C12] focus:border-transparent outline-none"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
                                         />
                                     </div>
                                 </div>
@@ -427,14 +427,14 @@ export default function InventoryPage() {
                                         <input
                                             type="number"
                                             defaultValue={editingItem?.value}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F39C12] focus:border-transparent outline-none"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
                                         />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Condition</label>
                                         <select
                                             defaultValue={editingItem?.condition || 'good'}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F39C12] focus:border-transparent outline-none"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
                                         >
                                             <option value="excellent">Excellent</option>
                                             <option value="good">Good</option>
@@ -449,7 +449,7 @@ export default function InventoryPage() {
                                     <input
                                         type="text"
                                         defaultValue={editingItem?.location}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F39C12] focus:border-transparent outline-none"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
                                         placeholder="Room or shelf location"
                                     />
                                 </div>
@@ -459,7 +459,7 @@ export default function InventoryPage() {
                                     <textarea
                                         defaultValue={editingItem?.notes}
                                         rows={3}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F39C12] focus:border-transparent outline-none resize-none"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none resize-none"
                                         placeholder="Additional notes..."
                                     />
                                 </div>
@@ -483,7 +483,7 @@ export default function InventoryPage() {
                                         setEditingItem(null)
                                         toast.success(editingItem ? 'Item updated!' : 'Item added!')
                                     }}
-                                    className="flex-1 px-4 py-2 bg-[#F39C12] text-white rounded-lg font-medium hover:bg-[#E67E22] transition-colors"
+                                    className="flex-1 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg font-medium hover:bg-[var(--color-primary-hover)] transition-colors"
                                 >
                                     {editingItem ? 'Update' : 'Add'} Item
                                 </button>

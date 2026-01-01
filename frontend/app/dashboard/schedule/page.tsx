@@ -175,7 +175,7 @@ export default function SchedulePage() {
             {/* Header */}
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4">
                 <div className="space-y-2">
-                    <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">Schedule</h1>
+                    <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">Schedule</h1>
                     <p className="text-gray-500 font-medium max-w-lg">Orchestrate your weekly lesson calendar.</p>
                 </div>
                 <div className="grid grid-cols-4 gap-2 sm:gap-3 no-print">

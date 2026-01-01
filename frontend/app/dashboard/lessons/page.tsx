@@ -166,7 +166,7 @@ export default function LessonsPage() {
             {/* Page Header */}
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">Lessons & Plans</h1>
+                    <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">Lessons & Plans</h1>
                     <p className="text-base sm:text-lg text-gray-500 mt-2 font-medium">Manage schedules, attendance, and lesson plans.</p>
                 </div>
                 <div className="flex flex-wrap gap-3">

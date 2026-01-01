@@ -214,7 +214,7 @@ export default function BillingPage() {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-20">
-                <Loader2 className="w-10 h-10 text-[#F39C12] animate-spin mb-4" />
+                <Loader2 className="w-10 h-10 text-[var(--color-primary)] animate-spin mb-4" />
                 <p className="text-gray-500 font-bold tracking-wider uppercase text-xs">Loading Billing...</p>
             </div>
         )
@@ -224,7 +224,7 @@ export default function BillingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
             {/* Header */}
             <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Billing & Invoices</h1>
+                <h1 className="text-2xl md:text-4xl font-bold text-gray-900">Billing & Invoices</h1>
                 <p className="text-sm text-gray-600 mt-1">
                     {isManager ? 'Manage invoices and track payments' : 'View your invoices and payments'}
                 </p>
@@ -234,7 +234,7 @@ export default function BillingPage() {
             {isManager && (
                 <button
                     onClick={() => setShowCreateModal(true)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#F39C12] text-white rounded-lg hover:bg-[#E67E22] transition-colors font-medium shadow-sm"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors font-medium shadow-sm"
                 >
                     <Plus className="w-5 h-5" />
                     Create Invoice
@@ -282,7 +282,7 @@ export default function BillingPage() {
                         placeholder="Search invoices..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12]"
+                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
                     />
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
@@ -292,7 +292,7 @@ export default function BillingPage() {
                             onClick={() => setFilterStatus(filter.value)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                                 filterStatus === filter.value
-                                    ? 'bg-[#F39C12] text-white'
+                                    ? 'bg-[var(--color-primary)] text-white'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                         >
@@ -465,7 +465,7 @@ export default function BillingPage() {
                                 type="submit"
                                 form="create-invoice-form"
                                 disabled={creating}
-                                className="flex-1 px-4 py-2 bg-[#F39C12] text-white rounded-lg hover:bg-[#E67E22] transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="flex-1 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                                 {creating ? (
                                     <>
@@ -487,7 +487,7 @@ export default function BillingPage() {
                                     required
                                     value={newInvoice.student}
                                     onChange={(e) => setNewInvoice({ ...newInvoice, student: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12]"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
                                 >
                                     <option value="">Select student</option>
                                     {students.map(student => (
@@ -504,7 +504,7 @@ export default function BillingPage() {
                                     required
                                     value={newInvoice.dueDate}
                                     onChange={(e) => setNewInvoice({ ...newInvoice, dueDate: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12]"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
                                 />
                             </div>
                         </div>
@@ -516,7 +516,7 @@ export default function BillingPage() {
                                     type="button"
                                     onClick={addLineItem}
                                     disabled={newInvoice.line_items.length >= 10}
-                                    className="text-sm text-[#F39C12] hover:text-[#E67E22] font-medium disabled:opacity-50"
+                                    className="text-sm text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] font-medium disabled:opacity-50"
                                 >
                                     + Add Item
                                 </button>
@@ -530,7 +530,7 @@ export default function BillingPage() {
                                             required
                                             value={item.description}
                                             onChange={(e) => updateLineItem(index, 'description', e.target.value)}
-                                            className="col-span-12 md:col-span-6 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12] text-sm"
+                                            className="col-span-12 md:col-span-6 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] text-sm"
                                             placeholder="Description"
                                         />
                                         <input
@@ -538,7 +538,7 @@ export default function BillingPage() {
                                             required
                                             value={item.quantity}
                                             onChange={(e) => updateLineItem(index, 'quantity', e.target.value)}
-                                            className="col-span-4 md:col-span-2 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12] text-sm"
+                                            className="col-span-4 md:col-span-2 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] text-sm"
                                             placeholder="Qty"
                                             min="1"
                                         />
@@ -547,7 +547,7 @@ export default function BillingPage() {
                                             required
                                             value={item.unit_price}
                                             onChange={(e) => updateLineItem(index, 'unit_price', e.target.value)}
-                                            className="col-span-5 md:col-span-3 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12] text-sm"
+                                            className="col-span-5 md:col-span-3 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] text-sm"
                                             placeholder="Price"
                                             min="0"
                                             step="0.01"

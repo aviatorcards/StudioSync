@@ -234,14 +234,14 @@ export default function ProjectsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
             {/* Header */}
             <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Project Board</h1>
+                <h1 className="text-2xl md:text-4xl font-bold text-gray-900">Project Board</h1>
                 <p className="text-sm text-gray-600 mt-1">Manage studio tasks and projects</p>
             </div>
 
             {/* Add Task Button */}
             <button
                 onClick={() => setShowAddTaskModal(true)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#F39C12] text-white rounded-lg hover:bg-[#E67E22] transition-colors font-medium shadow-sm"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors font-medium shadow-sm"
             >
                 <Plus className="w-5 h-5" />
                 Add Task
@@ -282,7 +282,7 @@ export default function ProjectsPage() {
                             onClick={() => setSelectedColumnMobile(column.id)}
                             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                                 selectedColumnMobile === column.id
-                                    ? 'bg-[#F39C12] text-white'
+                                    ? 'bg-[var(--color-primary)] text-white'
                                     : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                             }`}
                         >
@@ -302,7 +302,7 @@ export default function ProjectsPage() {
                         onDragLeave={onDragLeave}
                         onDrop={(e) => onDrop(e, column.id)}
                     >
-                        <div className={`p-3 rounded-t-lg border-2 ${column.color} ${column.bgColor} ${dragOverColumnId === column.id ? 'ring-2 ring-[#F39C12]' : ''}`}>
+                        <div className={`p-3 rounded-t-lg border-2 ${column.color} ${column.bgColor} ${dragOverColumnId === column.id ? 'ring-2 ring-[var(--color-primary)]' : ''}`}>
                             <div className="flex items-center justify-between">
                                 <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wide">{column.title}</h3>
                                 <span className="bg-white px-2 py-0.5 rounded-full text-xs font-bold text-gray-700">
@@ -311,7 +311,7 @@ export default function ProjectsPage() {
                             </div>
                         </div>
 
-                        <div className={`flex-1 p-3 border-2 border-t-0 ${column.color} ${column.bgColor} rounded-b-lg space-y-3 min-h-[400px] transition-all ${dragOverColumnId === column.id ? 'ring-2 ring-[#F39C12] bg-opacity-70' : ''}`}>
+                        <div className={`flex-1 p-3 border-2 border-t-0 ${column.color} ${column.bgColor} rounded-b-lg space-y-3 min-h-[400px] transition-all ${dragOverColumnId === column.id ? 'ring-2 ring-[var(--color-primary)] bg-opacity-70' : ''}`}>
                             {column.tasks.map((task) => (
                                 <TaskCard key={task.id} task={task} columnId={column.id} />
                             ))}
@@ -379,7 +379,7 @@ export default function ProjectsPage() {
                                 <input
                                     type="text"
                                     required
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12]"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
                                     value={newTask.title}
                                     onChange={e => setNewTask({ ...newTask, title: e.target.value })}
                                     placeholder="Task title"
@@ -390,7 +390,7 @@ export default function ProjectsPage() {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                                 <textarea
                                     rows={3}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12]"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
                                     value={newTask.description}
                                     onChange={e => setNewTask({ ...newTask, description: e.target.value })}
                                     placeholder="Task description"
@@ -401,7 +401,7 @@ export default function ProjectsPage() {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
                                     <select
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12]"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
                                         value={newTask.priority}
                                         onChange={e => setNewTask({ ...newTask, priority: e.target.value })}
                                     >
@@ -415,7 +415,7 @@ export default function ProjectsPage() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
                                     <input
                                         type="date"
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12]"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
                                         value={newTask.dueDate}
                                         onChange={e => setNewTask({ ...newTask, dueDate: e.target.value })}
                                     />
@@ -425,7 +425,7 @@ export default function ProjectsPage() {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Assignee</label>
                                 <select
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12]"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
                                     value={newTask.assignee}
                                     onChange={e => setNewTask({ ...newTask, assignee: e.target.value })}
                                 >
@@ -448,7 +448,7 @@ export default function ProjectsPage() {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 px-4 py-2 bg-[#F39C12] text-white rounded-lg hover:bg-[#E67E22] transition-colors font-medium"
+                                    className="flex-1 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors font-medium"
                                 >
                                     Add Task
                                 </button>

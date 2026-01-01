@@ -78,7 +78,7 @@ export default function GoalsPage() {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-20">
-                <Loader2 className="w-10 h-10 text-[#F39C12] animate-spin mb-4" />
+                <Loader2 className="w-10 h-10 text-[var(--color-primary)] animate-spin mb-4" />
                 <p className="text-gray-500 font-bold tracking-wider uppercase text-xs">Loading Goals...</p>
             </div>
         )
@@ -88,14 +88,14 @@ export default function GoalsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
             {/* Header */}
             <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Student Goals</h1>
+                <h1 className="text-2xl md:text-4xl font-bold text-gray-900">Student Goals</h1>
                 <p className="text-sm text-gray-600 mt-1">Track student progress and achievements</p>
             </div>
 
             {/* Create Button */}
             <button
                 onClick={() => setIsModalOpen(true)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#F39C12] text-white rounded-lg hover:bg-[#E67E22] transition-colors font-medium shadow-sm"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors font-medium shadow-sm"
             >
                 <Plus className="w-5 h-5" />
                 Create Goal
@@ -139,7 +139,7 @@ export default function GoalsPage() {
                             onClick={() => setFilterStatus(filter.value)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                                 filterStatus === filter.value
-                                    ? 'bg-[#F39C12] text-white'
+                                    ? 'bg-[var(--color-primary)] text-white'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                         >
@@ -163,7 +163,7 @@ export default function GoalsPage() {
                                     <div className="text-xl font-bold text-gray-900">{goal.progress_percentage}%</div>
                                     <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden mt-1">
                                         <div
-                                            className="h-full bg-gradient-to-r from-[#F39C12] to-[#E67E22] rounded-full transition-all"
+                                            className="h-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-hover)] rounded-full transition-all"
                                             style={{ width: `${goal.progress_percentage}%` }}
                                         />
                                     </div>
@@ -213,7 +213,7 @@ export default function GoalsPage() {
                     {filterStatus === 'all' && (
                         <button
                             onClick={() => setIsModalOpen(true)}
-                            className="px-6 py-2 bg-[#F39C12] text-white rounded-lg hover:bg-[#E67E22] transition-colors font-medium"
+                            className="px-6 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors font-medium"
                         >
                             Create Goal
                         </button>
@@ -241,7 +241,7 @@ export default function GoalsPage() {
                                 <input
                                     type="text"
                                     required
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12]"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
                                     value={formData.title}
                                     onChange={e => setFormData({ ...formData, title: e.target.value })}
                                     placeholder="e.g., Master C Major Scale"
@@ -253,7 +253,7 @@ export default function GoalsPage() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Student *</label>
                                     <select
                                         required
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12]"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
                                         value={formData.student}
                                         onChange={e => setFormData({ ...formData, student: e.target.value })}
                                     >
@@ -281,7 +281,7 @@ export default function GoalsPage() {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Target Date</label>
                                 <input
                                     type="date"
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12]"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
                                     value={formData.target_date}
                                     onChange={e => setFormData({ ...formData, target_date: e.target.value })}
                                 />
@@ -291,7 +291,7 @@ export default function GoalsPage() {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                                 <textarea
                                     rows={3}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12]"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
                                     value={formData.description}
                                     onChange={e => setFormData({ ...formData, description: e.target.value })}
                                     placeholder="Details about the goal..."
@@ -309,7 +309,7 @@ export default function GoalsPage() {
                                 <button
                                     type="submit"
                                     disabled={creating}
-                                    className="flex-1 px-4 py-2 bg-[#F39C12] text-white rounded-lg hover:bg-[#E67E22] transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                                    className="flex-1 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                     {creating ? (
                                         <>

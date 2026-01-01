@@ -11,7 +11,7 @@ JAZZMIN_SETTINGS = {
     
     # Welcome text on the login screen
     "welcome_sign": "Welcome to Music Studio Manager",
-    "copyright": "Built with 💜",
+    "copyright": "Built with StudioSync",
     
     # Search on the top nav bar
     "search_model": ["core.User", "core.Student", "core.Band"],
@@ -86,7 +86,7 @@ JAZZMIN_SETTINGS = {
     "related_modal_active": False,
     
     # Custom CSS/JS
-    "custom_css": None,
+    "custom_css": "admin/css/custom_admin.css",
     "custom_js": None,
     
     # Show language chooser
@@ -105,22 +105,22 @@ JAZZMIN_UI_TWEAKS = {
     "footer_small_text": False,
     "body_small_text": False,
     "brand_small_text": False,
-    "brand_colour": "navbar-purple",
-    "accent": "accent-primary",
-    "navbar": "navbar-purple navbar-dark",
+    "brand_colour": "navbar-dark",
+    "accent": "accent-olive",
+    "navbar": "navbar-dark navbar-brown",
     "no_navbar_border": False,
     "navbar_fixed": True,
     "layout_boxed": False,
     "footer_fixed": False,
     "sidebar_fixed": True,
-    "sidebar": "sidebar-dark-purple",
+    "sidebar": "sidebar-dark-brown",
     "sidebar_nav_small_text": False,
     "sidebar_disable_expand": False,
     "sidebar_nav_child_indent": False,
     "sidebar_nav_compact_style": False,
     "sidebar_nav_legacy_style": False,
     "sidebar_nav_flat_style": True,
-    "theme": "darkly",  # Options: default, cerulean, cosmo, cyborg, darkly, flatly, journal, litera, lumen, lux, materia, minty, pulse, sandstone, simplex, slate, solar, spacelab, superhero, united, yeti
+    "theme": "flatly",  # Options: default, cerulean, cosmo, cyborg, darkly, flatly, journal, litera, lumen, lux, materia, minty, pulse, sandstone, simplex, slate, solar, spacelab, superhero, united, yeti
     "dark_mode_theme": None,
     "button_classes": {
         "primary": "btn-primary",

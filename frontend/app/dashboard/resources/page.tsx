@@ -243,7 +243,7 @@ export default function ResourcesPage() {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-20">
-                <Loader2 className="w-10 h-10 text-[#F39C12] animate-spin mb-4" />
+                <Loader2 className="w-10 h-10 text-[var(--color-primary)] animate-spin mb-4" />
                 <p className="text-gray-500 font-bold tracking-wider uppercase text-xs">Loading Resources...</p>
             </div>
         )
@@ -253,14 +253,14 @@ export default function ResourcesPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
             {/* Header */}
             <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Resource Library</h1>
+                <h1 className="text-2xl md:text-4xl font-bold text-gray-900">Resource Library</h1>
                 <p className="text-sm text-gray-600 mt-1">Upload and manage teaching materials</p>
             </div>
 
             {/* Upload Button */}
             <button
                 onClick={() => setShowUploadModal(true)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#F39C12] text-white rounded-lg hover:bg-[#E67E22] transition-colors font-medium shadow-sm"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors font-medium shadow-sm"
             >
                 <Upload className="w-5 h-5" />
                 Upload Resource
@@ -311,7 +311,7 @@ export default function ResourcesPage() {
                             onClick={() => setFilterType(type.value)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                                 filterType === type.value
-                                    ? 'bg-[#F39C12] text-white'
+                                    ? 'bg-[var(--color-primary)] text-white'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                         >
@@ -364,7 +364,7 @@ export default function ResourcesPage() {
                             <div className="mt-3 flex gap-2">
                                 <button
                                     onClick={() => handleDownload(resource)}
-                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#F39C12] text-white rounded-lg hover:bg-[#E67E22] transition-colors text-sm font-medium"
+                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors text-sm font-medium"
                                 >
                                     {resource.resource_type === 'link' ? (
                                         <>
@@ -409,7 +409,7 @@ export default function ResourcesPage() {
                     {!searchQuery && filterType === 'all' && (
                         <button
                             onClick={() => setShowUploadModal(true)}
-                            className="px-6 py-2 bg-[#F39C12] text-white rounded-lg hover:bg-[#E67E22] transition-colors font-medium"
+                            className="px-6 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors font-medium"
                         >
                             Upload Resource
                         </button>

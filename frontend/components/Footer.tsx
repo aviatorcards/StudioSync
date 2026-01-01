@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Github } from 'lucide-react'
 import { Logo } from '@/components/Logo'
+import CurrentYear from './CurrentYear'
 
 export default function Footer() {
     return (
@@ -81,7 +82,7 @@ export default function Footer() {
                     <div className="mt-8 pt-8 border-t border-gray-200">
                         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                             <p className="text-gray-500 text-sm">
-                                © {new Date().getFullYear()} StudioSync. Open source software built with 💜
+                                © <CurrentYear /> StudioSync. Open source software built with 💜
                             </p>
                             <div className="flex gap-6">
                                 <Link href="/privacy" className="text-gray-500 hover:text-[#F39C12] text-sm transition-colors">

@@ -158,23 +158,12 @@ class BandRepertoire(models.Model):
 
 ## 🎯 Next Immediate Steps
 
-1. **Test Backend Login Fix**
-   - Restart Docker containers
-   - Test login with admin@test.com
-   - Verify no module errors
-
-2. **Update Notification Frontend**
+1. **Update Notification Frontend**
    - Replace user preferences with API calls
    - Add polling for real-time updates
    - Test mark as read functionality
 
-3. **Run Notification Migrations**
-   ```bash
-   docker-compose exec backend python manage.py makemigrations notifications
-   docker-compose exec backend python manage.py migrate notifications
-   ```
-
-4. **Plan Classes & Bands Feature**
+2. **Plan Classes & Bands Feature**
    - Design database schema
    - Create wireframes for UI
    - Implement backend models

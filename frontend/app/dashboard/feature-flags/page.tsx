@@ -50,7 +50,7 @@ export default function FeatureFlagsPage() {
       if (!res.ok) throw new Error('Failed to fetch flags')
 
       const data = await res.json()
-      setFlags(data)
+      setFlags(data.results)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {

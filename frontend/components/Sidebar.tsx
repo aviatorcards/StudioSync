@@ -25,7 +25,8 @@ import {
     FileText,
     Music,
     X,
-    Flag
+    Flag,
+    ShieldCheck
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -183,33 +184,57 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     return (
                         <div key={sectionIdx} className="mb-6">
                             {section.title && (
-                                <h3 className="px-6 text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">
+                                <h3 className="px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                                     {section.title}
                                 </h3>
                             )}
                             <ul className="space-y-1 px-3">
-                                {visibleItems.map((item) => (
-                                    <li key={item.href}>
-                                        <Link
-                                            href={item.href}
-                                            onClick={onClose}
-                                            className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${isActive(item.href)
-                                                ? 'bg-white/10 text-white font-medium'
-                                                : 'text-white/70 hover:bg-white/5 hover:text-white'
-                                                }`}
-                                        >
+                                {visibleItems.map((item) => {
+                                    const isExternal = item.href.startsWith('http')
+                                    const linkContent = (
+                                        <>
                                             <div className="flex items-center space-x-3">
                                                 <item.icon className="w-5 h-5" />
                                                 <span className="text-sm">{item.name}</span>
                                             </div>
                                             {item.badge && (
-                                                <span className="bg-[#F39C12] text-white text-xs px-2 py-0.5 rounded-full font-medium">
+                                                <span className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full font-medium">
                                                     {item.badge}
                                                 </span>
                                             )}
-                                        </Link>
-                                    </li>
-                                ))}
+                                        </>
+                                    )
+
+                                    if (isExternal) {
+                                        return (
+                                            <li key={item.href}>
+                                                <a
+                                                    href={item.href}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900`}
+                                                >
+                                                    {linkContent}
+                                                </a>
+                                            </li>
+                                        )
+                                    }
+
+                                    return (
+                                        <li key={item.href}>
+                                            <Link
+                                                href={item.href}
+                                                onClick={onClose}
+                                                className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${isActive(item.href)
+                                                    ? 'bg-primary text-white font-medium'
+                                                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                                                    }`}
+                                            >
+                                                {linkContent}
+                                            </Link>
+                                        </li>
+                                    )
+                                })}
                             </ul>
                         </div>
                     )
@@ -221,7 +246,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     return (
         <>
             {/* Desktop Sidebar - Always visible on md+ screens */}
-            <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 bg-[#2C3E50] text-white flex-col z-30">
+            <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 bg-gray-100 text-gray-900 flex-col z-30">
                 <SidebarContent />
             </aside>
 
@@ -245,7 +270,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             animate={{ x: 0 }}
                             exit={{ x: '-100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="fixed left-0 top-0 h-screen w-64 bg-[#2C3E50] text-white flex flex-col z-[101] md:hidden"
+                            className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white flex flex-col z-[101] md:hidden"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Close button */}

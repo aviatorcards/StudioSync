@@ -16,7 +16,7 @@ import {
     Plus
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
+import Modal from '@/components/ui/dialog'
 
 // --- Types ---
 interface TeacherProfile {
@@ -420,125 +420,121 @@ export default function StudentsPage() {
 
             {/* --- Edit Modal (Overhaul) --- */}
             {isEditModalOpen && selectedStudent && (
-                <Dialog
-                    open={isEditModalOpen}
-                    onOpenChange={setIsEditModalOpen}
-                    size="md"
+                <Modal
+                    isOpen={isEditModalOpen}
+                    onClose={() => setIsEditModalOpen(false)}
+                    title={`${formData.first_name} ${formData.last_name}`}
+                    footer={
+                        <>
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsEditModalOpen(false)}
+                                className="flex-1"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleSubmit}
+                                disabled={isSubmitting}
+                                className="flex-[2] gap-2"
+                            >
+                                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
+                            </Button>
+                        </>
+                    }
                 >
-                    <DialogHeader
-                        title={`${formData.first_name} ${formData.last_name}`}
-                        subtitle="Edit Student Details"
-                    />
-                    <DialogContent>
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">First Name</label>
-                                    <input
-                                        required
-                                        value={formData.first_name}
-                                        onChange={e => setFormData({ ...formData, first_name: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Last Name</label>
-                                    <input
-                                        required
-                                        value={formData.last_name}
-                                        onChange={e => setFormData({ ...formData, last_name: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
-                                    />
-                                </div>
-                                <div className="space-y-2 md:col-span-2">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Email Address</label>
-                                    <input
-                                        type="email"
-                                        required
-                                        value={formData.email}
-                                        onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
-                                    />
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">First Name</label>
+                                <input
+                                    required
+                                    value={formData.first_name}
+                                    onChange={e => setFormData({ ...formData, first_name: e.target.value })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Last Name</label>
+                                <input
+                                    required
+                                    value={formData.last_name}
+                                    onChange={e => setFormData({ ...formData, last_name: e.target.value })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Email Address</label>
+                                <input
+                                    type="email"
+                                    required
+                                    value={formData.email}
+                                    onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="h-px bg-gray-100" />
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Instrument</label>
+                                <select
+                                    value={formData.instrument}
+                                    onChange={e => setFormData({ ...formData, instrument: e.target.value })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                >
+                                    <option value="">Select Instrument...</option>
+                                    {allInstruments.map(i => <option key={i} value={i}>{i}</option>)}
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Skill Level</label>
+                                <select
+                                    value={formData.skill_level}
+                                    onChange={e => setFormData({ ...formData, skill_level: e.target.value })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                >
+                                    <option value="Beginner">Beginner</option>
+                                    <option value="Intermediate">Intermediate</option>
+                                    <option value="Advanced">Advanced</option>
+                                    <option value="Professional">Professional</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Primary Teacher</label>
+                                <select
+                                    value={formData.primary_teacher}
+                                    onChange={e => setFormData({ ...formData, primary_teacher: e.target.value })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                >
+                                    <option value="">Unassigned</option>
+                                    {teachers.map((t: any) => (
+                                        <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Status</label>
+                                <div className="flex items-center gap-4 px-4 py-3 bg-gray-50 rounded-xl h-[50px]">
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.is_active}
+                                            onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                    </label>
+                                    <span className="text-sm font-bold text-gray-700">
+                                        {formData.is_active ? 'Active' : 'Inactive'}
+                                    </span>
                                 </div>
                             </div>
-
-                            <div className="h-px bg-gray-100" />
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Instrument</label>
-                                    <select
-                                        value={formData.instrument}
-                                        onChange={e => setFormData({ ...formData, instrument: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
-                                    >
-                                        <option value="">Select Instrument...</option>
-                                        {allInstruments.map(i => <option key={i} value={i}>{i}</option>)}
-                                    </select>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Skill Level</label>
-                                    <select
-                                        value={formData.skill_level}
-                                        onChange={e => setFormData({ ...formData, skill_level: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
-                                    >
-                                        <option value="Beginner">Beginner</option>
-                                        <option value="Intermediate">Intermediate</option>
-                                        <option value="Advanced">Advanced</option>
-                                        <option value="Professional">Professional</option>
-                                    </select>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Primary Teacher</label>
-                                    <select
-                                        value={formData.primary_teacher}
-                                        onChange={e => setFormData({ ...formData, primary_teacher: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
-                                    >
-                                        <option value="">Unassigned</option>
-                                        {teachers.map((t: any) => (
-                                            <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Status</label>
-                                    <div className="flex items-center gap-4 px-4 py-3 bg-gray-50 rounded-xl h-[50px]">
-                                        <label className="relative inline-flex items-center cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={formData.is_active}
-                                                onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
-                                                className="sr-only peer"
-                                            />
-                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                                        </label>
-                                        <span className="text-sm font-bold text-gray-700">
-                                            {formData.is_active ? 'Active' : 'Inactive'}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                    </DialogContent>
-                    <DialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={() => setIsEditModalOpen(false)}
-                            className="flex-1"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleSubmit}
-                            disabled={isSubmitting}
-                            className="flex-[2] gap-2"
-                        >
-                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
-                        </Button>
-                    </DialogFooter>
-                </Dialog>
+                        </div>
+                    </form>
+                </Modal>
             )}
         </div>
     )

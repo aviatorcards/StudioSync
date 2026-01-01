@@ -45,9 +45,12 @@ class FeatureFlagViewSet(viewsets.ModelViewSet):
     
     def _evaluate_flags_for_user(self, user):
         """Evaluate all active flags for a user"""
-        flags = {}
+        flags = []
         for flag in FeatureFlag.objects.filter(is_active=True):
-            flags[flag.key] = self._check_flag_instance(flag, user)
+            flags.append({
+                "key": flag.key,
+                "value": self._check_flag_instance(flag, user)
+            })
         return flags
     
     def _check_flag(self, key, user):

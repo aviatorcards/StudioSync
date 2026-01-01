@@ -9,7 +9,7 @@ import {
 import { useUsers } from '@/hooks/useDashboardData'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
-import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
+import Modal from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 
 export default function BandsPage() {
@@ -292,201 +292,195 @@ export default function BandsPage() {
 
             {/* Band Modal */}
             {(isAddModalOpen || isEditModalOpen) && (
-                <Dialog
-                    open={isAddModalOpen || isEditModalOpen}
-                    onOpenChange={(open) => {
-                        if (!open) {
-                            setIsAddModalOpen(false);
-                            setIsEditModalOpen(false);
-                            setStudentSearchTerm('');
-                        }
+                <Modal
+                    isOpen={isAddModalOpen || isEditModalOpen}
+                    onClose={() => {
+                        setIsAddModalOpen(false);
+                        setIsEditModalOpen(false);
+                        setStudentSearchTerm('');
                     }}
-                    size="md"
+                    title={isEditModalOpen ? 'Band Configuration' : 'New Ensemble'}
+                    footer={
+                        <>
+                            <Button
+                                variant="outline"
+                                onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); setStudentSearchTerm(''); }}
+                                className="flex-1"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleSubmit}
+                                disabled={isSubmitting}
+                                className="flex-[2] gap-2"
+                            >
+                                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : isEditModalOpen ? 'Update Ensemble' : 'Create Ensemble'}
+                            </Button>
+                        </>
+                    }
                 >
-                    <DialogHeader
-                        title={isEditModalOpen ? 'Band Configuration' : 'New Ensemble'}
-                        subtitle="Group Identity & Logistics"
-                    />
-                    <DialogContent>
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Ensemble Name</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
-                                        placeholder="e.g. Midnight Jazz Collective"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Genre / Style</label>
-                                    <input
-                                        type="text"
-                                        value={formData.genre}
-                                        onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
-                                        placeholder="e.g. Fusion Jazz"
-                                    />
-                                </div>
-                            </div>
-
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Band Photo</label>
-                                <div className="group relative w-full h-40 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl overflow-hidden hover:border-primary hover:bg-gray-100 transition-all cursor-pointer">
-                                    {formData.photoPreview ? (
-                                        <>
-                                            <img src={formData.photoPreview} className="w-full h-full object-cover" alt="Band Preview" />
-                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <div className="flex flex-col items-center text-white">
-                                                    <Camera className="w-8 h-8 mb-2" />
-                                                    <span className="text-xs font-bold uppercase tracking-widest">Change Photo</span>
-                                                </div>
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Ensemble Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                    placeholder="e.g. Midnight Jazz Collective"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Genre / Style</label>
+                                <input
+                                    type="text"
+                                    value={formData.genre}
+                                    onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                    placeholder="e.g. Fusion Jazz"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Band Photo</label>
+                            <div className="group relative w-full h-40 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl overflow-hidden hover:border-primary hover:bg-gray-100 transition-all cursor-pointer">
+                                {formData.photoPreview ? (
+                                    <>
+                                        <img src={formData.photoPreview} className="w-full h-full object-cover" alt="Band Preview" />
+                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="flex flex-col items-center text-white">
+                                                <Camera className="w-8 h-8 mb-2" />
+                                                <span className="text-xs font-bold uppercase tracking-widest">Change Photo</span>
                                             </div>
-                                        </>
-                                    ) : (
-                                        <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
-                                            <Camera className="w-8 h-8 mb-2 group-hover:scale-110 group-hover:text-primary transition-all" />
-                                            <span className="text-xs font-bold uppercase tracking-widest">Click to Upload</span>
                                         </div>
-                                    )}
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) => {
-                                            const file = e.target.files?.[0]
-                                            if (file) {
-                                                setFormData({
-                                                    ...formData,
-                                                    photo: file,
-                                                    photoPreview: URL.createObjectURL(file)
-                                                })
-                                            }
-                                        }}
-                                        className="absolute inset-0 opacity-0 cursor-pointer"
-                                    />
-                                </div>
+                                    </>
+                                ) : (
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
+                                        <Camera className="w-8 h-8 mb-2 group-hover:scale-110 group-hover:text-primary transition-all" />
+                                        <span className="text-xs font-bold uppercase tracking-widest">Click to Upload</span>
+                                    </div>
+                                )}
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0]
+                                        if (file) {
+                                            setFormData({
+                                                ...formData,
+                                                photo: file,
+                                                photoPreview: URL.createObjectURL(file)
+                                            })
+                                        }
+                                    }}
+                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Ensemble Members</label>
+                                <span className="px-2.5 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest rounded-full border border-primary/20">
+                                    {formData.member_ids.length} Selected
+                                </span>
                             </div>
 
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Ensemble Members</label>
-                                    <span className="px-2.5 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest rounded-full border border-primary/20">
-                                        {formData.member_ids.length} Selected
-                                    </span>
-                                </div>
+                            <div className="relative">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search students to recruit..."
+                                    value={studentSearchTerm}
+                                    onChange={(e) => setStudentSearchTerm(e.target.value)}
+                                    className="w-full pl-11 pr-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl text-sm font-bold text-gray-700 outline-none transition-all"
+                                />
+                            </div>
 
-                                <div className="relative">
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        placeholder="Search students to recruit..."
-                                        value={studentSearchTerm}
-                                        onChange={(e) => setStudentSearchTerm(e.target.value)}
-                                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl text-sm font-bold text-gray-700 outline-none transition-all"
-                                    />
-                                </div>
-
-                                <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl p-4 max-h-[300px] overflow-y-auto space-y-2 custom-scrollbar">
-                                    {students
+                            <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl p-4 max-h-[300px] overflow-y-auto space-y-2 custom-scrollbar">
+                                {students
+                                    .filter((s: any) => {
+                                        const term = studentSearchTerm.toLowerCase();
+                                        return `${s.first_name} ${s.last_name}`.toLowerCase().includes(term) ||
+                                            (s.student_profile?.instrument || '').toLowerCase().includes(term)
+                                    })
+                                    .length > 0 ? (
+                                    students
                                         .filter((s: any) => {
                                             const term = studentSearchTerm.toLowerCase();
                                             return `${s.first_name} ${s.last_name}`.toLowerCase().includes(term) ||
                                                 (s.student_profile?.instrument || '').toLowerCase().includes(term)
                                         })
-                                        .length > 0 ? (
-                                        students
-                                            .filter((s: any) => {
-                                                const term = studentSearchTerm.toLowerCase();
-                                                return `${s.first_name} ${s.last_name}`.toLowerCase().includes(term) ||
-                                                    (s.student_profile?.instrument || '').toLowerCase().includes(term)
-                                            })
-                                            .map((student: any) => {
-                                                const studentId = student.student_profile?.id || student.id;
-                                                const isSelected = formData.member_ids.includes(studentId);
-                                                return (
-                                                    <button
-                                                        key={student.id}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            const newMembers = isSelected
-                                                                ? formData.member_ids.filter((id: string) => id !== studentId)
-                                                                : [...formData.member_ids, studentId]
-                                                            setFormData({ ...formData, member_ids: newMembers })
-                                                        }}
-                                                        className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${isSelected
-                                                            ? 'bg-primary text-white shadow-md'
-                                                            : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-100'
-                                                            }`}
-                                                    >
-                                                        <div className="flex items-center gap-3">
-                                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-black text-xs ${isSelected ? 'bg-white/20' : 'bg-gray-50'}`}>
-                                                                {student.first_name[0]}{student.last_name[0]}
-                                                            </div>
-                                                            <div className="text-left">
-                                                                <div className="text-sm font-bold leading-none mb-1">{student.first_name} {student.last_name}</div>
-                                                                <div className={`text-[10px] font-medium ${isSelected ? 'text-white/70' : 'text-gray-400'}`}>{student.student_profile?.instrument || 'No Instrument'}</div>
-                                                            </div>
+                                        .map((student: any) => {
+                                            const studentId = student.student_profile?.id || student.id;
+                                            const isSelected = formData.member_ids.includes(studentId);
+                                            return (
+                                                <button
+                                                    key={student.id}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const newMembers = isSelected
+                                                            ? formData.member_ids.filter((id: string) => id !== studentId)
+                                                            : [...formData.member_ids, studentId]
+                                                        setFormData({ ...formData, member_ids: newMembers })
+                                                    }}
+                                                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${isSelected
+                                                        ? 'bg-primary text-white shadow-md'
+                                                        : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-100'
+                                                        }`}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-black text-xs ${isSelected ? 'bg-white/20' : 'bg-gray-50'}`}>
+                                                            {student.first_name[0]}{student.last_name[0]}
                                                         </div>
-                                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isSelected ? 'bg-white/20' : 'bg-gray-100'}`}>
-                                                            {isSelected ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4 text-gray-400" />}
+                                                        <div className="text-left">
+                                                            <div className="text-sm font-bold leading-none mb-1">{student.first_name} {student.last_name}</div>
+                                                            <div className={`text-[10px] font-medium ${isSelected ? 'text-white/70' : 'text-gray-400'}`}>{student.student_profile?.instrument || 'No Instrument'}</div>
                                                         </div>
-                                                    </button>
-                                                )
-                                            })
-                                    ) : (
-                                        <div className="py-12 text-center">
-                                            <UserPlus className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-                                            <p className="text-xs uppercase font-bold text-gray-400 tracking-widest">No Students Found</p>
-                                        </div>
-                                    )}
-                                </div>
+                                                    </div>
+                                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isSelected ? 'bg-white/20' : 'bg-gray-100'}`}>
+                                                        {isSelected ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4 text-gray-400" />}
+                                                    </div>
+                                                </button>
+                                            )
+                                        })
+                                ) : (
+                                    <div className="py-12 text-center">
+                                        <UserPlus className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+                                        <p className="text-xs uppercase font-bold text-gray-400 tracking-widest">No Students Found</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Billing Email</label>
+                                <input
+                                    type="email"
+                                    required
+                                    value={formData.billing_email}
+                                    onChange={(e) => setFormData({ ...formData, billing_email: e.target.value })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                    placeholder="billing@collective.com"
+                                />
                             </div>
 
-                            <div className="space-y-6">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Billing Email</label>
-                                    <input
-                                        type="email"
-                                        required
-                                        value={formData.billing_email}
-                                        onChange={(e) => setFormData({ ...formData, billing_email: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
-                                        placeholder="billing@collective.com"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Notes</label>
-                                    <textarea
-                                        value={formData.notes}
-                                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all min-h-[100px] resize-none"
-                                        placeholder="Define performance goals or group dynamics..."
-                                    />
-                                </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Notes</label>
+                                <textarea
+                                    value={formData.notes}
+                                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all min-h-[100px] resize-none"
+                                    placeholder="Define performance goals or group dynamics..."
+                                />
                             </div>
-                        </form>
-                    </DialogContent>
-                    <DialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); setStudentSearchTerm(''); }}
-                            className="flex-1"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleSubmit}
-                            disabled={isSubmitting}
-                            className="flex-[2] gap-2"
-                        >
-                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : isEditModalOpen ? 'Update Ensemble' : 'Create Ensemble'}
-                        </Button>
-                    </DialogFooter>
-                </Dialog>
+                        </div>
+                    </form>
+                </Modal>
             )}
         </div>
     )

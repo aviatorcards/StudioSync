@@ -22,7 +22,7 @@ import {
     Plus,
     ExternalLink
 } from 'lucide-react'
-import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
+import Modal from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 
 type ResourceType = 'pdf' | 'audio' | 'video' | 'image' | 'link' | 'other'
@@ -419,16 +419,39 @@ export default function ResourcesPage() {
 
             {/* Upload Modal */}
             {showUploadModal && (
-                <Dialog
-                    open={showUploadModal}
-                    onOpenChange={setShowUploadModal}
-                    size="md"
+                <Modal
+                    isOpen={showUploadModal}
+                    onClose={() => setShowUploadModal(false)}
+                    title="Upload Resource"
+                    footer={
+                        <>
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowUploadModal(false)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleUpload}
+                                disabled={uploading}
+                                className="gap-2"
+                            >
+                                {uploading ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Uploading...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Upload className="w-4 h-4" />
+                                        Upload
+                                    </>
+                                )}
+                            </Button>
+                        </>
+                    }
                 >
-                    <DialogHeader
-                        title="Upload Resource"
-                        subtitle="Share Materials & Content"
-                    />
-                    <DialogContent className="space-y-4">
+                    <div className="space-y-4">
                             {/* Resource Type */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -564,33 +587,8 @@ export default function ResourcesPage() {
                                     className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                                 />
                             </div>
-                    </DialogContent>
-                    <DialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={() => setShowUploadModal(false)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleUpload}
-                            disabled={uploading}
-                            className="gap-2"
-                        >
-                            {uploading ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    Uploading...
-                                </>
-                            ) : (
-                                <>
-                                    <Upload className="w-4 h-4" />
-                                    Upload
-                                </>
-                            )}
-                        </Button>
-                    </DialogFooter>
-                </Dialog>
+                    </div>
+                </Modal>
             )}
         </div>
     )

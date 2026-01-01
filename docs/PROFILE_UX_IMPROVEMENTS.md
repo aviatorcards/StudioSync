@@ -105,8 +105,7 @@ If avatar upload still fails after these changes:
 
 1. **Check console** for exact error message
 2. **Check Django logs** for backend errors
-3. **Verify file upload** in Django admin
-4. **Test with curl**:
+3. **Test with curl**:
 ```bash
 curl -X PATCH http://localhost:8000/api/core/users/me/ \
   -H "Authorization: Bearer YOUR_TOKEN" \

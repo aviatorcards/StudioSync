@@ -2,10 +2,11 @@
 
 import { createContext, useContext, useEffect, ReactNode } from 'react'
 import { useUser } from './UserContext'
+import { applyColorScheme, getStoredColorScheme, colorSchemes } from '@/lib/colors'
 
 interface AppearanceContextType {
     theme: 'light' | 'dark' | 'auto'
-    colorScheme: 'default' | 'blue' | 'green' | 'purple'
+    colorScheme: keyof typeof colorSchemes
     fontSize: 'small' | 'medium' | 'large'
     compactMode: boolean
 }
@@ -22,7 +23,7 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
 
     const appearance: AppearanceContextType = {
         theme: currentUser?.preferences?.appearance?.theme || 'light',
-        colorScheme: currentUser?.preferences?.appearance?.color_scheme || 'default',
+        colorScheme: currentUser?.preferences?.appearance?.color_scheme || getStoredColorScheme(),
         fontSize: currentUser?.preferences?.appearance?.font_size || 'medium',
         compactMode: currentUser?.preferences?.appearance?.compact_mode || false
     }
@@ -45,14 +46,8 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
             document.documentElement.classList.remove('dark')
         }
 
-        // Apply color scheme as CSS variable
-        const colorMap = {
-            default: '#F39C12',
-            blue: '#3498DB',
-            green: '#27AE60',
-            purple: '#9B59B6'
-        }
-        document.documentElement.style.setProperty('--primary-color', colorMap[appearance.colorScheme])
+        // Apply color scheme
+        applyColorScheme(appearance.colorScheme)
 
         // Apply font size
         const fontSizeMap = {

@@ -448,215 +448,199 @@ export default function BillingPage() {
 
             {/* Create Invoice Modal */}
             {showCreateModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowCreateModal(false)}>
-                    <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                            <h2 className="text-xl font-bold text-gray-900">Create New Invoice</h2>
+                <Modal
+                    isOpen={showCreateModal}
+                    onClose={() => setShowCreateModal(false)}
+                    title="Create New Invoice"
+                    footer={
+                        <>
                             <button
+                                type="button"
                                 onClick={() => setShowCreateModal(false)}
-                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                             >
-                                <X className="w-5 h-5" />
+                                Cancel
                             </button>
+                            <button
+                                type="submit"
+                                form="create-invoice-form"
+                                disabled={creating}
+                                className="flex-1 px-4 py-2 bg-[#F39C12] text-white rounded-lg hover:bg-[#E67E22] transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {creating ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Creating...
+                                    </>
+                                ) : (
+                                    'Create Invoice'
+                                )}
+                            </button>
+                        </>
+                    }
+                >
+                    <form id="create-invoice-form" onSubmit={handleCreateInvoice} className="p-6 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Student *</label>
+                                <select
+                                    required
+                                    value={newInvoice.student}
+                                    onChange={(e) => setNewInvoice({ ...newInvoice, student: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12]"
+                                >
+                                    <option value="">Select student</option>
+                                    {students.map(student => (
+                                        <option key={student.id} value={student.id}>
+                                            {student.user?.first_name} {student.user?.last_name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Due Date *</label>
+                                <input
+                                    type="date"
+                                    required
+                                    value={newInvoice.dueDate}
+                                    onChange={(e) => setNewInvoice({ ...newInvoice, dueDate: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12]"
+                                />
+                            </div>
                         </div>
 
-                        <form onSubmit={handleCreateInvoice} className="p-6 space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Student *</label>
-                                    <select
-                                        required
-                                        value={newInvoice.student}
-                                        onChange={(e) => setNewInvoice({ ...newInvoice, student: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12]"
-                                    >
-                                        <option value="">Select student</option>
-                                        {students.map(student => (
-                                            <option key={student.id} value={student.id}>
-                                                {student.user?.first_name} {student.user?.last_name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Due Date *</label>
-                                    <input
-                                        type="date"
-                                        required
-                                        value={newInvoice.dueDate}
-                                        onChange={(e) => setNewInvoice({ ...newInvoice, dueDate: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12]"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <div className="flex items-center justify-between mb-2">
-                                    <label className="text-sm font-medium text-gray-700">Line Items ({newInvoice.line_items.length}/10)</label>
-                                    <button
-                                        type="button"
-                                        onClick={addLineItem}
-                                        disabled={newInvoice.line_items.length >= 10}
-                                        className="text-sm text-[#F39C12] hover:text-[#E67E22] font-medium disabled:opacity-50"
-                                    >
-                                        + Add Item
-                                    </button>
-                                </div>
-
-                                <div className="space-y-3">
-                                    {newInvoice.line_items.map((item, index) => (
-                                        <div key={index} className="grid grid-cols-12 gap-2">
-                                            <input
-                                                type="text"
-                                                required
-                                                value={item.description}
-                                                onChange={(e) => updateLineItem(index, 'description', e.target.value)}
-                                                className="col-span-12 md:col-span-6 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12] text-sm"
-                                                placeholder="Description"
-                                            />
-                                            <input
-                                                type="number"
-                                                required
-                                                value={item.quantity}
-                                                onChange={(e) => updateLineItem(index, 'quantity', e.target.value)}
-                                                className="col-span-4 md:col-span-2 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12] text-sm"
-                                                placeholder="Qty"
-                                                min="1"
-                                            />
-                                            <input
-                                                type="number"
-                                                required
-                                                value={item.unit_price}
-                                                onChange={(e) => updateLineItem(index, 'unit_price', e.target.value)}
-                                                className="col-span-5 md:col-span-3 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12] text-sm"
-                                                placeholder="Price"
-                                                min="0"
-                                                step="0.01"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => removeLineItem(index)}
-                                                disabled={newInvoice.line_items.length <= 1}
-                                                className="col-span-3 md:col-span-1 p-2 text-gray-400 hover:text-red-600 disabled:opacity-30 transition-colors"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="pt-4 border-t border-gray-200 flex justify-between items-center">
-                                <span className="text-sm font-medium text-gray-600">Total Amount</span>
-                                <span className="text-2xl font-bold text-gray-900">${modalTotal.toFixed(2)}</span>
-                            </div>
-
-                            <div className="flex gap-3 pt-4">
+                        <div>
+                            <div className="flex items-center justify-between mb-2">
+                                <label className="text-sm font-medium text-gray-700">Line Items ({newInvoice.line_items.length}/10)</label>
                                 <button
                                     type="button"
-                                    onClick={() => setShowCreateModal(false)}
-                                    className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                                    onClick={addLineItem}
+                                    disabled={newInvoice.line_items.length >= 10}
+                                    className="text-sm text-[#F39C12] hover:text-[#E67E22] font-medium disabled:opacity-50"
                                 >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={creating}
-                                    className="flex-1 px-4 py-2 bg-[#F39C12] text-white rounded-lg hover:bg-[#E67E22] transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
-                                >
-                                    {creating ? (
-                                        <>
-                                            <Loader2 className="w-4 h-4 animate-spin" />
-                                            Creating...
-                                        </>
-                                    ) : (
-                                        'Create Invoice'
-                                    )}
+                                    + Add Item
                                 </button>
                             </div>
-                        </form>
-                    </div>
-                </div>
+
+                            <div className="space-y-3">
+                                {newInvoice.line_items.map((item, index) => (
+                                    <div key={index} className="grid grid-cols-12 gap-2">
+                                        <input
+                                            type="text"
+                                            required
+                                            value={item.description}
+                                            onChange={(e) => updateLineItem(index, 'description', e.target.value)}
+                                            className="col-span-12 md:col-span-6 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12] text-sm"
+                                            placeholder="Description"
+                                        />
+                                        <input
+                                            type="number"
+                                            required
+                                            value={item.quantity}
+                                            onChange={(e) => updateLineItem(index, 'quantity', e.target.value)}
+                                            className="col-span-4 md:col-span-2 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12] text-sm"
+                                            placeholder="Qty"
+                                            min="1"
+                                        />
+                                        <input
+                                            type="number"
+                                            required
+                                            value={item.unit_price}
+                                            onChange={(e) => updateLineItem(index, 'unit_price', e.target.value)}
+                                            className="col-span-5 md:col-span-3 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F39C12]/20 focus:border-[#F39C12] text-sm"
+                                            placeholder="Price"
+                                            min="0"
+                                            step="0.01"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => removeLineItem(index)}
+                                            disabled={newInvoice.line_items.length <= 1}
+                                            className="col-span-3 md:col-span-1 p-2 text-gray-400 hover:text-red-600 disabled:opacity-30 transition-colors"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="pt-4 border-t border-gray-200 flex justify-between items-center">
+                            <span className="text-sm font-medium text-gray-600">Total Amount</span>
+                            <span className="text-2xl font-bold text-gray-900">${modalTotal.toFixed(2)}</span>
+                        </div>
+                    </form>
+                </Modal>
             )}
 
             {/* View Invoice Modal */}
             {viewingInvoice && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 print:p-0 print:bg-white" onClick={() => setViewingInvoice(null)}>
-                    <div className="bg-white w-full max-w-2xl max-h-[90vh] rounded-lg shadow-xl overflow-hidden flex flex-col print:shadow-none print:rounded-none" onClick={(e) => e.stopPropagation()}>
-                        <div className="bg-gray-900 p-6 text-white flex justify-between items-center print:bg-white print:text-black print:border-b">
-                            <div>
-                                <h2 className="text-2xl font-bold">Invoice</h2>
-                                <p className="text-sm text-gray-400 print:text-gray-600">{viewingInvoice.invoice_number}</p>
-                            </div>
-                            <button
-                                onClick={() => setViewingInvoice(null)}
-                                className="p-2 hover:bg-gray-800 rounded-lg transition-colors print:hidden"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                            <div className="grid grid-cols-2 gap-6">
-                                <div>
-                                    <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Billed To</p>
-                                    <p className="font-semibold text-gray-900">{viewingInvoice.student_name || viewingInvoice.band_name || 'Client'}</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Due Date</p>
-                                    <p className="font-semibold text-gray-900">{new Date(viewingInvoice.due_date).toLocaleDateString()}</p>
-                                </div>
-                            </div>
-
-                            <div className="border border-gray-200 rounded-lg overflow-hidden">
-                                <table className="w-full text-left">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase">Description</th>
-                                            <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase text-center">Qty</th>
-                                            <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase text-right">Price</th>
-                                            <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase text-right">Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100">
-                                        {viewingInvoice.line_items?.map((item, idx) => (
-                                            <tr key={idx}>
-                                                <td className="px-4 py-3 text-sm text-gray-900">{item.description}</td>
-                                                <td className="px-4 py-3 text-sm text-gray-700 text-center">{item.quantity}</td>
-                                                <td className="px-4 py-3 text-sm text-gray-700 text-right">${Number(item.unit_price).toFixed(2)}</td>
-                                                <td className="px-4 py-3 text-sm font-semibold text-gray-900 text-right">
-                                                    ${Number(item.total_price || (item.quantity * Number(item.unit_price))).toFixed(2)}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-                                <span className="text-sm font-medium text-gray-600">Total Amount Due</span>
-                                <span className="text-3xl font-bold text-gray-900">${Number(viewingInvoice.total_amount).toFixed(2)}</span>
-                            </div>
-                        </div>
-
-                        <div className="p-6 bg-gray-50 flex gap-3 print:hidden">
+                <Modal
+                    isOpen={!!viewingInvoice}
+                    onClose={() => setViewingInvoice(null)}
+                    title="Invoice"
+                    footer={
+                        <>
                             <button
                                 onClick={() => window.print()}
-                                className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-white transition-colors font-medium"
+                                className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-white transition-colors font-medium print:hidden"
                             >
                                 Print / Download
                             </button>
                             {viewingInvoice.status !== 'paid' && viewingInvoice.status !== 'cancelled' && (
                                 <button
                                     onClick={() => handlePayInvoice(viewingInvoice.id)}
-                                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium print:hidden"
                                 >
                                     Pay Now
                                 </button>
                             )}
+                        </>
+                    }
+                >
+                    <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                        <div className="grid grid-cols-2 gap-6">
+                            <div>
+                                <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Billed To</p>
+                                <p className="font-semibold text-gray-900">{viewingInvoice.student_name || viewingInvoice.band_name || 'Client'}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Due Date</p>
+                                <p className="font-semibold text-gray-900">{new Date(viewingInvoice.due_date).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+
+                        <div className="border border-gray-200 rounded-lg overflow-hidden">
+                            <table className="w-full text-left">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase">Description</th>
+                                        <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase text-center">Qty</th>
+                                        <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase text-right">Price</th>
+                                        <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase text-right">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {viewingInvoice.line_items?.map((item, idx) => (
+                                        <tr key={idx}>
+                                            <td className="px-4 py-3 text-sm text-gray-900">{item.description}</td>
+                                            <td className="px-4 py-3 text-sm text-gray-700 text-center">{item.quantity}</td>
+                                            <td className="px-4 py-3 text-sm text-gray-700 text-right">${Number(item.unit_price).toFixed(2)}</td>
+                                            <td className="px-4 py-3 text-sm font-semibold text-gray-900 text-right">
+                                                ${Number(item.total_price || (item.quantity * Number(item.unit_price))).toFixed(2)}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+                            <span className="text-sm font-medium text-gray-600">Total Amount Due</span>
+                            <span className="text-3xl font-bold text-gray-900">${Number(viewingInvoice.total_amount).toFixed(2)}</span>
                         </div>
                     </div>
-                </div>
+                </Modal>
             )}
         </div>
     )

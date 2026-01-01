@@ -26,7 +26,7 @@ const features = [
     icon: GraduationCap,
     title: 'Students',
     description: 'Manage students, bands, and track progress',
-    color: 'from-purple-500 to-indigo-500',
+    color: 'from-earth-primary to-earth-dark',
     size: 'large',
     details: {
       overview: 'Comprehensive student management system designed for music studios. Track individual progress, organize by bands or groups, and maintain detailed profiles for each student.',
@@ -50,7 +50,7 @@ const features = [
     icon: Calendar,
     title: 'Scheduling',
     description: 'Smart calendar with recurring lessons',
-    color: 'from-blue-500 to-cyan-500',
+    color: 'from-olive-primary to-olive-dark',
     size: 'medium',
     details: {
       overview: 'Intelligent scheduling system that handles private lessons, group sessions, and recurring patterns. Built-in conflict detection ensures no double-bookings.',
@@ -75,7 +75,7 @@ const features = [
     icon: DollarSign,
     title: 'Billing',
     description: 'Automated invoices and payment tracking',
-    color: 'from-emerald-500 to-teal-500',
+    color: 'from-earth-light to-earth-primary',
     size: 'medium',
     details: {
       overview: 'Complete billing solution for music studios. Generate invoices automatically from lessons, track payments, and manage multiple payment methods.',
@@ -100,7 +100,7 @@ const features = [
     icon: Notebook,
     title: 'Lesson Notes',
     description: 'Rich lesson documentation and assignments',
-    color: 'from-amber-500 to-orange-500',
+    color: 'from-olive-light to-olive-primary',
     size: 'small',
     details: {
       overview: 'Detailed lesson documentation system that helps teachers track student progress and assign practice materials. Students and parents can view notes and assignments.',
@@ -125,7 +125,7 @@ const features = [
     icon: Library,
     title: 'Resources',
     description: 'Digital library and lending management',
-    color: 'from-pink-500 to-rose-500',
+    color: 'from-earth-lighter to-earth-light',
     size: 'small',
     details: {
       overview: 'Comprehensive resource management for both digital files and physical items. Share sheet music, recordings, and track instrument loans.',
@@ -150,7 +150,7 @@ const features = [
     icon: MessageCircle,
     title: 'Messaging',
     description: 'Communication with email and SMS',
-    color: 'from-violet-500 to-purple-500',
+    color: 'from-neutral-medium to-neutral-dark',
     size: 'small',
     details: {
       overview: 'Multi-channel communication system to keep everyone connected. Send automated reminders, direct messages, and announcements through email, SMS, or in-app notifications.',
@@ -241,10 +241,10 @@ function AnimatedCounter({ value, inView }: { value: string, inView: boolean }) 
   return <span>{count}</span>
 }
 
-function FloatingOrb({ delay = 0, duration = 20, size = 300, opacity = 0.15, color = 'purple' }) {
+function FloatingOrb({ delay = 0, duration = 20, size = 300, opacity = 0.15, color = 'earth-primary' }) {
   return (
     <motion.div
-      className={`absolute rounded-full blur-3xl bg-${color}-500`}
+      className={`absolute rounded-full blur-3xl bg-${color}`}
       style={{
         width: size,
         height: size,
@@ -463,7 +463,7 @@ function FeatureCard({ feature, index, onClick }: { feature: typeof features[0],
             <feature.icon className="w-8 h-8 text-white" />
           </div>
 
-          <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-600 group-hover:to-indigo-600 transition-all">
+          <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-earth-primary group-hover:to-olive-dark transition-all">
             {feature.title}
           </h3>
 
@@ -476,7 +476,7 @@ function FeatureCard({ feature, index, onClick }: { feature: typeof features[0],
         <div className="mt-8">
           <motion.div
             whileHover={{ x: 5 }}
-            className="flex items-center text-purple-600 font-semibold group/btn"
+            className="flex items-center text-earth-dark font-semibold group/btn"
           >
             Learn more
             <ArrowRight className="w-5 h-5 ml-2 group-hover/btn:translate-x-1 transition-transform" />
@@ -510,13 +510,13 @@ function TestimonialCard({ testimonial, index }: { testimonial: typeof testimoni
       </p>
 
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white font-bold text-lg">
+        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-earth-primary to-olive-dark flex items-center justify-center text-white font-bold text-lg">
           {testimonial.name.split(' ').map(n => n[0]).join('')}
         </div>
         <div>
           <div className="font-bold text-gray-900">{testimonial.name}</div>
           <div className="text-sm text-gray-600">{testimonial.role}</div>
-          <div className="text-sm text-purple-600">{testimonial.studio}</div>
+          <div className="text-sm text-earth-dark">{testimonial.studio}</div>
         </div>
       </div>
     </motion.div>
@@ -551,17 +551,17 @@ export default function Home() {
 
       {/* Scroll progress indicator */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-500 origin-left z-50"
+        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-earth-primary via-olive-primary to-earth-light origin-left z-50"
         style={{ scaleX }}
       />
 
       <Navigation />
 
       {/* Animated background */}
-      <div className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
-        <FloatingOrb delay={0} duration={25} size={400} opacity={0.12} color="purple" />
-        <FloatingOrb delay={5} duration={30} size={300} opacity={0.1} color="indigo" />
-        <FloatingOrb delay={10} duration={35} size={350} opacity={0.08} color="blue" />
+      <div className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-earth-lighter via-neutral-light to-olive-light">
+        <FloatingOrb delay={0} duration={25} size={400} opacity={0.12} color="earth-primary" />
+        <FloatingOrb delay={5} duration={30} size={300} opacity={0.1} color="olive-primary" />
+        <FloatingOrb delay={10} duration={35} size={350} opacity={0.08} color="earth-light" />
 
         {/* Musical staff lines */}
         <div className="absolute inset-0 opacity-5">
@@ -589,26 +589,26 @@ export default function Home() {
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-purple-200 text-purple-700 font-medium mb-8"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-earth-light text-earth-dark font-medium mb-8"
               >
                 <Sparkles className="w-4 h-4" />
                 Join 500+ music studios
               </motion.div>
 
               <h1 className="text-6xl md:text-8xl font-bold mb-6 leading-tight">
-                <span className="block bg-gradient-to-r from-indigo-900 via-purple-800 to-indigo-900 bg-clip-text text-transparent">
+                <span className="block bg-gradient-to-r from-earth-dark via-earth-primary to-earth-dark bg-clip-text text-transparent">
                   Orchestrate
                 </span>
-                <span className="block bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                <span className="block bg-gradient-to-r from-earth-primary to-olive-dark bg-clip-text text-transparent">
                   Your Studio
                 </span>
               </h1>
 
               <p className="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto mb-12 leading-relaxed font-light">
                 The all-in-one platform that harmonizes{' '}
-                <span className="font-semibold text-purple-700">students</span>,{' '}
-                <span className="font-semibold text-indigo-700">scheduling</span>, and{' '}
-                <span className="font-semibold text-blue-700">billing</span>{' '}
+                <span className="font-semibold text-earth-dark">students</span>,{' '}
+                <span className="font-semibold text-olive-dark">scheduling</span>, and{' '}
+                <span className="font-semibold text-earth-primary">billing</span>{' '}
                 — so you can focus on what matters: making music.
               </p>
 
@@ -616,7 +616,7 @@ export default function Home() {
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link
                     href="/signup"
-                    className="group px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-2xl font-semibold text-lg shadow-xl shadow-purple-500/30 hover:shadow-2xl hover:shadow-purple-500/40 transition-all flex items-center gap-2"
+                    className="group px-8 py-4 bg-gradient-to-r from-earth-primary to-olive-dark text-white rounded-2xl font-semibold text-lg shadow-xl shadow-earth-primary/30 hover:shadow-2xl hover:shadow-earth-primary/40 transition-all flex items-center gap-2"
                   >
                     Start Free Trial
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -645,7 +645,7 @@ export default function Home() {
             >
               <div className="relative max-w-5xl mx-auto">
                 {/* Glassmorphic mockup */}
-                <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-purple-500/20 border border-white/30 bg-white/40 backdrop-blur-xl">
+                <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-earth-primary/20 border border-white/30 bg-white/40 backdrop-blur-xl">
                   <div className="aspect-video relative">
                     {/* Dashboard Preview Image */}
                     <Image
@@ -665,7 +665,7 @@ export default function Home() {
                   className="absolute -left-4 top-1/4 md:-left-12 bg-white/80 backdrop-blur-md rounded-2xl p-4 shadow-xl border border-white/50 hidden md:block"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-olive-primary flex items-center justify-center">
                       <Check className="w-6 h-6 text-white" />
                     </div>
                     <div>
@@ -681,7 +681,7 @@ export default function Home() {
                   className="absolute -right-4 top-1/3 md:-right-12 bg-white/80 backdrop-blur-md rounded-2xl p-4 shadow-xl border border-white/50 hidden md:block"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-earth-primary flex items-center justify-center">
                       <DollarSign className="w-6 h-6 text-white" />
                     </div>
                     <div>
@@ -707,7 +707,7 @@ export default function Home() {
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   className="text-center"
                 >
-                  <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+                  <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-earth-primary to-olive-dark bg-clip-text text-transparent mb-2">
                     <AnimatedCounter value={stat.value} inView={statsInView} />
                   </div>
                   <div className="text-gray-600 font-medium">{stat.label}</div>
@@ -728,11 +728,11 @@ export default function Home() {
               className="text-center mb-16"
             >
               <h2 className="text-5xl md:text-6xl font-bold mb-6">
-                <span className="bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-neutral-dark to-neutral-medium bg-clip-text text-transparent">
                   Everything You Need,
                 </span>
                 <br />
-                <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-earth-primary to-olive-dark bg-clip-text text-transparent">
                   Beautifully Simple
                 </span>
               </h2>
@@ -763,7 +763,7 @@ export default function Home() {
               viewport={{ once: true }}
               className="text-center"
             >
-              <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-neutral-dark to-neutral-medium bg-clip-text text-transparent">
                 Loved by Music Educators
               </h2>
               <p className="text-xl text-gray-600">
@@ -792,7 +792,7 @@ export default function Home() {
               className="relative rounded-3xl overflow-hidden"
             >
               {/* Gradient background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600" />
+              <div className="absolute inset-0 bg-gradient-to-br from-earth-primary via-olive-primary to-earth-light" />
 
               {/* Animated orbs */}
               <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
@@ -811,7 +811,7 @@ export default function Home() {
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Link
                       href="/signup"
-                      className="inline-flex items-center gap-2 px-8 py-4 bg-white text-purple-600 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all"
+                      className="inline-flex items-center gap-2 px-8 py-4 bg-white text-earth-dark rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all"
                     >
                       Start Your Free Trial
                       <ArrowRight className="w-5 h-5" />

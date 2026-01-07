@@ -1,0 +1,35 @@
+- [ ] **Redesign Popup Dialog** `[frontend]`
+  - [ ] Analyze Existing Modal Component `[frontend]`
+    - [ ] Read and analyze the `Modal.tsx` file `[frontend]`
+    - [ ] Identify how it's being used in other components `[frontend]`
+  - [ ] Propose a New Design `[frontend]`
+    - [ ] Create a design that is modern, clean, and functional `[frontend]`
+    - [ ] Ensure the design is responsive for desktop and mobile `[frontend]`
+    - [ ] Ensure the design is accessible `[frontend]`
+  - [ ] Implement the New Design `[frontend]`
+    - [ ] Update the JSX in `Modal.tsx` to reflect the new structure (header, body, footer) `[frontend]`
+    - [ ] Use Tailwind CSS to style the component `[frontend]`
+    - [ ] Use `framer-motion` for animations `[frontend]`
+    - [ ] Implement accessibility features `[frontend]`
+  - [ ] Update Components Using the Modal `[frontend]`
+    - [ ] Search the codebase for instances where `Modal.tsx` is used `[frontend]`
+    - [ ] Update the props passed to the `Modal` component `[frontend]`
+    - [ ] Ensure that the content passed to the modal is correctly structured `[frontend]`
+  - [ ] Test the New Design `[test]`
+    - [ ] Manually test the modal on desktop and mobile browsers `[test]`
+    - [ ] Test the modal's responsiveness `[test]`
+    - [ ] Test the accessibility features `[test]`
+    - [ ] Verify that all components using the modal are still working correctly `[test]`
+- [ ] **Redesign Landing Page Color Scheme** `[frontend]`
+  - [ ] Analyze Existing Color Scheme `[frontend]`
+    - [ ] Analyze `frontend/tailwind.config.js` to see the defined color palette `[frontend]`
+    - [ ] Search for the color class names in the `frontend/app` directory `[frontend]`
+  - [ ] Propose a New Color Palette `[frontend]`
+    - [ ] Create a new color palette based on earth tones `[frontend]`
+    - [ ] Present the proposed color palette to the user for approval `[frontend]`
+  - [ ] Implement the New Color Palette `[frontend]`
+    - [ ] Update the `frontend/tailwind.config.js` file with the new colors `[frontend]`
+    - [ ] Replace the old color class names with the new ones in the relevant files `[frontend]`
+  - [ ] Test the New Color Scheme `[test]`
+    - [ ] Review the landing pages and any other affected pages to check the new color scheme `[test]`
+    - [ ] Verify that the color contrast is sufficient for accessibility `[test]`

@@ -1,0 +1,244 @@
+/* ============================================================================
+   StudioSync Django Admin Custom Styles - Earth Tone Theme
+   ============================================================================ */
+
+/* Color Palette - Earth Tones */
+:root {
+    --earth-primary: #A0522D;    /* Sienna */
+    --earth-dark: #8B4513;       /* SaddleBrown */
+    --earth-light: #D2B48C;      /* Tan */
+    --earth-lighter: #F5DEB3;    /* Wheat */
+    --olive-primary: #6B8E23;    /* OliveDrab */
+    --olive-dark: #556B2F;       /* DarkOliveGreen */
+    --olive-light: #B8D490;
+}
+
+/* ============================================================================
+   Navbar Styling
+   ============================================================================ */
+
+.navbar-brown {
+    background-color: var(--earth-primary) !important;
+    border-bottom: 2px solid var(--earth-dark);
+}
+
+.navbar-brown .navbar-brand,
+.navbar-brown .nav-link {
+    color: #ffffff !important;
+}
+
+.navbar-brown .nav-link:hover {
+    color: var(--earth-lighter) !important;
+    background-color: var(--earth-dark) !important;
+}
+
+/* ============================================================================
+   Sidebar Styling
+   ============================================================================ */
+
+.sidebar-dark-brown {
+    background-color: var(--earth-dark) !important;
+}
+
+.sidebar-dark-brown .nav-link {
+    color: var(--earth-lighter) !important;
+}
+
+.sidebar-dark-brown .nav-link:hover {
+    background-color: var(--earth-primary) !important;
+    color: #ffffff !important;
+}
+
+.sidebar-dark-brown .nav-link.active {
+    background-color: var(--olive-dark) !important;
+    color: #ffffff !important;
+    border-left: 3px solid var(--olive-light);
+}
+
+.sidebar-dark-brown .nav-treeview .nav-link {
+    padding-left: 2rem;
+    color: var(--earth-light) !important;
+}
+
+/* ============================================================================
+   Accent Colors
+   ============================================================================ */
+
+.accent-olive a {
+    color: var(--olive-dark) !important;
+}
+
+.accent-olive a:hover {
+    color: var(--olive-primary) !important;
+}
+
+/* ============================================================================
+   Buttons
+   ============================================================================ */
+
+.btn-primary {
+    background-color: var(--earth-primary) !important;
+    border-color: var(--earth-dark) !important;
+}
+
+.btn-primary:hover {
+    background-color: var(--earth-dark) !important;
+    border-color: var(--earth-dark) !important;
+}
+
+.btn-success {
+    background-color: var(--olive-primary) !important;
+    border-color: var(--olive-dark) !important;
+}
+
+.btn-success:hover {
+    background-color: var(--olive-dark) !important;
+    border-color: var(--olive-dark) !important;
+}
+
+/* ============================================================================
+   Links and Interactive Elements
+   ============================================================================ */
+
+a {
+    color: var(--earth-primary);
+}
+
+a:hover {
+    color: var(--earth-dark);
+}
+
+.breadcrumb-item.active {
+    color: var(--earth-dark);
+}
+
+/* ============================================================================
+   Form Elements
+   ============================================================================ */
+
+.form-control:focus {
+    border-color: var(--earth-primary);
+    box-shadow: 0 0 0 0.2rem rgba(160, 82, 45, 0.25);
+}
+
+.custom-select:focus {
+    border-color: var(--earth-primary);
+    box-shadow: 0 0 0 0.2rem rgba(160, 82, 45, 0.25);
+}
+
+/* ============================================================================
+   Tables
+   ============================================================================ */
+
+.table thead th {
+    border-bottom: 2px solid var(--earth-light);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(245, 222, 179, 0.1);
+}
+
+/* ============================================================================
+   Cards and Panels
+   ============================================================================ */
+
+.card-header {
+    background-color: var(--earth-lighter);
+    border-bottom: 1px solid var(--earth-light);
+}
+
+.card-primary .card-header {
+    background-color: var(--earth-primary);
+    color: #ffffff;
+}
+
+/* ============================================================================
+   Pagination
+   ============================================================================ */
+
+.pagination .page-item.active .page-link {
+    background-color: var(--earth-primary);
+    border-color: var(--earth-primary);
+}
+
+.pagination .page-link:hover {
+    background-color: var(--earth-light);
+    border-color: var(--earth-light);
+}
+
+/* ============================================================================
+   Loading and Progress
+   ============================================================================ */
+
+.progress-bar {
+    background-color: var(--olive-primary);
+}
+
+/* ============================================================================
+   Badges
+   ============================================================================ */
+
+.badge-primary {
+    background-color: var(--earth-primary);
+}
+
+.badge-success {
+    background-color: var(--olive-primary);
+}
+
+/* ============================================================================
+   Responsive Design Improvements
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    /* Make sidebar overlay on mobile */
+    .sidebar {
+        position: fixed;
+        left: -250px;
+        transition: left 0.3s ease;
+        z-index: 1000;
+    }
+
+    .sidebar.show {
+        left: 0;
+    }
+
+    /* Adjust navbar for mobile */
+    .navbar-brand {
+        font-size: 1rem;
+    }
+
+    /* Make tables scrollable on mobile */
+    .table-responsive {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    /* Stack form fields on mobile */
+    .form-row {
+        flex-direction: column;
+    }
+
+    .form-row .col,
+    .form-row [class*="col-"] {
+        max-width: 100%;
+        flex: 0 0 100%;
+    }
+}
+
+/* ============================================================================
+   Print Styles
+   ============================================================================ */
+
+@media print {
+    .sidebar,
+    .navbar,
+    .btn {
+        display: none !important;
+    }
+
+    .content-wrapper {
+        margin: 0 !important;
+    }
+}

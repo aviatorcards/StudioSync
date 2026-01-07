@@ -183,7 +183,7 @@ python manage.py migrate notifications
 
 ## Admin Interface
 
-Notifications can be managed in Django Admin at `/admin/notifications/notification/`
+Notifications can be managed in the Django admin panel.
 
 Features:
 - View all notifications

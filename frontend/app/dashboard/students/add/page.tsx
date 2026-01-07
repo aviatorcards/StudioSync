@@ -66,7 +66,7 @@ export default function AddStudentPage() {
                         {/* Personal Information */}
                         <div>
                             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                <User className="w-5 h-5 text-[#F39C12]" />
+                                <User className="w-5 h-5 text-[var(--color-primary)]" />
                                 Personal Information
                             </h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -80,7 +80,7 @@ export default function AddStudentPage() {
                                         required
                                         value={formData.first_name}
                                         onChange={handleChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F39C12] focus:border-transparent outline-none"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
                                         placeholder="John"
                                     />
                                 </div>
@@ -94,7 +94,7 @@ export default function AddStudentPage() {
                                         required
                                         value={formData.last_name}
                                         onChange={handleChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F39C12] focus:border-transparent outline-none"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
                                         placeholder="Doe"
                                     />
                                 </div>
@@ -104,7 +104,7 @@ export default function AddStudentPage() {
                         {/* Contact Information */}
                         <div>
                             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                <Mail className="w-5 h-5 text-[#F39C12]" />
+                                <Mail className="w-5 h-5 text-[var(--color-primary)]" />
                                 Contact & Login
                             </h2>
                             <div className="space-y-4">
@@ -118,7 +118,7 @@ export default function AddStudentPage() {
                                         required
                                         value={formData.email}
                                         onChange={handleChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F39C12] focus:border-transparent outline-none"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
                                         placeholder="john.doe@example.com"
                                     />
                                     <p className="text-xs text-gray-500 mt-1">This will be used for login</p>
@@ -132,7 +132,7 @@ export default function AddStudentPage() {
                                         name="birth_date"
                                         value={formData.birth_date}
                                         onChange={handleChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F39C12] focus:border-transparent outline-none"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
                                     />
                                 </div>
                             </div>
@@ -141,7 +141,7 @@ export default function AddStudentPage() {
                         {/* Musical Information */}
                         <div>
                             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                <Music className="w-5 h-5 text-[#F39C12]" />
+                                <Music className="w-5 h-5 text-[var(--color-primary)]" />
                                 Musical Details
                             </h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -154,7 +154,7 @@ export default function AddStudentPage() {
                                         name="instrument"
                                         value={formData.instrument}
                                         onChange={handleChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F39C12] focus:border-transparent outline-none"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
                                         placeholder="Piano, Guitar, Violin... (Optional)"
                                     />
                                 </div>
@@ -166,7 +166,7 @@ export default function AddStudentPage() {
                                         name="skill_level"
                                         value={formData.skill_level}
                                         onChange={handleChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F39C12] focus:border-transparent outline-none"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
                                     >
                                         <option value="beginner">Beginner</option>
                                         <option value="intermediate">Intermediate</option>
@@ -180,7 +180,7 @@ export default function AddStudentPage() {
                         {/* Emergency Contact */}
                         <div>
                             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                <Phone className="w-5 h-5 text-[#F39C12]" />
+                                <Phone className="w-5 h-5 text-[var(--color-primary)]" />
                                 Emergency Contact
                             </h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -193,7 +193,7 @@ export default function AddStudentPage() {
                                         name="emergency_contact_name"
                                         value={formData.emergency_contact_name}
                                         onChange={handleChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F39C12] focus:border-transparent outline-none"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
                                         placeholder="Parent or Guardian"
                                     />
                                 </div>
@@ -206,7 +206,7 @@ export default function AddStudentPage() {
                                         name="emergency_contact_phone"
                                         value={formData.emergency_contact_phone}
                                         onChange={handleChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F39C12] focus:border-transparent outline-none"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
                                         placeholder="(555) 123-4567"
                                     />
                                 </div>
@@ -225,7 +225,7 @@ export default function AddStudentPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="flex-1 px-6 py-2.5 bg-[#F39C12] text-white rounded-lg hover:bg-[#E67E22] font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex-1 px-6 py-2.5 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-hover)] font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {loading ? 'Creating...' : 'Create Student'}
                             </button>

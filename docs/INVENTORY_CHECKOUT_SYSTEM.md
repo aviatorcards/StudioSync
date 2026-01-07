@@ -270,13 +270,12 @@ Create new page: `/frontend/app/dashboard/practice-rooms/page.tsx`:
 
 ## 🚀 **Next Steps**
 
-1. **Run migrations** (see Step 1 above)
-2. **Create sample data** in Django admin
-3. **Update frontend** inventory page to use API
-4. **Create checkout interface** for students
-5. **Create practice room booking** interface
-6. **Add calendar view** for reservations
-7. **Add email notifications** for:
+1. **Create sample data** in the admin panel.
+2. **Update frontend** inventory page to use API
+3. **Create checkout interface** for students
+4. **Create practice room booking** interface
+5. **Add calendar view** for reservations
+6. **Add email notifications** for:
    - Checkout approvals
    - Return reminders
    - Reservation confirmations

@@ -10,7 +10,7 @@ import {
     X, Loader2, UserPlus, Music, Link as LinkIcon, Edit, UserCog, Trash2,
     Search, ChevronLeft, ChevronRight, Users as UsersIcon, Mail, Shield
 } from 'lucide-react'
-import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
+import Modal from '@/components/Modal'
 import { Button } from '@/components/ui/button'
 
 export default function UsersPage() {
@@ -199,7 +199,7 @@ export default function UsersPage() {
     if (loading && users.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-20">
-                <Loader2 className="w-10 h-10 text-[#F39C12] animate-spin mb-4" />
+                <Loader2 className="w-10 h-10 text-[var(--color-primary)] animate-spin mb-4" />
                 <p className="text-gray-500 font-medium">Loading users...</p>
             </div>
         )
@@ -211,7 +211,7 @@ export default function UsersPage() {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Users</h1>
+                        <h1 className="text-2xl md:text-4xl font-bold text-gray-900">Users</h1>
                         <p className="text-sm text-gray-600 mt-1">Manage system users and roles</p>
                     </div>
                     <button
@@ -512,180 +512,185 @@ export default function UsersPage() {
 
             {/* User Modal */}
             {isUserModalOpen && (
-                <Dialog
-                    open={isUserModalOpen}
-                    onOpenChange={setIsUserModalOpen}
-                    size="md"
+                <Modal
+                    isOpen={isUserModalOpen}
+                    onClose={() => setIsUserModalOpen(false)}
+                    title={selectedUser ? 'Edit User' : 'New User'}
+                    footer={
+                        <>
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsUserModalOpen(false)}
+                                className="flex-1"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleSubmit}
+                                disabled={isSubmitting}
+                                className="flex-1 gap-2"
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Saving...
+                                    </>
+                                ) : (
+                                    selectedUser ? 'Update User' : 'Create User'
+                                )}
+                            </Button>
+                        </>
+                    }
                 >
-                    <DialogHeader
-                        title={selectedUser ? 'Edit User' : 'New User'}
-                        subtitle={selectedUser ? 'Update user information' : 'Create a new user account'}
-                    />
-                    <DialogContent>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                                {/* Basic Info */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={formData.first_name}
-                                            onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-dark focus:border-transparent outline-none"
-                                            placeholder="Jane"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={formData.last_name}
-                                            onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-dark focus:border-transparent outline-none"
-                                            placeholder="Smith"
-                                        />
-                                    </div>
-                                </div>
-
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                            {/* Basic Info */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
                                     <input
-                                        type="email"
+                                        type="text"
                                         required
-                                        disabled={!!selectedUser}
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-dark focus:border-transparent outline-none disabled:bg-gray-100"
-                                        placeholder="jane.smith@example.com"
+                                        value={formData.first_name}
+                                        onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-dark focus:border-transparent outline-none"
+                                        placeholder="Jane"
                                     />
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.last_name}
+                                        onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-dark focus:border-transparent outline-none"
+                                        placeholder="Smith"
+                                    />
+                                </div>
+                            </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                                        <select
-                                            value={formData.role}
-                                            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-dark focus:border-transparent outline-none"
-                                        >
-                                            <option value="student">Student</option>
-                                            <option value="teacher">Instructor</option>
-                                            <option value="parent">Parent</option>
-                                            <option value="admin">Administrator</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                                        <div className="flex items-center h-[42px] px-3 bg-gray-50 rounded-lg">
-                                            <label className="relative inline-flex items-center cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.is_active}
-                                                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                                                    className="sr-only peer"
-                                                />
-                                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-                                            </label>
-                                            <span className="ml-3 text-sm font-medium text-gray-700">
-                                                {formData.is_active ? 'Active' : 'Inactive'}
-                                            </span>
-                                        </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <input
+                                    type="email"
+                                    required
+                                    disabled={!!selectedUser}
+                                    value={formData.email}
+                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-dark focus:border-transparent outline-none disabled:bg-gray-100"
+                                    placeholder="jane.smith@example.com"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                                    <select
+                                        value={formData.role}
+                                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-dark focus:border-transparent outline-none"
+                                    >
+                                        <option value="student">Student</option>
+                                        <option value="teacher">Instructor</option>
+                                        <option value="parent">Parent</option>
+                                        <option value="admin">Administrator</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                    <div className="flex items-center h-[42px] px-3 bg-gray-50 rounded-lg">
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.is_active}
+                                                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                                                className="sr-only peer"
+                                            />
+                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                                        </label>
+                                        <span className="ml-3 text-sm font-medium text-gray-700">
+                                            {formData.is_active ? 'Active' : 'Inactive'}
+                                        </span>
                                     </div>
                                 </div>
+                            </div>
 
-                                {/* Student Fields */}
-                                {formData.role === 'student' && (
-                                    <div className="p-4 bg-green-50 rounded-lg border border-green-100 space-y-4">
-                                        <h3 className="text-sm font-bold text-green-900">Student Details</h3>
+                            {/* Student Fields */}
+                            {formData.role === 'student' && (
+                                <div className="p-4 bg-green-50 rounded-lg border border-green-100 space-y-4">
+                                    <h3 className="text-sm font-bold text-green-900">Student Details</h3>
 
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Instrument</label>
-                                            <select
-                                                value={formData.instrument}
-                                                onChange={(e) => setFormData({ ...formData, instrument: e.target.value })}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
-                                            >
-                                                <option value="">Select instrument...</option>
-                                                {allInstruments.map(inst => (
-                                                    <option key={inst} value={inst}>{inst}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Bands (Hold Ctrl/Cmd for multiple)</label>
-                                            <select
-                                                multiple
-                                                value={formData.band_ids}
-                                                onChange={(e) => {
-                                                    const values = Array.from(e.target.selectedOptions, option => option.value)
-                                                    setFormData({ ...formData, band_ids: values })
-                                                }}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none min-h-[100px]"
-                                            >
-                                                {bands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Parent/Guardian</label>
-                                            <select
-                                                value={formData.family_id}
-                                                onChange={(e) => setFormData({ ...formData, family_id: e.target.value })}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
-                                            >
-                                                <option value="">No linked parent</option>
-                                                {parentOptions.map((p: any) => <option key={p.id} value={p.id}>{p.full_name || p.email}</option>)}
-                                            </select>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Teacher Fields */}
-                                {formData.role === 'teacher' && (
-                                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 space-y-4">
-                                        <h3 className="text-sm font-bold text-blue-900">Instructor Specialties</h3>
-
-                                        <div className="flex flex-wrap gap-2">
-                                            {formData.specialties.map(spec => (
-                                                <span key={spec} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium flex items-center gap-1">
-                                                    {spec}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setFormData({ ...formData, specialties: formData.specialties.filter(s => s !== spec) })}
-                                                        className="hover:text-blue-900"
-                                                    >
-                                                        <X className="w-3 h-3" />
-                                                    </button>
-                                                </span>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Instrument</label>
+                                        <select
+                                            value={formData.instrument}
+                                            onChange={(e) => setFormData({ ...formData, instrument: e.target.value })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                                        >
+                                            <option value="">Select instrument...</option>
+                                            {allInstruments.map(inst => (
+                                                <option key={inst} value={inst}>{inst}</option>
                                             ))}
-                                        </div>
+                                        </select>
+                                    </div>
 
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                value={newSpecialty}
-                                                onChange={(e) => setNewSpecialty(e.target.value)}
-                                                onKeyPress={(e) => {
-                                                    if (e.key === 'Enter') {
-                                                        e.preventDefault()
-                                                        const trimmed = newSpecialty.trim()
-                                                        if (!trimmed) return
-                                                        const formatted = trimmed.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())
-                                                        if (!formData.specialties.includes(formatted)) {
-                                                            setFormData({ ...formData, specialties: [...formData.specialties, formatted] })
-                                                            setNewSpecialty('')
-                                                        }
-                                                    }
-                                                }}
-                                                placeholder="e.g. Jazz Piano"
-                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => {
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Bands (Hold Ctrl/Cmd for multiple)</label>
+                                        <select
+                                            multiple
+                                            value={formData.band_ids}
+                                            onChange={(e) => {
+                                                const values = Array.from(e.target.selectedOptions, option => option.value)
+                                                setFormData({ ...formData, band_ids: values })
+                                            }}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none min-h-[100px]"
+                                        >
+                                            {bands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Parent/Guardian</label>
+                                        <select
+                                            value={formData.family_id}
+                                            onChange={(e) => setFormData({ ...formData, family_id: e.target.value })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                                        >
+                                            <option value="">No linked parent</option>
+                                            {parentOptions.map((p: any) => <option key={p.id} value={p.id}>{p.full_name || p.email}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Teacher Fields */}
+                            {formData.role === 'teacher' && (
+                                <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 space-y-4">
+                                    <h3 className="text-sm font-bold text-blue-900">Instructor Specialties</h3>
+
+                                    <div className="flex flex-wrap gap-2">
+                                        {formData.specialties.map(spec => (
+                                            <span key={spec} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium flex items-center gap-1">
+                                                {spec}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormData({ ...formData, specialties: formData.specialties.filter(s => s !== spec) })}
+                                                    className="hover:text-blue-900"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </span>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={newSpecialty}
+                                            onChange={(e) => setNewSpecialty(e.target.value)}
+                                            onKeyPress={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault()
                                                     const trimmed = newSpecialty.trim()
                                                     if (!trimmed) return
                                                     const formatted = trimmed.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())
@@ -693,41 +698,32 @@ export default function UsersPage() {
                                                         setFormData({ ...formData, specialties: [...formData.specialties, formatted] })
                                                         setNewSpecialty('')
                                                     }
-                                                }}
-                                                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
-                                            >
-                                                Add
-                                            </button>
-                                        </div>
+                                                }
+                                            }}
+                                            placeholder="e.g. Jazz Piano"
+                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const trimmed = newSpecialty.trim()
+                                                if (!trimmed) return
+                                                const formatted = trimmed.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())
+                                                if (!formData.specialties.includes(formatted)) {
+                                                    setFormData({ ...formData, specialties: [...formData.specialties, formatted] })
+                                                    setNewSpecialty('')
+                                                }
+                                            }}
+                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                                        >
+                                            Add
+                                        </button>
                                     </div>
-                                )}
-
-                        </form>
-                    </DialogContent>
-                    <DialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={() => setIsUserModalOpen(false)}
-                            className="flex-1"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleSubmit}
-                            disabled={isSubmitting}
-                            className="flex-1 gap-2"
-                        >
-                            {isSubmitting ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    Saving...
-                                </>
-                            ) : (
-                                selectedUser ? 'Update User' : 'Create User'
+                                </div>
                             )}
-                        </Button>
-                    </DialogFooter>
-                </Dialog>
+
+                    </form>
+                </Modal>
             )}
         </>
     )

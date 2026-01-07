@@ -242,7 +242,7 @@ export default function SettingsPage() {
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header */}
             <header className="pt-4 space-y-2">
-                <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">Settings</h1>
+                <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">Settings</h1>
                 <p className="text-gray-500 font-medium max-w-lg">Manage your account and preferences.</p>
             </header>
 

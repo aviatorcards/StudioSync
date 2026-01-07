@@ -8,10 +8,10 @@ import Link from 'next/link'
 import { Music, Heart, Zap, Users, Target, Code, Sparkles, ArrowRight, Github } from 'lucide-react'
 import { RippleCard } from '@/components/RippleCard'
 
-function FloatingOrb({ delay = 0, duration = 20, size = 300, opacity = 0.15, color = 'purple' }) {
+function FloatingOrb({ delay = 0, duration = 20, size = 300, opacity = 0.15, color = 'earth-primary' }) {
     return (
         <motion.div
-            className={`absolute rounded-full blur-3xl bg-${color}-500`}
+            className={`absolute rounded-full blur-3xl bg-${color}`}
             style={{
                 width: size,
                 height: size,
@@ -95,7 +95,7 @@ function TimelineItem({ item, index }: any) {
                         <div>
                             <div className="flex items-center gap-3 mb-2">
                                 <h4 className="font-bold text-gray-900">{item.title}</h4>
-                                <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700 font-medium">
+                                <span className="text-xs px-2 py-1 rounded-full bg-earth-lighter text-earth-dark font-medium">
                                     {item.year}
                                 </span>
                             </div>
@@ -122,7 +122,7 @@ function StatCard({ stat, index }: any) {
         >
             <div className="absolute inset-0 bg-white/60 backdrop-blur-xl border border-white/20" />
             <div className="relative">
-                <div className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+                <div className="text-5xl font-bold bg-gradient-to-r from-earth-primary to-olive-dark bg-clip-text text-transparent mb-2">
                     {stat.value}
                 </div>
                 <div className="text-gray-600 font-medium">{stat.label}</div>
@@ -137,19 +137,19 @@ export default function AboutPage() {
             icon: Heart,
             title: 'Instructor First',
             description: 'Every feature we build starts with the question: "Does this make an instructor\'s life easier?"',
-            color: 'from-pink-500 to-rose-500'
+            color: 'from-earth-primary to-earth-dark'
         },
         {
             icon: Zap,
             title: 'Simplicity',
             description: 'Powerful doesn\'t have to mean complicated. We believe in intuitive design that just works.',
-            color: 'from-purple-500 to-indigo-500'
+            color: 'from-olive-primary to-olive-dark'
         },
         {
             icon: Users,
             title: 'Community',
             description: 'We\'re building more than software—we\'re building a community of passionate music educators.',
-            color: 'from-blue-500 to-cyan-500'
+            color: 'from-earth-light to-earth-primary'
         }
     ]
 
@@ -158,28 +158,28 @@ export default function AboutPage() {
             title: 'The Problem',
             year: '2023',
             icon: Target,
-            color: 'from-red-500 to-orange-500',
+            color: 'from-earth-primary to-earth-dark',
             description: 'Managing a growing music studio with spreadsheets and multiple apps became unsustainable. Hours lost to admin work instead of teaching.'
         },
         {
             title: 'The Search',
             year: '2023',
             icon: Music,
-            color: 'from-amber-500 to-yellow-500',
+            color: 'from-olive-light to-olive-primary',
             description: 'Existing solutions were either too complex or cost $3,000+ annually. Independent instructors needed something better.'
         },
         {
             title: 'The Solution',
             year: '2024',
             icon: Code,
-            color: 'from-emerald-500 to-teal-500',
+            color: 'from-earth-light to-earth-primary',
             description: 'Built StudioSync as an all-in-one platform: scheduling, billing, student management, and communication in one beautiful interface.'
         },
         {
             title: 'Open Source',
             year: '2024',
             icon: Github,
-            color: 'from-purple-500 to-indigo-500',
+            color: 'from-olive-primary to-olive-dark',
             description: 'Made it open source and affordable for all. Because every instructor deserves professional tools without breaking the bank.'
         }
     ]
@@ -196,10 +196,10 @@ export default function AboutPage() {
             <Navigation />
 
             {/* Animated background */}
-            <div className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
-                <FloatingOrb delay={0} duration={25} size={400} opacity={0.12} color="purple" />
-                <FloatingOrb delay={5} duration={30} size={300} opacity={0.1} color="indigo" />
-                <FloatingOrb delay={10} duration={35} size={350} opacity={0.08} color="pink" />
+            <div className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-earth-lighter via-neutral-light to-olive-light">
+                <FloatingOrb delay={0} duration={25} size={400} opacity={0.12} color="earth-primary" />
+                <FloatingOrb delay={5} duration={30} size={300} opacity={0.1} color="olive-primary" />
+                <FloatingOrb delay={10} duration={35} size={350} opacity={0.08} color="earth-light" />
 
                 {/* Musical staff lines */}
                 <div className="absolute inset-0 opacity-5">
@@ -226,7 +226,7 @@ export default function AboutPage() {
                                 initial={{ scale: 0.5, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ duration: 0.5 }}
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-purple-200 text-purple-700 font-medium mb-8"
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-earth-light text-earth-dark font-medium mb-8"
                             >
                                 <Sparkles className="w-4 h-4" />
                                 Our Story
@@ -236,7 +236,7 @@ export default function AboutPage() {
                                 <span className="block bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                                     Built by Teachers,
                                 </span>
-                                <span className="block bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                                <span className="block bg-gradient-to-r from-earth-primary to-olive-dark bg-clip-text text-transparent">
                                     For Teachers
                                 </span>
                             </h1>
@@ -273,12 +273,12 @@ export default function AboutPage() {
                             <div className="absolute inset-0 bg-white/60 backdrop-blur-xl border border-white/20" />
 
                             {/* Gradient accent */}
-                            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600" />
+                            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-earth-primary via-olive-primary to-earth-light" />
 
                             {/* Content */}
                             <div className="relative p-8 md:p-12">
                                 <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
+                                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-earth-primary to-olive-dark flex items-center justify-center">
                                         <Music className="w-7 h-7 text-white" />
                                     </div>
                                     <h2 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
@@ -364,8 +364,8 @@ export default function AboutPage() {
                             <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" />
 
                             {/* Decorative elements */}
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl" />
-                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl" />
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-earth-primary/20 rounded-full blur-3xl" />
+                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-olive-primary/20 rounded-full blur-3xl" />
 
                             {/* Content */}
                             <div className="relative p-8 md:p-12 text-white">
@@ -416,7 +416,7 @@ export default function AboutPage() {
                             className="relative rounded-3xl overflow-hidden"
                         >
                             {/* Gradient background */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-earth-primary via-olive-primary to-earth-light" />
 
                             {/* Animated orbs */}
                             <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
@@ -435,7 +435,7 @@ export default function AboutPage() {
                                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                         <Link
                                             href="/signup"
-                                            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-purple-600 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all"
+                                            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-earth-dark rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all"
                                         >
                                             Start Free Trial
                                             <ArrowRight className="w-5 h-5" />

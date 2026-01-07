@@ -23,10 +23,10 @@ module.exports = {
                 background: "hsl(var(--background))",
                 foreground: "hsl(var(--foreground))",
                 primary: {
-                    DEFAULT: "var(--color-primary, #1ABC9C)",
-                    hover: "var(--color-primary-hover, #16A085)",
-                    light: "var(--color-primary-light, #E8F8F5)",
-                    dark: "var(--color-primary-dark, #138D75)",
+                    DEFAULT: "var(--color-primary, #C4704F)",
+                    hover: "var(--color-primary-hover, #A25A3D)",
+                    light: "var(--color-primary-light, #E5B299)",
+                    dark: "var(--color-primary-dark, #A25A3D)",
                     foreground: "hsl(var(--primary-foreground))",
                 },
                 secondary: {
@@ -53,6 +53,22 @@ module.exports = {
                     DEFAULT: "hsl(var(--card))",
                     foreground: "hsl(var(--card-foreground))",
                 },
+                earth: {
+                    primary: '#C4704F', // Warm Terracotta
+                    dark: '#A25A3D',    // Deep Terracotta
+                    light: '#E5B299',   // Peachy Terracotta
+                    lighter: '#E8F5E9', // Soft Mint
+                },
+                olive: {
+                    primary: '#6B8E23', // OliveDrab
+                    dark: '#556B2F',    // DarkOliveGreen
+                    light: '#B8D490',   // Light Olive
+                },
+                neutral: {
+                    light: '#EFF7F0',   // Very Light Sage
+                    medium: '#D8E4C8',  // Light Sage
+                    dark: '#5A6B4F',    // Muted Olive Gray
+                }
             },
             borderRadius: {
                 lg: "var(--radius)",

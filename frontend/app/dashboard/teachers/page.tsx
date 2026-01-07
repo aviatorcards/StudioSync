@@ -11,7 +11,7 @@ import { useUser } from '@/contexts/UserContext'
 import { useTeachers } from '@/hooks/useDashboardData'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
-import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
+import Modal from '@/components/Modal'
 import { Button } from '@/components/ui/button'
 
 export default function InstructorsPage() {
@@ -128,7 +128,7 @@ export default function InstructorsPage() {
             {/* Header */}
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4">
                 <div className="space-y-2">
-                    <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">Instructors</h1>
+                    <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">Instructors</h1>
                     <p className="text-gray-500 font-medium max-w-lg">Manage your teaching staff and track performance.</p>
                 </div>
                 {currentUser?.role === 'admin' && (
@@ -389,107 +389,94 @@ export default function InstructorsPage() {
 
             {/* Edit Modal */}
             {isEditModalOpen && (
-                <Dialog
-                    open={isEditModalOpen}
-                    onOpenChange={setIsEditModalOpen}
-                    size="md"
+                <Modal
+                    isOpen={isEditModalOpen}
+                    onClose={() => setIsEditModalOpen(false)}
+                    title="Edit Instructor"
+                    footer={
+                        <>
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsEditModalOpen(false)}
+                                className="flex-1"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleSubmit}
+                                disabled={isSubmitting}
+                                className="flex-[2] gap-2"
+                            >
+                                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
+                            </Button>
+                        </>
+                    }
                 >
-                    <DialogHeader
-                        title="Edit Instructor"
-                        subtitle="Update Information"
-                    />
-                    <DialogContent>
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">First Name</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formData.first_name}
-                                        onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Last Name</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formData.last_name}
-                                        onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
-                                    />
-                                </div>
-                            </div>
-
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Email</label>
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">First Name</label>
                                 <input
-                                    type="email"
+                                    type="text"
                                     required
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    value={formData.first_name}
+                                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                                     className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
                                 />
                             </div>
-
                             <div className="space-y-2">
-                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Specialties</label>
-                                <div className="flex flex-wrap gap-2 mb-3">
-                                    {formData.specialties.map((spec) => (
-                                        <span key={spec} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-bold border border-blue-100">
-                                            {spec}
-                                            <button
-                                                type="button"
-                                                onClick={() => setFormData({
-                                                    ...formData,
-                                                    specialties: formData.specialties.filter(i => i !== spec)
-                                                })}
-                                                className="hover:text-red-600 transition-colors"
-                                            >
-                                                <X className="w-3.5 h-3.5" />
-                                            </button>
-                                        </span>
-                                    ))}
-                                    {formData.specialties.length === 0 && (
-                                        <p className="text-sm text-gray-400">No specialties added yet</p>
-                                    )}
-                                </div>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={newInstrument}
-                                        onChange={(e) => setNewInstrument(e.target.value)}
-                                        onKeyPress={(e) => {
-                                            if (e.key === 'Enter') {
-                                                e.preventDefault();
-                                                const trimmed = newInstrument.trim();
-                                                if (!trimmed) return;
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Last Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={formData.last_name}
+                                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                />
+                            </div>
+                        </div>
 
-                                                const formatted = trimmed.replace(
-                                                    /\w\S*/g,
-                                                    (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase()
-                                                );
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Email</label>
+                            <input
+                                type="email"
+                                required
+                                value={formData.email}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                            />
+                        </div>
 
-                                                if (formData.specialties.some(s => s.toLowerCase() === formatted.toLowerCase())) {
-                                                    toast.error('This specialty is already listed');
-                                                    return;
-                                                }
-
-                                                setFormData({
-                                                    ...formData,
-                                                    specialties: [...formData.specialties, formatted]
-                                                });
-                                                setNewInstrument('');
-                                            }
-                                        }}
-                                        placeholder="Add specialty (e.g., Piano)"
-                                        className="flex-1 px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => {
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Specialties</label>
+                            <div className="flex flex-wrap gap-2 mb-3">
+                                {formData.specialties.map((spec) => (
+                                    <span key={spec} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-bold border border-blue-100">
+                                        {spec}
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData({
+                                                ...formData,
+                                                specialties: formData.specialties.filter(i => i !== spec)
+                                            })}
+                                            className="hover:text-red-600 transition-colors"
+                                        >
+                                            <X className="w-3.5 h-3.5" />
+                                        </button>
+                                    </span>
+                                ))}
+                                {formData.specialties.length === 0 && (
+                                    <p className="text-sm text-gray-400">No specialties added yet</p>
+                                )}
+                            </div>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={newInstrument}
+                                    onChange={(e) => setNewInstrument(e.target.value)}
+                                    onKeyPress={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
                                             const trimmed = newInstrument.trim();
                                             if (!trimmed) return;
 
@@ -508,63 +495,72 @@ export default function InstructorsPage() {
                                                 specialties: [...formData.specialties, formatted]
                                             });
                                             setNewInstrument('');
-                                        }}
-                                        className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-bold"
-                                    >
-                                        Add
-                                    </button>
-                                </div>
-                            </div>
+                                        }
+                                    }}
+                                    placeholder="Add specialty (e.g., Piano)"
+                                    className="flex-1 px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const trimmed = newInstrument.trim();
+                                        if (!trimmed) return;
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Hourly Rate ($)</label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={formData.hourly_rate}
-                                        onChange={(e) => setFormData({ ...formData, hourly_rate: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
-                                        placeholder="0.00"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Status</label>
-                                    <div className="flex items-center gap-4 px-4 py-3 bg-gray-50 rounded-xl h-[50px]">
-                                        <label className="relative inline-flex items-center cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={formData.is_active}
-                                                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                                                className="sr-only peer"
-                                            />
-                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                                        </label>
-                                        <span className="text-sm font-bold text-gray-700">
-                                            {formData.is_active ? 'Active' : 'Inactive'}
-                                        </span>
-                                    </div>
+                                        const formatted = trimmed.replace(
+                                            /\w\S*/g,
+                                            (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase()
+                                        );
+
+                                        if (formData.specialties.some(s => s.toLowerCase() === formatted.toLowerCase())) {
+                                            toast.error('This specialty is already listed');
+                                            return;
+                                        }
+
+                                        setFormData({
+                                            ...formData,
+                                            specialties: [...formData.specialties, formatted]
+                                        });
+                                        setNewInstrument('');
+                                    }}
+                                    className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-bold"
+                                >
+                                    Add
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Hourly Rate ($)</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={formData.hourly_rate}
+                                    onChange={(e) => setFormData({ ...formData, hourly_rate: e.target.value })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                    placeholder="0.00"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Status</label>
+                                <div className="flex items-center gap-4 px-4 py-3 bg-gray-50 rounded-xl h-[50px]">
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.is_active}
+                                            onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                    </label>
+                                    <span className="text-sm font-bold text-gray-700">
+                                        {formData.is_active ? 'Active' : 'Inactive'}
+                                    </span>
                                 </div>
                             </div>
-                        </form>
-                    </DialogContent>
-                    <DialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={() => setIsEditModalOpen(false)}
-                            className="flex-1"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleSubmit}
-                            disabled={isSubmitting}
-                            className="flex-[2] gap-2"
-                        >
-                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
-                        </Button>
-                    </DialogFooter>
-                </Dialog>
+                        </div>
+                    </form>
+                </Modal>
             )}
         </div>
     )

@@ -1,3 +1,6 @@
+/* Google Fonts - Outfit & Manrope */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Manrope:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,7 +13,7 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 262 83% 58%;
+    --primary: 19 60% 41%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -20,24 +23,24 @@
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --success: 171 77% 43%;
+    --success: 82 39% 35%;
     --success-foreground: 210 40% 98%;
     --warning: 38 92% 50%;
     --warning-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 262 83% 58%;
+    --ring: 19 60% 41%;
     --radius: 0.75rem;
-    
+
     /* Appearance Settings */
-    --primary-color: #F39C12;
+    --primary-color: #C4704F;
     --base-font-size: 16px;
 
-    /* Dynamic Color Scheme Variables */
-    --color-primary: #F39C12;
-    --color-primary-hover: #E67E22;
-    --color-primary-light: #FEF5E7;
-    --color-primary-dark: #D68910;
+    /* Dynamic Color Scheme Variables - Warm Terracotta & Olive */
+    --color-primary: #C4704F;
+    --color-primary-hover: #A25A3D;
+    --color-primary-light: #E5B299;
+    --color-primary-dark: #A25A3D;
   }
 
   .dark {
@@ -47,8 +50,8 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 262 83% 58%;
-    --primary-foreground: 222.2 84% 4.9%;
+    --primary: 19 60% 41%;
+    --primary-foreground: 210 40% 98%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
@@ -57,13 +60,13 @@
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --success: 171 77% 25%;
+    --success: 82 39% 25%;
     --success-foreground: 210 40% 98%;
     --warning: 38 92% 30%;
     --warning-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 262 83% 58%;
+    --ring: 19 60% 41%;
   }
 }
 
@@ -119,9 +122,6 @@
   }
 }
 
-/* Google Fonts - Outfit & Manrope */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Manrope:wght@300;400;500;600;700;800&display=swap');
-
 /* Custom Typography */
 * {
   font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -141,7 +141,7 @@ h1, h2, h3, h4, h5, h6 {
   scrollbar-width: none;
 }
 
-/* Dynamic Color Overrides - Maps hardcoded #F39C12 to CSS variables */
+/* Dynamic Color Overrides - Maps hardcoded to CSS variables */
 .bg-\[\#F39C12\] {
   background-color: var(--color-primary) !important;
 }

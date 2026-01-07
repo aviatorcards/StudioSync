@@ -1,59 +1,31 @@
 export const colorSchemes = {
-  orange: {
-    name: 'Orange',
-    primary: '#F39C12',
-    primaryHover: '#E67E22',
-    primaryLight: '#FEF5E7',
-    primaryDark: '#D68910',
-  },
-  blue: {
-    name: 'Blue',
-    primary: '#3498DB',
-    primaryHover: '#2980B9',
-    primaryLight: '#EBF5FB',
-    primaryDark: '#21618C',
-  },
-  green: {
-    name: 'Green',
-    primary: '#27AE60',
-    primaryHover: '#229954',
-    primaryLight: '#E8F8F5',
-    primaryDark: '#1E8449',
-  },
-  purple: {
-    name: 'Purple',
-    primary: '#9B59B6',
-    primaryHover: '#8E44AD',
-    primaryLight: '#F4ECF7',
-    primaryDark: '#7D3C98',
-  },
-  red: {
-    name: 'Red',
-    primary: '#E74C3C',
-    primaryHover: '#C0392B',
+  terracotta: {
+    name: 'Terracotta',
+    primary: '#D98880',
+    primaryHover: '#CD6155',
     primaryLight: '#FADBD8',
-    primaryDark: '#A93226',
+    primaryDark: '#B03A2E',
   },
-  teal: {
-    name: 'Teal',
-    primary: '#1ABC9C',
-    primaryHover: '#16A085',
-    primaryLight: '#E8F8F5',
-    primaryDark: '#138D75',
+  ocean: {
+    name: 'Ocean',
+    primary: '#5DADE2',
+    primaryHover: '#3498DB',
+    primaryLight: '#D6EAF8',
+    primaryDark: '#2874A6',
   },
-  indigo: {
-    name: 'Indigo',
-    primary: '#5D6D7E',
-    primaryHover: '#34495E',
+  sky: {
+    name: 'Sky',
+    primary: '#85C1E9',
+    primaryHover: '#5DADE2',
     primaryLight: '#EBF5FB',
-    primaryDark: '#2C3E50',
+    primaryDark: '#2E86C1',
   },
-  pink: {
-    name: 'Pink',
-    primary: '#EC7063',
-    primaryHover: '#E74C3C',
-    primaryLight: '#FADBD8',
-    primaryDark: '#C0392B',
+  slate: {
+    name: 'Slate',
+    primary: '#AAB7B8',
+    primaryHover: '#909497',
+    primaryLight: '#EAECEE',
+    primaryDark: '#566573',
   },
 } as const
 
@@ -74,9 +46,9 @@ export function applyColorScheme(scheme: ColorScheme) {
 }
 
 export function getStoredColorScheme(): ColorScheme {
-  if (typeof window === 'undefined') return 'orange'
+  if (typeof window === 'undefined') return 'terracotta'
   const stored = localStorage.getItem('colorScheme') as ColorScheme
-  return stored && stored in colorSchemes ? stored : 'orange'
+  return stored && stored in colorSchemes ? stored : 'terracotta'
 }
 
 export function initializeColorScheme() {

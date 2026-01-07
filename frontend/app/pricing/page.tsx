@@ -19,10 +19,10 @@ import {
     Code
 } from 'lucide-react'
 
-function FloatingOrb({ delay = 0, duration = 20, size = 300, opacity = 0.15, color = 'purple' }) {
+function FloatingOrb({ delay = 0, duration = 20, size = 300, opacity = 0.15, color = 'earth-primary' }) {
     return (
         <motion.div
-            className={`absolute rounded-full blur-3xl bg-${color}-500`}
+            className={`absolute rounded-full blur-3xl bg-${color}`}
             style={{
                 width: size,
                 height: size,
@@ -422,10 +422,10 @@ export default function PricingPage() {
             <Navigation />
 
             {/* Animated background */}
-            <div className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
-                <FloatingOrb delay={0} duration={25} size={400} opacity={0.12} color="purple" />
-                <FloatingOrb delay={5} duration={30} size={300} opacity={0.1} color="indigo" />
-                <FloatingOrb delay={10} duration={35} size={350} opacity={0.08} color="blue" />
+            <div className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-earth-lighter via-neutral-light to-olive-light">
+                <FloatingOrb delay={0} duration={25} size={400} opacity={0.12} color="earth-primary" />
+                <FloatingOrb delay={5} duration={30} size={300} opacity={0.1} color="olive-primary" />
+                <FloatingOrb delay={10} duration={35} size={350} opacity={0.08} color="earth-light" />
             </div>
 
             <main className="relative">
@@ -441,7 +441,7 @@ export default function PricingPage() {
                                 initial={{ scale: 0.5, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ duration: 0.5 }}
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-purple-200 text-purple-700 font-medium mb-8"
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-earth-light text-earth-dark font-medium mb-8"
                             >
                                 <Sparkles className="w-4 h-4" />
                                 Simple, Transparent Pricing
@@ -451,7 +451,7 @@ export default function PricingPage() {
                                 <span className="block bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                                     Choose Your
                                 </span>
-                                <span className="block bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                                <span className="block bg-gradient-to-r from-earth-primary to-olive-dark bg-clip-text text-transparent">
                                     Perfect Plan
                                 </span>
                             </h1>
@@ -488,7 +488,7 @@ export default function PricingPage() {
                             className="relative rounded-3xl overflow-hidden"
                         >
                             {/* Gradient background */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-earth-primary via-olive-primary to-earth-light" />
 
                             {/* Decorative orbs */}
                             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
@@ -645,7 +645,7 @@ export default function PricingPage() {
                                 >
                                     <div className="absolute inset-0 bg-white/60 backdrop-blur-xl border border-white/20" />
                                     <div className="relative">
-                                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center mx-auto mb-4">
+                                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-earth-primary to-olive-dark flex items-center justify-center mx-auto mb-4">
                                             <item.icon className="w-7 h-7 text-white" />
                                         </div>
                                         <h3 className="font-bold text-gray-900 mb-2">{item.title}</h3>
@@ -690,7 +690,7 @@ export default function PricingPage() {
                             className="relative rounded-3xl overflow-hidden"
                         >
                             {/* Gradient background */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-earth-primary via-olive-primary to-earth-light" />
 
                             {/* Animated orbs */}
                             <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
@@ -709,7 +709,7 @@ export default function PricingPage() {
                                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                         <Link
                                             href="/signup"
-                                            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-purple-600 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all"
+                                            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-earth-dark rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all"
                                         >
                                             Start Your Free Trial
                                             <ArrowRight className="w-5 h-5" />

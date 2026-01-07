@@ -33,9 +33,9 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-primary/5 via-purple-500/5 to-pink-500/5 flex">
+        <div className="min-h-screen bg-gradient-to-br from-earth-lighter via-neutral-light to-olive-light flex">
             {/* Left Side - Branding */}
-            <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-purple-600 to-pink-600 p-12 flex-col justify-between relative overflow-hidden">
+            <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-earth-primary via-olive-primary to-earth-light p-12 flex-col justify-between relative overflow-hidden">
                 {/* Decorative circles */}
                 <div className="absolute top-20 right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
                 <div className="absolute bottom-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
@@ -78,10 +78,10 @@ export default function LoginPage() {
                 <div className="w-full max-w-md">
                     {/* Mobile Logo */}
                     <Link href="/" className="lg:hidden flex items-center gap-3 justify-center mb-8 group">
-                        <div className="w-12 h-12 bg-gradient-to-br from-primary to-purple-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform overflow-hidden">
+                        <div className="w-12 h-12 bg-gradient-to-br from-earth-primary to-olive-dark rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform overflow-hidden">
                             <Image src="/logo_final.png" alt="StudioSync" width={32} height={32} className="object-contain" />
                         </div>
-                        <span className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                        <span className="text-2xl font-bold bg-gradient-to-r from-earth-primary to-olive-dark bg-clip-text text-transparent">
                             StudioSync
                         </span>
                     </Link>
@@ -93,7 +93,7 @@ export default function LoginPage() {
                             </h2>
                             <p className="text-gray-600">
                                 Don&apos;t have an account?{' '}
-                                <Link href="/signup" className="font-semibold text-primary hover:text-primary/80 transition-colors">
+                                <Link href="/signup" className="font-semibold text-earth-dark hover:text-earth-primary transition-colors">
                                     Sign up free
                                 </Link>
                             </p>
@@ -123,7 +123,7 @@ export default function LoginPage() {
                                         required
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                                        className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-earth-primary focus:border-transparent transition-all"
                                         placeholder="you@example.com"
                                     />
                                 </div>
@@ -145,7 +145,7 @@ export default function LoginPage() {
                                         required
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                                        className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-earth-primary focus:border-transparent transition-all"
                                         placeholder="••••••••"
                                     />
                                 </div>
@@ -157,14 +157,14 @@ export default function LoginPage() {
                                         id="remember-me"
                                         name="remember-me"
                                         type="checkbox"
-                                        className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                                        className="h-4 w-4 text-earth-primary focus:ring-earth-primary border-gray-300 rounded"
                                     />
                                     <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
                                         Remember me
                                     </label>
                                 </div>
 
-                                <Link href="/forgot-password" className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors">
+                                <Link href="/forgot-password" className="text-sm font-semibold text-earth-dark hover:text-earth-primary transition-colors">
                                     Forgot password?
                                 </Link>
                             </div>
@@ -193,11 +193,11 @@ export default function LoginPage() {
 
                         <div className="mt-6 text-center text-sm text-gray-500">
                             By signing in, you agree to our{' '}
-                            <Link href="/terms" className="text-primary hover:underline">
+                            <Link href="/terms" className="text-earth-dark hover:underline">
                                 Terms
                             </Link>
                             {' '}and{' '}
-                            <Link href="/privacy" className="text-primary hover:underline">
+                            <Link href="/privacy" className="text-earth-dark hover:underline">
                                 Privacy Policy
                             </Link>
                         </div>

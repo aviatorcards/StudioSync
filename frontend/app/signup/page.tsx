@@ -84,9 +84,9 @@ export default function SignupPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-primary/5 via-purple-500/5 to-pink-500/5 flex">
+        <div className="min-h-screen bg-gradient-to-br from-earth-lighter via-neutral-light to-olive-light flex">
             {/* Left Side - Branding */}
-            <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-purple-600 to-pink-600 p-12 flex-col justify-between relative overflow-hidden">
+            <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-earth-primary via-olive-primary to-earth-light p-12 flex-col justify-between relative overflow-hidden">
                 {/* Decorative circles */}
                 <div className="absolute top-20 right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
                 <div className="absolute bottom-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
@@ -141,10 +141,10 @@ export default function SignupPage() {
                 <div className="w-full max-w-md">
                     {/* Mobile Logo */}
                     <Link href="/" className="lg:hidden flex items-center gap-3 justify-center mb-8 group">
-                        <div className="w-12 h-12 bg-gradient-to-br from-primary to-purple-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform overflow-hidden">
+                        <div className="w-12 h-12 bg-gradient-to-br from-earth-primary to-olive-dark rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform overflow-hidden">
                             <Image src="/logo_final.png" alt="StudioSync" width={32} height={32} className="object-contain" />
                         </div>
-                        <span className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                        <span className="text-2xl font-bold bg-gradient-to-r from-earth-primary to-olive-dark bg-clip-text text-transparent">
                             StudioSync
                         </span>
                     </Link>
@@ -156,7 +156,7 @@ export default function SignupPage() {
                             </h2>
                             <p className="text-gray-600">
                                 Already have an account?{' '}
-                                <Link href="/login" className="font-semibold text-primary hover:text-primary/80 transition-colors">
+                                <Link href="/login" className="font-semibold text-earth-dark hover:text-earth-primary transition-colors">
                                     Sign in
                                 </Link>
                             </p>
@@ -164,9 +164,9 @@ export default function SignupPage() {
 
                         {/* Selected Plan Badge */}
                         {selectedPlan && selectedPlan !== 'starter' && (
-                            <div className="mb-6 p-4 bg-gradient-to-r from-primary/10 to-purple-500/10 border border-primary/20 rounded-xl">
+                            <div className="mb-6 p-4 bg-gradient-to-r from-earth-primary/10 to-olive-primary/10 border border-earth-primary/20 rounded-xl">
                                 <p className="text-sm font-semibold text-gray-700">
-                                    Selected Plan: <span className="text-primary capitalize">{selectedPlan}</span>
+                                    Selected Plan: <span className="text-earth-dark capitalize">{selectedPlan}</span>
                                 </p>
                             </div>
                         )}
@@ -195,7 +195,7 @@ export default function SignupPage() {
                                             required
                                             value={formData.firstName}
                                             onChange={handleChange}
-                                            className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                                            className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-earth-primary focus:border-transparent transition-all"
                                             placeholder="John"
                                         />
                                     </div>
@@ -211,7 +211,7 @@ export default function SignupPage() {
                                         required
                                         value={formData.lastName}
                                         onChange={handleChange}
-                                        className="block w-full px-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                                        className="block w-full px-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-earth-primary focus:border-transparent transition-all"
                                         placeholder="Doe"
                                     />
                                 </div>
@@ -232,7 +232,7 @@ export default function SignupPage() {
                                         required
                                         value={formData.email}
                                         onChange={handleChange}
-                                        className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                                        className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-earth-primary focus:border-transparent transition-all"
                                         placeholder="you@example.com"
                                     />
                                 </div>
@@ -247,7 +247,7 @@ export default function SignupPage() {
                                     name="role"
                                     value={formData.role}
                                     onChange={handleChange}
-                                    className="block w-full px-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                                    className="block w-full px-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-earth-primary focus:border-transparent transition-all"
                                 >
                                     <option value="student">Student</option>
                                     <option value="teacher">Instructor</option>
@@ -271,7 +271,7 @@ export default function SignupPage() {
                                         required
                                         value={formData.password}
                                         onChange={handleChange}
-                                        className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                                        className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-earth-primary focus:border-transparent transition-all"
                                         placeholder="••••••••"
                                     />
                                 </div>
@@ -293,7 +293,7 @@ export default function SignupPage() {
                                         required
                                         value={formData.confirmPassword}
                                         onChange={handleChange}
-                                        className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                                        className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-earth-primary focus:border-transparent transition-all"
                                         placeholder="••••••••"
                                     />
                                 </div>
@@ -302,7 +302,7 @@ export default function SignupPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
+                                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-earth-primary to-olive-dark hover:from-earth-primary/90 hover:to-olive-dark/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earth-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
                             >
                                 {loading ? (
                                     <>
@@ -320,11 +320,11 @@ export default function SignupPage() {
 
                         <div className="mt-6 text-center text-sm text-gray-500">
                             By signing up, you agree to our{' '}
-                            <Link href="/terms" className="text-primary hover:underline">
+                            <Link href="/terms" className="text-earth-dark hover:underline">
                                 Terms
                             </Link>
                             {' '}and{' '}
-                            <Link href="/privacy" className="text-primary hover:underline">
+                            <Link href="/privacy" className="text-earth-dark hover:underline">
                                 Privacy Policy
                             </Link>
                         </div>

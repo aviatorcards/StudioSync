@@ -6,19 +6,19 @@ export const colorSchemes = {
     primaryLight: '#FADBD8',
     primaryDark: '#B03A2E',
   },
-  sage: {
-    name: 'Sage',
-    primary: '#A9DFBF',
-    primaryHover: '#58D68D',
-    primaryLight: '#E8F8F5',
-    primaryDark: '#1E8449',
+  ocean: {
+    name: 'Ocean',
+    primary: '#5DADE2',
+    primaryHover: '#3498DB',
+    primaryLight: '#D6EAF8',
+    primaryDark: '#2874A6',
   },
-  sand: {
-    name: 'Sand',
-    primary: '#F0E68C',
-    primaryHover: '#E9D66B',
-    primaryLight: '#FEF9E7',
-    primaryDark: '#D4AC0D',
+  sky: {
+    name: 'Sky',
+    primary: '#85C1E9',
+    primaryHover: '#5DADE2',
+    primaryLight: '#EBF5FB',
+    primaryDark: '#2E86C1',
   },
   slate: {
     name: 'Slate',

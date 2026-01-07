@@ -6,7 +6,6 @@ import { useMessages, MessageThread, Message } from '@/hooks/useMessages'
 import { useUser } from '@/contexts/UserContext'
 import { useUsers } from '@/hooks/useDashboardData'
 import { toast } from 'react-hot-toast'
-import { FeatureGate } from '@/components/FeatureGate'
 
 // Helper to format date
 const formatDate = (dateString: string) => {
@@ -64,25 +63,6 @@ export default function MessagesPage() {
     }
 
     return (
-        <FeatureGate
-            flag="messaging_enabled"
-            fallback={
-                <div className="flex items-center justify-center min-h-[calc(100vh-6rem)]">
-                    <div className="max-w-md text-center p-8 bg-white rounded-lg border border-gray-200 shadow-sm">
-                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Edit className="w-8 h-8 text-blue-600" />
-                        </div>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Messaging Coming Soon</h2>
-                        <p className="text-gray-600 mb-6">
-                            The messaging feature is currently disabled. Contact your administrator to enable it.
-                        </p>
-                        <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                            Contact Support
-                        </button>
-                    </div>
-                </div>
-            }
-        >
         <div className="h-[calc(100vh-6rem)] flex bg-white rounded-lg border overflow-hidden">
             {/* Thread List Sidebar */}
             <div className={`w-full md:w-80 lg:w-96 flex flex-col border-r ${activeThread ? 'hidden md:flex' : 'flex'}`}>
@@ -252,7 +232,6 @@ export default function MessagesPage() {
                 />
             )}
         </div>
-        </FeatureGate>
     )
 }
 

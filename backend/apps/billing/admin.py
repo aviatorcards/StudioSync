@@ -91,14 +91,14 @@ class InvoiceAdmin(admin.ModelAdmin):
     def status_badge(self, obj):
         """Display status as a colored badge"""
         colors = {
-            'draft': '#6c757d',
-            'sent': '#0dcaf0',
-            'paid': '#198754',
-            'partial': '#ffc107',
-            'overdue': '#dc3545',
-            'cancelled': '#adb5bd',
+            'draft': '#5A6B4F',     # Neutral Dark
+            'sent': '#6B8E23',      # Olive Primary
+            'paid': '#556B2F',      # Olive Dark
+            'partial': '#E8A845',   # Warm Amber
+            'overdue': '#C4704F',   # Earth Primary (Terracotta)
+            'cancelled': '#8A9780', # Light Neutral
         }
-        color = colors.get(obj.status, '#6c757d')
+        color = colors.get(obj.status, '#5A6B4F')
         return format_html(
             '<span style="background-color: {}; color: white; padding: 3px 10px; '
             'border-radius: 3px; font-weight: bold;">{}</span>',
@@ -147,12 +147,12 @@ class PaymentAdmin(admin.ModelAdmin):
     def status_badge(self, obj):
         """Display status as a colored badge"""
         colors = {
-            'pending': '#ffc107',
-            'completed': '#198754',
-            'failed': '#dc3545',
-            'refunded': '#6c757d',
+            'pending': '#E8A845',   # Warm Amber
+            'completed': '#556B2F', # Olive Dark
+            'failed': '#C4704F',    # Earth Primary (Terracotta)
+            'refunded': '#5A6B4F',  # Neutral Dark
         }
-        color = colors.get(obj.status, '#6c757d')
+        color = colors.get(obj.status, '#5A6B4F')
         return format_html(
             '<span style="background-color: {}; color: white; padding: 3px 10px; '
             'border-radius: 3px; font-weight: bold;">{}</span>',

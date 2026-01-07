@@ -1,3 +1,6 @@
+/* Google Fonts - Outfit & Manrope */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Manrope:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -30,14 +33,14 @@
     --radius: 0.75rem;
 
     /* Appearance Settings */
-    --primary-color: #A0522D;
+    --primary-color: #C4704F;
     --base-font-size: 16px;
 
-    /* Dynamic Color Scheme Variables - Earth Tones */
-    --color-primary: #A0522D;
-    --color-primary-hover: #8B4513;
-    --color-primary-light: #F5DEB3;
-    --color-primary-dark: #8B4513;
+    /* Dynamic Color Scheme Variables - Warm Terracotta & Olive */
+    --color-primary: #C4704F;
+    --color-primary-hover: #A25A3D;
+    --color-primary-light: #E5B299;
+    --color-primary-dark: #A25A3D;
   }
 
   .dark {
@@ -118,9 +121,6 @@
     animation: ripple 600ms ease-out;
   }
 }
-
-/* Google Fonts - Outfit & Manrope */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Manrope:wght@300;400;500;600;700;800&display=swap');
 
 /* Custom Typography */
 * {

@@ -10,8 +10,8 @@ class LessonNoteInline(admin.StackedInline):
     """Inline admin for lesson notes"""
     model = LessonNote
     extra = 0
-    fields = ['content', 'practice_assignments', 'created_by']
-    readonly_fields = ['created_by']
+    fields = ['content', 'practice_assignments', 'teacher']
+    readonly_fields = ['teacher']
 
 
 @admin.register(Lesson)
@@ -74,11 +74,11 @@ class LessonAdmin(admin.ModelAdmin):
     def status_badge(self, obj):
         """Display status as a colored badge"""
         colors = {
-            'scheduled': '#0dcaf0',
-            'in_progress': '#ffc107',
-            'completed': '#198754',
-            'cancelled': '#6c757d',
-            'no_show': '#dc3545',
+            'scheduled': '#6B8E23',  # Olive Primary
+            'in_progress': '#E8A845',  # Warm Amber
+            'completed': '#556B2F',  # Olive Dark
+            'cancelled': '#5A6B4F',  # Neutral Dark
+            'no_show': '#C4704F',  # Earth Primary (Terracotta)
         }
         color = colors.get(obj.status, '#6c757d')
         return format_html(
@@ -136,10 +136,10 @@ class StudentGoalAdmin(admin.ModelAdmin):
         'title',
         'student',
         'target_date',
-        'completed',
+        'status',
         'created_at',
     ]
-    list_filter = ['completed', 'target_date', 'created_at']
+    list_filter = ['status', 'target_date', 'created_at']
     search_fields = [
         'title',
         'description',
@@ -149,10 +149,13 @@ class StudentGoalAdmin(admin.ModelAdmin):
     readonly_fields = ['id', 'created_at', 'updated_at']
     fieldsets = (
         ('Goal Information', {
-            'fields': ('student', 'title', 'description')
+            'fields': ('student', 'teacher', 'title', 'description')
+        }),
+        ('Progress', {
+            'fields': ('status', 'progress_percentage')
         }),
         ('Timeline', {
-            'fields': ('target_date', 'completed', 'completed_at')
+            'fields': ('target_date', 'achieved_date')
         }),
         ('Metadata', {
             'fields': ('id', 'created_at', 'updated_at'),

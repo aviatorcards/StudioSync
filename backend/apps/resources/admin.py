@@ -69,17 +69,17 @@ class ResourceAdmin(admin.ModelAdmin):
 
         if obj.quantity_available == 0:
             return format_html(
-                '<span style="color: #dc3545; font-weight: bold;">Out of Stock</span>'
+                '<span style="color: #C4704F; font-weight: bold;">Out of Stock</span>'
             )
         elif obj.quantity_available < obj.quantity_total:
             return format_html(
-                '<span style="color: #ffc107; font-weight: bold;">{}/{} Available</span>',
+                '<span style="color: #E8A845; font-weight: bold;">{}/{} Available</span>',
                 obj.quantity_available,
                 obj.quantity_total
             )
         else:
             return format_html(
-                '<span style="color: #198754; font-weight: bold;">In Stock ({}/{})</span>',
+                '<span style="color: #556B2F; font-weight: bold;">In Stock ({}/{})</span>',
                 obj.quantity_available,
                 obj.quantity_total
             )
@@ -125,12 +125,12 @@ class ResourceCheckoutAdmin(admin.ModelAdmin):
     def status_badge(self, obj):
         """Display status as a colored badge"""
         colors = {
-            'checked_out': '#ffc107',
-            'returned': '#198754',
-            'overdue': '#dc3545',
-            'lost': '#dc3545',
+            'checked_out': '#E8A845',  # Warm Amber
+            'returned': '#556B2F',     # Olive Dark
+            'overdue': '#C4704F',      # Earth Primary (Terracotta)
+            'lost': '#C4704F',         # Earth Primary (Terracotta)
         }
-        color = colors.get(obj.status, '#6c757d')
+        color = colors.get(obj.status, '#5A6B4F')
         return format_html(
             '<span style="background-color: {}; color: white; padding: 3px 10px; '
             'border-radius: 3px; font-weight: bold;">{}</span>',

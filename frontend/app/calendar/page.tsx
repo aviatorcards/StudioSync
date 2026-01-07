@@ -18,17 +18,10 @@ import {
 } from 'lucide-react'
 
 // Floating orb component
-function FloatingOrb({ delay = 0, duration = 20, size = 300, opacity = 0.15, color = 'purple' }) {
-    const colorMap: { [key: string]: string } = {
-        purple: 'bg-purple-500',
-        blue: 'bg-blue-500',
-        pink: 'bg-pink-500',
-        indigo: 'bg-indigo-500'
-    }
-
+function FloatingOrb({ delay = 0, duration = 20, size = 300, opacity = 0.15, color = 'earth-primary' }) {
     return (
         <motion.div
-            className={`absolute rounded-full blur-3xl ${colorMap[color]}`}
+            className={`absolute rounded-full blur-3xl bg-${color}`}
             style={{
                 width: size,
                 height: size,
@@ -102,12 +95,12 @@ export default function CalendarPage() {
         <>
             <Navigation />
 
-            <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 relative overflow-hidden">
+            <main className="min-h-screen bg-gradient-to-br from-earth-lighter via-neutral-light to-olive-light relative overflow-hidden">
                 {/* Floating orbs background */}
                 <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                    <FloatingOrb delay={0} duration={25} size={500} opacity={0.1} color="purple" />
-                    <FloatingOrb delay={5} duration={20} size={400} opacity={0.08} color="blue" />
-                    <FloatingOrb delay={10} duration={30} size={600} opacity={0.06} color="pink" />
+                    <FloatingOrb delay={0} duration={25} size={500} opacity={0.1} color="earth-primary" />
+                    <FloatingOrb delay={5} duration={20} size={400} opacity={0.08} color="olive-primary" />
+                    <FloatingOrb delay={10} duration={30} size={600} opacity={0.06} color="earth-light" />
                 </div>
 
                 {/* Hero Section */}
@@ -117,7 +110,7 @@ export default function CalendarPage() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6 }}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-white/20 text-sm font-medium text-purple-600 mb-6"
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-white/20 text-sm font-medium text-earth-dark mb-6"
                         >
                             <Calendar className="w-4 h-4" />
                             Smart Scheduling for Music Studios
@@ -129,7 +122,7 @@ export default function CalendarPage() {
                             transition={{ duration: 0.6, delay: 0.1 }}
                             className="text-5xl md:text-7xl font-bold mb-6"
                         >
-                            <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                            <span className="bg-gradient-to-r from-earth-primary via-olive-primary to-earth-dark bg-clip-text text-transparent">
                                 Never Miss a Beat
                             </span>
                         </motion.h1>
@@ -151,7 +144,7 @@ export default function CalendarPage() {
                         >
                             <Link
                                 href="/signup"
-                                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105 inline-flex items-center justify-center gap-2"
+                                className="px-8 py-4 bg-gradient-to-r from-earth-primary to-olive-dark text-white rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105 inline-flex items-center justify-center gap-2"
                             >
                                 Start Free Trial
                                 <ArrowRight className="w-5 h-5" />
@@ -233,7 +226,7 @@ export default function CalendarPage() {
                             className="relative rounded-3xl overflow-hidden"
                         >
                             {/* Gradient background */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-earth-primary via-olive-primary to-earth-light" />
 
                             {/* Decorative orbs */}
                             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
@@ -280,8 +273,8 @@ export default function CalendarPage() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                         >
-                            <Sparkles className="w-16 h-16 mx-auto mb-6 text-purple-600" />
-                            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                            <Sparkles className="w-16 h-16 mx-auto mb-6 text-earth-dark" />
+                            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-earth-primary to-olive-dark bg-clip-text text-transparent">
                                 Ready to Streamline Your Schedule?
                             </h2>
                             <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
@@ -290,7 +283,7 @@ export default function CalendarPage() {
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                 <Link
                                     href="/signup"
-                                    className="px-10 py-5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105 inline-flex items-center justify-center gap-2 text-lg"
+                                    className="px-10 py-5 bg-gradient-to-r from-earth-primary to-olive-dark text-white rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105 inline-flex items-center justify-center gap-2 text-lg"
                                 >
                                     Start Free Trial
                                     <ArrowRight className="w-5 h-5" />

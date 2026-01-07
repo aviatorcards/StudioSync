@@ -23,10 +23,10 @@ module.exports = {
                 background: "hsl(var(--background))",
                 foreground: "hsl(var(--foreground))",
                 primary: {
-                    DEFAULT: "var(--color-primary, #A0522D)",
-                    hover: "var(--color-primary-hover, #8B4513)",
-                    light: "var(--color-primary-light, #F5DEB3)",
-                    dark: "var(--color-primary-dark, #8B4513)",
+                    DEFAULT: "var(--color-primary, #C4704F)",
+                    hover: "var(--color-primary-hover, #A25A3D)",
+                    light: "var(--color-primary-light, #E5B299)",
+                    dark: "var(--color-primary-dark, #A25A3D)",
                     foreground: "hsl(var(--primary-foreground))",
                 },
                 secondary: {
@@ -54,20 +54,20 @@ module.exports = {
                     foreground: "hsl(var(--card-foreground))",
                 },
                 earth: {
-                    primary: '#A0522D', // Sienna
-                    dark: '#8B4513',    // SaddleBrown
-                    light: '#D2B48C',   // Tan
-                    lighter: '#F5DEB3', // Wheat
+                    primary: '#C4704F', // Warm Terracotta
+                    dark: '#A25A3D',    // Deep Terracotta
+                    light: '#E5B299',   // Peachy Terracotta
+                    lighter: '#E8F5E9', // Soft Mint
                 },
                 olive: {
                     primary: '#6B8E23', // OliveDrab
                     dark: '#556B2F',    // DarkOliveGreen
-                    light: '#B8D490',
+                    light: '#B8D490',   // Light Olive
                 },
                 neutral: {
-                    light: '#F8F8F8',
-                    medium: '#D3D3D3',
-                    dark: '#696969',
+                    light: '#EFF7F0',   // Very Light Sage
+                    medium: '#D8E4C8',  // Light Sage
+                    dark: '#5A6B4F',    // Muted Olive Gray
                 }
             },
             borderRadius: {

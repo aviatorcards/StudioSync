@@ -21,8 +21,14 @@ import {
     Filter,
     Calendar,
     Eye,
-    Mail
+    Mail,
+    Receipt,
+    ChevronRight,
+    ArrowUpRight,
+    CreditCard
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
 
 interface Invoice {
     id: string
@@ -158,22 +164,22 @@ export default function BillingPage() {
 
     const getStatusColor = (status: string) => {
         const styles: Record<string, string> = {
-            paid: 'bg-green-100 text-green-700 border-green-200',
-            pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-            overdue: 'bg-red-100 text-red-700 border-red-200',
-            draft: 'bg-gray-100 text-gray-700 border-gray-200',
-            sent: 'bg-blue-100 text-blue-700 border-blue-200',
+            paid: 'bg-green-50 text-green-600 border-green-100',
+            pending: 'bg-yellow-50 text-yellow-600 border-yellow-100',
+            overdue: 'bg-red-50 text-red-600 border-red-100',
+            draft: 'bg-gray-50 text-gray-500 border-gray-100',
+            sent: 'bg-blue-50 text-blue-600 border-blue-100',
         }
-        return styles[status] || 'bg-gray-100 text-gray-700 border-gray-200'
+        return styles[status] || 'bg-gray-50 text-gray-500 border-gray-100'
     }
 
     const getStatusIcon = (status: string) => {
         switch (status) {
-            case 'paid': return <CheckCircle2 className="w-4 h-4" />
-            case 'overdue': return <AlertCircle className="w-4 h-4" />
+            case 'paid': return <CheckCircle2 className="w-3 h-3" />
+            case 'overdue': return <AlertCircle className="w-3 h-3" />
             case 'pending':
-            case 'sent': return <Clock className="w-4 h-4" />
-            default: return <FileText className="w-4 h-4" />
+            case 'sent': return <Clock className="w-3 h-3" />
+            default: return <FileText className="w-3 h-3" />
         }
     }
 
@@ -213,87 +219,114 @@ export default function BillingPage() {
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center py-20">
-                <Loader2 className="w-10 h-10 text-[var(--color-primary)] animate-spin mb-4" />
-                <p className="text-gray-500 font-bold tracking-wider uppercase text-xs">Loading Billing...</p>
+            <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-in fade-in duration-500">
+                <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Synchronizing Billing...</p>
             </div>
         )
     }
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header */}
-            <div>
-                <h1 className="text-2xl md:text-4xl font-bold text-gray-900">Billing & Invoices</h1>
-                <p className="text-sm text-gray-600 mt-1">
-                    {isManager ? 'Manage invoices and track payments' : 'View your invoices and payments'}
-                </p>
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4">
+                <div className="space-y-2">
+                    <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">Billing & Invoices</h1>
+                    <p className="text-gray-500 font-medium max-w-lg">
+                        {isManager ? 'Manage invoices and track studio revenue.' : 'View your invoices and manage your subscription.'}
+                    </p>
+                </div>
+                {isManager && (
+                    <Button
+                        onClick={() => setShowCreateModal(true)}
+                        className="gap-2 hover:scale-105"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Create Invoice
+                    </Button>
+                )}
+            </header>
+
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600 group-hover:scale-110 transition-transform">
+                            <CheckCircle2 className="w-5 h-5" />
+                        </div>
+                        <span className="text-[10px] font-black text-green-500 uppercase tracking-widest bg-green-50 px-2 py-0.5 rounded-full">Paid</span>
+                    </div>
+                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Total Revenue</p>
+                    <div className="flex items-baseline gap-1">
+                        <h3 className="text-3xl font-black text-gray-900 tracking-tight">${totalRevenue.toLocaleString()}</h3>
+                        <span className="text-xs font-bold text-gray-400">USD</span>
+                    </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="w-10 h-10 bg-yellow-50 rounded-xl flex items-center justify-center text-yellow-600 group-hover:scale-110 transition-transform">
+                            <Clock className="w-5 h-5" />
+                        </div>
+                        <span className="text-[10px] font-black text-yellow-500 uppercase tracking-widest bg-yellow-50 px-2 py-0.5 rounded-full">Pending</span>
+                    </div>
+                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Expected soon</p>
+                    <div className="flex items-baseline gap-1">
+                        <h3 className="text-3xl font-black text-gray-900 tracking-tight">${pendingAmount.toLocaleString()}</h3>
+                        <span className="text-xs font-bold text-gray-400">USD</span>
+                    </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center text-red-600 group-hover:scale-110 transition-transform">
+                            <AlertCircle className="w-5 h-5" />
+                        </div>
+                        <span className="text-[10px] font-black text-red-500 uppercase tracking-widest bg-red-50 px-2 py-0.5 rounded-full">Overdue</span>
+                    </div>
+                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Past Due</p>
+                    <div className="flex items-baseline gap-1">
+                        <h3 className="text-3xl font-black text-red-600 tracking-tight">${overdueAmount.toLocaleString()}</h3>
+                        <span className="text-xs font-bold text-gray-400">USD</span>
+                    </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-600 group-hover:scale-110 transition-transform">
+                            <Receipt className="w-5 h-5" />
+                        </div>
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-2 py-0.5 rounded-full">Volume</span>
+                    </div>
+                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Total Invoices</p>
+                    <div className="flex items-baseline gap-1">
+                        <h3 className="text-3xl font-black text-gray-900 tracking-tight">{typedInvoices.length}</h3>
+                        <span className="text-xs font-bold text-gray-400">Count</span>
+                    </div>
+                </div>
             </div>
 
-            {/* Create Button (Manager Only) */}
-            {isManager && (
-                <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors font-medium shadow-sm"
-                >
-                    <Plus className="w-5 h-5" />
-                    Create Invoice
-                </button>
-            )}
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white rounded-lg border border-gray-200 p-4">
-                    <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs font-medium text-gray-600 uppercase">Total Revenue</p>
-                        <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    </div>
-                    <p className="text-2xl font-bold text-green-600">${totalRevenue.toFixed(2)}</p>
-                </div>
-                <div className="bg-white rounded-lg border border-gray-200 p-4">
-                    <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs font-medium text-gray-600 uppercase">Pending</p>
-                        <Clock className="w-4 h-4 text-yellow-600" />
-                    </div>
-                    <p className="text-2xl font-bold text-yellow-600">${pendingAmount.toFixed(2)}</p>
-                </div>
-                <div className="bg-white rounded-lg border border-gray-200 p-4">
-                    <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs font-medium text-gray-600 uppercase">Overdue</p>
-                        <AlertCircle className="w-4 h-4 text-red-600" />
-                    </div>
-                    <p className="text-2xl font-bold text-red-600">${overdueAmount.toFixed(2)}</p>
-                </div>
-                <div className="bg-white rounded-lg border border-gray-200 p-4">
-                    <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs font-medium text-gray-600 uppercase">Total Invoices</p>
-                        <FileText className="w-4 h-4 text-gray-600" />
-                    </div>
-                    <p className="text-2xl font-bold text-gray-900">{typedInvoices.length}</p>
-                </div>
-            </div>
-
-            {/* Search and Filters */}
-            <div className="flex flex-col sm:flex-row gap-3">
-                <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            {/* Controls */}
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-3xl border border-gray-100 shadow-sm">
+                <div className="relative w-full md:w-96">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                         type="text"
-                        placeholder="Search invoices..."
+                        placeholder="Search by client or invoice #..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
+                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-sm text-gray-700 outline-none transition-all"
                     />
                 </div>
-                <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
+                <div className="flex p-1 bg-gray-50 rounded-2xl border border-gray-100 overflow-x-auto w-full md:w-auto no-scrollbar">
                     {statusFilters.map(filter => (
                         <button
                             key={filter.value}
                             onClick={() => setFilterStatus(filter.value)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
                                 filterStatus === filter.value
-                                    ? 'bg-[var(--color-primary)] text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    ? 'bg-white text-primary shadow-sm'
+                                    : 'text-gray-400 hover:text-gray-600'
                             }`}
                         >
                             {filter.label}
@@ -302,86 +335,95 @@ export default function BillingPage() {
                 </div>
             </div>
 
-            {/* Desktop Table View */}
-            <div className="hidden md:block bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Invoice #</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Client</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Amount</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Due Date</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Actions</th>
+            {/* Invoices List */}
+            <div className="bg-white rounded-[2rem] border border-gray-100 shadow-xl overflow-hidden">
+                <div className="overflow-x-auto custom-scrollbar">
+                    <table className="w-full border-separate border-spacing-0">
+                        <thead>
+                            <tr className="bg-gray-50/50">
+                                <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Invoice</th>
+                                <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Client</th>
+                                <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Amount</th>
+                                <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+                                <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Due Date</th>
+                                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-gray-50">
                             {filteredInvoices.length > 0 ? filteredInvoices.map((invoice) => (
-                                <tr key={invoice.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-4 py-3">
-                                        <span className="font-semibold text-gray-900 text-sm">{invoice.invoice_number}</span>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <span className="text-sm text-gray-700">{invoice.student_name || invoice.band_name || 'Client'}</span>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <span className="font-semibold text-gray-900 text-sm">${Number(invoice.total_amount).toFixed(2)}</span>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                                            <Calendar className="w-3.5 h-3.5" />
-                                            {new Date(invoice.due_date).toLocaleDateString()}
+                                <tr key={invoice.id} className="group hover:bg-gray-50/50 transition-colors">
+                                    <td className="px-6 py-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center text-primary font-black text-xs">
+                                                #{invoice.invoice_number.slice(-3)}
+                                            </div>
+                                            <span className="font-bold text-gray-900 text-sm tracking-tight">{invoice.invoice_number}</span>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3">
-                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold uppercase border ${getStatusColor(invoice.status)}`}>
+                                    <td className="px-6 py-6 font-bold text-gray-600 text-sm">
+                                        {invoice.student_name || invoice.band_name || 'Generic Client'}
+                                    </td>
+                                    <td className="px-6 py-6 font-black text-gray-900 text-sm">
+                                        ${Number(invoice.total_amount).toFixed(2)}
+                                    </td>
+                                    <td className="px-6 py-6">
+                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusColor(invoice.status)}`}>
                                             {getStatusIcon(invoice.status)}
                                             {invoice.status}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td className="px-6 py-6 font-bold text-gray-500 text-xs">
+                                        {new Date(invoice.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                    </td>
+                                    <td className="px-6 py-6">
                                         <div className="flex items-center justify-end gap-2">
-                                            <button
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
                                                 onClick={() => setViewingInvoice(invoice)}
-                                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                                                title="View Invoice"
+                                                className="hover:scale-110 active:scale-95"
                                             >
-                                                <Eye className="w-4 h-4 text-gray-600" />
-                                            </button>
+                                                <Eye className="w-4 h-4 text-gray-400" />
+                                            </Button>
                                             {isManager && invoice.status !== 'paid' && (
-                                                <button
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
                                                     onClick={() => handleSendReminder(invoice.id)}
-                                                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                                                    title="Send Reminder"
+                                                    className="hover:scale-110 active:scale-95"
                                                 >
-                                                    <Mail className="w-4 h-4 text-gray-600" />
-                                                </button>
+                                                    <Mail className="w-4 h-4 text-gray-400" />
+                                                </Button>
                                             )}
-                                            <button
-                                                onClick={() => handleDownloadInvoice(invoice)}
-                                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                                                title="Download PDF"
-                                            >
-                                                <Download className="w-4 h-4 text-gray-600" />
-                                            </button>
-                                            {invoice.status !== 'paid' && invoice.status !== 'cancelled' && (
-                                                <button
+                                            {invoice.status !== 'paid' && invoice.status !== 'cancelled' ? (
+                                                <Button
                                                     onClick={() => handlePayInvoice(invoice.id)}
-                                                    className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                                                    className="gap-2 bg-green-600 hover:bg-green-700 h-9 px-4 active:scale-95"
                                                 >
-                                                    Pay Now
-                                                </button>
+                                                    <CreditCard className="w-3.5 h-3.5" />
+                                                    <span className="text-[10px] font-black uppercase tracking-widest">Pay</span>
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    variant="outline"
+                                                    size="icon"
+                                                    onClick={() => handleDownloadInvoice(invoice)}
+                                                    className="hover:scale-110 active:scale-95"
+                                                >
+                                                    <Download className="w-4 h-4 text-gray-400" />
+                                                </Button>
                                             )}
                                         </div>
                                     </td>
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan={6} className="px-4 py-12 text-center">
+                                    <td colSpan={6} className="px-6 py-20 text-center">
                                         <div className="flex flex-col items-center">
-                                            <FileText className="w-12 h-12 text-gray-300 mb-3" />
-                                            <p className="text-gray-500 font-medium">No invoices found</p>
+                                            <div className="w-20 h-20 bg-gray-50 rounded-[2.5rem] flex items-center justify-center mb-6">
+                                                <Receipt className="w-10 h-10 text-gray-200" />
+                                            </div>
+                                            <p className="text-sm font-black text-gray-400 uppercase tracking-widest">No invoices found</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -391,105 +433,25 @@ export default function BillingPage() {
                 </div>
             </div>
 
-            {/* Mobile Card View */}
-            <div className="md:hidden space-y-3">
-                {filteredInvoices.length > 0 ? filteredInvoices.map((invoice) => (
-                    <div key={invoice.id} className="bg-white rounded-lg border border-gray-200 p-4">
-                        <div className="flex items-start justify-between mb-3">
-                            <div>
-                                <span className="text-xs font-medium text-gray-500">Invoice</span>
-                                <p className="font-semibold text-gray-900">{invoice.invoice_number}</p>
-                            </div>
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold uppercase border ${getStatusColor(invoice.status)}`}>
-                                {getStatusIcon(invoice.status)}
-                                {invoice.status}
-                            </span>
-                        </div>
-
-                        <div className="space-y-2 mb-3 pb-3 border-b border-gray-100">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-600">Client:</span>
-                                <span className="font-medium text-gray-900">{invoice.student_name || invoice.band_name || 'Client'}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-600">Amount:</span>
-                                <span className="font-semibold text-gray-900">${Number(invoice.total_amount).toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-600">Due:</span>
-                                <span className="font-medium text-gray-900">{new Date(invoice.due_date).toLocaleDateString()}</span>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setViewingInvoice(invoice)}
-                                className="flex-1 px-3 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
-                            >
-                                View
-                            </button>
-                            {invoice.status !== 'paid' && invoice.status !== 'cancelled' && (
-                                <button
-                                    onClick={() => handlePayInvoice(invoice.id)}
-                                    className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-                                >
-                                    Pay Now
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                )) : (
-                    <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                        <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500 font-medium">No invoices found</p>
-                    </div>
-                )}
-            </div>
-
             {/* Create Invoice Modal */}
-            {showCreateModal && (
-                <Modal
-                    isOpen={showCreateModal}
-                    onClose={() => setShowCreateModal(false)}
-                    title="Create New Invoice"
-                    footer={
-                        <>
-                            <button
-                                type="button"
-                                onClick={() => setShowCreateModal(false)}
-                                className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                form="create-invoice-form"
-                                disabled={creating}
-                                className="flex-1 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
-                            >
-                                {creating ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        Creating...
-                                    </>
-                                ) : (
-                                    'Create Invoice'
-                                )}
-                            </button>
-                        </>
-                    }
-                >
-                    <form id="create-invoice-form" onSubmit={handleCreateInvoice} className="p-6 space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Student *</label>
+            <Dialog
+                open={showCreateModal}
+                onOpenChange={setShowCreateModal}
+                size="lg"
+            >
+                <DialogHeader title="New Invoice" />
+                <DialogContent>
+                    <form id="create-invoice-form" onSubmit={handleCreateInvoice} className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Student / Client *</label>
                                 <select
                                     required
                                     value={newInvoice.student}
                                     onChange={(e) => setNewInvoice({ ...newInvoice, student: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-sm text-gray-700 outline-none transition-all appearance-none"
                                 >
-                                    <option value="">Select student</option>
+                                    <option value="">Select student...</option>
                                     {students.map(student => (
                                         <option key={student.id} value={student.id}>
                                             {student.user?.first_name} {student.user?.last_name}
@@ -497,26 +459,25 @@ export default function BillingPage() {
                                     ))}
                                 </select>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Due Date *</label>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Due Date *</label>
                                 <input
                                     type="date"
                                     required
                                     value={newInvoice.dueDate}
                                     onChange={(e) => setNewInvoice({ ...newInvoice, dueDate: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-sm text-gray-700 outline-none transition-all"
                                 />
                             </div>
                         </div>
 
-                        <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <label className="text-sm font-medium text-gray-700">Line Items ({newInvoice.line_items.length}/10)</label>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Line Items</label>
                                 <button
                                     type="button"
                                     onClick={addLineItem}
-                                    disabled={newInvoice.line_items.length >= 10}
-                                    className="text-sm text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] font-medium disabled:opacity-50"
+                                    className="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/5 px-3 py-1 rounded-full hover:bg-primary/10 transition-colors"
                                 >
                                     + Add Item
                                 </button>
@@ -524,124 +485,171 @@ export default function BillingPage() {
 
                             <div className="space-y-3">
                                 {newInvoice.line_items.map((item, index) => (
-                                    <div key={index} className="grid grid-cols-12 gap-2">
-                                        <input
-                                            type="text"
-                                            required
-                                            value={item.description}
-                                            onChange={(e) => updateLineItem(index, 'description', e.target.value)}
-                                            className="col-span-12 md:col-span-6 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] text-sm"
-                                            placeholder="Description"
-                                        />
-                                        <input
-                                            type="number"
-                                            required
-                                            value={item.quantity}
-                                            onChange={(e) => updateLineItem(index, 'quantity', e.target.value)}
-                                            className="col-span-4 md:col-span-2 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] text-sm"
-                                            placeholder="Qty"
-                                            min="1"
-                                        />
-                                        <input
-                                            type="number"
-                                            required
-                                            value={item.unit_price}
-                                            onChange={(e) => updateLineItem(index, 'unit_price', e.target.value)}
-                                            className="col-span-5 md:col-span-3 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] text-sm"
-                                            placeholder="Price"
-                                            min="0"
-                                            step="0.01"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => removeLineItem(index)}
-                                            disabled={newInvoice.line_items.length <= 1}
-                                            className="col-span-3 md:col-span-1 p-2 text-gray-400 hover:text-red-600 disabled:opacity-30 transition-colors"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
+                                    <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                                        <div className="md:col-span-6 space-y-1">
+                                            <input
+                                                type="text"
+                                                required
+                                                value={item.description}
+                                                onChange={(e) => updateLineItem(index, 'description', e.target.value)}
+                                                className="w-full px-4 py-3 bg-white border border-gray-200 focus:border-primary rounded-xl font-bold text-sm text-gray-700 outline-none transition-all"
+                                                placeholder="Item description"
+                                            />
+                                        </div>
+                                        <div className="md:col-span-2 space-y-1">
+                                            <input
+                                                type="number"
+                                                required
+                                                min="1"
+                                                value={item.quantity}
+                                                onChange={(e) => updateLineItem(index, 'quantity', e.target.value)}
+                                                className="w-full px-4 py-3 bg-white border border-gray-200 focus:border-primary rounded-xl font-bold text-sm text-gray-700 outline-none transition-all"
+                                                placeholder="Qty"
+                                            />
+                                        </div>
+                                        <div className="md:col-span-3 space-y-1">
+                                            <input
+                                                type="number"
+                                                required
+                                                step="0.01"
+                                                value={item.unit_price}
+                                                onChange={(e) => updateLineItem(index, 'unit_price', e.target.value)}
+                                                className="w-full px-4 py-3 bg-white border border-gray-200 focus:border-primary rounded-xl font-bold text-sm text-gray-700 outline-none transition-all"
+                                                placeholder="Price"
+                                            />
+                                        </div>
+                                        <div className="md:col-span-1">
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                disabled={newInvoice.line_items.length <= 1}
+                                                onClick={() => removeLineItem(index)}
+                                                className="text-red-500 hover:text-red-600"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-                        <div className="pt-4 border-t border-gray-200 flex justify-between items-center">
-                            <span className="text-sm font-medium text-gray-600">Total Amount</span>
-                            <span className="text-2xl font-bold text-gray-900">${modalTotal.toFixed(2)}</span>
+                        <div className="pt-6 border-t border-gray-100 flex justify-between items-center">
+                            <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Estimated Total</span>
+                            <span className="text-3xl font-black text-gray-900 tracking-tight">${modalTotal.toFixed(2)}</span>
                         </div>
                     </form>
-                </Modal>
-            )}
+                </DialogContent>
+                <DialogFooter>
+                    <Button
+                        variant="ghost"
+                        onClick={() => setShowCreateModal(false)}
+                        className="flex-1"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        type="submit"
+                        form="create-invoice-form"
+                        disabled={creating}
+                        className="flex-[2] gap-2 active:scale-95 transition-transform"
+                    >
+                        {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUpRight className="w-4 h-4" />}
+                        {creating ? 'Creating...' : 'Issue Invoice'}
+                    </Button>
+                </DialogFooter>
+            </Dialog>
 
             {/* View Invoice Modal */}
-            {viewingInvoice && (
-                <Modal
-                    isOpen={!!viewingInvoice}
-                    onClose={() => setViewingInvoice(null)}
-                    title="Invoice"
-                    footer={
-                        <>
-                            <button
+            <Dialog
+                open={!!viewingInvoice}
+                onOpenChange={(open) => !open && setViewingInvoice(null)}
+                size="lg"
+            >
+                {viewingInvoice && (
+                    <>
+                        <DialogHeader title={`Invoice ${viewingInvoice.invoice_number}`} />
+                        <DialogContent>
+                            <div className="space-y-8 print:p-0">
+                                <div className="grid grid-cols-2 gap-8">
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Billed To</p>
+                                        <p className="text-lg font-black text-gray-900 leading-tight">
+                                            {viewingInvoice.student_name || viewingInvoice.band_name || 'Generic Client'}
+                                        </p>
+                                    </div>
+                                    <div className="text-right space-y-1">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Dated</p>
+                                        <p className="text-sm font-bold text-gray-900">
+                                            {new Date(viewingInvoice.due_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="border border-gray-100 rounded-[2rem] overflow-hidden shadow-sm">
+                                    <table className="w-full text-left border-separate border-spacing-0">
+                                        <thead className="bg-gray-50/50">
+                                            <tr>
+                                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Service Description</th>
+                                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Qty</th>
+                                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Unit Price</th>
+                                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-50">
+                                            {viewingInvoice.line_items?.map((item, idx) => (
+                                                <tr key={idx}>
+                                                    <td className="px-6 py-4 text-sm font-bold text-gray-700">{item.description}</td>
+                                                    <td className="px-6 py-4 text-sm font-bold text-gray-500 text-center">{item.quantity}</td>
+                                                    <td className="px-6 py-4 text-sm font-bold text-gray-500 text-right">${Number(item.unit_price).toFixed(2)}</td>
+                                                    <td className="px-6 py-4 text-sm font-black text-gray-900 text-right">
+                                                        ${Number(item.total_price || (item.quantity * Number(item.unit_price))).toFixed(2)}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div className="flex justify-between items-center py-6 px-4 bg-gray-900 rounded-3xl text-white shadow-xl shadow-gray-200">
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Total Balance Due</p>
+                                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-white/10 border border-white/20`}>
+                                            <span className={viewingInvoice.status === 'paid' ? 'text-green-400' : 'text-yellow-400'}>
+                                                {viewingInvoice.status}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="text-4xl font-black tracking-tight">${Number(viewingInvoice.total_amount).toFixed(2)}</span>
+                                        <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">USD</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </DialogContent>
+                        <DialogFooter className="print:hidden">
+                            <Button
+                                variant="outline"
                                 onClick={() => window.print()}
-                                className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-white transition-colors font-medium print:hidden"
+                                className="flex-1 gap-2"
                             >
-                                Print / Download
-                            </button>
+                                <Download className="w-4 h-4" />
+                                Download PDF
+                            </Button>
                             {viewingInvoice.status !== 'paid' && viewingInvoice.status !== 'cancelled' && (
-                                <button
+                                <Button
                                     onClick={() => handlePayInvoice(viewingInvoice.id)}
-                                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium print:hidden"
+                                    className="flex-1 gap-2 bg-green-600 hover:bg-green-700 active:scale-95 transition-transform"
                                 >
-                                    Pay Now
-                                </button>
+                                    <CreditCard className="w-4 h-4" />
+                                    Secure Pay
+                                </Button>
                             )}
-                        </>
-                    }
-                >
-                    <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                        <div className="grid grid-cols-2 gap-6">
-                            <div>
-                                <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Billed To</p>
-                                <p className="font-semibold text-gray-900">{viewingInvoice.student_name || viewingInvoice.band_name || 'Client'}</p>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Due Date</p>
-                                <p className="font-semibold text-gray-900">{new Date(viewingInvoice.due_date).toLocaleDateString()}</p>
-                            </div>
-                        </div>
-
-                        <div className="border border-gray-200 rounded-lg overflow-hidden">
-                            <table className="w-full text-left">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase">Description</th>
-                                        <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase text-center">Qty</th>
-                                        <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase text-right">Price</th>
-                                        <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase text-right">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {viewingInvoice.line_items?.map((item, idx) => (
-                                        <tr key={idx}>
-                                            <td className="px-4 py-3 text-sm text-gray-900">{item.description}</td>
-                                            <td className="px-4 py-3 text-sm text-gray-700 text-center">{item.quantity}</td>
-                                            <td className="px-4 py-3 text-sm text-gray-700 text-right">${Number(item.unit_price).toFixed(2)}</td>
-                                            <td className="px-4 py-3 text-sm font-semibold text-gray-900 text-right">
-                                                ${Number(item.total_price || (item.quantity * Number(item.unit_price))).toFixed(2)}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-                            <span className="text-sm font-medium text-gray-600">Total Amount Due</span>
-                            <span className="text-3xl font-bold text-gray-900">${Number(viewingInvoice.total_amount).toFixed(2)}</span>
-                        </div>
-                    </div>
-                </Modal>
-            )}
+                        </DialogFooter>
+                    </>
+                )}
+            </Dialog>
         </div>
     )
 }

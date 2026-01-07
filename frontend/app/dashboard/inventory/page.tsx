@@ -3,83 +3,37 @@
 import { useState } from 'react'
 import {
     Plus, Search, Package, Music, BookOpen, Headphones,
-    Edit, X, MapPin, ChevronLeft, ChevronRight, Filter
+    Edit, X, MapPin, ChevronLeft, ChevronRight, Filter,
+    Loader2
 } from 'lucide-react'
 import { AnimatePresence } from 'framer-motion'
 import { toast } from 'react-hot-toast'
+import { useInventoryItems } from '@/hooks/useDashboardData'
+import api from '@/services/api'
+import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 
 interface InventoryItem {
     id: string
     name: string
     category: 'instrument' | 'equipment' | 'sheet-music' | 'accessories' | 'other'
     quantity: number
+    available_quantity?: number
     condition: 'excellent' | 'good' | 'fair' | 'needs-repair'
     location: string
-    value: number
+    value: number | string
     notes: string
     last_maintenance?: string
 }
 
 export default function InventoryPage() {
-    const [items, setItems] = useState<InventoryItem[]>([
-        {
-            id: '1',
-            name: 'Yamaha U1 Upright Piano',
-            category: 'instrument',
-            quantity: 1,
-            condition: 'excellent',
-            location: 'Studio Room A',
-            value: 5000,
-            notes: 'Tuned quarterly',
-            last_maintenance: '2024-12-01'
-        },
-        {
-            id: '2',
-            name: 'Shure SM58 Microphones',
-            category: 'equipment',
-            quantity: 4,
-            condition: 'good',
-            location: 'Supply Closet',
-            value: 400,
-            notes: 'For vocal lessons'
-        },
-        {
-            id: '3',
-            name: 'Suzuki Violin Method Books',
-            category: 'sheet-music',
-            quantity: 12,
-            condition: 'good',
-            location: 'Library Shelf B',
-            value: 180,
-            notes: 'All levels 1-5'
-        },
-        {
-            id: '4',
-            name: 'Music Stands (Standard)',
-            category: 'accessories',
-            quantity: 15,
-            condition: 'fair',
-            location: 'Main Hall',
-            value: 450,
-            notes: 'Some scratches'
-        },
-        {
-            id: '5',
-            name: 'Guitar Strings (Nylon)',
-            category: 'accessories',
-            quantity: 8,
-            condition: 'excellent',
-            location: 'Storage Drawer 1',
-            value: 120,
-            notes: 'Backup sets'
-        }
-    ])
-
+    const { items, loading, refresh } = useInventoryItems()
     const [searchQuery, setSearchQuery] = useState('')
     const [filterCategory, setFilterCategory] = useState<string>('all')
     const [currentPage, setCurrentPage] = useState(1)
     const [showAddModal, setShowAddModal] = useState(false)
     const [editingItem, setEditingItem] = useState<InventoryItem | null>(null)
+    const [submitting, setSubmitting] = useState(false)
 
     const itemsPerPage = 10
 
@@ -101,8 +55,8 @@ export default function InventoryPage() {
     const startIndex = (currentPage - 1) * itemsPerPage
     const currentItems = filteredItems.slice(startIndex, startIndex + itemsPerPage)
 
-    const totalValue = items.reduce((acc, i) => acc + i.value, 0)
-    const lowStock = items.filter(i => i.quantity <= 2).length
+    const totalValue = items.reduce((acc, i) => acc + Number(i.value), 0)
+    const lowStock = items.filter(i => (i.available_quantity || i.quantity) <= 2).length
     const needsRepair = items.filter(i => i.condition === 'needs-repair').length
 
     const ConditionBadge = ({ condition }: { condition: string }) => {
@@ -119,6 +73,48 @@ export default function InventoryPage() {
             <span className={`px-2 py-1 rounded-lg text-xs font-bold border ${style}`}>
                 {label}
             </span>
+        )
+    }
+
+    const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        setSubmitting(true)
+        const formData = new FormData(e.currentTarget)
+        const data = {
+            name: formData.get('name'),
+            category: formData.get('category'),
+            quantity: Number(formData.get('quantity')),
+            value: Number(formData.get('value')),
+            condition: formData.get('condition'),
+            location: formData.get('location'),
+            notes: formData.get('notes'),
+        }
+
+        try {
+            if (editingItem) {
+                await api.patch(`/inventory/items/${editingItem.id}/`, data)
+                toast.success('Item updated!')
+            } else {
+                await api.post('/inventory/items/', data)
+                toast.success('Item added!')
+            }
+            setShowAddModal(false)
+            setEditingItem(null)
+            refresh()
+        } catch (error) {
+            console.error(error)
+            toast.error('Failed to save item')
+        } finally {
+            setSubmitting(false)
+        }
+    }
+
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20">
+                <Loader2 className="w-10 h-10 text-[var(--color-primary)] animate-spin mb-4" />
+                <p className="text-gray-500 font-bold tracking-wider uppercase text-xs">Synchronizing Inventory...</p>
+            </div>
         )
     }
 
@@ -254,7 +250,7 @@ export default function InventoryPage() {
                                         {item.quantity}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        ${item.value.toLocaleString()}
+                                        ${Number(item.value).toLocaleString()}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right">
                                         <button
@@ -315,7 +311,7 @@ export default function InventoryPage() {
                                 </div>
                                 <div>
                                     <p className="text-gray-500 text-xs">Value</p>
-                                    <p className="text-gray-900 font-medium">${item.value.toLocaleString()}</p>
+                                    <p className="text-gray-900 font-medium">${Number(item.value).toLocaleString()}</p>
                                 </div>
                                 <div>
                                     <p className="text-gray-500 text-xs mb-1">Condition</p>
@@ -359,139 +355,132 @@ export default function InventoryPage() {
             </div>
 
             {/* Add/Edit Modal */}
-            <AnimatePresence>
-                {(showAddModal || editingItem) && (
-                    <div
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            <Dialog
+                open={showAddModal || !!editingItem}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setShowAddModal(false)
+                        setEditingItem(null)
+                    }
+                }}
+                size="md"
+            >
+                <DialogHeader
+                    title={editingItem ? 'Edit Item' : 'Add New Item'}
+                />
+                <DialogContent>
+                    <form id="inventory-form" onSubmit={handleSave} className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-black text-gray-400 uppercase tracking-widest mb-1">Item Name</label>
+                            <input
+                                name="name"
+                                type="text"
+                                required
+                                defaultValue={editingItem?.name}
+                                className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[var(--color-primary)] rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                placeholder="e.g. Yamaha Piano"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-black text-gray-400 uppercase tracking-widest mb-1">Category</label>
+                                <select
+                                    name="category"
+                                    defaultValue={editingItem?.category || 'instrument'}
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[var(--color-primary)] rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                >
+                                    <option value="instrument">Instrument</option>
+                                    <option value="equipment">Equipment</option>
+                                    <option value="sheet-music">Sheet Music</option>
+                                    <option value="accessories">Accessories</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-black text-gray-400 uppercase tracking-widest mb-1">Quantity</label>
+                                <input
+                                    name="quantity"
+                                    type="number"
+                                    required
+                                    min="1"
+                                    defaultValue={editingItem?.quantity || 1}
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[var(--color-primary)] rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-black text-gray-400 uppercase tracking-widest mb-1">Value ($)</label>
+                                <input
+                                    name="value"
+                                    type="number"
+                                    step="0.01"
+                                    defaultValue={editingItem?.value}
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[var(--color-primary)] rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-black text-gray-400 uppercase tracking-widest mb-1">Condition</label>
+                                <select
+                                    name="condition"
+                                    defaultValue={editingItem?.condition || 'good'}
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[var(--color-primary)] rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                >
+                                    <option value="excellent">Excellent</option>
+                                    <option value="good">Good</option>
+                                    <option value="fair">Fair</option>
+                                    <option value="needs-repair">Needs Repair</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-black text-gray-400 uppercase tracking-widest mb-1">Location</label>
+                            <input
+                                name="location"
+                                type="text"
+                                required
+                                defaultValue={editingItem?.location}
+                                className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[var(--color-primary)] rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                placeholder="Room or shelf location"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-black text-gray-400 uppercase tracking-widest mb-1">Notes</label>
+                            <textarea
+                                name="notes"
+                                defaultValue={editingItem?.notes}
+                                rows={3}
+                                className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-[var(--color-primary)] rounded-xl font-bold text-gray-700 outline-none transition-all resize-none"
+                                placeholder="Additional notes..."
+                            />
+                        </div>
+                    </form>
+                </DialogContent>
+                <DialogFooter>
+                    <Button
+                        variant="outline"
                         onClick={() => {
                             setShowAddModal(false)
                             setEditingItem(null)
                         }}
+                        className="flex-1"
                     >
-                        <div
-                            className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="px-6 py-4 bg-gray-900 text-white flex justify-between items-center">
-                                <h3 className="text-lg font-bold">
-                                    {editingItem ? 'Edit Item' : 'Add New Item'}
-                                </h3>
-                                <button
-                                    onClick={() => {
-                                        setShowAddModal(false)
-                                        setEditingItem(null)
-                                    }}
-                                    className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center transition-colors"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-
-                            <form className="p-6 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
-                                    <input
-                                        type="text"
-                                        defaultValue={editingItem?.name}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
-                                        placeholder="e.g. Yamaha Piano"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                                        <select
-                                            defaultValue={editingItem?.category || 'instrument'}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
-                                        >
-                                            <option value="instrument">Instrument</option>
-                                            <option value="equipment">Equipment</option>
-                                            <option value="sheet-music">Sheet Music</option>
-                                            <option value="accessories">Accessories</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-                                        <input
-                                            type="number"
-                                            defaultValue={editingItem?.quantity || 1}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Value ($)</label>
-                                        <input
-                                            type="number"
-                                            defaultValue={editingItem?.value}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Condition</label>
-                                        <select
-                                            defaultValue={editingItem?.condition || 'good'}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
-                                        >
-                                            <option value="excellent">Excellent</option>
-                                            <option value="good">Good</option>
-                                            <option value="fair">Fair</option>
-                                            <option value="needs-repair">Needs Repair</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                                    <input
-                                        type="text"
-                                        defaultValue={editingItem?.location}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
-                                        placeholder="Room or shelf location"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                                    <textarea
-                                        defaultValue={editingItem?.notes}
-                                        rows={3}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none resize-none"
-                                        placeholder="Additional notes..."
-                                    />
-                                </div>
-                            </form>
-
-                            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setShowAddModal(false)
-                                        setEditingItem(null)
-                                    }}
-                                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-100 transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setShowAddModal(false)
-                                        setEditingItem(null)
-                                        toast.success(editingItem ? 'Item updated!' : 'Item added!')
-                                    }}
-                                    className="flex-1 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg font-medium hover:bg-[var(--color-primary-hover)] transition-colors"
-                                >
-                                    {editingItem ? 'Update' : 'Add'} Item
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </AnimatePresence>
+                        Cancel
+                    </Button>
+                    <Button
+                        type="submit"
+                        form="inventory-form"
+                        disabled={submitting}
+                        className="flex-[2] gap-2"
+                    >
+                        {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (editingItem ? 'Update' : 'Add') + ' Item'}
+                    </Button>
+                </DialogFooter>
+            </Dialog>
         </div>
     )
 }

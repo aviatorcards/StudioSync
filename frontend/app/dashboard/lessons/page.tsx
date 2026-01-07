@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns'
 import { useUser } from '@/contexts/UserContext'
-import { useLessons, useUsers, useBands } from '@/hooks/useDashboardData'
+import { useLessons, useUsers, useBands, useLessonPlans, useResources } from '@/hooks/useDashboardData'
+import ResourceSelector from '@/components/ResourceSelector'
+import type { LessonPlan, LessonPlanFormData } from '@/types/lessonPlan'
 import {
     Search,
     Calendar,
@@ -18,9 +20,18 @@ import {
     Loader2,
     X,
     Clock,
-    CheckCircle2
+    CheckCircle2,
+    BookOpen,
+    Target,
+    Activity,
+    Sparkles,
+    Trash2,
+    Edit,
+    Package,
+    Tag
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
 
 interface Lesson {
     id: string
@@ -64,18 +75,23 @@ export default function LessonsPage() {
     const [currentPage, setCurrentPage] = useState(1)
     const itemsPerPage = 10
 
-    // Modal State
+    // Lesson Plan State
+    const { plans, loading: plansLoading, createPlan, updatePlan, deletePlan } = useLessonPlans()
     const [showPlanModal, setShowPlanModal] = useState(false)
-    const [planType, setPlanType] = useState<'individual' | 'group'>('individual')
-
-    // Escape listener
-    useState(() => {
-        const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') setShowPlanModal(false)
-        }
-        window.addEventListener('keydown', handleEsc)
-        return () => window.removeEventListener('keydown', handleEsc)
+    const [editingPlan, setEditingPlan] = useState<LessonPlan | null>(null)
+    const [showResourceSelector, setShowResourceSelector] = useState(false)
+    const [formData, setFormData] = useState<LessonPlanFormData>({
+        title: '',
+        description: '',
+        content: '',
+        difficulty_level: 'beginner',
+        estimated_duration_minutes: 60,
+        tags: [],
+        is_public: false,
+        resource_ids: []
     })
+    const [tagInput, setTagInput] = useState('')
+    const [submitting, setSubmitting] = useState(false)
 
     const getStatusBadge = (status: string) => {
         const styles = {
@@ -90,7 +106,7 @@ export default function LessonsPage() {
         const style = styles[key as keyof typeof styles] || styles.scheduled
 
         return (
-            <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider border ${style}`}>
+            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${style}`}>
                 {status ? status.replace('_', ' ') : 'Unknown'}
             </span>
         )
@@ -108,8 +124,8 @@ export default function LessonsPage() {
         const style = styles[key as keyof typeof styles] || styles.private
 
         return (
-            <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${style}`}>
-                {type ? type.charAt(0).toUpperCase() + type.slice(1) : 'Unknown'}
+            <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border uppercase tracking-tighter ${style}`}>
+                {type ? type : 'Unknown'}
             </span>
         )
     }
@@ -154,46 +170,42 @@ export default function LessonsPage() {
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center py-20 animate-pulse">
-                <Loader2 className="w-10 h-10 text-[#1ABC9C] animate-spin mb-4" />
-                <p className="text-gray-500 font-bold tracking-[0.2em] uppercase text-xs">Loading Lessons...</p>
+            <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-in fade-in duration-500">
+                <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Synchronizing Lessons...</p>
             </div>
         )
     }
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-12 space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Page Header */}
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-                <div>
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Header */}
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4">
+                <div className="space-y-2">
                     <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">Lessons & Plans</h1>
-                    <p className="text-base sm:text-lg text-gray-500 mt-2 font-medium">Manage schedules, attendance, and lesson plans.</p>
+                    <p className="text-gray-500 font-medium max-w-lg">Orchestrate your pedagogical workflow and track student evolution.</p>
                 </div>
-                <div className="flex flex-wrap gap-3">
-                    {currentUser && ['admin', 'teacher'].includes(currentUser.role) && (
-                        <Button
-                            onClick={() => setShowPlanModal(true)}
-                            className="gap-2 w-full sm:w-auto"
-                        >
-                            <Plus className="w-4 h-4" />
-                            Create Lesson Plan
-                        </Button>
-                    )}
-                </div>
-            </div>
+                {currentUser && ['admin', 'teacher'].includes(currentUser.role) && (
+                    <Button
+                        onClick={() => setShowPlanModal(true)}
+                        className="gap-2 hover:scale-105 shadow-lg shadow-primary/20 transition-all"
+                    >
+                        <Plus className="w-4 h-4" />
+                        New Lesson Plan
+                    </Button>
+                )}
+            </header>
 
-            {/* Filters & Controls */}
-            <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-[2rem] border border-gray-100 shadow-xl space-y-4 sm:space-y-6">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
-                    {/* View & Status Toggles */}
-                    <div className="flex flex-wrap gap-3 sm:gap-4 items-center w-full lg:w-auto">
-                        {/* View Toggle */}
-                        <div className="flex bg-gray-50 rounded-xl p-1 sm:p-1.5 border border-gray-100 flex-1 sm:flex-initial">
+            {/* Controls */}
+            <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-xl space-y-4">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div className="flex flex-wrap gap-3 items-center">
+                        <div className="flex bg-gray-50 rounded-2xl p-1 border border-gray-100">
                             <Button
                                 variant={viewMode === 'all' ? 'secondary' : 'ghost'}
                                 size="sm"
                                 onClick={() => setViewMode('all')}
-                                className={`flex-1 sm:flex-initial ${viewMode === 'all' ? 'bg-white shadow-sm' : 'text-gray-500'}`}
+                                className={`px-4 rounded-xl text-[10px] font-black uppercase tracking-widest ${viewMode === 'all' ? 'bg-white shadow-sm' : 'text-gray-400'}`}
                             >
                                 All Lessons
                             </Button>
@@ -201,60 +213,54 @@ export default function LessonsPage() {
                                 variant={viewMode === 'my_lessons' ? 'secondary' : 'ghost'}
                                 size="sm"
                                 onClick={() => setViewMode('my_lessons')}
-                                className={`flex-1 sm:flex-initial ${viewMode === 'my_lessons' ? 'bg-white shadow-sm' : 'text-gray-500'}`}
+                                className={`px-4 rounded-xl text-[10px] font-black uppercase tracking-widest ${viewMode === 'my_lessons' ? 'bg-white shadow-sm' : 'text-gray-400'}`}
                             >
                                 My Students
                             </Button>
                         </div>
-
-                        <div className="h-8 w-px bg-gray-200 hidden lg:block"></div>
-
-                        {/* Status Filter */}
-                        <div className="flex p-1 sm:p-1.5 bg-gray-50 rounded-xl border border-gray-100 overflow-x-auto w-full lg:w-auto">
+                        <div className="flex p-1 bg-gray-50 rounded-2xl border border-gray-100 overflow-x-auto no-scrollbar">
                             {['all', 'scheduled', 'completed', 'cancelled'].map(status => (
-                                <Button
+                                <button
                                     key={status}
-                                    variant={filterStatus === status ? 'secondary' : 'ghost'}
-                                    size="sm"
                                     onClick={() => setFilterStatus(status)}
-                                    className={`whitespace-nowrap flex-1 sm:flex-initial ${filterStatus === status ? 'bg-white shadow-sm' : 'text-gray-500'}`}
+                                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                                        filterStatus === status
+                                            ? 'bg-white text-primary shadow-sm'
+                                            : 'text-gray-400 hover:text-gray-600'
+                                    }`}
                                 >
-                                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                                </Button>
+                                    {status}
+                                </button>
                             ))}
                         </div>
                     </div>
 
-                    {/* Search & Dates */}
-                    <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-                        <div className="relative flex-1 sm:flex-initial">
-                            <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="relative flex-1">
+                            <Search className="w-4 h-4 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
                             <input
                                 type="text"
-                                placeholder="Search..."
-                                className="pl-9 sm:pl-11 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#1ABC9C] focus:border-transparent outline-none w-full sm:w-64 font-medium shadow-sm"
+                                placeholder="Search students, teachers..."
+                                className="pl-12 pr-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-sm text-gray-700 outline-none transition-all w-full"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="date"
-                                className="px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#1ABC9C] outline-none font-medium shadow-sm w-full"
-                                value={dateRange.start}
-                                onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                            />
-                        </div>
+                        <input
+                            type="date"
+                            className="px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-sm text-gray-700 outline-none transition-all min-w-[150px]"
+                            value={dateRange.start}
+                            onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                        />
                     </div>
                 </div>
             </div>
 
-            {/* Data Table */}
-            <div className="bg-white rounded-xl sm:rounded-[2.5rem] border border-gray-100 shadow-2xl overflow-hidden">
-                {/* Desktop Table View */}
-                <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-gray-50/50 border-b border-gray-100">
+            {/* Table */}
+            <div className="bg-white rounded-[2rem] border border-gray-100 shadow-2xl overflow-hidden">
+                <div className="overflow-x-auto custom-scrollbar">
+                    <table className="w-full border-separate border-spacing-0">
+                        <thead className="bg-gray-50/50">
                             <tr>
                                 <th className="px-6 py-5 text-left w-4">
                                     <input
@@ -267,15 +273,15 @@ export default function LessonsPage() {
                                                 setSelectedLessons(currentItems.map(l => l.id))
                                             }
                                         }}
-                                        className="rounded border-gray-300 text-[#1ABC9C] focus:ring-[#1ABC9C] w-4 h-4"
+                                        className="rounded border-gray-300 text-primary focus:ring-primary w-4 h-4"
                                     />
                                 </th>
-                                <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] whitespace-nowrap">Date & Time</th>
-                                <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] whitespace-nowrap">Student / Group</th>
-                                <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] whitespace-nowrap">Instructor</th>
-                                <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] whitespace-nowrap">Type</th>
-                                <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] whitespace-nowrap">Status</th>
-                                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] whitespace-nowrap">Actions</th>
+                                <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Date & Schedule</th>
+                                <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Student / Group</th>
+                                <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Instructor</th>
+                                <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Complexity</th>
+                                <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+                                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
@@ -286,8 +292,8 @@ export default function LessonsPage() {
                                     const duration = (end.getTime() - start.getTime()) / (1000 * 60)
 
                                     return (
-                                        <tr key={lesson.id} className="hover:bg-gray-50/50 transition-all group">
-                                            <td className="px-6 py-5">
+                                        <tr key={lesson.id} className="hover:bg-gray-50/30 transition-all group">
+                                            <td className="px-6 py-6">
                                                 <input
                                                     type="checkbox"
                                                     checked={selectedLessons.includes(lesson.id)}
@@ -295,45 +301,40 @@ export default function LessonsPage() {
                                                     className="rounded border-gray-300 text-primary focus:ring-primary w-4 h-4"
                                                 />
                                             </td>
-                                            <td className="px-6 py-5 whitespace-nowrap">
+                                            <td className="px-6 py-6">
                                                 <div className="flex flex-col gap-1">
-                                                    <span className="text-sm font-bold text-gray-900">{format(start, 'MMM d, yyyy')}</span>
-                                                    <span className="text-xs text-gray-500 flex items-center gap-1.5 font-semibold">
-                                                        <Clock className="w-3 h-3" />
-                                                        {format(start, 'h:mm a')} - {format(end, 'h:mm a')} ({duration}m)
+                                                    <span className="text-sm font-black text-gray-900 tracking-tight">{format(start, 'EEE, MMM d')}</span>
+                                                    <span className="text-[10px] text-gray-400 flex items-center gap-1.5 font-black uppercase tracking-widest">
+                                                        <Clock className="w-3 h-3 text-primary" />
+                                                        {format(start, 'h:mm a')} • {duration}m
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-5 whitespace-nowrap">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center text-blue-700 text-xs font-black border border-blue-200">
+                                            <td className="px-6 py-6">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="h-10 w-10 shrink-0 rounded-2xl bg-primary/5 flex items-center justify-center text-primary text-xs font-black border border-primary/10">
                                                         {lesson.student_name?.split(' ').map(n => n[0]).join('')}
                                                     </div>
                                                     <div>
-                                                        <div className="text-sm font-bold text-gray-900">{lesson.student_name}</div>
-                                                        <div className="text-xs text-gray-500 font-semibold">{lesson.student_instrument}</div>
+                                                        <div className="text-sm font-black text-gray-900 tracking-tight uppercase tracking-tighter">{lesson.student_name}</div>
+                                                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{lesson.student_instrument}</div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-5 whitespace-nowrap">
-                                                <div className="text-sm text-gray-700 flex items-center gap-2 font-semibold">
-                                                    <div className="h-7 w-7 shrink-0 rounded-lg bg-gray-100 flex items-center justify-center border border-gray-200">
-                                                        <User className="w-3.5 h-3.5 text-gray-500" />
-                                                    </div>
-                                                    {lesson.teacher_name}
-                                                </div>
+                                            <td className="px-6 py-6 font-bold text-gray-600 text-sm">
+                                                {lesson.teacher_name}
                                             </td>
-                                            <td className="px-6 py-5 whitespace-nowrap">
+                                            <td className="px-6 py-6">
                                                 {getTypeBadge(lesson.lesson_type)}
                                             </td>
-                                            <td className="px-6 py-5 whitespace-nowrap">
+                                            <td className="px-6 py-6">
                                                 {getStatusBadge(lesson.status)}
                                             </td>
-                                            <td className="px-6 py-5 text-right whitespace-nowrap">
+                                            <td className="px-6 py-6 text-right">
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="text-gray-400 hover:text-gray-600"
+                                                    className="text-gray-300 hover:text-gray-600 hover:bg-gray-100/50"
                                                 >
                                                     <MoreHorizontal className="w-5 h-5" />
                                                 </Button>
@@ -345,12 +346,11 @@ export default function LessonsPage() {
                                 <tr>
                                     <td colSpan={7} className="px-6 py-20 text-center">
                                         <div className="flex flex-col items-center justify-center gap-4">
-                                            <div className="w-20 h-20 bg-gray-50 rounded-[2rem] flex items-center justify-center border-2 border-dashed border-gray-200">
-                                                <FileText className="w-10 h-10 text-gray-200" />
+                                            <div className="w-20 h-20 bg-gray-50 rounded-[2.5rem] flex items-center justify-center border-2 border-dashed border-gray-100">
+                                                <BookOpen className="w-10 h-10 text-gray-200" />
                                             </div>
                                             <div>
-                                                <p className="text-xl font-black text-gray-900 mb-1">School&apos;s out!</p>
-                                                <p className="text-sm text-gray-400 font-medium">Try adjusting your filters or search terms</p>
+                                                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">No matching lessons found</p>
                                             </div>
                                         </div>
                                     </td>
@@ -360,200 +360,376 @@ export default function LessonsPage() {
                     </table>
                 </div>
 
-                {/* Mobile Card View */}
-                <div className="md:hidden space-y-4 p-4">
-                    {currentItems.length > 0 ? currentItems.map((lesson) => {
-                        const start = parseISO(lesson.scheduled_start)
-                        const end = parseISO(lesson.scheduled_end)
-                        const duration = (end.getTime() - start.getTime()) / (1000 * 60)
-
-                        return (
-                            <div key={lesson.id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col gap-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex flex-col">
-                                        <span className="text-sm font-black text-gray-900">{format(start, 'MMM d, yyyy')}</span>
-                                        <span className="text-xs text-gray-500 flex items-center gap-1.5 font-semibold">
-                                            <Clock className="w-3 h-3" />
-                                            {format(start, 'h:mm a')} - {format(end, 'h:mm a')} ({duration}m)
-                                        </span>
-                                    </div>
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedLessons.includes(lesson.id)}
-                                        onChange={() => toggleLesson(lesson.id)}
-                                        className="rounded border-gray-300 text-primary focus:ring-primary w-5 h-5"
-                                    />
-                                </div>
-
-                                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                                    <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center text-blue-700 text-xs font-black border border-blue-200">
-                                        {lesson.student_name?.split(' ').map(n => n[0]).join('')}
-                                    </div>
-                                    <div>
-                                        <div className="text-sm font-bold text-gray-900">{lesson.student_name}</div>
-                                        <div className="text-xs text-gray-500 font-semibold">{lesson.student_instrument}</div>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center justify-between flex-wrap gap-2">
-                                    <div className="flex items-center gap-2">
-                                        {getTypeBadge(lesson.lesson_type)}
-                                        {getStatusBadge(lesson.status)}
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-                                    <div className="flex items-center gap-2 text-xs font-bold text-gray-600">
-                                        <div className="h-6 w-6 shrink-0 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
-                                            <User className="w-3 h-3 text-gray-500" />
-                                        </div>
-                                        {lesson.teacher_name}
-                                    </div>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="text-gray-400 hover:text-gray-600"
-                                    >
-                                        <MoreHorizontal className="w-5 h-5" />
-                                    </Button>
-                                </div>
-                            </div>
-                        )
-                    }) : (
-                        <div className="text-center py-12">
-                            <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                                <FileText className="w-8 h-8 text-gray-200" />
-                            </div>
-                            <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No Lessons Found</p>
-                        </div>
-                    )}
-                </div>
-
                 {/* Pagination */}
-                <div className="p-4 sm:p-6 border-t border-gray-100 bg-gray-50/30 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="text-xs sm:text-sm text-gray-600 font-semibold text-center sm:text-left">
-                        <span className="font-black text-gray-900">{filteredLessons.length > 0 ? startIndex + 1 : 0}</span> to <span className="font-black text-gray-900">{Math.min(startIndex + itemsPerPage, filteredLessons.length)}</span> of <span className="font-black text-gray-900">{filteredLessons.length}</span>
+                <div className="p-6 bg-gray-50/30 flex flex-col sm:flex-row items-center justify-between gap-6">
+                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Showing <span className="text-gray-900">{startIndex + 1}</span> to <span className="text-gray-900">{Math.min(startIndex + itemsPerPage, filteredLessons.length)}</span> of <span className="text-gray-900">{filteredLessons.length}</span>
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex items-center gap-3">
                         <Button
-                            variant="outline"
+                            variant="ghost"
                             size="icon"
                             onClick={() => handlePageChange(currentPage - 1)}
                             disabled={currentPage === 1}
+                            className="rounded-xl"
                         >
-                            <ChevronLeft className="w-4 h-4" />
+                            <ChevronLeft className="w-5 h-5" />
                         </Button>
-                        <span className="px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-black text-gray-700 shadow-sm whitespace-nowrap flex items-center">
+                        <div className="px-6 py-2 bg-white border border-gray-100 rounded-2xl text-xs font-black text-gray-700 shadow-sm">
                             {currentPage} / {totalPages || 1}
-                        </span>
+                        </div>
                         <Button
-                            variant="outline"
+                            variant="ghost"
                             size="icon"
                             onClick={() => handlePageChange(currentPage + 1)}
                             disabled={currentPage === totalPages || totalPages === 0}
+                            className="rounded-xl"
                         >
-                            <ChevronRight className="w-4 h-4" />
+                            <ChevronRight className="w-5 h-5" />
                         </Button>
                     </div>
                 </div>
             </div>
 
-            {/* Create Lesson Plan Modal */}
-            {showPlanModal && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300" onClick={() => setShowPlanModal(false)}>
-                    <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-lg w-full overflow-hidden animate-in zoom-in slide-in-from-top-4 duration-300" onClick={e => e.stopPropagation()}>
-                        <div className="px-10 py-8 bg-[#2C3E50] text-white flex justify-between items-center">
-                            <div>
-                                <h3 className="text-3xl font-black tracking-tight">Create Lesson Plan</h3>
-                                <p className="text-white/60 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Design Your Curriculum</p>
-                            </div>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setShowPlanModal(false)}
-                                className="bg-white/10 hover:bg-white/20 text-white shadow-none"
-                            >
-                                <X className="w-7 h-7" />
-                            </Button>
-                        </div>
-
-                        <div className="p-10 space-y-6">
-                            {/* Plan Type Selection */}
-                            <div className="flex gap-4">
-                                <Button
-                                    onClick={() => setPlanType('individual')}
-                                    variant={planType === 'individual' ? 'default' : 'outline'}
-                                    className={`flex-1 h-24 flex-col gap-3 ${planType === 'individual' ? 'bg-primary/10 border-primary text-primary hover:bg-primary/20' : ''}`}
-                                >
-                                    <User className="w-7 h-7" />
-                                    <span className="font-black text-sm">Individual</span>
-                                </Button>
-                                <Button
-                                    onClick={() => setPlanType('group')}
-                                    variant={planType === 'group' ? 'default' : 'outline'}
-                                    className={`flex-1 h-24 flex-col gap-3 ${planType === 'group' ? 'bg-primary/10 border-primary text-primary hover:bg-primary/20' : ''}`}
-                                >
-                                    <Users className="w-7 h-7" />
-                                    <span className="font-black text-sm">Class / Group</span>
-                                </Button>
-                            </div>
-
-                            <div className="space-y-5">
-                                <div>
-                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
-                                        {planType === 'individual' ? 'Select Student' : 'Select Group'}
-                                    </label>
-                                    <select className="w-full px-5 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-900 text-sm">
-                                        <option value="">Select...</option>
-                                        {planType === 'individual' ? (
-                                            students.map((student: any) => {
-                                                const user = student.user || {}
-                                                const firstName = student.first_name || user.first_name
-                                                const lastName = student.last_name || user.last_name
-                                                const fullName = user.full_name || (firstName ? `${firstName} ${lastName}` : '') || student.email || 'Unnamed Student'
-                                                return <option key={student.id} value={student.id}>{fullName}</option>
-                                            })
-                                        ) : (
-                                            bands.map((band: any) => (
-                                                <option key={band.id} value={band.id}>{band.name || 'Unnamed Group'}</option>
-                                            ))
-                                        )}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Lesson Topic / Goal</label>
-                                    <input type="text" className="w-full px-5 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-900 text-sm" placeholder="e.g. Major Scales, Rhythm Basics" />
-                                </div>
-
-                                <div>
-                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Activities & Notes</label>
-                                    <textarea rows={4} className="w-full px-5 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-900 text-sm" placeholder="Outline the lesson plan..."></textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="px-10 pb-10 flex gap-4">
-                            <Button
-                                variant="outline"
-                                onClick={() => setShowPlanModal(false)}
-                                className="flex-1"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                onClick={() => {
-                                    alert('Lesson plan created!')
-                                    setShowPlanModal(false)
-                                }}
-                                className="flex-[2]"
-                            >
-                                Save Plan
-                            </Button>
-                        </div>
+            {/* Lesson Plans Section */}
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-xl p-6 space-y-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-xl font-black text-gray-900">Lesson Plan Templates</h2>
+                        <p className="text-sm text-gray-600 mt-1">Reusable curriculum frameworks with attached resources</p>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                        {plans.length} plan{plans.length !== 1 ? 's' : ''}
                     </div>
                 </div>
-            )}
+
+                {plansLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    </div>
+                ) : plans.length === 0 ? (
+                    <div className="text-center py-12 space-y-3">
+                        <BookOpen className="w-12 h-12 text-gray-300 mx-auto" />
+                        <p className="text-gray-500">No lesson plans yet</p>
+                        <p className="text-sm text-gray-400">Create your first template to get started</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {plans.map((plan: LessonPlan) => (
+                            <div key={plan.id} className="border border-gray-200 rounded-2xl p-4 hover:shadow-lg transition-shadow">
+                                <div className="flex items-start justify-between mb-3">
+                                    <div className="flex-1">
+                                        <h3 className="font-bold text-gray-900 line-clamp-1">{plan.title}</h3>
+                                        <p className="text-xs text-gray-500 mt-1">{plan.created_by_name}</p>
+                                    </div>
+                                    <div className="flex gap-1">
+                                        <button
+                                            onClick={() => {
+                                                setEditingPlan(plan)
+                                                setFormData({
+                                                    title: plan.title,
+                                                    description: plan.description,
+                                                    content: plan.content,
+                                                    difficulty_level: plan.difficulty_level,
+                                                    estimated_duration_minutes: plan.estimated_duration_minutes,
+                                                    tags: plan.tags,
+                                                    is_public: plan.is_public,
+                                                    resource_ids: plan.resources?.map(r => r.id) || []
+                                                })
+                                                setShowPlanModal(true)
+                                            }}
+                                            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                                        >
+                                            <Edit className="w-4 h-4 text-gray-600" />
+                                        </button>
+                                        <button
+                                            onClick={async () => {
+                                                if (confirm('Delete this lesson plan?')) {
+                                                    await deletePlan(plan.id)
+                                                }
+                                            }}
+                                            className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                                        >
+                                            <Trash2 className="w-4 h-4 text-red-600" />
+                                        </button>
+                                    </div>
+                                </div>
+                                {plan.description && (
+                                    <p className="text-sm text-gray-600 line-clamp-2 mb-3">{plan.description}</p>
+                                )}
+                                <div className="flex items-center gap-2 flex-wrap mb-3">
+                                    <span className={`text-xs px-2 py-1 rounded-lg font-semibold ${
+                                        plan.difficulty_level === 'beginner' ? 'bg-green-100 text-green-800' :
+                                        plan.difficulty_level === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
+                                        'bg-red-100 text-red-800'
+                                    }`}>
+                                        {plan.difficulty_level}
+                                    </span>
+                                    <span className="text-xs text-gray-500">{plan.estimated_duration_minutes} min</span>
+                                    {plan.resources && plan.resources.length > 0 && (
+                                        <span className="text-xs text-gray-500 flex items-center gap-1">
+                                            <Package className="w-3 h-3" />
+                                            {plan.resources.length}
+                                        </span>
+                                    )}
+                                </div>
+                                {plan.tags && plan.tags.length > 0 && (
+                                    <div className="flex gap-1 flex-wrap">
+                                        {plan.tags.slice(0, 3).map((tag, idx) => (
+                                            <span key={idx} className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
+                                                {tag}
+                                            </span>
+                                        ))}
+                                        {plan.tags.length > 3 && (
+                                            <span className="text-xs text-gray-400">+{plan.tags.length - 3}</span>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Create/Edit Lesson Plan Modal */}
+            <Dialog
+                open={showPlanModal}
+                onOpenChange={(open) => {
+                    setShowPlanModal(open)
+                    if (!open) {
+                        setEditingPlan(null)
+                        setFormData({
+                            title: '',
+                            description: '',
+                            content: '',
+                            difficulty_level: 'beginner',
+                            estimated_duration_minutes: 60,
+                            tags: [],
+                            is_public: false,
+                            resource_ids: []
+                        })
+                    }
+                }}
+                size="lg"
+            >
+                <DialogHeader title={editingPlan ? 'Edit Lesson Plan' : 'Create Lesson Plan'} />
+                <DialogContent>
+                    <div className="space-y-6 max-h-[60vh] overflow-y-auto">
+                        {/* Title */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+                                <Sparkles className="w-3 h-3" />
+                                Plan Title
+                            </label>
+                            <input
+                                type="text"
+                                value={formData.title}
+                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-primary rounded-xl font-semibold text-gray-900 outline-none transition-all"
+                                placeholder="e.g., Beginner Piano - Week 1"
+                                required
+                            />
+                        </div>
+
+                        {/* Description */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Description</label>
+                            <textarea
+                                value={formData.description}
+                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                rows={2}
+                                className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-primary rounded-xl font-medium text-gray-900 outline-none transition-all resize-none"
+                                placeholder="Brief overview of this lesson plan..."
+                            />
+                        </div>
+
+                        {/* Content */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+                                <Activity className="w-3 h-3" />
+                                Lesson Content
+                            </label>
+                            <textarea
+                                value={formData.content}
+                                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                                rows={6}
+                                className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-primary rounded-xl font-medium text-gray-900 outline-none transition-all resize-none"
+                                placeholder="Detailed lesson structure, exercises, goals..."
+                                required
+                            />
+                        </div>
+
+                        {/* Difficulty & Duration */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Difficulty</label>
+                                <select
+                                    value={formData.difficulty_level}
+                                    onChange={(e) => setFormData({ ...formData, difficulty_level: e.target.value as any })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-primary rounded-xl font-semibold text-gray-900 outline-none transition-all"
+                                >
+                                    <option value="beginner">Beginner</option>
+                                    <option value="intermediate">Intermediate</option>
+                                    <option value="advanced">Advanced</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+                                    <Clock className="w-3 h-3" />
+                                    Duration (min)
+                                </label>
+                                <input
+                                    type="number"
+                                    value={formData.estimated_duration_minutes}
+                                    onChange={(e) => setFormData({ ...formData, estimated_duration_minutes: parseInt(e.target.value) || 0 })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-primary rounded-xl font-semibold text-gray-900 outline-none transition-all"
+                                    min="1"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        {/* Tags */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+                                <Tag className="w-3 h-3" />
+                                Tags
+                            </label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={tagInput}
+                                    onChange={(e) => setTagInput(e.target.value)}
+                                    onKeyPress={(e) => {
+                                        if (e.key === 'Enter' && tagInput.trim()) {
+                                            e.preventDefault()
+                                            if (!formData.tags.includes(tagInput.trim())) {
+                                                setFormData({ ...formData, tags: [...formData.tags, tagInput.trim()] })
+                                            }
+                                            setTagInput('')
+                                        }
+                                    }}
+                                    className="flex-1 px-4 py-2 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-primary rounded-xl font-medium text-gray-900 outline-none transition-all"
+                                    placeholder="Type and press Enter"
+                                />
+                            </div>
+                            {formData.tags.length > 0 && (
+                                <div className="flex gap-2 flex-wrap">
+                                    {formData.tags.map((tag, idx) => (
+                                        <span key={idx} className="px-3 py-1 bg-primary/10 text-primary rounded-lg text-sm font-semibold flex items-center gap-2">
+                                            {tag}
+                                            <button
+                                                onClick={() => setFormData({ ...formData, tags: formData.tags.filter((_, i) => i !== idx) })}
+                                                className="hover:text-red-600"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Resources */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+                                <Package className="w-3 h-3" />
+                                Attached Resources
+                            </label>
+                            <button
+                                type="button"
+                                onClick={() => setShowResourceSelector(true)}
+                                className="w-full px-4 py-3 bg-gray-50 border-2 border-dashed border-gray-300 hover:border-primary rounded-xl font-semibold text-gray-600 hover:text-primary transition-all flex items-center justify-center gap-2"
+                            >
+                                <Plus className="w-4 h-4" />
+                                {formData.resource_ids.length > 0 ? `${formData.resource_ids.length} resource(s) selected` : 'Select Resources'}
+                            </button>
+                        </div>
+
+                        {/* Public Toggle */}
+                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                            <div>
+                                <div className="font-bold text-gray-900">Make Public</div>
+                                <div className="text-sm text-gray-600">Share with other teachers in your studio</div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, is_public: !formData.is_public })}
+                                className={`relative w-12 h-6 rounded-full transition-colors ${
+                                    formData.is_public ? 'bg-primary' : 'bg-gray-300'
+                                }`}
+                            >
+                                <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                                    formData.is_public ? 'translate-x-6' : 'translate-x-0'
+                                }`} />
+                            </button>
+                        </div>
+                    </div>
+                </DialogContent>
+                <DialogFooter>
+                    <Button
+                        variant="ghost"
+                        onClick={() => setShowPlanModal(false)}
+                        disabled={submitting}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={async () => {
+                            if (!formData.title.trim() || !formData.content.trim()) {
+                                alert('Please fill in title and content')
+                                return
+                            }
+                            setSubmitting(true)
+                            try {
+                                if (editingPlan) {
+                                    await updatePlan(editingPlan.id, formData)
+                                } else {
+                                    await createPlan(formData)
+                                }
+                                setShowPlanModal(false)
+                                setEditingPlan(null)
+                                setFormData({
+                                    title: '',
+                                    description: '',
+                                    content: '',
+                                    difficulty_level: 'beginner',
+                                    estimated_duration_minutes: 60,
+                                    tags: [],
+                                    is_public: false,
+                                    resource_ids: []
+                                })
+                            } catch (err) {
+                                console.error(err)
+                            } finally {
+                                setSubmitting(false)
+                            }
+                        }}
+                        disabled={submitting}
+                        className="gap-2"
+                    >
+                        {submitting ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Saving...
+                            </>
+                        ) : (
+                            <>
+                                <CheckCircle2 className="w-4 h-4" />
+                                {editingPlan ? 'Update Plan' : 'Create Plan'}
+                            </>
+                        )}
+                    </Button>
+                </DialogFooter>
+            </Dialog>
+
+            {/* Resource Selector Modal */}
+            <ResourceSelector
+                selectedIds={formData.resource_ids}
+                onSelectionChange={(ids) => setFormData({ ...formData, resource_ids: ids })}
+                isOpen={showResourceSelector}
+                onClose={() => setShowResourceSelector(false)}
+            />
         </div>
     )
 }

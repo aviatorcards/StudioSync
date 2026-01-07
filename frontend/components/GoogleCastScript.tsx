@@ -13,9 +13,6 @@ declare global {
 
 export default function GoogleCastScript() {
     useEffect(() => {
-        // Only run on client-side
-        if (typeof window === 'undefined') return
-
         window.__onGCastApiAvailable = (isAvailable: boolean) => {
             if (isAvailable) {
                 try {

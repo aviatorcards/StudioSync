@@ -7,10 +7,12 @@ import {
     Loader2, Square, Music, Monitor, Armchair,
     Save, Plus, Building2, X, MapPin, CheckCircle2, Link as LinkIcon,
     DoorOpen, Maximize, Disc, Speaker, Mic2, BookOpen, Warehouse, Printer,
-    Lock, Unlock
+    Lock, Unlock, Sparkles, Globe, Clock, DollarSign, Target
 } from 'lucide-react'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
 
 // --- Interfaces & Constants ---
 
@@ -52,8 +54,7 @@ const TOOLBOX_ITEMS = [
 export default function StudiosPage() {
     const { studios, loading: studiosLoading, refetch } = useStudios()
 
-    // Determine primary studio (User: "primary studio that we're currently in")
-    // We'll default to the first one for now.
+    // Determine primary studio
     const activeStudio = studios && studios.length > 0 ? studios[0] : null
 
     // --- Editor State ---
@@ -62,8 +63,8 @@ export default function StudiosPage() {
     const [editorLoading, setEditorLoading] = useState(false)
     const [saving, setSaving] = useState(false)
 
-    // --- Creation Modal State (for when no studio exists) ---
-    const [isModalOpen, setIsModalOpen] = useState(false)
+    // --- Creation Modal State ---
+    const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [formData, setFormData] = useState({
         name: '',
@@ -94,17 +95,15 @@ export default function StudiosPage() {
             const fetchLayout = async () => {
                 try {
                     const res = await api.get(`/core/studios/${activeStudio.id}/`)
-                    // Check if layout_data exists and is an array
                     if (res.data.layout_data && Array.isArray(res.data.layout_data)) {
                         setShapes(res.data.layout_data)
                     } else {
-                        setShapes([]) // Reset if no layout data, or invalid
+                        setShapes([]) 
                     }
                 } catch (err: any) {
                     console.error(err)
-                    // Don't show error toast on 404/empty, just log
                     if (err.response?.status !== 404) {
-                        toast.error('Failed to load layout')
+                        toast.error('Failed to load architecture data')
                     }
                 } finally {
                     setEditorLoading(false)
@@ -125,17 +124,6 @@ export default function StudiosPage() {
         }
     }, [selectedId, shapes])
 
-    // Close modal on Escape
-    useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') setIsModalOpen(false)
-        }
-        if (isModalOpen) {
-            window.addEventListener('keydown', handleEscape)
-            return () => window.removeEventListener('keydown', handleEscape)
-        }
-    }, [isModalOpen])
-
 
     // --- Actions ---
 
@@ -146,10 +134,10 @@ export default function StudiosPage() {
             await api.patch(`/core/studios/${activeStudio.id}/`, {
                 layout_data: shapes
             })
-            toast.success('Layout saved successfully')
+            toast.success('Architecture layout synchronized')
         } catch (err) {
             console.error(err)
-            toast.error('Failed to save layout')
+            toast.error('Synchronization failed')
         } finally {
             setSaving(false)
         }
@@ -193,12 +181,9 @@ export default function StudiosPage() {
 
     const handlePrint = () => {
         if (!stageRef.current) return
-
-        // 1. Deselect everything for a clean print
         setSelectedId(null)
         if (transformerRef.current) transformerRef.current.nodes([])
 
-        // Wait a tick for selection to clear, then print
         setTimeout(() => {
             const dataUrl = stageRef.current.toDataURL({ pixelRatio: 2 })
             const printWindow = window.open('', '_blank')
@@ -206,13 +191,13 @@ export default function StudiosPage() {
                 printWindow.document.write(`
                     <html>
                         <head>
-                            <title>${activeStudio?.name || 'Studio'} Layout</title>
+                            <title>${activeStudio?.name || 'Studio'} Blueprint</title>
                             <style>
-                                body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #fff; }
-                                img { max-width: 100%; height: auto; border: 1px solid #eee; }
+                                body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #fff; font-family: system-ui; }
+                                img { max-width: 100%; height: auto; border: 1px solid #eee; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
                                 @media print {
                                     body { -webkit-print-color-adjust: exact; }
-                                    img { border: none; }
+                                    img { border: none; box-shadow: none; }
                                 }
                             </style>
                         </head>
@@ -245,7 +230,7 @@ export default function StudiosPage() {
             timezone: userTimezone,
             is_active: true
         })
-        setIsModalOpen(true)
+        setIsDialogOpen(true)
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -253,13 +238,12 @@ export default function StudiosPage() {
         setIsSubmitting(true)
         try {
             await api.post('/core/studios/', formData)
-            toast.success('Studio created successfully')
-            setIsModalOpen(false)
-            refetch() // Reload studios to trigger activeStudio
+            toast.success('Studio initialized successfully')
+            setIsDialogOpen(false)
+            refetch()
         } catch (error: any) {
             console.error('Failed to create studio:', error)
-            const errorMsg = error.response?.data?.detail || 'Operation failed'
-            toast.error(errorMsg)
+            toast.error(error.response?.data?.detail || 'Initialization failed')
         } finally {
             setIsSubmitting(false)
         }
@@ -270,458 +254,474 @@ export default function StudiosPage() {
 
     if (studiosLoading) {
         return (
-            <div className="flex flex-col items-center justify-center py-20 animate-pulse">
-                <Loader2 className="w-10 h-10 text-[#2C3E50] animate-spin mb-4" />
-                <p className="text-gray-500 font-bold tracking-[0.2em] uppercase text-xs">Loading Studio...</p>
+            <div className="flex flex-col items-center justify-center py-20 animate-in fade-in duration-700">
+                <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+                <p className="text-[10px] font-black text-gray-400 tracking-[0.3em] uppercase">Accessing Infrastructure...</p>
             </div>
         )
     }
 
-    // Case 1: No Studio Exists -> Show Empty State / Creation Prompt
+    // Case 1: No Studio Exists 
     if (!activeStudio) {
         return (
-            <div className="max-w-7xl mx-auto px-4 py-12">
-                <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl p-20 text-center">
-                    <div className="flex flex-col items-center gap-6">
-                        <div className="w-24 h-24 bg-gray-50 rounded-[2rem] flex items-center justify-center border-2 border-dashed border-gray-200">
+            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-in fade-in slide-in-from-bottom-6 duration-1000">
+                <div className="bg-white rounded-[3rem] border border-gray-100 shadow-2xl p-24 text-center relative overflow-hidden group">
+                     <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl group-hover:scale-110 transition-transform duration-1000" />
+                     <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-50 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl group-hover:scale-110 transition-transform duration-1000" />
+
+                    <div className="flex flex-col items-center gap-8 relative z-10">
+                        <div className="w-28 h-28 bg-white rounded-[2.5rem] flex items-center justify-center border-2 border-dashed border-gray-200 shadow-sm">
                             <Building2 className="w-12 h-12 text-gray-300" />
                         </div>
-                        <div>
-                            <h2 className="text-3xl font-black text-gray-900 mb-2">Setup Your Studio</h2>
-                            <p className="text-gray-500 font-medium max-w-md mx-auto">
-                                Before you can design your layout, you need to create your primary studio profile.
+                        <div className="space-y-3">
+                            <h2 className="text-4xl font-black text-gray-900 tracking-tight">Setup Your Main Headquarters</h2>
+                            <p className="text-gray-500 font-medium max-w-lg mx-auto leading-relaxed">
+                                Initialize your primary studio environment to start orchestrating lesson plans, designing layouts, and managing your faculty roster.
                             </p>
                         </div>
-                        <button
+                        <Button
                             onClick={handleOpenCreate}
-                            className="px-8 py-4 bg-[#2C3E50] text-white rounded-2xl hover:bg-[#34495E] transition-all flex items-center gap-2 font-bold shadow-lg hover:scale-105 active:scale-95"
+                            className="px-10 py-8 text-sm font-black uppercase tracking-[0.1em] hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20"
                         >
-                            <Plus className="w-5 h-5" />
-                            Create Studio Profile
-                        </button>
+                            <Plus className="w-5 h-5 mr-1" />
+                            Initialize Headquarters
+                        </Button>
                     </div>
                 </div>
 
-                {/* Create Modal */}
-                {isModalOpen && (
-                    <div
-                        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-300 antialiased"
-                        onClick={() => setIsModalOpen(false)}
-                    >
-                        <div
-                            className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-in zoom-in slide-in-from-top-4 duration-300 ring-1 ring-black/5 flex flex-col"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="px-10 py-8 bg-[#2C3E50] text-white flex items-center justify-between shrink-0 ring-1 ring-white/10">
-                                <div>
-                                    <h2 className="text-3xl font-black tracking-tight">Add New Studio</h2>
-                                    <p className="text-white/60 text-[10px] font-black uppercase tracking-widest mt-1">Configure Location & Settings</p>
+                {/* Create Studio Dialog */}
+                <Dialog
+                    open={isDialogOpen}
+                    onOpenChange={setIsDialogOpen}
+                    size="xl"
+                >
+                    <DialogHeader title="Studio Initialization" />
+                    <DialogContent>
+                        <form id="studio-creation-form" onSubmit={handleSubmit} className="space-y-10">
+                            {/* Basics */}
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                                        <Sparkles className="w-4 h-4" />
+                                    </div>
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">Core Identity</h3>
                                 </div>
-                                <button onClick={() => setIsModalOpen(false)} className="w-12 h-12 rounded-2xl hover:bg-white/10 flex items-center justify-center transition-colors">
-                                    <X className="w-7 h-7" />
-                                </button>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Official Studio Name *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        className="w-full px-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-gray-900 transition-all placeholder:text-gray-300"
+                                        placeholder="e.g. Apex Music Conservatoire"
+                                    />
+                                </div>
                             </div>
 
-                            <form onSubmit={handleSubmit} className="p-10 space-y-8 overflow-y-auto flex-1 scrollbar-hide">
-                                {/* Basics */}
-                                <div className="space-y-6">
-                                    <div className="flex items-center gap-4 text-[#2C3E50]">
-                                        <Building2 className="w-6 h-6" />
-                                        <h3 className="text-lg font-black uppercase tracking-wide">Core Identity</h3>
+                            {/* Contact */}
+                            <div className="space-y-6 pt-6 border-t border-gray-50">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500">
+                                        <Globe className="w-4 h-4" />
                                     </div>
-                                    <div className="grid grid-cols-1 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Studio Name *</label>
-                                            <input
-                                                type="text"
-                                                required
-                                                value={formData.name}
-                                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                                className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#2C3E50] outline-none font-bold text-gray-900 transition-all shadow-inner placeholder:font-medium"
-                                                placeholder="e.g. Downtown Music Academy"
-                                            />
-                                        </div>
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">Global Communication</h3>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Administrative Email</label>
+                                        <input
+                                            type="email"
+                                            value={formData.email}
+                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                            className="w-full px-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-gray-900 transition-all placeholder:text-gray-300"
+                                            placeholder="hq@studio.com"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Primary Phone</label>
+                                        <input
+                                            type="tel"
+                                            value={formData.phone}
+                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                            className="w-full px-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-gray-900 transition-all placeholder:text-gray-300"
+                                            placeholder="+1 (555) 000-0000"
+                                        />
+                                    </div>
+                                    <div className="col-span-full space-y-2">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Public Domain / Website</label>
+                                        <input
+                                            type="url"
+                                            value={formData.website}
+                                            onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                                            className="w-full px-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-gray-900 transition-all placeholder:text-gray-300"
+                                            placeholder="https://apexmusic.com"
+                                        />
                                     </div>
                                 </div>
+                            </div>
 
-                                {/* Contact */}
-                                <div className="space-y-6 pt-6 border-t border-gray-100">
-                                    <div className="flex items-center gap-4 text-[#2C3E50]">
-                                        <LinkIcon className="w-6 h-6" />
-                                        <h3 className="text-lg font-black uppercase tracking-wide">Contact Info</h3>
+                            {/* Location */}
+                            <div className="space-y-6 pt-6 border-t border-gray-50">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500">
+                                        <MapPin className="w-4 h-4" />
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Email Address</label>
-                                            <input
-                                                type="email"
-                                                value={formData.email}
-                                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                                className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#2C3E50] outline-none font-bold text-gray-900 transition-all shadow-inner placeholder:font-medium"
-                                                placeholder="info@academy.com"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Phone Number</label>
-                                            <input
-                                                type="tel"
-                                                value={formData.phone}
-                                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                                className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#2C3E50] outline-none font-bold text-gray-900 transition-all shadow-inner placeholder:font-medium"
-                                                placeholder="(555) 123-4567"
-                                            />
-                                        </div>
-                                        <div className="col-span-full space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Website URL</label>
-                                            <input
-                                                type="url"
-                                                value={formData.website}
-                                                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                                                className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#2C3E50] outline-none font-bold text-gray-900 transition-all shadow-inner placeholder:font-medium"
-                                                placeholder="https://example.com"
-                                            />
-                                        </div>
-                                    </div>
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">Physical Location</h3>
                                 </div>
-
-                                {/* Location */}
-                                <div className="space-y-6 pt-6 border-t border-gray-100">
-                                    <div className="flex items-center gap-4 text-[#2C3E50]">
-                                        <MapPin className="w-6 h-6" />
-                                        <h3 className="text-lg font-black uppercase tracking-wide">Location</h3>
-                                    </div>
-                                    <div className="space-y-4">
+                                <div className="space-y-4">
+                                    <input
+                                        type="text"
+                                        value={formData.address_line1}
+                                        onChange={(e) => setFormData({ ...formData, address_line1: e.target.value })}
+                                        className="w-full px-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-gray-900 transition-all placeholder:text-gray-300"
+                                        placeholder="Street Address"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={formData.address_line2}
+                                        onChange={(e) => setFormData({ ...formData, address_line2: e.target.value })}
+                                        className="w-full px-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-gray-900 transition-all placeholder:text-gray-300"
+                                        placeholder="Suite / Floor / Unit (Optional)"
+                                    />
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         <input
                                             type="text"
-                                            value={formData.address_line1}
-                                            onChange={(e) => setFormData({ ...formData, address_line1: e.target.value })}
-                                            className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#2C3E50] outline-none font-bold text-gray-900 transition-all shadow-inner placeholder:font-medium"
-                                            placeholder="Address Line 1"
+                                            value={formData.city}
+                                            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                            className="w-full px-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-sm text-gray-900 transition-all placeholder:text-gray-300"
+                                            placeholder="City"
                                         />
                                         <input
                                             type="text"
-                                            value={formData.address_line2}
-                                            onChange={(e) => setFormData({ ...formData, address_line2: e.target.value })}
-                                            className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#2C3E50] outline-none font-bold text-gray-900 transition-all shadow-inner placeholder:font-medium"
-                                            placeholder="Address Line 2 (Optional)"
+                                            value={formData.state}
+                                            onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                                            className="w-full px-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-sm text-gray-900 transition-all placeholder:text-gray-300"
+                                            placeholder="State"
                                         />
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <input
-                                                type="text"
-                                                value={formData.city}
-                                                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                                                className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#2C3E50] outline-none font-bold text-gray-900 transition-all shadow-inner placeholder:font-medium"
-                                                placeholder="City"
-                                            />
-                                            <input
-                                                type="text"
-                                                value={formData.state}
-                                                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                                                className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#2C3E50] outline-none font-bold text-gray-900 transition-all shadow-inner placeholder:font-medium"
-                                                placeholder="State/Region"
-                                            />
-                                            <input
-                                                type="text"
-                                                value={formData.postal_code}
-                                                onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
-                                                className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#2C3E50] outline-none font-bold text-gray-900 transition-all shadow-inner placeholder:font-medium"
-                                                placeholder="Zip Code"
-                                            />
-                                            <input
-                                                type="text"
-                                                value={formData.country}
-                                                onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                                                className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#2C3E50] outline-none font-bold text-gray-900 transition-all shadow-inner placeholder:font-medium"
-                                                placeholder="Country Code (e.g. US)"
-                                            />
-                                        </div>
+                                        <input
+                                            type="text"
+                                            value={formData.postal_code}
+                                            onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
+                                            className="w-full px-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-sm text-gray-900 transition-all placeholder:text-gray-300"
+                                            placeholder="Postal Code"
+                                        />
+                                        <input
+                                            type="text"
+                                            value={formData.country}
+                                            onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                                            className="w-full px-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-sm text-gray-900 transition-all placeholder:text-gray-300"
+                                            placeholder="ISO (US)"
+                                        />
                                     </div>
                                 </div>
+                            </div>
 
-                                {/* Settings */}
-                                <div className="space-y-6 pt-6 border-t border-gray-100">
-                                    <div className="flex items-center gap-4 text-[#2C3E50]">
-                                        <CheckCircle2 className="w-6 h-6" />
-                                        <h3 className="text-lg font-black uppercase tracking-wide">Settings</h3>
+                            {/* System Settings */}
+                             <div className="space-y-6 pt-6 border-t border-gray-50">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500">
+                                        <Clock className="w-4 h-4" />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Currency</label>
-                                            <input
-                                                type="text"
-                                                value={formData.currency}
-                                                onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                                                className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#2C3E50] outline-none font-bold text-gray-900 transition-all shadow-inner placeholder:font-medium"
-                                                placeholder="USD"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Timezone</label>
-                                            <input
-                                                type="text"
-                                                value={formData.timezone}
-                                                onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
-                                                className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#2C3E50] outline-none font-bold text-gray-900 transition-all shadow-inner placeholder:font-medium"
-                                                placeholder="UTC"
-                                            />
-                                        </div>
-                                        <div className="col-span-full pt-4">
-                                            <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl cursor-pointer hover:bg-gray-100 transition-all">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.is_active}
-                                                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                                                    className="w-5 h-5 rounded-md border-gray-300 text-[#2C3E50] focus:ring-[#2C3E50]"
-                                                />
-                                                <span className="font-bold text-gray-700">Studio is Active</span>
-                                            </label>
-                                        </div>
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">System Parameters</h3>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                     <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                            <DollarSign className="w-3 h-3 text-emerald-500" />
+                                            Active Currency
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={formData.currency}
+                                            onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                                            className="w-full px-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-gray-900 transition-all placeholder:text-gray-300"
+                                            placeholder="USD"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Regional Timezone</label>
+                                        <input
+                                            type="text"
+                                            value={formData.timezone}
+                                            onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
+                                            className="w-full px-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-gray-900 transition-all placeholder:text-gray-300"
+                                            placeholder="America/New_York"
+                                        />
                                     </div>
                                 </div>
-
-                                <div className="flex gap-4 pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsModalOpen(false)}
-                                        className="flex-1 px-8 py-4 border-2 border-gray-100 rounded-2xl font-black text-xs uppercase tracking-widest text-gray-400 hover:bg-gray-50 transition-all active:scale-95"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={isSubmitting}
-                                        className="flex-[2] px-8 py-4 bg-[#2C3E50] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#34495E] disabled:opacity-50 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3"
-                                    >
-                                        {isSubmitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Saving...</> : 'Create Studio'}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
+                            </div>
+                        </form>
+                    </DialogContent>
+                    <DialogFooter>
+                         <Button
+                            variant="ghost"
+                            onClick={() => setIsDialogOpen(false)}
+                            className="flex-1"
+                        >
+                            Abort
+                        </Button>
+                        <Button
+                            type="submit"
+                            form="studio-creation-form"
+                            disabled={isSubmitting}
+                            className="flex-[2] gap-2 active:scale-95 transition-transform"
+                        >
+                            {isSubmitting ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Initializing...
+                                </>
+                            ) : (
+                                'Complete Onboarding'
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </Dialog>
             </div>
         )
     }
 
     // Case 2: Studio Exists -> Editor View
     return (
-        <>
+        <div className="flex flex-col h-[calc(100vh-theme(spacing.24))] -m-8 relative overflow-hidden bg-gray-50/30">
             {/* Mobile Desktop-Only Notice */}
-            <div className="md:hidden">
-                <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg p-4 shadow-lg border-2 border-orange-600">
-                    <div className="flex items-start gap-3">
-                        <div className="shrink-0 w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <h3 className="font-bold text-sm mb-1">Desktop Required</h3>
-                            <p className="text-xs text-white/90 leading-relaxed">
-                                The Studio Designer requires a desktop or laptop computer. Please use a larger screen for the full layout editor.
-                            </p>
-                            <p className="text-xs text-white/70 mt-2 italic">
-                                (Yes, even an old Sun SPARC workstation will do!)
-                            </p>
-                        </div>
+            <div className="block md:hidden p-8">
+                 <div className="bg-white rounded-3xl border border-gray-100 shadow-2xl p-10 text-center space-y-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+                    <div className="w-20 h-20 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-500 mx-auto">
+                        <Monitor className="w-10 h-10" />
+                    </div>
+                    <div className="space-y-2">
+                        <h3 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Large Display Required</h3>
+                        <p className="text-sm font-medium text-gray-500 leading-relaxed">
+                            The Blueprint Designer requires significant screen real estate for precise architectural orchestration. 
+                            Please access this module from a desktop environment.
+                        </p>
                     </div>
                 </div>
             </div>
 
             {/* Desktop Content */}
-            <div className="hidden md:flex h-[calc(100vh-theme(spacing.24))] -m-8 flex-col">
-            {/* Toolbar Header */}
-            <div className="h-16 bg-white border-b border-gray-200 px-6 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-4">
-                    <h1 className="text-xl font-black text-gray-900">
-                        {activeStudio.name} <span className="text-gray-400 font-medium text-base ml-2">Studio Layout</span>
-                    </h1>
-                </div>
-                <div className="flex items-center gap-2">
-                    {selectedId && (
-                        <>
-                            <button
-                                onClick={toggleLock}
-                                className={`px-4 py-2 font-medium rounded-lg mr-2 text-sm flex items-center gap-2 transition-colors ${shapes.find(s => s.id === selectedId)?.locked
-                                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                                    : 'text-gray-600 hover:bg-gray-100'
-                                    }`}
-                                title={shapes.find(s => s.id === selectedId)?.locked ? "Unlock Item" : "Lock Item"}
-                            >
-                                {shapes.find(s => s.id === selectedId)?.locked ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                                {shapes.find(s => s.id === selectedId)?.locked ? 'Unlock' : 'Lock'}
-                            </button>
-                            <button
-                                onClick={handleDeleteItem}
-                                className="px-4 py-2 text-red-600 font-medium hover:bg-red-50 rounded-lg mr-4 text-sm"
-                            >
-                                Delete Selected
-                            </button>
-                        </>
-                    )}
-                    <button
-                        onClick={handlePrint}
-                        className="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg mr-2 text-sm flex items-center gap-2"
-                        title="Print Layout"
-                    >
-                        <Printer className="w-4 h-4" />
-                        Print
-                    </button>
-                    <button
-                        onClick={handleSave}
-                        disabled={saving}
-                        className="px-5 py-2.5 bg-[#2C3E50] text-white rounded-xl font-bold flex items-center gap-2 hover:bg-[#34495E] disabled:opacity-50 transition-all shadow-md active:scale-95 text-sm"
-                    >
-                        <Save className="w-4 h-4" />
-                        {saving ? 'Saving...' : 'Save Layout'}
-                    </button>
-                </div>
-            </div>
-
-            <div className="flex flex-1 overflow-hidden">
-                {/* Toolbox */}
-                <aside className="w-64 bg-white border-r border-gray-200 p-6 flex flex-col gap-4 overflow-y-auto z-10 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]">
-                    <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Furniture & Items</h2>
-                    {TOOLBOX_ITEMS.map((item) => (
-                        <button
-                            key={item.type}
-                            onClick={() => handleAddItem(item.type)}
-                            className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl hover:bg-white hover:shadow-lg hover:-translate-y-1 border border-gray-100 transition-all group text-left"
-                        >
-                            <div className="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center group-hover:border-[#2C3E50] transition-colors shadow-sm">
-                                <item.icon className="w-5 h-5 text-gray-600" />
-                            </div>
-                            <span className="font-bold text-gray-700 text-sm">{item.label}</span>
-                        </button>
-                    ))}
-
-                    <div className="mt-auto p-5 bg-blue-50/50 rounded-2xl border border-blue-100/50 text-blue-900 text-xs leading-relaxed">
-                        <p className="font-bold mb-1 uppercase tracking-wider text-[10px] text-blue-400">Pro Tip</p>
-                        Selected items can be rotated and resized using the handles directly on the canvas.
-                    </div>
-                </aside>
-
-                {/* Canvas Area */}
-                <main className="flex-1 bg-gray-50/50 relative overflow-hidden flex items-center justify-center">
-                    {/* Grid Background */}
-                    <div
-                        className="absolute inset-0 opacity-10 pointer-events-none"
-                        style={{
-                            backgroundImage: 'radial-gradient(#2C3E50 1px, transparent 1px)',
-                            backgroundSize: '24px 24px'
-                        }}
-                    />
-
-                    {editorLoading ? (
-                        <div className="flex flex-col items-center gap-3">
-                            <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-                            <p className="text-sm font-medium text-gray-400">Loading layout...</p>
+            <div className="hidden md:flex flex-col flex-1">
+                {/* Editor Header */}
+                <header className="h-20 bg-white border-b border-gray-100 px-8 flex items-center justify-between shrink-0 z-20">
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                            <Maximize className="w-5 h-5" />
                         </div>
-                    ) : (
-                        <div className="bg-white shadow-2xl rounded-sm overflow-hidden border border-gray-100">
-                            <Stage
-                                width={1000}
-                                height={800}
-                                ref={stageRef}
-                                onMouseDown={(e: any) => {
-                                    // Deselect if clicked on stage
-                                    if (e.target === e.target.getStage()) {
-                                        setSelectedId(null)
-                                        if (transformerRef.current) transformerRef.current.nodes([])
-                                    }
-                                }}
-                            >
-                                <Layer>
-                                    {shapes.map((shape) => (
-                                        <Group
-                                            key={shape.id}
-                                            id={shape.id}
-                                            x={shape.x}
-                                            y={shape.y}
-                                            rotation={shape.rotation}
-                                            draggable={!shape.locked}
-                                            onClick={() => setSelectedId(shape.id)}
-                                            onTap={() => setSelectedId(shape.id)}
-                                            onDragEnd={(e: any) => {
-                                                const newShapes = shapes.map(s => {
-                                                    if (s.id === shape.id) {
-                                                        return {
-                                                            ...s,
-                                                            x: Math.round(e.target.x() / GRID_SIZE) * GRID_SIZE,
-                                                            y: Math.round(e.target.y() / GRID_SIZE) * GRID_SIZE
-                                                        }
-                                                    }
-                                                    return s
-                                                })
-                                                setShapes(newShapes)
-                                            }}
-                                            onTransformEnd={(e: any) => {
-                                                const node = stageRef.current.findOne('#' + shape.id)
-                                                if (node) {
-                                                    const scaleX = node.scaleX();
-                                                    const scaleY = node.scaleY();
+                        <div className="flex flex-col">
+                            <h1 className="text-lg font-black text-gray-900 tracking-tighter uppercase leading-tight">
+                                {activeStudio.name} Blueprint
+                            </h1>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Architectural Orchestration Mode</p>
+                        </div>
+                    </div>
 
-                                                    // Reset scale and update width/height
-                                                    node.scaleX(1);
-                                                    node.scaleY(1);
+                    <div className="flex items-center gap-3">
+                        {selectedId && (
+                            <div className="flex items-center gap-2 p-1.5 bg-gray-50 rounded-2xl mr-4 border border-gray-100 animate-in slide-in-from-right-2">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={toggleLock}
+                                    className={`px-4 rounded-xl text-[10px] font-black uppercase tracking-widest gap-2 ${
+                                        shapes.find(s => s.id === selectedId)?.locked 
+                                            ? 'text-orange-600 bg-white shadow-sm' 
+                                            : 'text-gray-500 hover:text-gray-700'
+                                    }`}
+                                >
+                                    {shapes.find(s => s.id === selectedId)?.locked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                                    {shapes.find(s => s.id === selectedId)?.locked ? 'Unlock' : 'Lock'}
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={handleDeleteItem}
+                                    className="px-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50"
+                                >
+                                    Eliminate
+                                </Button>
+                            </div>
+                        )}
+                        <Button
+                            variant="ghost"
+                            onClick={handlePrint}
+                            className="gap-2 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-500"
+                        >
+                            <Printer className="w-4 h-4" />
+                            Render PDF
+                        </Button>
+                        <Button
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="gap-2 px-8 rounded-2xl shadow-lg shadow-primary/10 transition-all font-black uppercase tracking-widest text-[10px] py-6"
+                        >
+                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                            {saving ? 'Synchronizing...' : 'Save Blueprint'}
+                        </Button>
+                    </div>
+                </header>
 
+                <div className="flex flex-1 overflow-hidden">
+                    {/* Sidebar / Elements Library */}
+                    <aside className="w-72 bg-white border-r border-gray-100 px-6 py-8 flex flex-col gap-6 overflow-y-auto z-10 custom-scrollbar">
+                        <div className="space-y-1">
+                            <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Architecture Library</h2>
+                            <p className="text-[10px] font-medium text-gray-400">Drag items to the canvas area</p>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 gap-3">
+                            {TOOLBOX_ITEMS.map((item) => (
+                                <button
+                                    key={item.type}
+                                    onClick={() => handleAddItem(item.type)}
+                                    className="flex items-center gap-4 p-4 bg-gray-50 rounded-[1.25rem] hover:bg-white hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-2 border-transparent hover:border-primary/20 transition-all group text-left active:scale-[0.98]"
+                                >
+                                    <div className="w-12 h-12 rounded-[1rem] bg-white border border-gray-100 flex items-center justify-center group-hover:bg-primary/5 transition-colors shadow-sm">
+                                        <item.icon className="w-5 h-5 text-gray-500 group-hover:text-primary transition-colors" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="font-black text-gray-700 text-xs uppercase tracking-tight">{item.label}</span>
+                                        <span className="text-[9px] font-bold text-gray-400 uppercase">Interactive Component</span>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="mt-auto p-6 bg-primary/[0.03] rounded-3xl border border-primary/10 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+                            <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
+                                <Target className="w-3.5 h-3.5" />
+                                Design Tip
+                            </p>
+                            <p className="text-[11px] font-medium text-gray-600 leading-relaxed">
+                                Use the <span className="font-black text-primary">handles</span> to resize and rotate. Changes are temporarily stored until <span className="font-black text-primary">Saved</span>.
+                            </p>
+                        </div>
+                    </aside>
+
+                    {/* Canvas Main Area */}
+                    <main className="flex-1 bg-gray-50/50 relative overflow-hidden flex items-center justify-center p-12">
+                         {/* Grid Background */}
+                         <div
+                            className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                            style={{
+                                backgroundImage: 'radial-gradient(#000 1.5px, transparent 1.5px)',
+                                backgroundSize: '32px 32px'
+                            }}
+                        />
+
+                        {editorLoading ? (
+                            <div className="flex flex-col items-center gap-4 animate-in fade-in duration-500">
+                                <Loader2 className="w-12 h-12 animate-spin text-primary/20" />
+                                <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Rendering Environment...</p>
+                            </div>
+                        ) : (
+                            <div className="bg-white shadow-[0_32px_100px_rgba(0,0,0,0.06)] rounded-sm overflow-hidden border border-gray-200 ring-8 ring-white transform scale-[0.85] origin-center">
+                                <Stage
+                                    width={1000}
+                                    height={800}
+                                    ref={stageRef}
+                                    onMouseDown={(e: any) => {
+                                        if (e.target === e.target.getStage()) {
+                                            setSelectedId(null)
+                                            if (transformerRef.current) transformerRef.current.nodes([])
+                                        }
+                                    }}
+                                >
+                                    <Layer>
+                                        {shapes.map((shape) => (
+                                            <Group
+                                                key={shape.id}
+                                                id={shape.id}
+                                                x={shape.x}
+                                                y={shape.y}
+                                                rotation={shape.rotation}
+                                                draggable={!shape.locked}
+                                                onClick={() => setSelectedId(shape.id)}
+                                                onTap={() => setSelectedId(shape.id)}
+                                                onDragEnd={(e: any) => {
                                                     const newShapes = shapes.map(s => {
                                                         if (s.id === shape.id) {
                                                             return {
                                                                 ...s,
-                                                                x: node.x(),
-                                                                y: node.y(),
-                                                                rotation: node.rotation(),
-                                                                // Use stored shape width/height for calculation because Group width/height might be 0
-                                                                width: Math.max(5, s.width * scaleX),
-                                                                height: Math.max(5, s.height * scaleY)
+                                                                x: Math.round(e.target.x() / GRID_SIZE) * GRID_SIZE,
+                                                                y: Math.round(e.target.y() / GRID_SIZE) * GRID_SIZE
                                                             }
                                                         }
                                                         return s
                                                     })
                                                     setShapes(newShapes)
-                                                }
+                                                }}
+                                                onTransformEnd={(e: any) => {
+                                                    const node = stageRef.current.findOne('#' + shape.id)
+                                                    if (node) {
+                                                        const scaleX = node.scaleX();
+                                                        const scaleY = node.scaleY();
+                                                        node.scaleX(1);
+                                                        node.scaleY(1);
+
+                                                        const newShapes = shapes.map(s => {
+                                                            if (s.id === shape.id) {
+                                                                return {
+                                                                    ...s,
+                                                                    x: node.x(),
+                                                                    y: node.y(),
+                                                                    rotation: node.rotation(),
+                                                                    width: Math.max(5, s.width * scaleX),
+                                                                    height: Math.max(5, s.height * scaleY)
+                                                                }
+                                                            }
+                                                            return s
+                                                        })
+                                                        setShapes(newShapes)
+                                                    }
+                                                }}
+                                            >
+                                                <Rect
+                                                    width={shape.width}
+                                                    height={shape.height}
+                                                    fill={selectedId === shape.id ? '#6366f1' : shape.fill}
+                                                    opacity={0.8}
+                                                    cornerRadius={6}
+                                                    shadowColor="black"
+                                                    shadowBlur={15}
+                                                    shadowOpacity={0.1}
+                                                    shadowOffset={{ x: 2, y: 4 }}
+                                                />
+                                                <Text
+                                                    text={shape.type.toUpperCase()}
+                                                    fontSize={9}
+                                                    fontStyle="bold"
+                                                    fill="white"
+                                                    width={shape.width}
+                                                    align="center"
+                                                    y={shape.height / 2 - 4}
+                                                    opacity={0.9}
+                                                />
+                                            </Group>
+                                        ))}
+                                        <Transformer
+                                            ref={transformerRef}
+                                            rotateAnchorOffset={24}
+                                            anchorSize={10}
+                                            anchorCornerRadius={5}
+                                            anchorFill="#6366f1"
+                                            anchorStroke="#6366f1"
+                                            borderStroke="#6366f1"
+                                            boundBoxFunc={(oldBox, newBox) => {
+                                                if (newBox.width < 10 || newBox.height < 10) return oldBox
+                                                return newBox
                                             }}
-                                        >
-                                            <Rect
-                                                width={shape.width}
-                                                height={shape.height}
-                                                fill={selectedId === shape.id ? '#3498db' : shape.fill}
-                                                opacity={0.9}
-                                                cornerRadius={4}
-                                                shadowColor="black"
-                                                shadowBlur={10}
-                                                shadowOpacity={0.15}
-                                                shadowOffset={{ x: 2, y: 4 }}
-                                            />
-                                            <Text
-                                                text={shape.type.toUpperCase()}
-                                                fontSize={10}
-                                                fontStyle="bold"
-                                                fill="white"
-                                                width={shape.width}
-                                                align="center"
-                                                y={shape.height / 2 - 5}
-                                            />
-                                        </Group>
-                                    ))}
-                                    <Transformer
-                                        ref={transformerRef}
-                                        boundBoxFunc={(oldBox, newBox) => {
-                                            // Limit resize
-                                            if (newBox.width < 5 || newBox.height < 5) {
-                                                return oldBox
-                                            }
-                                            return newBox
-                                        }}
-                                    />
-                                </Layer>
-                            </Stage>
-                        </div>
-                    )}
-                </main>
+                                        />
+                                    </Layer>
+                                </Stage>
+                            </div>
+                        )}
+                    </main>
+                </div>
             </div>
-            </div>
-        </>
+        </div>
     )
 }

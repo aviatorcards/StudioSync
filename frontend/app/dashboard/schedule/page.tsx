@@ -11,7 +11,7 @@ import {
     Calendar as CalendarIcon, Clock, Info, RefreshCw, Loader2
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import Modal from '@/components/Modal'
+import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
 
 // --- Types ---
 interface LessonBooking {
@@ -348,234 +348,239 @@ export default function SchedulePage() {
             </div>
 
             {/* Booking Modal */}
-            <Modal
-                isOpen={showBookingModal}
-                onClose={() => setShowBookingModal(false)}
-                title="New Booking"
-                footer={
-                    <>
-                        <Button
-                            variant="outline"
-                            onClick={() => setShowBookingModal(false)}
-                            className="flex-1"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleBooking}
-                            disabled={bookingLoading}
-                            className="flex-[2] gap-2"
-                        >
-                            {bookingLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Booking'}
-                        </Button>
-                    </>
-                }
+            <Dialog
+                open={showBookingModal}
+                onOpenChange={setShowBookingModal}
+                size="lg"
             >
-                <form onSubmit={handleBooking} className="space-y-6">
-                        {/* Booking Mode Selector */}
-                        <div className="flex p-1 bg-gray-50 rounded-2xl border border-gray-100 mb-2">
-                            {(['individual', 'band', 'event'] as const).map((mode) => (
-                                <Button
-                                    key={mode}
-                                    type="button"
-                                    onClick={() => {
-                                        setBookingMode(mode)
-                                        if (mode === 'band') setNewBooking(prev => ({ ...prev, lesson_type: 'group' }))
-                                        if (mode === 'individual') setNewBooking(prev => ({ ...prev, lesson_type: 'private' }))
-                                        if (mode === 'event') setNewBooking(prev => ({ ...prev, lesson_type: 'workshop' }))
-                                    }}
-                                    variant={bookingMode === mode ? 'default' : 'ghost'}
-                                    size="sm"
-                                    className={`flex-1 text-[10px] uppercase tracking-widest ${bookingMode !== mode ? 'text-gray-400' : ''}`}
-                                    style={bookingMode === mode ? {
-                                        backgroundColor: 'var(--color-primary-dark)',
-                                        color: 'white'
-                                    } : undefined}
-                                >
-                                    {mode}
-                                </Button>
-                            ))}
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {currentUser?.role !== 'student' ? (
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
-                                        {bookingMode === 'band' ? 'Band / Group' : bookingMode === 'individual' ? 'Student' : 'Target (Optional)'}
-                                    </label>
+                <DialogHeader title="New Booking" />
+                <DialogContent>
+                    <form id="booking-form" onSubmit={handleBooking} className="space-y-6">
+                            {/* Booking Mode Selector */}
+                            <div className="flex p-1 bg-gray-50 rounded-2xl border border-gray-100 mb-2">
+                                {(['individual', 'band', 'event'] as const).map((mode) => (
+                                    <Button
+                                        key={mode}
+                                        type="button"
+                                        onClick={() => {
+                                            setBookingMode(mode)
+                                            if (mode === 'band') setNewBooking(prev => ({ ...prev, lesson_type: 'group' }))
+                                            if (mode === 'individual') setNewBooking(prev => ({ ...prev, lesson_type: 'private' }))
+                                            if (mode === 'event') setNewBooking(prev => ({ ...prev, lesson_type: 'workshop' }))
+                                        }}
+                                        variant={bookingMode === mode ? 'default' : 'ghost'}
+                                        size="sm"
+                                        className={`flex-1 text-[10px] uppercase tracking-widest ${bookingMode !== mode ? 'text-gray-400' : ''}`}
+                                        style={bookingMode === mode ? {
+                                            backgroundColor: 'var(--color-primary-dark)',
+                                            color: 'white'
+                                        } : undefined}
+                                    >
+                                        {mode}
+                                    </Button>
+                                ))}
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {currentUser?.role !== 'student' ? (
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                                            {bookingMode === 'band' ? 'Band / Group' : bookingMode === 'individual' ? 'Student' : 'Target (Optional)'}
+                                        </label>
 
-                                    {bookingMode === 'band' ? (
-                                        <select
-                                            required
-                                            value={newBooking.band}
-                                            onChange={(e) => setNewBooking({ ...newBooking, band: e.target.value, student: '' })}
-                                            className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
-                                        >
-                                            <option value="">Select Band...</option>
-                                            {bands.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                                        </select>
-                                    ) : bookingMode === 'individual' ? (
-                                        <select
-                                            required
-                                            value={newBooking.student}
-                                            onChange={(e) => setNewBooking({ ...newBooking, student: e.target.value, band: '' })}
-                                            className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
-                                        >
-                                            <option value="">Select Student...</option>
-                                            {students.map((s: any) => <option key={s.id} value={s.id}>{s.name || s.user?.email || 'Student'}</option>)}
-                                        </select>
-                                    ) : (
-                                        <select
-                                            value={newBooking.student || newBooking.band}
-                                            onChange={(e) => {
-                                                const val = e.target.value
-                                                if (!val) {
-                                                    setNewBooking({ ...newBooking, student: '', band: '' })
-                                                } else if (students.find(s => s.id === val)) {
-                                                    setNewBooking({ ...newBooking, student: val, band: '' })
-                                                } else {
-                                                    setNewBooking({ ...newBooking, band: val, student: '' })
-                                                }
-                                            }}
-                                            className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
-                                        >
-                                            <option value="">No specific student/band</option>
-                                            <optgroup label="Students">
-                                                {students.map((s: any) => <option key={s.id} value={s.id}>{s.name || s.user?.email}</option>)}
-                                            </optgroup>
-                                            <optgroup label="Bands">
+                                        {bookingMode === 'band' ? (
+                                            <select
+                                                required
+                                                value={newBooking.band}
+                                                onChange={(e) => setNewBooking({ ...newBooking, band: e.target.value, student: '' })}
+                                                className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                            >
+                                                <option value="">Select Band...</option>
                                                 {bands.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                                            </optgroup>
+                                            </select>
+                                        ) : bookingMode === 'individual' ? (
+                                            <select
+                                                required
+                                                value={newBooking.student}
+                                                onChange={(e) => setNewBooking({ ...newBooking, student: e.target.value, band: '' })}
+                                                className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                            >
+                                                <option value="">Select Student...</option>
+                                                {students.map((s: any) => <option key={s.id} value={s.id}>{s.name || s.user?.email || 'Student'}</option>)}
+                                            </select>
+                                        ) : (
+                                            <select
+                                                value={newBooking.student || newBooking.band}
+                                                onChange={(e) => {
+                                                    const val = e.target.value
+                                                    if (!val) {
+                                                        setNewBooking({ ...newBooking, student: '', band: '' })
+                                                    } else if (students.find(s => s.id === val)) {
+                                                        setNewBooking({ ...newBooking, student: val, band: '' })
+                                                    } else {
+                                                        setNewBooking({ ...newBooking, band: val, student: '' })
+                                                    }
+                                                }}
+                                                className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                            >
+                                                <option value="">No specific student/band</option>
+                                                <optgroup label="Students">
+                                                    {students.map((s: any) => <option key={s.id} value={s.id}>{s.name || s.user?.email}</option>)}
+                                                </optgroup>
+                                                <optgroup label="Bands">
+                                                    {bands.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                                                </optgroup>
+                                            </select>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Instructor</label>
+                                        <select
+                                            required
+                                            value={newBooking.teacher}
+                                            onChange={(e) => setNewBooking({ ...newBooking, teacher: e.target.value })}
+                                            className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                        >
+                                            <option value="">Select Instructor...</option>
+                                            {teachers.map((t: any) => <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>)}
                                         </select>
-                                    )}
-                                </div>
-                            ) : (
+                                    </div>
+                                )}
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Instructor</label>
+                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Room / location</label>
                                     <select
-                                        required
-                                        value={newBooking.teacher}
-                                        onChange={(e) => setNewBooking({ ...newBooking, teacher: e.target.value })}
+                                        value={newBooking.room}
+                                        onChange={(e) => setNewBooking({ ...newBooking, room: e.target.value })}
                                         className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
                                     >
-                                        <option value="">Select Instructor...</option>
-                                        {teachers.map((t: any) => <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>)}
+                                        <option value="">Select Room...</option>
+                                        {rooms.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                                        <option value="external">External / Online</option>
                                     </select>
                                 </div>
-                            )}
-                            <div className="space-y-2">
-                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Room / location</label>
-                                <select
-                                    value={newBooking.room}
-                                    onChange={(e) => setNewBooking({ ...newBooking, room: e.target.value })}
-                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
-                                >
-                                    <option value="">Select Room...</option>
-                                    {rooms.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
-                                    <option value="external">External / Online</option>
-                                </select>
                             </div>
-                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Date</label>
-                                <input
-                                    type="date"
-                                    required
-                                    value={newBooking.date}
-                                    onChange={(e) => setNewBooking({ ...newBooking, date: e.target.value })}
-                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Time</label>
-                                <div className="relative">
-                                    <select
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Date</label>
+                                    <input
+                                        type="date"
                                         required
-                                        value={newBooking.time}
-                                        onChange={(e) => setNewBooking({ ...newBooking, time: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
-                                    >
-                                        {timeOptions.map(t => <option key={t} value={t}>{formatTime(t)}</option>)}
-                                    </select>
-                                    <Clock className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                                        value={newBooking.date}
+                                        onChange={(e) => setNewBooking({ ...newBooking, date: e.target.value })}
+                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Time</label>
+                                    <div className="relative">
+                                        <select
+                                            required
+                                            value={newBooking.time}
+                                            onChange={(e) => setNewBooking({ ...newBooking, time: e.target.value })}
+                                            className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                        >
+                                            {timeOptions.map(t => <option key={t} value={t}>{formatTime(t)}</option>)}
+                                        </select>
+                                        <Clock className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Duration (min)</label>
-                                <input
-                                    type="number"
-                                    required
-                                    min="15"
-                                    step="15"
-                                    value={newBooking.duration}
-                                    onChange={(e) => setNewBooking({ ...newBooking, duration: parseInt(e.target.value) })}
-                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
-                                />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Duration (min)</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        min="15"
+                                        step="15"
+                                        value={newBooking.duration}
+                                        onChange={(e) => setNewBooking({ ...newBooking, duration: parseInt(e.target.value) })}
+                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Lesson / Event Type</label>
+                                    <select
+                                        value={newBooking.lesson_type}
+                                        onChange={(e) => setNewBooking({ ...newBooking, lesson_type: e.target.value })}
+                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary-dark rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                    >
+                                        <option value="private">Private Lesson</option>
+                                        <option value="group">Group Lesson / Band</option>
+                                        <option value="workshop">Workshop</option>
+                                        <option value="recital">Recital</option>
+                                        <option value="makeup">Makeup Lesson</option>
+                                        <option value="other">Other Event</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Lesson / Event Type</label>
-                                <select
-                                    value={newBooking.lesson_type}
-                                    onChange={(e) => setNewBooking({ ...newBooking, lesson_type: e.target.value })}
-                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary-dark rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
-                                >
-                                    <option value="private">Private Lesson</option>
-                                    <option value="group">Group Lesson / Band</option>
-                                    <option value="workshop">Workshop</option>
-                                    <option value="recital">Recital</option>
-                                    <option value="makeup">Makeup Lesson</option>
-                                    <option value="other">Other Event</option>
-                                </select>
-                            </div>
-                        </div>
-                </form>
-            </Modal>
+                    </form>
+                </DialogContent>
+                <DialogFooter>
+                    <Button
+                        variant="outline"
+                        onClick={() => setShowBookingModal(false)}
+                        className="flex-1"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        type="submit"
+                        form="booking-form"
+                        disabled={bookingLoading}
+                        className="flex-[2] gap-2"
+                    >
+                        {bookingLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Booking'}
+                    </Button>
+                </DialogFooter>
+            </Dialog>
 
             {/* Subscribe Modal */}
-            <Modal
-                isOpen={showSubscribeModal}
-                onClose={() => setShowSubscribeModal(false)}
-                title="Subscribe"
-                footer={
+            <Dialog
+                open={showSubscribeModal}
+                onOpenChange={setShowSubscribeModal}
+                size="md"
+            >
+                <DialogHeader title="Subscribe" />
+                <DialogContent>
+                    <div className="space-y-6">
+                            <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex gap-3">
+                                <Info className="w-5 h-5 text-blue-600 shrink-0" />
+                                <p className="text-sm text-blue-800 font-medium">Use this link to subscribe in your calendar app (Google Calendar, iCal, etc).</p>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Feed URL</label>
+                                <div className="flex gap-2">
+                                    <input
+                                        readOnly
+                                        value="http://localhost:8000/api/calendar/my/lessons.ics"
+                                        className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-mono text-gray-600 outline-none"
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => {
+                                            navigator.clipboard.writeText("http://localhost:8000/api/calendar/my/lessons.ics")
+                                            toast.success("Copied!")
+                                        }}
+                                    >
+                                        Copy
+                                    </Button>
+                                </div>
+                            </div>
+                    </div>
+                </DialogContent>
+                <DialogFooter>
                     <Button
                         variant="secondary"
                         onClick={() => setShowSubscribeModal(false)}
-                        className="px-8"
+                        className="w-full"
                     >
                         Close
                     </Button>
-                }
-            >
-                <div className="space-y-6">
-                        <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex gap-3">
-                            <Info className="w-5 h-5 text-blue-600 shrink-0" />
-                            <p className="text-sm text-blue-800 font-medium">Use this link to subscribe in your calendar app (Google Calendar, iCal, etc).</p>
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Feed URL</label>
-                            <div className="flex gap-2">
-                                <input
-                                    readOnly
-                                    value="http://localhost:8000/api/calendar/my/lessons.ics"
-                                    className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-mono text-gray-600 outline-none"
-                                />
-                                <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                        navigator.clipboard.writeText("http://localhost:8000/api/calendar/my/lessons.ics")
-                                        toast.success("Copied!")
-                                    }}
-                                >
-                                    Copy
-                                </Button>
-                            </div>
-                        </div>
-                </div>
-            </Modal>
+                </DialogFooter>
+            </Dialog>
         </div>
     )
 }

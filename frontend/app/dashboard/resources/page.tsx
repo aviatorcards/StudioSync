@@ -20,10 +20,15 @@ import {
     Filter,
     X,
     Plus,
-    ExternalLink
+    ExternalLink,
+    Grid,
+    Target,
+    BookOpen,
+    Sparkles,
+    Trash
 } from 'lucide-react'
-import Modal from '@/components/Modal'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
 
 type ResourceType = 'pdf' | 'audio' | 'video' | 'image' | 'link' | 'other'
 
@@ -103,7 +108,6 @@ export default function ResourcesPage() {
     }, [])
 
     const handleFileSelect = (file: File) => {
-        // Determine resource type from mime type
         let resourceType: ResourceType = 'other'
         if (file.type.startsWith('audio/')) resourceType = 'audio'
         else if (file.type.startsWith('video/')) resourceType = 'video'
@@ -121,17 +125,17 @@ export default function ResourcesPage() {
 
     const handleUpload = async () => {
         if (!uploadForm.title) {
-            toast.error('Please enter a title')
+            toast.error('Identity required (title)')
             return
         }
 
         if (uploadForm.resource_type === 'link' && !uploadForm.external_url) {
-            toast.error('Please enter a URL for link resources')
+            toast.error('External URL required')
             return
         }
 
         if (uploadForm.resource_type !== 'link' && !uploadForm.file) {
-            toast.error('Please select a file to upload')
+            toast.error('Binary payload required (file)')
             return
         }
 
@@ -156,7 +160,7 @@ export default function ResourcesPage() {
                 }
             })
 
-            toast.success('Resource uploaded successfully')
+            toast.success('Asset synchronized successfully')
             setShowUploadModal(false)
             setUploadForm({
                 title: '',
@@ -170,7 +174,7 @@ export default function ResourcesPage() {
             refetch()
         } catch (error: any) {
             console.error('Upload failed:', error)
-            toast.error(error.response?.data?.message || 'Failed to upload resource')
+            toast.error(error.response?.data?.message || 'Synchronization failed')
         } finally {
             setUploading(false)
         }
@@ -183,44 +187,35 @@ export default function ResourcesPage() {
         }
 
         if (!resource.file_url) {
-            toast.error('No file available for download')
+            toast.error('Asset URL unavailable')
             return
         }
 
         try {
-            // Open file in new tab for download
             window.open(resource.file_url, '_blank')
-            toast.success('Download started')
+            toast.success('Extraction initiated')
         } catch (error) {
             console.error('Download failed:', error)
-            toast.error('Failed to download file')
+            toast.error('Extraction failed')
         }
     }
 
     const handleDelete = async (resourceId: string) => {
-        if (!confirm('Are you sure you want to delete this resource?')) {
+        if (!confirm('Are you sure you want to eliminate this asset?')) {
             return
         }
 
         setDeleting(resourceId)
         try {
             await api.delete(`/resources/library/${resourceId}/`)
-            toast.success('Resource deleted')
+            toast.success('Asset eliminated')
             refetch()
         } catch (error) {
             console.error('Delete failed:', error)
-            toast.error('Failed to delete resource')
+            toast.error('Elimination failed')
         } finally {
             setDeleting(null)
         }
-    }
-
-    const formatFileSize = (bytes?: number) => {
-        if (!bytes) return 'Unknown size'
-        const kb = bytes / 1024
-        const mb = kb / 1024
-        if (mb > 1) return `${mb.toFixed(1)} MB`
-        return `${kb.toFixed(1)} KB`
     }
 
     const filteredResources = resources.filter((resource: Resource) => {
@@ -231,279 +226,236 @@ export default function ResourcesPage() {
     })
 
     const resourceTypes: { value: ResourceType | 'all'; label: string }[] = [
-        { value: 'all', label: 'All' },
-        { value: 'pdf', label: 'PDFs' },
-        { value: 'audio', label: 'Audio' },
-        { value: 'video', label: 'Video' },
-        { value: 'image', label: 'Images' },
-        { value: 'link', label: 'Links' },
-        { value: 'other', label: 'Other' }
+        { value: 'all', label: 'Consolidated Library' },
+        { value: 'pdf', label: 'Architectures (PDF)' },
+        { value: 'audio', label: 'Aural Assets' },
+        { value: 'video', label: 'Visual Tracks' },
+        { value: 'image', label: 'Media Graphics' },
+        { value: 'link', label: 'External Links' },
+        { value: 'other', label: 'Unclassified' }
     ]
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center py-20">
-                <Loader2 className="w-10 h-10 text-[var(--color-primary)] animate-spin mb-4" />
-                <p className="text-gray-500 font-bold tracking-wider uppercase text-xs">Loading Resources...</p>
+            <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-in fade-in duration-500">
+                <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Scanning Repository...</p>
             </div>
         )
     }
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header */}
-            <div>
-                <h1 className="text-2xl md:text-4xl font-bold text-gray-900">Resource Library</h1>
-                <p className="text-sm text-gray-600 mt-1">Upload and manage teaching materials</p>
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4">
+                <div className="space-y-2">
+                    <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+                        Resource Repository
+                        <div className="bg-primary/10 px-3 py-1 rounded-full text-xs font-black text-primary uppercase tracking-widest">
+                            {resources.length} Assets
+                        </div>
+                    </h1>
+                    <p className="text-gray-500 font-medium max-w-lg">Manage instructional assets, curriculum benchmarks, and media payloads.</p>
+                </div>
+                <Button
+                    onClick={() => setShowUploadModal(true)}
+                    className="gap-2 hover:scale-105 shadow-xl shadow-primary/20 transition-all py-6 px-10 font-black uppercase tracking-widest text-[10px]"
+                >
+                    <Upload className="w-4 h-4" />
+                    Synchronize Asset
+                </Button>
+            </header>
+
+            {/* Stats */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                 {[
+                    { label: 'Asset Total', value: resources.length, icon: Grid, color: 'blue' },
+                    { label: 'Binary Files', value: resources.filter((r: Resource) => r.file).length, icon: File, color: 'emerald' },
+                    { label: 'External Refs', value: resources.filter((r: Resource) => r.resource_type === 'link').length, icon: LinkIcon, color: 'purple' },
+                    { label: 'Active Domains', value: new Set(resources.map((r: Resource) => r.category).filter(Boolean)).size, icon: Target, color: 'orange' }
+                ].map((stat, i) => (
+                    <div key={i} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
+                         <div className="flex items-center justify-between mb-4">
+                            <div className={`w-10 h-10 bg-${stat.color}-50 rounded-xl flex items-center justify-center text-${stat.color}-600 group-hover:scale-110 transition-transform`}>
+                                <stat.icon className="w-5 h-5" />
+                            </div>
+                            <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest">System Stat</div>
+                        </div>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{stat.label}</p>
+                        <h3 className="text-2xl font-black text-gray-900 tracking-tight uppercase tracking-tighter">{stat.value}</h3>
+                    </div>
+                ))}
             </div>
 
-            {/* Upload Button */}
-            <button
-                onClick={() => setShowUploadModal(true)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors font-medium shadow-sm"
-            >
-                <Upload className="w-5 h-5" />
-                Upload Resource
-            </button>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white rounded-lg border border-gray-200 p-4">
-                    <p className="text-xs font-medium text-gray-600 uppercase">Total Resources</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">{resources.length}</p>
-                </div>
-                <div className="bg-white rounded-lg border border-gray-200 p-4">
-                    <p className="text-xs font-medium text-gray-600 uppercase">Files</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                        {resources.filter((r: Resource) => r.file).length}
-                    </p>
-                </div>
-                <div className="bg-white rounded-lg border border-gray-200 p-4">
-                    <p className="text-xs font-medium text-gray-600 uppercase">Links</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                        {resources.filter((r: Resource) => r.resource_type === 'link').length}
-                    </p>
-                </div>
-                <div className="bg-white rounded-lg border border-gray-200 p-4">
-                    <p className="text-xs font-medium text-gray-600 uppercase">Categories</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                        {new Set(resources.map((r: Resource) => r.category).filter(Boolean)).size}
-                    </p>
+            {/* Controls */}
+            <div className="flex flex-col gap-6">
+                <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-3xl border border-gray-100 shadow-xl">
+                    <div className="relative flex-1 w-full max-w-xl">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Lookup resource title, tags, or description..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-sm text-gray-700 outline-none transition-all"
+                        />
+                    </div>
+                    <div className="flex p-1 bg-gray-50 rounded-2xl border border-gray-100 overflow-x-auto w-full md:w-auto no-scrollbar">
+                        {resourceTypes.slice(0, 4).map(type => (
+                            <button
+                                key={type.value}
+                                onClick={() => setFilterType(type.value)}
+                                className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                                    filterType === type.value
+                                        ? 'bg-white text-primary shadow-sm'
+                                        : 'text-gray-400 hover:text-gray-600'
+                                }`}
+                            >
+                                {type.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
-            {/* Search and Filter */}
-            <div className="flex flex-col sm:flex-row gap-3">
-                <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                        type="text"
-                        placeholder="Search resources..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                    />
-                </div>
-                <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
-                    {resourceTypes.map(type => (
-                        <button
-                            key={type.value}
-                            onClick={() => setFilterType(type.value)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                                filterType === type.value
-                                    ? 'bg-[var(--color-primary)] text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
-                        >
-                            {type.label}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* Resources Grid */}
+            {/* Grid */}
             {filteredResources.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {filteredResources.map((resource: Resource) => (
                         <div
                             key={resource.id}
-                            className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow"
+                            className="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all group relative overflow-hidden flex flex-col"
                         >
-                            <div className="flex items-start gap-3">
-                                <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center border border-gray-200 shrink-0">
-                                    {getIcon(resource.resource_type)}
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-gray-50 rounded-full translate-x-1/2 -translate-y-1/2 group-hover:bg-primary/5 transition-colors" />
+                            
+                            <div className="flex items-start justify-between mb-8 relative z-10">
+                                <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center border-2 border-white shadow-sm group-hover:scale-110 transition-transform">
+                                    {getIcon(resource.resource_type, 'w-6 h-6')}
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-semibold text-gray-900 truncate">{resource.title}</h3>
-                                    <p className="text-xs text-gray-500 uppercase mt-0.5">
-                                        {resource.resource_type}
-                                    </p>
+                                <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest group-hover:text-primary transition-colors">
+                                    {resource.resource_type}
                                 </div>
                             </div>
 
-                            {resource.description && (
-                                <p className="text-sm text-gray-600 mt-3 line-clamp-2">{resource.description}</p>
-                            )}
-
-                            <div className="mt-3 flex flex-wrap gap-1">
-                                {resource.tags.slice(0, 3).map((tag, idx) => (
-                                    <span
-                                        key={idx}
-                                        className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded"
-                                    >
-                                        {tag}
-                                    </span>
-                                ))}
+                            <div className="flex-1 space-y-2 relative z-10">
+                                <h3 className="text-base font-black text-gray-900 uppercase tracking-tighter leading-tight line-clamp-2">
+                                    {resource.title}
+                                </h3>
+                                <p className="text-xs font-medium text-gray-500 line-clamp-3 leading-relaxed">
+                                    {resource.description || 'No descriptive payload provided.'}
+                                </p>
                             </div>
 
-                            <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-                                <span>{resource.uploaded_by_name}</span>
+                            <div className="mt-8 pt-6 border-t border-gray-50 flex items-center justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                <span>{resource.uploaded_by_name?.split(' ')[0]}</span>
                                 <span>{new Date(resource.created_at).toLocaleDateString()}</span>
                             </div>
 
-                            <div className="mt-3 flex gap-2">
-                                <button
+                            <div className="mt-6 flex gap-2 relative z-10">
+                                <Button
                                     onClick={() => handleDownload(resource)}
-                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors text-sm font-medium"
+                                    className="flex-1 px-4 rounded-[1.25rem] text-[10px] font-black uppercase tracking-widest gap-2 py-6 shadow-lg shadow-primary/10"
                                 >
-                                    {resource.resource_type === 'link' ? (
-                                        <>
-                                            <ExternalLink className="w-4 h-4" />
-                                            Open
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Download className="w-4 h-4" />
-                                            Download
-                                        </>
-                                    )}
-                                </button>
-                                <button
+                                    {resource.resource_type === 'link' ? <ExternalLink className="w-3.5 h-3.5" /> : <Download className="w-3.5 h-3.5" />}
+                                    {resource.resource_type === 'link' ? 'Open' : 'Extract'}
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={() => handleDelete(resource.id)}
                                     disabled={deleting === resource.id}
-                                    className="px-3 py-2 border border-gray-200 text-gray-600 rounded-lg hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors disabled:opacity-50"
+                                    className="p-4 rounded-[1.25rem] text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all py-6 h-auto"
                                 >
                                     {deleting === resource.id ? (
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                     ) : (
-                                        <Trash2 className="w-4 h-4" />
+                                        <Trash className="w-4 h-4" />
                                     )}
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     ))}
                 </div>
             ) : (
-                <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                        <FolderOpen className="w-8 h-8 text-gray-400" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        {searchQuery || filterType !== 'all' ? 'No resources found' : 'No resources yet'}
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-4">
-                        {searchQuery || filterType !== 'all'
-                            ? 'Try adjusting your search or filters'
-                            : 'Upload your first resource to get started'}
-                    </p>
-                    {!searchQuery && filterType === 'all' && (
-                        <button
+                <div className="bg-white rounded-[3rem] border border-gray-100 shadow-xl p-24 text-center">
+                    <div className="flex flex-col items-center gap-6">
+                        <div className="w-24 h-24 bg-gray-50 rounded-[2rem] flex items-center justify-center border-2 border-dashed border-gray-200">
+                            <BookOpen className="w-12 h-12 text-gray-200" />
+                        </div>
+                        <div className="space-y-2">
+                            <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">Repository Empty</h3>
+                            <p className="text-sm font-medium text-gray-500 max-w-sm mx-auto leading-relaxed">
+                                No assets matched your current lookup filters. Try adjusting your parameters or synchronize a new asset.
+                            </p>
+                        </div>
+                        <Button
                             onClick={() => setShowUploadModal(true)}
-                            className="px-6 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors font-medium"
+                            className="px-10 py-6 rounded-2xl shadow-lg shadow-primary/10"
                         >
-                            Upload Resource
-                        </button>
-                    )}
+                            <Plus className="w-4 h-4 mr-1" />
+                            Synchronize New Asset
+                        </Button>
+                    </div>
                 </div>
             )}
 
             {/* Upload Modal */}
-            {showUploadModal && (
-                <Modal
-                    isOpen={showUploadModal}
-                    onClose={() => setShowUploadModal(false)}
-                    title="Upload Resource"
-                    footer={
-                        <>
-                            <Button
-                                variant="outline"
-                                onClick={() => setShowUploadModal(false)}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                onClick={handleUpload}
-                                disabled={uploading}
-                                className="gap-2"
-                            >
-                                {uploading ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        Uploading...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Upload className="w-4 h-4" />
-                                        Upload
-                                    </>
-                                )}
-                            </Button>
-                        </>
-                    }
-                >
-                    <div className="space-y-4">
+            <Dialog
+                open={showUploadModal}
+                onOpenChange={setShowUploadModal}
+                size="lg"
+            >
+                <DialogHeader title="Asset Synchronization" />
+                <DialogContent>
+                    <div className="space-y-8">
                             {/* Resource Type */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Resource Type
-                                </label>
-                                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Architectural Tier</label>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                     {(['pdf', 'audio', 'video', 'image', 'link', 'other'] as ResourceType[]).map(type => (
                                         <button
                                             key={type}
                                             onClick={() => setUploadForm(prev => ({ ...prev, resource_type: type }))}
-                                            className={`p-3 border rounded-lg text-xs font-medium capitalize transition-colors ${
+                                            className={`p-5 rounded-2xl border-2 transition-all group flex flex-col items-center gap-3 ${
                                                 uploadForm.resource_type === type
-                                                    ? 'border-primary bg-primary/10 text-primary'
-                                                    : 'border-gray-200 hover:bg-gray-50'
+                                                    ? 'border-primary bg-primary/[0.03] text-primary'
+                                                    : 'border-gray-50 bg-gray-50/30 hover:bg-gray-50 hover:border-gray-200'
                                             }`}
                                         >
-                                            <div className="flex flex-col items-center gap-1">
+                                            <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform">
                                                 {getIcon(type, 'w-5 h-5')}
-                                                {type}
                                             </div>
+                                            <span className="text-[10px] font-black uppercase tracking-widest">{type}</span>
                                         </button>
                                     ))}
                                 </div>
                             </div>
 
-                            {/* File Upload / URL Input */}
+                            {/* Payload Area */}
                             {uploadForm.resource_type === 'link' ? (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        URL *
-                                    </label>
-                                    <input
-                                        type="url"
-                                        value={uploadForm.external_url}
-                                        onChange={(e) => setUploadForm(prev => ({ ...prev, external_url: e.target.value }))}
-                                        placeholder="https://example.com"
-                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                    />
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">External Reference (URL)</label>
+                                    <div className="relative">
+                                         <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                         <input
+                                            type="url"
+                                            value={uploadForm.external_url}
+                                            onChange={(e) => setUploadForm(prev => ({ ...prev, external_url: e.target.value }))}
+                                            placeholder="https://apexmusic.com/ref/102"
+                                            className="w-full pl-12 pr-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-gray-900 transition-all placeholder:text-gray-300"
+                                        />
+                                    </div>
                                 </div>
                             ) : (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        File *
-                                    </label>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Binary Payload</label>
                                     <div
                                         onDragOver={handleDragOver}
                                         onDragLeave={handleDragLeave}
                                         onDrop={handleDrop}
-                                        className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                                            isDragging
-                                                ? 'border-primary bg-primary/5'
-                                                : 'border-gray-300 hover:border-gray-400'
+                                        onClick={() => !uploadForm.file && fileInputRef.current?.click()}
+                                        className={`border-2 border-dashed rounded-3xl p-12 text-center transition-all cursor-pointer group ${
+                                            isDragging ? 'border-primary bg-primary/[0.02]' : 'border-gray-100 bg-gray-50/30 hover:border-gray-200 hover:bg-gray-50'
                                         }`}
                                     >
                                         <input
@@ -513,83 +465,105 @@ export default function ResourcesPage() {
                                             className="hidden"
                                         />
                                         {uploadForm.file ? (
-                                            <div className="flex items-center justify-center gap-3">
-                                                {getIcon(uploadForm.resource_type, 'w-8 h-8')}
-                                                <div className="text-left">
-                                                    <p className="font-medium text-gray-900">{uploadForm.file.name}</p>
-                                                    <p className="text-sm text-gray-500">
-                                                        {(uploadForm.file.size / 1024 / 1024).toFixed(2)} MB
+                                            <div className="flex items-center justify-center gap-6 animate-in zoom-in-95">
+                                                <div className="w-16 h-16 bg-white rounded-2xl shadow-xl flex items-center justify-center group-hover:rotate-6 transition-transform">
+                                                    {getIcon(uploadForm.resource_type, 'w-8 h-8')}
+                                                </div>
+                                                <div className="text-left space-y-1">
+                                                    <p className="text-sm font-black text-gray-900 uppercase tracking-tighter line-clamp-1">{uploadForm.file.name}</p>
+                                                    <p className="text-[10px] font-black text-primary uppercase tracking-widest">
+                                                        {(uploadForm.file.size / 1024 / 1024).toFixed(2)} MB Payload
                                                     </p>
                                                 </div>
-                                                <button
-                                                    onClick={() => setUploadForm(prev => ({ ...prev, file: null }))}
-                                                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                                <Button
+                                                    variant="ghost"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        setUploadForm(prev => ({ ...prev, file: null }))
+                                                    }}
+                                                    className="p-3 hover:bg-red-50 hover:text-red-500 rounded-xl"
                                                 >
-                                                    <X className="w-4 h-4" />
-                                                </button>
+                                                    <X className="w-5 h-5" />
+                                                </Button>
                                             </div>
                                         ) : (
-                                            <>
-                                                <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                                                <p className="text-gray-600 mb-2">
-                                                    Drag and drop your file here, or
-                                                </p>
-                                                <Button
-                                                    onClick={() => fileInputRef.current?.click()}
-                                                    type="button"
-                                                >
-                                                    Browse Files
-                                                </Button>
-                                            </>
+                                            <div className="space-y-4">
+                                                <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto group-hover:-translate-y-2 transition-transform">
+                                                    <Upload className="w-6 h-6 text-gray-300 group-hover:text-primary transition-colors" />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <p className="text-xs font-black text-gray-900 uppercase tracking-widest">Drop payload here</p>
+                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">or click to browse local storage</p>
+                                                </div>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
                             )}
 
-                            {/* Title */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Title *
-                                </label>
-                                <input
-                                    type="text"
-                                    value={uploadForm.title}
-                                    onChange={(e) => setUploadForm(prev => ({ ...prev, title: e.target.value }))}
-                                    placeholder="Resource title"
-                                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                />
-                            </div>
-
-                            {/* Description */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Description
-                                </label>
-                                <textarea
-                                    value={uploadForm.description}
-                                    onChange={(e) => setUploadForm(prev => ({ ...prev, description: e.target.value }))}
-                                    placeholder="Add a description..."
-                                    rows={3}
-                                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                />
-                            </div>
-
-                            {/* Category */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Category
-                                </label>
-                                <input
-                                    type="text"
-                                    value={uploadForm.category}
-                                    onChange={(e) => setUploadForm(prev => ({ ...prev, category: e.target.value }))}
-                                    placeholder="e.g., Sheet Music, Practice Tracks"
-                                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                />
+                            {/* Metadata */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2 md:col-span-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Asset Title</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={uploadForm.title}
+                                        onChange={(e) => setUploadForm(prev => ({ ...prev, title: e.target.value }))}
+                                        placeholder="Enter definitive resource title..."
+                                        className="w-full px-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-gray-900 transition-all"
+                                    />
+                                </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Functional Description</label>
+                                    <textarea
+                                        value={uploadForm.description}
+                                        onChange={(e) => setUploadForm(prev => ({ ...prev, description: e.target.value }))}
+                                        placeholder="Add descriptive metadata..."
+                                        rows={3}
+                                        className="w-full px-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-gray-900 transition-all resize-none"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Taxonomy (Category)</label>
+                                    <input
+                                        type="text"
+                                        value={uploadForm.category}
+                                        onChange={(e) => setUploadForm(prev => ({ ...prev, category: e.target.value }))}
+                                        placeholder="e.g. Masterclass Focus"
+                                        className="w-full px-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-gray-900 transition-all"
+                                    />
+                                </div>
                             </div>
                     </div>
-                </Modal>
-            )}
+                </DialogContent>
+                <DialogFooter>
+                    <Button
+                        variant="ghost"
+                        onClick={() => setShowUploadModal(false)}
+                        className="flex-1"
+                    >
+                        Abort
+                    </Button>
+                    <Button
+                        onClick={handleUpload}
+                        disabled={uploading}
+                        className="flex-[2] gap-2 active:scale-95 transition-transform"
+                    >
+                        {uploading ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Synchronizing...
+                            </>
+                        ) : (
+                            <>
+                                <Sparkles className="w-4 h-4" />
+                                Execute Synchronization
+                            </>
+                        )}
+                    </Button>
+                </DialogFooter>
+            </Dialog>
         </div>
     )
 }

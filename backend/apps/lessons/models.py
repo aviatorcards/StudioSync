@@ -103,6 +103,16 @@ class Lesson(models.Model):
         related_name='lessons'
     )
     
+    # Lesson plan template reference
+    lesson_plan = models.ForeignKey(
+        'LessonPlan',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='lessons',
+        help_text="Optional lesson plan template used for this lesson"
+    )
+    
     # Location
     location = models.CharField(max_length=200, blank=True)
     is_online = models.BooleanField(default=False)

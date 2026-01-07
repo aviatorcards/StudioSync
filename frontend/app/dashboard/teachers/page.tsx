@@ -5,14 +5,15 @@ import { useRouter } from 'next/navigation'
 import {
     UserPlus, Search, Edit, Mail, Phone,
     GraduationCap, Music, Users, Loader2, X,
-    CheckCircle, Download, ChevronRight
+    CheckCircle, Download, ChevronRight,
+    DollarSign, Briefcase, Award, Zap
 } from 'lucide-react'
 import { useUser } from '@/contexts/UserContext'
 import { useTeachers } from '@/hooks/useDashboardData'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
-import Modal from '@/components/Modal'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
 
 export default function InstructorsPage() {
     const router = useRouter()
@@ -24,14 +25,6 @@ export default function InstructorsPage() {
     const [selectedTeacher, setSelectedTeacher] = useState<any>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [newInstrument, setNewInstrument] = useState('')
-
-    useEffect(() => {
-        const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') setIsEditModalOpen(false)
-        }
-        window.addEventListener('keydown', handleEsc)
-        return () => window.removeEventListener('keydown', handleEsc)
-    }, [])
 
     const [formData, setFormData] = useState({
         first_name: '',
@@ -118,7 +111,7 @@ export default function InstructorsPage() {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-in fade-in duration-500">
                 <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Loading Instructors...</p>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Scanning Faculty Records...</p>
             </div>
         )
     }
@@ -128,132 +121,104 @@ export default function InstructorsPage() {
             {/* Header */}
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4">
                 <div className="space-y-2">
-                    <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">Instructors</h1>
-                    <p className="text-gray-500 font-medium max-w-lg">Manage your teaching staff and track performance.</p>
+                    <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">Faculty & Mentors</h1>
+                    <p className="text-gray-500 font-medium max-w-lg">Oversee pedagogical impact, instructional quality, and faculty growth.</p>
                 </div>
                 {currentUser?.role === 'admin' && (
-                    <button
+                    <Button
                         onClick={() => router.push('/dashboard/users')}
-                        className="flex items-center gap-2 px-5 py-3 bg-primary hover:bg-primary-hover text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-bold text-sm active:scale-95"
+                        className="gap-2 hover:scale-105 shadow-lg shadow-primary/20 transition-all font-black uppercase tracking-widest text-[10px] py-6 px-8"
                     >
                         <UserPlus className="w-4 h-4" />
-                        Add Instructor
-                    </button>
+                        Onboard Faculty
+                    </Button>
                 )}
             </header>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-                    <div className="flex items-start justify-between mb-4">
-                        <div>
-                            <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Total Instructors</p>
-                            <p className="text-3xl font-black text-gray-900">{teachers.length}</p>
+                {[
+                    { label: 'Total Faculty', value: teachers.length, icon: Users, color: 'purple' },
+                    { label: 'Active Status', value: activeInstructors, icon: CheckCircle, color: 'emerald' },
+                    { label: 'Mentorship Count', value: totalStudents, icon: GraduationCap, color: 'blue' },
+                    { label: 'Market Average', value: `$${avgRate}`, icon: Music, color: 'orange' }
+                ].map((stat, i) => (
+                    <div key={i} className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm group hover:shadow-md transition-shadow">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className={`w-12 h-12 rounded-2xl bg-${stat.color}-50 flex items-center justify-center text-${stat.color}-600 group-hover:scale-110 transition-transform`}>
+                                <stat.icon className="w-6 h-6" />
+                            </div>
+                            <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Insights</div>
                         </div>
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center shadow-md">
-                            <Users className="w-6 h-6 text-white" />
-                        </div>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{stat.label}</p>
+                        <h3 className="text-3xl font-black text-gray-900 tracking-tight uppercase tracking-tighter">{stat.value}</h3>
                     </div>
-                </div>
-
-                <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-                    <div className="flex items-start justify-between mb-4">
-                        <div>
-                            <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Active</p>
-                            <p className="text-3xl font-black text-gray-900">{activeInstructors}</p>
-                        </div>
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-md">
-                            <CheckCircle className="w-6 h-6 text-white" />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-                    <div className="flex items-start justify-between mb-4">
-                        <div>
-                            <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Total Students</p>
-                            <p className="text-3xl font-black text-gray-900">{totalStudents}</p>
-                        </div>
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-md">
-                            <GraduationCap className="w-6 h-6 text-white" />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-                    <div className="flex items-start justify-between mb-4">
-                        <div>
-                            <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Avg Rate</p>
-                            <p className="text-3xl font-black text-gray-900">${avgRate}</p>
-                        </div>
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-md">
-                            <Music className="w-6 h-6 text-white" />
-                        </div>
-                    </div>
-                </div>
+                ))}
             </div>
 
             {/* Search & Export */}
-            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="relative flex-1 w-full sm:max-w-md">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="relative flex-1 w-full max-w-xl">
+                    <Search className="absolute left-4 top-1/2 -track-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                         type="text"
-                        placeholder="Search by name or email..."
+                        placeholder="Search faculty identity, instrument, or expertise..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                        className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-sm text-gray-700 outline-none transition-all"
                     />
                 </div>
-                <button
+                <Button
+                    variant="ghost"
                     onClick={handleExport}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-all font-bold text-sm active:scale-95 w-full sm:w-auto"
+                    className="gap-2 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-primary transition-colors"
                 >
                     <Download className="w-4 h-4" />
-                    Export
-                </button>
+                    Generate Directory Report
+                </Button>
             </div>
 
             {/* Instructors List */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                {/* Desktop Table View */}
-                <div className="hidden lg:block overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-gray-50/50 border-b border-gray-100">
+            <div className="bg-white rounded-[2rem] border border-gray-100 shadow-2xl overflow-hidden">
+                <div className="overflow-x-auto custom-scrollbar">
+                    <table className="w-full border-separate border-spacing-0">
+                        <thead className="bg-gray-50/50">
                             <tr>
-                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Instructor</th>
-                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Specialties</th>
-                                <th className="px-8 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Students</th>
-                                <th className="px-8 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Rate</th>
-                                <th className="px-8 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Instructor Identity</th>
+                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Expertise Area</th>
+                                <th className="px-8 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Mentorships</th>
+                                <th className="px-8 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Market Rate</th>
+                                <th className="px-8 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Operations</th>
                                 <th className="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
                             {filteredTeachers.length > 0 ? filteredTeachers.map((teacher) => (
-                                <tr key={teacher.id} className="hover:bg-gray-50/50 transition-all group">
-                                    <td className="px-8 py-5">
+                                <tr key={teacher.id} className="group hover:bg-gray-50/30 transition-all">
+                                    <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white font-black text-lg shadow-md">
+                                            <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-900 font-black text-lg border-2 border-white shadow-sm overflow-hidden group-hover:scale-105 transition-all">
                                                 {teacher.avatar ? (
-                                                    <img src={teacher.avatar} alt="" className="w-full h-full object-cover rounded-xl" />
+                                                    <img src={teacher.avatar} alt="" className="w-full h-full object-cover" />
                                                 ) : (
                                                     teacher.first_name[0].toUpperCase()
                                                 )}
                                             </div>
-                                            <div>
-                                                <div className="font-bold text-gray-900">{teacher.first_name} {teacher.last_name}</div>
-                                                <div className="text-xs text-gray-500 font-medium">{teacher.email}</div>
+                                            <div className="flex flex-col">
+                                                <span className="font-black text-gray-900 uppercase tracking-tighter leading-tight">
+                                                    {teacher.first_name} {teacher.last_name}
+                                                </span>
+                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{teacher.email}</span>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-8 py-5">
+                                    <td className="px-8 py-6">
                                         <div className="flex flex-wrap gap-1.5">
                                             {Array.from(new Set([
                                                 ...(Array.isArray(teacher.specialties) ? teacher.specialties : []),
                                                 ...(Array.isArray(teacher.instruments) ? teacher.instruments : [])
                                             ])).slice(0, 3).map((spec: string) => (
-                                                <span key={spec} className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100">
+                                                <span key={spec} className="inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-black tracking-widest uppercase bg-primary/5 text-primary border border-primary/10">
                                                     {spec}
                                                 </span>
                                             ))}
@@ -261,197 +226,103 @@ export default function InstructorsPage() {
                                                 ...(Array.isArray(teacher.specialties) ? teacher.specialties : []),
                                                 ...(Array.isArray(teacher.instruments) ? teacher.instruments : [])
                                             ])).length > 3 && (
-                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold bg-gray-100 text-gray-600">
-                                                        +{Array.from(new Set([
-                                                            ...(Array.isArray(teacher.specialties) ? teacher.specialties : []),
-                                                            ...(Array.isArray(teacher.instruments) ? teacher.instruments : [])
-                                                        ])).length - 3}
-                                                    </span>
-                                                )}
-                                            {((!teacher.specialties || teacher.specialties.length === 0) && (!teacher.instruments || teacher.instruments.length === 0)) && (
-                                                <span className="text-xs text-gray-400">None</span>
+                                                <span className="inline-flex items-center px-2 py-1 rounded-lg text-[10px] font-black text-gray-400 uppercase">
+                                                    +{Array.from(new Set([
+                                                        ...(Array.isArray(teacher.specialties) ? teacher.specialties : []),
+                                                        ...(Array.isArray(teacher.instruments) ? teacher.instruments : [])
+                                                    ])).length - 3}
+                                                </span>
                                             )}
                                         </div>
                                     </td>
-                                    <td className="px-8 py-5 text-center">
-                                        <span className="text-sm font-bold text-gray-900">{teacher.students_count || 0}</span>
+                                    <td className="px-8 py-6 text-center">
+                                        <span className="text-sm font-black text-gray-900">{teacher.students_count || 0}</span>
                                     </td>
-                                    <td className="px-8 py-5 text-center">
-                                        <span className="text-sm font-bold text-gray-900">
+                                    <td className="px-8 py-6 text-center">
+                                        <span className="text-sm font-black text-gray-900">
                                             {teacher.hourly_rate ? `$${teacher.hourly_rate}` : '-'}
                                         </span>
                                     </td>
-                                    <td className="px-8 py-5 text-center">
-                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${teacher.is_active
-                                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                            : 'bg-gray-50 text-gray-500 border border-gray-200'
-                                            }`}>
-                                            <div className={`w-1.5 h-1.5 rounded-full ${teacher.is_active ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
+                                    <td className="px-8 py-6 text-center">
+                                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                                            teacher.is_active ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-gray-50 text-gray-400 border-gray-100'
+                                         }`}>
+                                            <div className={`w-1.5 h-1.5 rounded-full ${teacher.is_active ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-gray-300'}`} />
                                             {teacher.is_active ? 'Active' : 'Inactive'}
                                         </span>
                                     </td>
-                                    <td className="px-8 py-5 text-right">
-                                        <button
+                                    <td className="px-8 py-6 text-right">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
                                             onClick={() => handleOpenEdit(teacher)}
-                                            className="p-2 text-gray-400 hover:text-primary hover:bg-teal-50 rounded-xl transition-all active:scale-95"
+                                            className="text-gray-300 hover:text-primary rounded-xl opacity-0 group-hover:opacity-100 transition-all"
                                         >
                                             <Edit className="w-4 h-4" />
-                                        </button>
+                                        </Button>
                                     </td>
                                 </tr>
-                            )) : (
-                                <tr>
-                                    <td colSpan={6} className="px-8 py-24 text-center">
-                                        <div className="flex flex-col items-center gap-4">
-                                            <div className="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center">
-                                                <GraduationCap className="w-10 h-10 text-gray-300" />
-                                            </div>
-                                            <p className="text-gray-400 font-bold text-lg">No instructors found.</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            )}
+                            ))}
                         </tbody>
                     </table>
-                </div>
-
-                {/* Mobile Cards */}
-                <div className="lg:hidden p-4 space-y-4">
-                    {filteredTeachers.length > 0 ? filteredTeachers.map((teacher: any) => (
-                        <div key={teacher.id} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm space-y-4 relative overflow-hidden">
-                            <div className={`absolute top-0 left-0 w-1.5 h-full ${teacher.is_active ? 'bg-primary' : 'bg-gray-400'}`} />
-
-                            <div className="flex items-start justify-between pl-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white font-black text-lg shadow-md">
-                                        {teacher.avatar ? (
-                                            <img src={teacher.avatar} alt="" className="w-full h-full object-cover rounded-xl" />
-                                        ) : (
-                                            teacher.first_name[0].toUpperCase()
-                                        )}
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-gray-900 leading-tight">{teacher.first_name} {teacher.last_name}</h3>
-                                        <p className="text-xs text-gray-500 font-medium truncate max-w-[150px]">{teacher.email}</p>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => handleOpenEdit(teacher)}
-                                    className="p-2 bg-gray-50 text-gray-400 rounded-lg hover:text-primary"
-                                >
-                                    <Edit className="w-4 h-4" />
-                                </button>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3 pl-3">
-                                <div className="p-3 bg-gray-50 rounded-xl space-y-1">
-                                    <div className="flex items-center gap-1.5 text-xs font-black text-gray-400 uppercase tracking-widest">
-                                        <Users className="w-3 h-3" />
-                                        Students
-                                    </div>
-                                    <p className="text-xs font-bold text-gray-800">{teacher.students_count || 0}</p>
-                                </div>
-                                <div className="p-3 bg-gray-50 rounded-xl space-y-1">
-                                    <div className="flex items-center gap-1.5 text-xs font-black text-gray-400 uppercase tracking-widest">
-                                        <Music className="w-3 h-3" />
-                                        Rate
-                                    </div>
-                                    <p className="text-xs font-bold text-gray-800">{teacher.hourly_rate ? `$${teacher.hourly_rate}` : '-'}</p>
-                                </div>
-                            </div>
-
-                            <div className="pl-3 flex items-center gap-2 pt-1">
-                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${teacher.is_active
-                                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                    : 'bg-gray-50 text-gray-500 border border-gray-200'
-                                    }`}>
-                                    <div className={`w-1.5 h-1.5 rounded-full ${teacher.is_active ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
-                                    {teacher.is_active ? 'Active' : 'Inactive'}
-                                </span>
-                                {Array.from(new Set([
-                                    ...(Array.isArray(teacher.specialties) ? teacher.specialties : []),
-                                    ...(Array.isArray(teacher.instruments) ? teacher.instruments : [])
-                                ])).slice(0, 2).map((spec: string) => (
-                                    <span key={spec} className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-blue-50 text-blue-600 border border-blue-100">
-                                        {spec}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    )) : (
-                        <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
-                            <GraduationCap className="w-12 h-12 text-gray-200" />
-                            <p className="text-gray-400 font-bold">No instructors found.</p>
-                        </div>
-                    )}
                 </div>
             </div>
 
             {/* Edit Modal */}
-            {isEditModalOpen && (
-                <Modal
-                    isOpen={isEditModalOpen}
-                    onClose={() => setIsEditModalOpen(false)}
-                    title="Edit Instructor"
-                    footer={
-                        <>
-                            <Button
-                                variant="outline"
-                                onClick={() => setIsEditModalOpen(false)}
-                                className="flex-1"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                onClick={handleSubmit}
-                                disabled={isSubmitting}
-                                className="flex-[2] gap-2"
-                            >
-                                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
-                            </Button>
-                        </>
-                    }
-                >
-                    <form onSubmit={handleSubmit} className="space-y-6">
+            <Dialog
+                open={isEditModalOpen}
+                onOpenChange={setIsEditModalOpen}
+                size="lg"
+            >
+                <DialogHeader title="Faculty Profile Enhancement" />
+                <DialogContent>
+                    <form id="edit-faculty-form" onSubmit={handleSubmit} className="space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">First Name</label>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Public First Name</label>
                                 <input
                                     type="text"
                                     required
                                     value={formData.first_name}
                                     onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                    className="w-full px-5 py-3.5 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-gray-700 outline-none transition-all"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Last Name</label>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Public Last Name</label>
                                 <input
                                     type="text"
                                     required
                                     value={formData.last_name}
                                     onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                    className="w-full px-5 py-3.5 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-gray-700 outline-none transition-all"
                                 />
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Email</label>
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Faculty Email Communication</label>
                             <input
                                 type="email"
                                 required
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                className="w-full px-5 py-3.5 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-gray-700 outline-none transition-all"
                             />
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Specialties</label>
-                            <div className="flex flex-wrap gap-2 mb-3">
+                        <div className="space-y-4 p-8 bg-primary/5 rounded-3xl border border-primary/10">
+                            <div className="flex items-center justify-between mb-2">
+                                <label className="text-[10px] font-black text-primary uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <Award className="w-4 h-4" />
+                                    Pedagogical Specializations
+                                </label>
+                                <span className="text-[10px] font-black text-gray-400">{formData.specialties.length} Total</span>
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-2">
                                 {formData.specialties.map((spec) => (
-                                    <span key={spec} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-bold border border-blue-100">
+                                    <span key={spec} className="inline-flex items-center gap-2 px-4 py-2 bg-white text-primary rounded-xl text-[10px] font-black uppercase tracking-widest border border-primary/10 shadow-sm hover:border-primary/30 transition-all">
                                         {spec}
                                         <button
                                             type="button"
@@ -459,109 +330,117 @@ export default function InstructorsPage() {
                                                 ...formData,
                                                 specialties: formData.specialties.filter(i => i !== spec)
                                             })}
-                                            className="hover:text-red-600 transition-colors"
+                                            className="hover:text-red-500 transition-colors"
                                         >
                                             <X className="w-3.5 h-3.5" />
                                         </button>
                                     </span>
                                 ))}
                                 {formData.specialties.length === 0 && (
-                                    <p className="text-sm text-gray-400">No specialties added yet</p>
+                                    <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest py-2">No credentials listed</p>
                                 )}
                             </div>
-                            <div className="flex gap-2">
+                            
+                            <div className="flex gap-3">
                                 <input
                                     type="text"
                                     value={newInstrument}
                                     onChange={(e) => setNewInstrument(e.target.value)}
-                                    onKeyPress={(e) => {
+                                    onKeyDown={(e) => {
                                         if (e.key === 'Enter') {
                                             e.preventDefault();
                                             const trimmed = newInstrument.trim();
                                             if (!trimmed) return;
-
-                                            const formatted = trimmed.replace(
-                                                /\w\S*/g,
-                                                (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase()
-                                            );
-
+                                            const formatted = trimmed.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase());
                                             if (formData.specialties.some(s => s.toLowerCase() === formatted.toLowerCase())) {
-                                                toast.error('This specialty is already listed');
+                                                toast.error('Specialty already exists');
                                                 return;
                                             }
-
-                                            setFormData({
-                                                ...formData,
-                                                specialties: [...formData.specialties, formatted]
-                                            });
+                                            setFormData({ ...formData, specialties: [...formData.specialties, formatted] });
                                             setNewInstrument('');
                                         }
                                     }}
-                                    placeholder="Add specialty (e.g., Piano)"
-                                    className="flex-1 px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                    placeholder="Add skill (e.g. Masterclass Performance)"
+                                    className="flex-1 px-5 py-3.5 bg-white border-transparent focus:border-primary border-2 rounded-2xl font-bold text-sm text-gray-700 outline-none transition-all shadow-sm"
                                 />
-                                <button
+                                <Button
                                     type="button"
                                     onClick={() => {
-                                        const trimmed = newInstrument.trim();
-                                        if (!trimmed) return;
-
-                                        const formatted = trimmed.replace(
-                                            /\w\S*/g,
-                                            (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase()
-                                        );
-
-                                        if (formData.specialties.some(s => s.toLowerCase() === formatted.toLowerCase())) {
-                                            toast.error('This specialty is already listed');
-                                            return;
-                                        }
-
-                                        setFormData({
-                                            ...formData,
-                                            specialties: [...formData.specialties, formatted]
-                                        });
-                                        setNewInstrument('');
+                                         const trimmed = newInstrument.trim();
+                                         if (!trimmed) return;
+                                         const formatted = trimmed.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase());
+                                         if (formData.specialties.some(s => s.toLowerCase() === formatted.toLowerCase())) {
+                                             toast.error('Specialty already exists');
+                                             return;
+                                         }
+                                         setFormData({ ...formData, specialties: [...formData.specialties, formatted] });
+                                         setNewInstrument('');
                                     }}
-                                    className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-bold"
                                 >
                                     Add
-                                </button>
+                                </Button>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Hourly Rate ($)</label>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                    <DollarSign className="w-3 h-3 text-emerald-500" />
+                                    Hourly Compensation
+                                </label>
                                 <input
                                     type="number"
                                     step="0.01"
                                     value={formData.hourly_rate}
                                     onChange={(e) => setFormData({ ...formData, hourly_rate: e.target.value })}
-                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                    className="w-full px-5 py-3.5 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-gray-700 outline-none transition-all"
                                     placeholder="0.00"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Status</label>
-                                <div className="flex items-center gap-4 px-4 py-3 bg-gray-50 rounded-xl h-[50px]">
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.is_active}
-                                            onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                                            className="sr-only peer"
-                                        />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                                    </label>
-                                    <span className="text-sm font-bold text-gray-700">
-                                        {formData.is_active ? 'Active' : 'Inactive'}
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Teaching Status</label>
+                                <div 
+                                    onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
+                                    className={`flex items-center justify-between px-5 py-3.5 rounded-2xl border-2 transition-all cursor-pointer h-[54px] ${
+                                        formData.is_active ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-200'
+                                    }`}
+                                >
+                                    <span className={`text-[10px] font-black uppercase tracking-widest ${formData.is_active ? 'text-emerald-600' : 'text-gray-400'}`}>
+                                        {formData.is_active ? 'Authorized Faculty' : 'Inactive'}
                                     </span>
+                                    <div className={`w-10 h-6 rounded-full p-1 transition-colors ${formData.is_active ? 'bg-emerald-500' : 'bg-gray-400'}`}>
+                                        <div className={`w-4 h-4 bg-white rounded-full transition-transform ${formData.is_active ? 'translate-x-4' : 'translate-x-0'}`} />
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </form>
-                </Modal>
-            )}
+                </DialogContent>
+                <DialogFooter>
+                    <Button
+                        variant="ghost"
+                        onClick={() => setIsEditModalOpen(false)}
+                        className="flex-1"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        type="submit"
+                        form="edit-faculty-form"
+                        disabled={isSubmitting}
+                        className="flex-[2] gap-2 active:scale-95 transition-transform"
+                    >
+                        {isSubmitting ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Committing...
+                            </>
+                        ) : (
+                            'Execute Profile Update'
+                        )}
+                    </Button>
+                </DialogFooter>
+            </Dialog>
         </div>
     )
 }

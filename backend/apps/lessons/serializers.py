@@ -12,6 +12,7 @@ class LessonListSerializer(serializers.ModelSerializer):
     student_instrument = serializers.CharField(source='student.instrument', read_only=True)
     band_name = serializers.CharField(source='band.name', read_only=True)
     room_name = serializers.CharField(source='room.name', read_only=True)
+    lesson_plan_title = serializers.CharField(source='lesson_plan.title', read_only=True)
     duration_minutes = serializers.IntegerField(read_only=True)
     
     class Meta:
@@ -20,7 +21,7 @@ class LessonListSerializer(serializers.ModelSerializer):
             'id', 'student_name', 'teacher_name', 'student_instrument', 'band_name', 'room_name',
             'lesson_type', 'status', 'scheduled_start', 'scheduled_end',
             'duration_minutes', 'location', 'is_online', 'online_meeting_url',
-            'summary', 'is_paid'
+            'summary', 'is_paid', 'lesson_plan', 'lesson_plan_title'
         ]
 
 
@@ -77,7 +78,7 @@ class LessonCreateSerializer(serializers.ModelSerializer):
         fields = [
             'studio', 'teacher', 'student', 'band', 'room', 'lesson_type', 'status',
             'scheduled_start', 'scheduled_end', 'location', 'is_online',
-            'online_meeting_url', 'rate', 'summary'
+            'online_meeting_url', 'rate', 'summary', 'lesson_plan'
         ]
 
     def validate(self, data):

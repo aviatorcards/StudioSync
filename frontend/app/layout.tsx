@@ -2,6 +2,7 @@ import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { UserProvider } from '@/contexts/UserContext'
+import GoogleCastScript from '@/components/GoogleCastScript'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -21,16 +22,14 @@ export const viewport = {
     userScalable: false,
 }
 
-import GoogleCastScript from '@/components/GoogleCastScript'
-
 export default function RootLayout({
     children,
 }: {
     children: React.ReactNode
 }) {
     return (
-        <html lang="en">
-            <body className={inter.className}>
+        <html lang="en" suppressHydrationWarning>
+            <body className={inter.className} suppressHydrationWarning>
                 <UserProvider>
                     {children}
                 </UserProvider>

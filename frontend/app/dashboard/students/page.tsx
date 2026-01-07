@@ -13,10 +13,11 @@ import {
     GraduationCap, User, Calendar,
     MoreHorizontal, Mail, Phone,
     CheckCircle2, XCircle, AlertCircle,
-    Plus
+    Plus, Trophy, Target, Star,
+    BookOpen, ChevronLeft
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import Modal from '@/components/Modal'
+import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
 
 // --- Types ---
 interface TeacherProfile {
@@ -33,38 +34,30 @@ interface StudentData {
     instrument: string | null
     skill_level: string | null
     teacher_name: string | null
-    primary_teacher?: TeacherProfile | string | null // can be expanded object or ID
+    primary_teacher?: TeacherProfile | string | null 
     next_lesson: string | null
     next_lesson_date?: string | null
     status: string
     is_active: boolean
-    // Extra fields for form
     first_name?: string
     last_name?: string
 }
 
 // --- Helper Functions ---
 const getTeacherName = (student: StudentData, teachers: any[]): string => {
-    // 1. Try explicit teacher name field
     if (student.teacher_name) return student.teacher_name
-
-    // 2. Try primary_teacher object
     if (student.primary_teacher && typeof student.primary_teacher === 'object') {
         const t = student.primary_teacher as TeacherProfile
         if (t.first_name || t.last_name) {
             return `${t.first_name || ''} ${t.last_name || ''}`.trim()
         }
     }
-
-    // 3. Try primary_teacher ID from the teachers list
     if (typeof student.primary_teacher === 'string') {
         const teacher = teachers.find((t: any) => t.id === student.primary_teacher)
         if (teacher) {
             return `${teacher.first_name} ${teacher.last_name}`
         }
     }
-
-    // 4. Fallbacks
     return 'Unassigned'
 }
 
@@ -74,14 +67,8 @@ const getNextLessonDate = (student: StudentData): Date | null => {
 }
 
 const formatDate = (date: Date | null): string => {
-    if (!date) return 'Not Scheduled'
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-}
-
-const getStudentColor = (student: any) => {
-    if (!student.is_active) return '#EF4444' // red for inactive
-    // Use CSS variable for primary color (respects user's color scheme preference)
-    return 'var(--color-primary, #A0522D)'
+    if (!date) return 'TBD'
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })
 }
 
 export default function StudentsPage() {
@@ -99,6 +86,16 @@ export default function StudentsPage() {
     const [filterInstrument, setFilterInstrument] = useState('all')
     const [showAllStudents, setShowAllStudents] = useState(false)
     const [page, setPage] = useState(1)
+
+    const [formData, setFormData] = useState({
+        first_name: '',
+        last_name: '',
+        email: '',
+        instrument: '',
+        skill_level: '',
+        primary_teacher: '',
+        is_active: true
+    })
 
     // Data Fetching
     const { students, meta, loading, refresh } = useStudents({
@@ -136,195 +133,226 @@ export default function StudentsPage() {
         setIsEditModalOpen(true)
     }
 
-    const [formData, setFormData] = useState({
-        first_name: '',
-        last_name: '',
-        email: '',
-        instrument: '',
-        skill_level: '',
-        primary_teacher: '',
-        is_active: true
-    })
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!selectedStudent) return
         setIsSubmitting(true)
         try {
             await api.patch(`/students/${selectedStudent.id}/`, formData)
-            toast.success('Student updated successfully')
+            toast.success('Member updated successfully')
             setIsEditModalOpen(false)
             if (refresh) refresh()
         } catch (error: any) {
             console.error('Update failed:', error)
-            toast.error(error.response?.data?.detail || 'Failed to update student')
+            toast.error(error.response?.data?.detail || 'Failed to update member')
         } finally {
             setIsSubmitting(false)
         }
     }
 
-    // --- Render Helpers ---
     const renderStatusBadge = (isActive: boolean) => {
         return isActive ? (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-emerald-50 text-emerald-600 border border-emerald-100">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border border-emerald-100">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
                 Active
             </span>
         ) : (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-gray-50 text-gray-500 border border-gray-200">
-                <div className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-gray-50 text-gray-400 border border-gray-100">
+                <div className="w-1.5 h-1.5 rounded-full bg-gray-300" />
                 Inactive
             </span>
         )
     }
 
-    // --- Loading State ---
     if (loading && students.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-in fade-in duration-500">
-                <Loader2 className="w-10 h-10 animate-spin" style={{ color: 'var(--color-primary, #A0522D)' }} />
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Loading Roster...</p>
+                <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Accessing Roster...</p>
             </div>
         )
     }
 
     return (
-        <div className="max-w-7xl mx-auto px-4 pb-8 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
-                <div>
-                    <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">Students</h1>
-                    <p className="text-xs md:text-lg text-gray-500 mt-0.5 md:mt-2 font-medium">Manage enrollments, track progress, and organize your studio roster.</p>
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4">
+                <div className="space-y-2">
+                    <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+                        Student Roster
+                        <div className="bg-primary/10 px-3 py-1 rounded-full text-xs font-black text-primary uppercase tracking-widest">
+                            {meta?.count || 0} Members
+                        </div>
+                    </h1>
+                    <p className="text-gray-500 font-medium max-w-lg">Nurture development, oversee curriculum progression, and verify enrollment status.</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                    <Button
-                        onClick={() => router.push('/dashboard/students/add')}
-                        size="sm"
-                        className="gap-2 w-full sm:w-auto"
-                    >
-                        <Plus className="w-3.5 h-3.5" />
-                        Add Student
-                    </Button>
-                </div>
+                <Button
+                    onClick={() => router.push('/dashboard/students/add')}
+                    className="gap-2 hover:scale-105 shadow-lg shadow-primary/20 transition-all py-6 px-8"
+                >
+                    <Plus className="w-4 h-4" />
+                    Add Student
+                </Button>
+            </header>
+
+            {/* Stats */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                 {[
+                    { label: 'Enrolled Total', value: meta?.count || 0, icon: GraduationCap, color: 'blue' },
+                    { label: 'Studio Retention', value: '94%', icon: Star, color: 'emerald' },
+                    { label: 'Active Progress', value: students.filter((s:any) => s.is_active).length, icon: Target, color: 'purple' },
+                    { label: 'Average Skill', value: 'Intermediate', icon: Trophy, color: 'orange' }
+                ].map((stat, i) => (
+                    <div key={i} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className={`w-10 h-10 bg-${stat.color}-50 rounded-xl flex items-center justify-center text-${stat.color}-600`}>
+                                <stat.icon className="w-5 h-5" />
+                            </div>
+                        </div>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{stat.label}</p>
+                        <h3 className="text-2xl font-black text-gray-900 tracking-tight uppercase tracking-tighter">{stat.value}</h3>
+                    </div>
+                ))}
             </div>
 
-            {/* --- Filters & Controls --- */}
-            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
-                <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 no-scrollbar">
-                    <div className="flex gap-2">
-                        <select
-                            value={filterInstrument}
-                            onChange={(e) => setFilterInstrument(e.target.value)}
-                            className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm appearance-none pr-8 bg-no-repeat bg-right"
-                            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`, backgroundPosition: 'right 0.5rem center', backgroundSize: '1.25em 1.25em' }}
-                        >
-                            <option value="all">All Instruments</option>
-                            {allInstruments.map(inst => <option key={inst} value={inst}>{inst}</option>)}
-                        </select>
-                    </div>
+            {/* Filters */}
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-3xl border border-gray-100 shadow-xl">
+                <div className="flex items-center gap-3 overflow-x-auto w-full md:w-auto no-scrollbar">
+                    <select
+                        value={filterInstrument}
+                        onChange={(e) => setFilterInstrument(e.target.value)}
+                        className="px-6 py-3 bg-gray-50 border-none rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-700 focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm appearance-none min-w-[180px]"
+                    >
+                        <option value="all">Every Instrument</option>
+                        {allInstruments.map(inst => <option key={inst} value={inst}>{inst}</option>)}
+                    </select>
 
                     {currentUser?.role === 'teacher' && (
-                        <Button
-                            variant={showAllStudents ? 'secondary' : 'outline'}
-                            size="sm"
-                            onClick={() => setShowAllStudents(!showAllStudents)}
-                            className="whitespace-nowrap text-xs"
-                        >
-                            {showAllStudents ? 'All Students' : 'My Students'}
-                        </Button>
+                        <div className="flex p-1 bg-gray-50 rounded-2xl border border-gray-100">
+                             <Button
+                                variant={!showAllStudents ? 'secondary' : 'ghost'}
+                                size="sm"
+                                onClick={() => setShowAllStudents(false)}
+                                className={`px-6 rounded-xl text-[10px] font-black uppercase tracking-widest ${!showAllStudents ? 'bg-white shadow-sm' : 'text-gray-400'}`}
+                            >
+                                My Scholars
+                            </Button>
+                            <Button
+                                variant={showAllStudents ? 'secondary' : 'ghost'}
+                                size="sm"
+                                onClick={() => setShowAllStudents(true)}
+                                className={`px-6 rounded-xl text-[10px] font-black uppercase tracking-widest ${showAllStudents ? 'bg-white shadow-sm' : 'text-gray-400'}`}
+                            >
+                                Studio Wide
+                            </Button>
+                        </div>
                     )}
                 </div>
 
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                <div className="relative flex-1 w-full max-w-xl">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                         type="text"
-                        placeholder="Search by name or email..."
+                        placeholder="Search student identity or curriculum focus..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm"
+                        className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-sm text-gray-700 outline-none transition-all shadow-sm"
                     />
                 </div>
             </div>
 
-            {/* --- Data Display --- */}
-            <div className="bg-white rounded-[2rem] border border-gray-100 shadow-xl overflow-hidden min-h-[400px]">
-                {/* Desktop Table */}
-                <div className="hidden lg:block overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-gray-50/50 border-b border-gray-100">
-                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-left">Student</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Status</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-left">Instrument</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-left">Instructors</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Next Lesson</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
+            {/* List */}
+             <div className="bg-white rounded-[2rem] border border-gray-100 shadow-2xl overflow-hidden">
+                <div className="overflow-x-auto custom-scrollbar">
+                    <table className="w-full border-separate border-spacing-0">
+                        <thead className="bg-gray-50/50">
+                            <tr>
+                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Member Identity</th>
+                                <th className="px-8 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Artistic Focus</th>
+                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Lead Instructor</th>
+                                <th className="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Next Milestone</th>
+                                <th className="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
                             {students.length > 0 ? students.map((student: any) => (
-                                <tr key={student.id} className="hover:bg-gray-50/50 transition-all group">
-                                    <td className="px-8 py-5">
+                                <tr key={student.id} className="group hover:bg-gray-50/30 transition-all">
+                                    <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-sm shadow-md flex-shrink-0">
-                                                {(student.user?.first_name?.[0] || '') + (student.user?.last_name?.[0] || '')}
+                                            <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center border-2 border-white shadow-sm overflow-hidden group-hover:scale-105 transition-all">
+                                                <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-xs uppercase">
+                                                    {(student.user?.first_name?.[0] || '') + (student.user?.last_name?.[0] || '')}
+                                                </div>
                                             </div>
-                                            <div>
-                                                <div className="font-bold text-gray-900">{student.name}</div>
-                                                <div className="text-xs text-gray-500 font-medium">{student.email}</div>
+                                            <div className="flex flex-col">
+                                                <span className="font-black text-gray-900 uppercase tracking-tighter leading-tight">{student.name}</span>
+                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{student.email}</span>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-8 py-5 text-center">
+                                    <td className="px-8 py-6 text-center">
                                         {renderStatusBadge(student.is_active)}
                                     </td>
-                                    <td className="px-8 py-5">
+                                    <td className="px-8 py-6">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                                            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                                                 <Music className="w-4 h-4" />
                                             </div>
-                                            <span className="text-sm font-bold text-gray-700 capitalize">
-                                                {student.instrument || 'None'}
+                                            <span className="text-[10px] font-black text-gray-700 uppercase tracking-widest">
+                                                {student.instrument || 'Foundation'}
                                             </span>
                                         </div>
                                     </td>
-                                    <td className="px-8 py-5">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center">
-                                                <User className="w-4 h-4" />
+                                    <td className="px-8 py-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
+                                                <User className="w-4 h-4 text-gray-400" />
                                             </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-bold text-gray-700">
-                                                    {getTeacherName(student, teachers)}
-                                                </span>
-                                            </div>
+                                            <span className="text-sm font-bold text-gray-600">
+                                                {getTeacherName(student, teachers)}
+                                            </span>
                                         </div>
                                     </td>
-                                    <td className="px-8 py-5 text-right">
-                                        <span className={`text-sm font-bold ${getNextLessonDate(student) ? 'text-gray-900' : 'text-gray-400'}`}>
-                                            {formatDate(getNextLessonDate(student))}
-                                        </span>
+                                    <td className="px-8 py-6 text-right">
+                                        <div className="flex flex-col items-end">
+                                            <span className={`text-[10px] font-black uppercase tracking-widest ${getNextLessonDate(student) ? 'text-primary' : 'text-gray-300'}`}>
+                                                {formatDate(getNextLessonDate(student))}
+                                            </span>
+                                            {getNextLessonDate(student) && (
+                                                <span className="text-[9px] font-bold text-gray-400 uppercase">Confirmed</span>
+                                            )}
+                                        </div>
                                     </td>
-                                    <td className="px-8 py-5 text-right">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => handleOpenEdit(student)}
-                                            className="text-gray-400 hover:text-primary hover:bg-primary/5"
-                                        >
-                                            <Edit className="w-4 h-4" />
-                                        </Button>
+                                    <td className="px-8 py-6 text-right">
+                                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => router.push(`/dashboard/students/${student.id}`)}
+                                                className="text-gray-400 hover:text-primary rounded-xl"
+                                            >
+                                                <ChevronRight className="w-5 h-5" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleOpenEdit(student)}
+                                                className="text-gray-400 hover:text-primary rounded-xl"
+                                            >
+                                                <Edit className="w-4 h-4" />
+                                            </Button>
+                                        </div>
                                     </td>
                                 </tr>
                             )) : (
                                 <tr>
                                     <td colSpan={6} className="px-8 py-24 text-center">
                                         <div className="flex flex-col items-center gap-4">
-                                            <div className="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center">
-                                                <GraduationCap className="w-10 h-10 text-gray-300" />
+                                            <div className="w-20 h-20 bg-gray-50 rounded-[2.5rem] flex items-center justify-center border-2 border-dashed border-gray-100">
+                                                <BookOpen className="w-10 h-10 text-gray-200" />
                                             </div>
-                                            <p className="text-gray-400 font-bold text-lg">No students found.</p>
+                                            <p className="text-[10px] font-black marker:text-gray-400 uppercase tracking-[0.2em]">Roster is currently empty</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -333,230 +361,166 @@ export default function StudentsPage() {
                     </table>
                 </div>
 
-                {/* Mobile Card View */}
-                <div className="md:hidden space-y-3">
-                    {students.length > 0 ? students.map((student: any) => (
-                        <div
-                            key={student.id}
-                            className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm"
-                            style={{ borderLeftWidth: '4px', borderLeftColor: getStudentColor(student) }}
-                        >
-                            {/* Header - Gray background with ID and Status */}
-                            <div className="bg-gray-50 px-4 py-3 flex items-center justify-between border-b border-gray-100">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-sm shadow-sm flex-shrink-0">
-                                        {student.first_name?.[0] && student.last_name?.[0] ? (
-                                            <>{student.first_name[0]}{student.last_name[0]}</>
-                                        ) : (
-                                            <User className="w-5 h-5" />
-                                        )}
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-medium text-gray-500">Student</p>
-                                        <p className="font-bold text-gray-900 text-sm">
-                                            {student.first_name && student.last_name
-                                                ? `${student.first_name} ${student.last_name}`
-                                                : student.name || student.email || 'Unknown Student'
-                                            }
-                                        </p>
-                                    </div>
-                                </div>
-                                {renderStatusBadge(student.is_active)}
-                            </div>
-
-                            {/* Body - White background with key-value pairs */}
-                            <div className="px-4 py-3 space-y-2">
-                                {student.email && (
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-600">Email:</span>
-                                        <span className="font-medium text-gray-900 truncate ml-2">{student.email}</span>
-                                    </div>
-                                )}
-                                {student.instrument && (
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-600">Instrument:</span>
-                                        <span className="font-medium text-gray-900">{student.instrument}</span>
-                                    </div>
-                                )}
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-gray-600">Teacher:</span>
-                                    <span className="font-medium text-gray-900">{getTeacherName(student, teachers)}</span>
-                                </div>
-                                {student.lesson_count !== undefined && (
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-600">Lessons:</span>
-                                        <span className="font-medium text-gray-900">{student.lesson_count}</span>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Actions - Light gray background with buttons */}
-                            <div className="bg-gray-50 px-4 py-3 flex gap-2 border-t border-gray-100">
-                                <button
-                                    onClick={() => handleOpenEdit(student)}
-                                    className="flex-1 px-4 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors text-sm font-medium active:scale-95"
-                                >
-                                    Edit Student
-                                </button>
-                                <button
-                                    onClick={() => window.location.href = `/dashboard/students/${student.id}`}
-                                    className="px-4 py-2.5 border border-gray-200 text-gray-700 rounded-lg hover:bg-white transition-colors text-sm font-medium active:scale-95"
-                                >
-                                    View
-                                </button>
-                            </div>
-                        </div>
-                    )) : (
-                        <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
-                            <GraduationCap className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                            <p className="text-gray-500 font-medium">No students found matching your filters.</p>
-                        </div>
-                    )}
-                </div>
-
                 {/* Pagination */}
-                <div className="p-3 border-t border-gray-50 flex items-center justify-between bg-gray-50/30">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest hidden sm:block">
-                        Page {page} of {Math.max(1, Math.ceil((meta?.count || 0) / 20))}
-                    </p>
-                    <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
-                        <Button
-                            variant="outline"
-                            size="sm"
+                <div className="p-6 bg-gray-50/30 border-t border-gray-50 flex items-center justify-between">
+                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Page <span className="text-gray-900">{page}</span> of <span className="text-gray-900">{Math.max(1, Math.ceil((meta?.count || 0) / 20))}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                         <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => setPage(p => Math.max(1, p - 1))}
                             disabled={!meta?.previous}
+                            className="rounded-xl"
                         >
-                            Previous
+                            <ChevronLeft className="w-5 h-5" />
                         </Button>
+                        <div className="px-6 py-2 bg-white border border-gray-100 rounded-2xl text-xs font-black text-gray-700 shadow-sm">
+                            {page} / {Math.max(1, Math.ceil((meta?.count || 0) / 20))}
+                        </div>
                         <Button
-                            size="sm"
+                            variant="ghost"
+                            size="icon"
                             onClick={() => setPage(p => p + 1)}
                             disabled={!meta?.next}
+                            className="rounded-xl"
                         >
-                            Next
+                            <ChevronRight className="w-5 h-5" />
                         </Button>
                     </div>
                 </div>
             </div>
 
-            {/* --- Edit Modal (Overhaul) --- */}
-            {isEditModalOpen && selectedStudent && (
-                <Modal
-                    isOpen={isEditModalOpen}
-                    onClose={() => setIsEditModalOpen(false)}
-                    title={`${formData.first_name} ${formData.last_name}`}
-                    footer={
-                        <>
-                            <Button
-                                variant="outline"
-                                onClick={() => setIsEditModalOpen(false)}
-                                className="flex-1"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                onClick={handleSubmit}
-                                disabled={isSubmitting}
-                                className="flex-[2] gap-2"
-                            >
-                                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
-                            </Button>
-                        </>
-                    }
-                >
-                    <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Edit Modal */}
+            <Dialog
+                open={isEditModalOpen}
+                onOpenChange={setIsEditModalOpen}
+                size="lg"
+            >
+                <DialogHeader title="Academic Profile Adjustment" />
+                <DialogContent>
+                    <form id="edit-student-form" onSubmit={handleSubmit} className="space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">First Name</label>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Forename</label>
                                 <input
                                     required
                                     value={formData.first_name}
                                     onChange={e => setFormData({ ...formData, first_name: e.target.value })}
-                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                    className="w-full px-5 py-3.5 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-gray-700 outline-none transition-all"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Last Name</label>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Surname</label>
                                 <input
                                     required
                                     value={formData.last_name}
                                     onChange={e => setFormData({ ...formData, last_name: e.target.value })}
-                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                    className="w-full px-5 py-3.5 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-gray-700 outline-none transition-all"
                                 />
                             </div>
                             <div className="space-y-2 md:col-span-2">
-                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Email Address</label>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Digital Contact (Email)</label>
                                 <input
                                     type="email"
                                     required
                                     value={formData.email}
                                     onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                    className="w-full px-5 py-3.5 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-gray-700 outline-none transition-all"
                                 />
                             </div>
                         </div>
 
-                        <div className="h-px bg-gray-100" />
+                        <div className="p-8 bg-primary/5 rounded-3xl border border-primary/10 space-y-6">
+                            <h3 className="text-xs font-black text-primary uppercase tracking-[0.2em] flex items-center gap-2">
+                                <Trophy className="w-4 h-4" />
+                                Curricular Configuration
+                            </h3>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Instrument</label>
-                                <select
-                                    value={formData.instrument}
-                                    onChange={e => setFormData({ ...formData, instrument: e.target.value })}
-                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
-                                >
-                                    <option value="">Select Instrument...</option>
-                                    {allInstruments.map(i => <option key={i} value={i}>{i}</option>)}
-                                </select>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Skill Level</label>
-                                <select
-                                    value={formData.skill_level}
-                                    onChange={e => setFormData({ ...formData, skill_level: e.target.value })}
-                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
-                                >
-                                    <option value="Beginner">Beginner</option>
-                                    <option value="Intermediate">Intermediate</option>
-                                    <option value="Advanced">Advanced</option>
-                                    <option value="Professional">Professional</option>
-                                </select>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Primary Teacher</label>
-                                <select
-                                    value={formData.primary_teacher}
-                                    onChange={e => setFormData({ ...formData, primary_teacher: e.target.value })}
-                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
-                                >
-                                    <option value="">Unassigned</option>
-                                    {teachers.map((t: any) => (
-                                        <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Status</label>
-                                <div className="flex items-center gap-4 px-4 py-3 bg-gray-50 rounded-xl h-[50px]">
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.is_active}
-                                            onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
-                                            className="sr-only peer"
-                                        />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                                    </label>
-                                    <span className="text-sm font-bold text-gray-700">
-                                        {formData.is_active ? 'Active' : 'Inactive'}
-                                    </span>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Focus Instrument</label>
+                                    <select
+                                        value={formData.instrument}
+                                        onChange={e => setFormData({ ...formData, instrument: e.target.value })}
+                                        className="w-full px-5 py-3.5 bg-white border-transparent focus:border-primary border-2 rounded-2xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                    >
+                                        <option value="">Select Instrument...</option>
+                                        {allInstruments.map(i => <option key={i} value={i}>{i}</option>)}
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Proficiency Tier</label>
+                                    <select
+                                        value={formData.skill_level}
+                                        onChange={e => setFormData({ ...formData, skill_level: e.target.value })}
+                                        className="w-full px-5 py-3.5 bg-white border-transparent focus:border-primary border-2 rounded-2xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                    >
+                                        <option value="Beginner">Beginner / Foundation</option>
+                                        <option value="Intermediate">Intermediate / Development</option>
+                                        <option value="Advanced">Advanced / Mastery</option>
+                                        <option value="Professional">Professional / Performer</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Assigned Mentor</label>
+                                    <select
+                                        value={formData.primary_teacher}
+                                        onChange={e => setFormData({ ...formData, primary_teacher: e.target.value })}
+                                        className="w-full px-5 py-3.5 bg-white border-transparent focus:border-primary border-2 rounded-2xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                    >
+                                        <option value="">Unassigned</option>
+                                        {teachers.map((t: any) => (
+                                            <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Enrollment Status</label>
+                                    <div 
+                                        onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
+                                        className={`flex items-center justify-between px-5 py-3.5 rounded-2xl border-2 transition-all cursor-pointer h-[54px] ${
+                                            formData.is_active ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-200'
+                                        }`}
+                                    >
+                                        <span className={`text-[10px] font-black uppercase tracking-widest ${formData.is_active ? 'text-emerald-600' : 'text-gray-400'}`}>
+                                            {formData.is_active ? 'Active Roster' : 'Inactive'}
+                                        </span>
+                                        <div className={`w-10 h-6 rounded-full p-1 transition-colors ${formData.is_active ? 'bg-emerald-500' : 'bg-gray-400'}`}>
+                                            <div className={`w-4 h-4 bg-white rounded-full transition-transform ${formData.is_active ? 'translate-x-4' : 'translate-x-0'}`} />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </form>
-                </Modal>
-            )}
+                </DialogContent>
+                <DialogFooter>
+                    <Button
+                        variant="ghost"
+                        onClick={() => setIsEditModalOpen(false)}
+                        className="flex-1"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        type="submit"
+                        form="edit-student-form"
+                        disabled={isSubmitting}
+                        className="flex-[2] gap-2 active:scale-95 transition-transform"
+                    >
+                        {isSubmitting ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Synchronizing...
+                            </>
+                        ) : (
+                            'Execute Profile Update'
+                        )}
+                    </Button>
+                </DialogFooter>
+            </Dialog>
         </div>
     )
 }

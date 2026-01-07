@@ -1,6 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { Plus, Filter, Calendar as CalendarIcon, User, X, Edit2, Trash2, Loader2 } from 'lucide-react'
+import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 
 interface Task {
     id: string
@@ -112,8 +115,6 @@ export default function KanbanPage() {
 
     const handleAddCard = (e: React.FormEvent) => {
         e.preventDefault()
-        console.log('Adding task:', newTask)
-        // Add to first column for now (To Do)
         const newTaskObj: Task = {
             id: Math.random().toString(36).substr(2, 9),
             title: newTask.title,
@@ -127,7 +128,6 @@ export default function KanbanPage() {
             col.id === 'todo' ? { ...col, tasks: [...col.tasks, newTaskObj] } : col
         ))
 
-        alert(`Task "${newTask.title}" added to board!`)
         setShowAddModal(false)
         setNewTask({ title: '', description: '', priority: 'medium', dueDate: '', assignee: '' })
     }
@@ -202,76 +202,82 @@ export default function KanbanPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Project Board</h1>
-                    <p className="text-sm text-gray-500 mt-1">Manage studio projects and tasks</p>
+                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Project Board</h1>
+                    <p className="text-sm text-gray-500 font-medium mt-1 uppercase tracking-wider">Manage studio projects and tasks</p>
                 </div>
                 <div className="flex space-x-3">
-                    <button className="px-4 py-2 bg-[#2C3E50] text-white rounded-lg hover:bg-[#34495E] transition-colors">
-                        Filter
-                    </button>
-                    <button
-                        onClick={() => setShowAddModal(true)}
-                        className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors"
+                    <Button
+                        variant="outline"
+                        className="gap-2"
                     >
-                        + Add Task
-                    </button>
+                        <Filter className="w-4 h-4" />
+                        Filter
+                    </Button>
+                    <Button
+                        onClick={() => setShowAddModal(true)}
+                        className="gap-2"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Add Task
+                    </Button>
                 </div>
             </div>
 
             {/* Kanban Board */}
-            <div className="grid grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {columns.map((column) => (
                     <div
                         key={column.id}
-                        className="flex flex-col h-full"
+                        className="flex flex-col h-full min-h-[500px]"
                         onDragOver={(e) => onDragOver(e, column.id)}
                         onDragLeave={onDragLeave}
                         onDrop={(e) => onDrop(e, column.id)}
                     >
                         {/* Column Header */}
-                        <div className={`p-4 rounded-t-lg border-2 ${column.color} ${dragOverColumnId === column.id ? 'bg-gray-100' : ''}`}>
+                        <div className={`p-4 rounded-t-2xl border-2 border-b-0 ${column.color} ${dragOverColumnId === column.id ? 'bg-gray-100' : ''}`}>
                             <div className="flex items-center justify-between">
-                                <h3 className="font-semibold text-gray-900">{column.title}</h3>
-                                <span className="bg-white px-2 py-1 rounded-full text-xs font-medium">
+                                <h3 className="font-bold text-gray-900 uppercase tracking-widest text-xs">{column.title}</h3>
+                                <span className="bg-white px-2 py-0.5 rounded-full text-[10px] font-black shadow-sm">
                                     {column.tasks.length}
                                 </span>
                             </div>
                         </div>
 
                         {/* Task Cards */}
-                        <div className={`flex-1 p-4 border-2 border-t-0 ${column.color} rounded-b-lg space-y-3 min-h-[500px] transition-colors ${dragOverColumnId === column.id ? 'bg-gray-50' : ''}`}>
+                        <div className={`flex-1 p-3 border-2 ${column.color} rounded-b-2xl space-y-3 transition-colors ${dragOverColumnId === column.id ? 'bg-gray-50' : ''}`}>
                             {column.tasks.map((task) => (
                                 <div
                                     key={task.id}
                                     draggable
                                     onDragStart={(e) => onDragStart(e, task.id, column.id)}
                                     onClick={() => setSelectedTask(task)}
-                                    className={`bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing ${getPriorityColor(task.priority)} ${draggedTaskId === task.id ? 'opacity-50' : ''}`}
+                                    className={`bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing hover:scale-[1.02] ${getPriorityColor(task.priority)} ${draggedTaskId === task.id ? 'opacity-50' : ''}`}
                                 >
                                     {/* Task Header */}
-                                    <div className="flex items-start justify-between mb-2">
-                                        <h4 className="font-medium text-sm text-gray-900 flex-1">
+                                    <div className="flex items-start justify-between mb-2 gap-2">
+                                        <h4 className="font-bold text-xs text-gray-900 flex-1 leading-tight">
                                             {task.title}
                                         </h4>
                                         {getPriorityBadge(task.priority)}
                                     </div>
 
                                     {/* Task Description */}
-                                    <p className="text-xs text-gray-600 mb-3">
+                                    <p className="text-[10px] text-gray-500 mb-3 font-medium line-clamp-2">
                                         {task.description}
                                     </p>
 
                                     {/* Task Meta */}
-                                    <div className="flex items-center justify-between text-xs text-gray-500">
+                                    <div className="flex items-center justify-between text-[10px] text-gray-400 font-bold uppercase tracking-tighter">
                                         {task.dueDate && (
-                                            <div className="flex items-center space-x-1">
-                                                <span>📅</span>
+                                            <div className="flex items-center gap-1">
+                                                <CalendarIcon className="w-3 h-3" />
                                                 <span>{task.dueDate}</span>
                                             </div>
                                         )}
                                         {task.assignee && (
-                                            <div className="flex items-center space-x-1">
-                                                <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center text-white text-[10px] font-medium">
+                                            <div className="flex items-center gap-1.5 ml-auto">
+                                                <span className="truncate max-w-[60px]">{task.assignee}</span>
+                                                <div className="w-5 h-5 bg-[var(--color-primary-light)] rounded-full flex items-center justify-center text-[var(--color-primary-dark)] text-[8px] font-black border border-[var(--color-primary)]">
                                                     {task.assignee.split(' ').map(n => n[0]).join('')}
                                                 </div>
                                             </div>
@@ -283,7 +289,7 @@ export default function KanbanPage() {
                             {/* Add Card Button */}
                             <button
                                 onClick={() => setShowAddModal(true)}
-                                className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-400 hover:border-gray-400 hover:text-gray-600 transition-colors text-sm"
+                                className="w-full p-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-400 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] hover:bg-white transition-all text-[10px] font-black uppercase tracking-widest active:scale-95"
                             >
                                 + Add Card
                             </button>
@@ -292,56 +298,140 @@ export default function KanbanPage() {
                 ))}
             </div>
 
-            {/* Task Detail Modal (Simple version) */}
-            {selectedTask && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setSelectedTask(null)}>
-                    <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-start justify-between mb-4">
-                            <h2 className="text-2xl font-bold">{selectedTask.title}</h2>
-                            <button onClick={() => setSelectedTask(null)} className="text-gray-400 hover:text-gray-600">
-                                ✕
-                            </button>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div>
-                                <label className="text-sm font-medium text-gray-600">Description</label>
-                                <p className="text-gray-900 mt-1">{selectedTask.description}</p>
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-4">
+            {/* Task Detail Modal */}
+            <Dialog
+                open={!!selectedTask}
+                onOpenChange={(open) => !open && setSelectedTask(null)}
+                size="md"
+            >
+                {selectedTask && (
+                    <>
+                        <DialogHeader title={selectedTask.title} />
+                        <DialogContent>
+                            <div className="space-y-6">
                                 <div>
-                                    <label className="text-sm font-medium text-gray-600">Priority</label>
-                                    <div className="mt-1">{getPriorityBadge(selectedTask.priority)}</div>
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Description</label>
+                                    <p className="text-sm text-gray-700 font-medium bg-gray-50 p-4 rounded-xl border border-gray-100 italic leading-relaxed">
+                                        "{selectedTask.description}"
+                                    </p>
                                 </div>
 
-                                {selectedTask.dueDate && (
+                                <div className="grid grid-cols-3 gap-6">
                                     <div>
-                                        <label className="text-sm font-medium text-gray-600">Due Date</label>
-                                        <p className="text-gray-900 mt-1">📅 {selectedTask.dueDate}</p>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Priority</label>
+                                        <div>{getPriorityBadge(selectedTask.priority)}</div>
                                     </div>
-                                )}
 
-                                {selectedTask.assignee && (
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Assignee</label>
-                                        <p className="text-gray-900 mt-1">{selectedTask.assignee}</p>
-                                    </div>
-                                )}
+                                    {selectedTask.dueDate && (
+                                        <div>
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Due Date</label>
+                                            <p className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                                                <CalendarIcon className="w-4 h-4 text-primary" />
+                                                {selectedTask.dueDate}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {selectedTask.assignee && (
+                                        <div>
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Assignee</label>
+                                            <p className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                                                <User className="w-4 h-4 text-primary" />
+                                                {selectedTask.assignee}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
+                        </DialogContent>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setSelectedTask(null)} className="flex-1">
+                                Close
+                            </Button>
+                            <Button className="flex-1 gap-2">
+                                <Edit2 className="w-4 h-4" />
+                                Edit Task
+                            </Button>
+                        </DialogFooter>
+                    </>
+                )}
+            </Dialog>
 
-                            <div className="flex space-x-3 pt-4">
-                                <button className="px-4 py-2 bg-[#2C3E50] text-white rounded-lg hover:bg-[#34495E]">
-                                    Edit Task
-                                </button>
-                                <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                    Delete
-                                </button>
+            {/* Add Task Modal */}
+            <Dialog
+                open={showAddModal}
+                onOpenChange={setShowAddModal}
+                size="md"
+            >
+                <DialogHeader title="Add New Task" />
+                <DialogContent>
+                    <form id="add-task-form" onSubmit={handleAddCard} className="space-y-4">
+                        <div>
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Task Title</label>
+                            <input
+                                required
+                                type="text"
+                                value={newTask.title}
+                                onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                                className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                placeholder="e.g. Schedule Studio Cleaning"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Description</label>
+                            <textarea
+                                value={newTask.description}
+                                onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                                className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all min-h-[100px] resize-none"
+                                placeholder="Detailed task description..."
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Priority</label>
+                                <select
+                                    value={newTask.priority}
+                                    onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as any })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                >
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Due Date</label>
+                                <input
+                                    type="text"
+                                    value={newTask.dueDate}
+                                    onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                    placeholder="e.g. March 1"
+                                />
                             </div>
                         </div>
-                    </div>
-                </div>
-            )}
+                        <div>
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Assignee</label>
+                            <input
+                                type="text"
+                                value={newTask.assignee}
+                                onChange={(e) => setNewTask({ ...newTask, assignee: e.target.value })}
+                                className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                placeholder="Enter name..."
+                            />
+                        </div>
+                    </form>
+                </DialogContent>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setShowAddModal(false)} className="flex-1">
+                        Cancel
+                    </Button>
+                    <Button type="submit" form="add-task-form" className="flex-[2] gap-2">
+                        <Plus className="w-4 h-4" />
+                        Create Task
+                    </Button>
+                </DialogFooter>
+            </Dialog>
         </div>
     )
 }

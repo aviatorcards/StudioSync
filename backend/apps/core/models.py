@@ -365,3 +365,80 @@ class SignedDocument(models.Model):
         signer = self.signer_user.get_full_name() if self.signer_user else "Unknown"
         return f"{self.get_document_type_display()} - {signer}"
 
+
+class SetupStatus(models.Model):
+    """Tracks whether initial setup wizard has been completed"""
+    is_completed = models.BooleanField(default=False)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    setup_version = models.CharField(max_length=10, default='1.0')
+    
+    # Store feature selections and other setup data
+    features_enabled = models.JSONField(default=dict, blank=True)
+    setup_data = models.JSONField(default=dict, blank=True, help_text="Additional setup configuration")
+    
+    class Meta:
+        db_table = 'setup_status'
+        verbose_name_plural = "Setup Status"
+    
+    def __str__(self):
+        status = "Completed" if self.is_completed else "Pending"
+        return f"Setup Status: {status}"
+    
+    @classmethod
+    def is_setup_complete(cls):
+        """Check if setup has been completed"""
+        setup = cls.objects.first()
+        return setup and setup.is_completed
+    
+    def mark_complete(self):
+        """Mark setup as completed"""
+        self.is_completed = True
+        self.completed_at = timezone.now()
+        self.save()
+
+
+class FeatureFlag(models.Model):
+    """Track which features are enabled for a studio"""
+    studio = models.OneToOneField(
+        Studio,
+        on_delete=models.CASCADE,
+        related_name='features',
+        primary_key=True
+    )
+    
+    # Feature toggles
+    billing_enabled = models.BooleanField(default=True, help_text="Enable billing and invoicing features")
+    inventory_enabled = models.BooleanField(default=True, help_text="Enable inventory management")
+    messaging_enabled = models.BooleanField(default=True, help_text="Enable internal messaging system")
+    resources_enabled = models.BooleanField(default=True, help_text="Enable resources library")
+    goals_enabled = models.BooleanField(default=True, help_text="Enable student goals tracking")
+    bands_enabled = models.BooleanField(default=True, help_text="Enable bands/ensembles management")
+    analytics_enabled = models.BooleanField(default=True, help_text="Enable analytics and reports")
+    practice_rooms_enabled = models.BooleanField(default=True, help_text="Enable practice room booking")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'feature_flags'
+        verbose_name = "Feature Flag"
+        verbose_name_plural = "Feature Flags"
+    
+    def __str__(self):
+        return f"Features for {self.studio.name}"
+    
+    def get_enabled_features(self):
+        """Return list of enabled feature names"""
+        return [
+            field.name.replace('_enabled', '')
+            for field in self._meta.fields
+            if field.name.endswith('_enabled') and getattr(self, field.name)
+        ]
+    
+    def get_disabled_features(self):
+        """Return list of disabled feature names"""
+        return [
+            field.name.replace('_enabled', '')
+            for field in self._meta.fields
+            if field.name.endswith('_enabled') and not getattr(self, field.name)
+        ]

@@ -46,18 +46,24 @@ class FamilySerializer(serializers.ModelSerializer):
     def get_students_count(self, obj):
         return obj.students.count()
 
+class SimpleStudioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Studio
+        fields = ['id', 'name', 'address_line1', 'city', 'state', 'postal_code', 'country', 'settings']
+
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for user profile management"""
     full_name = serializers.SerializerMethodField()
     student_profile = serializers.SerializerMethodField()
     teacher_profile = serializers.SerializerMethodField()
+    studio = serializers.SerializerMethodField()
     
     class Meta:
         model = User
         fields = [
             'id', 'email', 'first_name', 'last_name', 'full_name', 
             'phone', 'role', 'timezone', 'avatar', 'preferences',
-            'student_profile', 'teacher_profile', 'is_active'
+            'student_profile', 'teacher_profile', 'studio', 'is_active'
         ]
         read_only_fields = ['id', 'email', 'full_name']
 
@@ -116,8 +122,21 @@ class UserSerializer(serializers.ModelSerializer):
             teacher = obj.teacher_profile
             return {
                 'id': teacher.id,
-                'students_count': teacher.primary_students.count()
+                'students_count': teacher.primary_students.count(),
+                'studio_id': teacher.studio_id
             }
+        return None
+
+    def get_studio(self, obj):
+        # Return studio for owner or teacher
+        studio = None
+        if hasattr(obj, 'owned_studios') and obj.owned_studios.exists():
+            studio = obj.owned_studios.first()
+        elif obj.role == 'teacher' and hasattr(obj, 'teacher_profile'):
+            studio = obj.teacher_profile.studio
+            
+        if studio:
+            return SimpleStudioSerializer(studio).data
         return None
 
 class StudioSerializer(serializers.ModelSerializer):
@@ -247,6 +266,21 @@ class SetupWizardCompleteSerializer(serializers.Serializer):
     business_start_hour = serializers.IntegerField(default=9, min_value=0, max_value=23)
     business_end_hour = serializers.IntegerField(default=18, min_value=0, max_value=23)
 
+    # Step: Expanded Business Rules (Billing, Scheduling, Events)
+    # Billing
+    default_hourly_rate = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, min_value=0)
+    tax_rate = serializers.DecimalField(max_digits=5, decimal_places=2, default=0, min_value=0, max_value=100)
+    charge_tax_on_lessons = serializers.BooleanField(default=False)
+    invoice_due_days = serializers.IntegerField(default=14, min_value=0)
+    invoice_footer_text = serializers.CharField(required=False, allow_blank=True)
+
+    # Scheduling
+    cancellation_notice_period = serializers.IntegerField(default=24, min_value=0, help_text="Hours notice required")
+    enable_online_booking = serializers.BooleanField(default=False)
+
+    # Events
+    default_event_duration = serializers.IntegerField(default=60, min_value=15, max_value=480)
+
     # Step: Email Settings
     smtp_host = serializers.CharField(max_length=255, required=False, allow_blank=True)
     smtp_port = serializers.IntegerField(default=587)
@@ -266,10 +300,8 @@ class SetupWizardCompleteSerializer(serializers.Serializer):
 
     def validate(self, data):
         """Cross-field validation"""
-        if data.get('business_end_hour', 18) <= data.get('business_start_hour', 9):
-            raise serializers.ValidationError({
-                'business_end_hour': 'End hour must be after start hour'
-            })
+        # Removed validation for business_end_hour > business_start_hour
+        # to support overnight schedules (e.g. 4 PM to 2 AM)
         return data
 
 

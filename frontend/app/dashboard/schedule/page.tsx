@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useUser } from '@/contexts/UserContext'
-import { useLessons, useStudents, useTeachers, useBands, useRooms } from '@/hooks/useDashboardData'
+import { useLessons, useStudents, useTeachers, useBands, useRooms, useStudios } from '@/hooks/useDashboardData'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
 import { format, addDays, startOfWeek, addMinutes, setHours, setMinutes, parseISO, isSameDay, getHours } from 'date-fns'
@@ -45,6 +45,20 @@ export default function SchedulePage() {
     const { teachers } = useTeachers()
     const { bands } = useBands()
     const { rooms } = useRooms()
+    const { studios } = useStudios()
+    
+    // Studio Settings for Business Hours
+    const currentStudio = studios?.[0]
+    const businessStart = currentStudio?.settings?.business_start_hour ?? 8
+    const businessEnd = currentStudio?.settings?.business_end_hour ?? 21
+    
+    // Determine if overnight schedule (e.g. 4 PM to 2 AM)
+    const isOvernight = businessEnd < businessStart
+
+    // Set fallback defaults for booking state
+    const [bookingDefaults, setBookingDefaults] = useState({
+        time: `${businessStart.toString().padStart(2, '0')}:00`
+    })
 
     const [newBooking, setNewBooking] = useState<LessonBooking>({
         student: '',
@@ -52,7 +66,7 @@ export default function SchedulePage() {
         band: '',
         room: '',
         date: '',
-        time: '09:00',
+        time: bookingDefaults.time,
         duration: 60,
         lesson_type: 'private'
     })
@@ -61,21 +75,34 @@ export default function SchedulePage() {
 
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
-    // Time slots (8 AM - 9 PM)
-    const startHour = 8
-    const endHour = 21
-    const timeSlots = Array.from({ length: endHour - startHour + 1 }, (_, i) => i + startHour)
+    // Time slots generation
+    const timeSlots = (() => {
+        if (!isOvernight) {
+             return Array.from({ length: businessEnd - businessStart + 1 }, (_, i) => i + businessStart)
+        } else {
+             // Example: Start 16, End 2 -> [16...23, 0...2]
+             const pmSlots = Array.from({ length: 24 - businessStart }, (_, i) => i + businessStart)
+             const amSlots = Array.from({ length: businessEnd + 1 }, (_, i) => i)
+             return [...pmSlots, ...amSlots]
+        }
+    })()
 
     // Accurate time dropdown options (15 min intervals)
     const timeOptions = (() => {
-        const options = []
-        let currentTime = setMinutes(setHours(new Date(), startHour), 0)
-        const endTime = setMinutes(setHours(new Date(), endHour), 0)
-
-        while (currentTime <= endTime) {
-            options.push(format(currentTime, 'HH:mm'))
-            currentTime = addMinutes(currentTime, 15)
-        }
+        const options: string[] = []
+        
+        timeSlots.forEach(hour => {
+            const date = new Date()
+            date.setHours(hour, 0, 0, 0)
+            
+            // Generate 4 slots per hour: 00, 15, 30, 45
+            for (let i = 0; i < 4; i++) {
+                // If it's the last hour, check if we should include all minutes? 
+                // Usually yes, unless it's strictly "End at 5:00" vs "End at 5:59"
+                // Let's include full hour slots for the displayed range.
+                options.push(format(addMinutes(date, i * 15), 'HH:mm'))
+            }
+        })
         return options
     })()
 
@@ -133,7 +160,7 @@ export default function SchedulePage() {
             await api.post('/lessons/', payload)
             toast.success('Lesson booked successfully')
             setShowBookingModal(false)
-            setNewBooking({ student: '', teacher: '', band: '', room: '', date: '', time: '09:00', duration: 60, lesson_type: 'private' })
+            setNewBooking({ student: '', teacher: '', band: '', room: '', date: '', time: bookingDefaults.time, duration: 60, lesson_type: 'private' })
             refetchLessons()
         } catch (error) {
             console.error(error)
@@ -144,7 +171,14 @@ export default function SchedulePage() {
     }
 
     const getLessonsForSlot = (dayIdx: number, hour: number) => {
-        const targetDate = weekDays[dayIdx]
+        let targetDate = weekDays[dayIdx]
+        
+        // Handle overnight logic: if it's an overnight schedule and the hour is in the early morning (<= end),
+        // it belongs to the "next day" physically, but same "schedule column".
+        if (isOvernight && hour <= businessEnd) {
+             targetDate = addDays(targetDate, 1)
+        }
+        
         return lessons.filter((lesson: any) => {
             const lessonUserDate = parseISO(lesson.scheduled_start)
             return isSameDay(lessonUserDate, targetDate) && getHours(lessonUserDate) === hour

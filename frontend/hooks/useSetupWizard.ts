@@ -39,6 +39,17 @@ const INITIAL_DATA: SetupWizardData = {
         default_lesson_duration: 60,
         business_start_hour: 9,
         business_end_hour: 18,
+        // Billing
+        default_hourly_rate: 0,
+        tax_rate: 0,
+        charge_tax_on_lessons: false,
+        invoice_due_days: 14,
+        invoice_footer_text: '',
+        // Scheduling
+        cancellation_notice_period: 24,
+        enable_online_booking: false,
+        // Events
+        default_event_duration: 60,
     },
     email_settings: {
         smtp_host: '',

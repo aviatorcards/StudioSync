@@ -79,12 +79,26 @@ export default function SettingsPage() {
 
     // Studio settings
     const [studioSettings, setStudioSettings] = useState({
-        studio_name: currentUser?.preferences?.studio?.studio_name ?? '',
-        studio_address: currentUser?.preferences?.studio?.studio_address ?? '',
-        default_lesson_duration: currentUser?.preferences?.studio?.default_lesson_duration ?? '60',
-        cancellation_notice: currentUser?.preferences?.studio?.cancellation_notice ?? '24',
-        studio_description: currentUser?.preferences?.studio?.studio_description ?? ''
+        studio_name: '',
+        studio_address: '',
+        default_lesson_duration: '60',
+        cancellation_notice: '24',
+        studio_description: ''
     })
+
+    // Initialize studio settings from user profile
+    useState(() => {
+        if (currentUser?.studio) {
+            const s = currentUser.studio
+            setStudioSettings({
+                studio_name: s.name || '',
+                studio_address: s.address_line1 || '',
+                default_lesson_duration: s.settings?.default_lesson_duration?.toString() || '60',
+                cancellation_notice: s.settings?.cancellation_notice_period?.toString() || '24',
+                studio_description: s.settings?.studio_description || ''
+            })
+        }
+    }, [currentUser])
 
     // Technical settings (SMTP/SMS) - Admin only
     const [technicalSettings, setTechnicalSettings] = useState({
@@ -213,22 +227,53 @@ export default function SettingsPage() {
     const handleSaveSettings = async (settingsType: string, settings: any) => {
         setLoading(true)
         try {
-            const updatedPreferences = {
-                ...currentUser?.preferences,
-                [settingsType.toLowerCase()]: settings
-            }
+            if (settingsType === 'Studio') {
+                // Fetch current studio to get latest settings for merging
+                const currentStudioRes = await api.get('/core/studios/current/')
+                const currentStudio = currentStudioRes.data
+                const currentSettings = currentStudio.settings || {}
 
-            const response = await api.patch('/core/users/me/', {
-                preferences: updatedPreferences
-            })
+                // Prepare update payload
+                const updatePayload = {
+                    name: settings.studio_name,
+                    address_line1: settings.studio_address,
+                    settings: {
+                        ...currentSettings,
+                        default_lesson_duration: parseInt(settings.default_lesson_duration),
+                        cancellation_notice_period: parseInt(settings.cancellation_notice),
+                        studio_description: settings.studio_description
+                    }
+                }
 
-            setCurrentUser(response.data)
-            toast.success(`${settingsType} settings saved successfully`)
+                const response = await api.patch('/core/studios/current/', updatePayload)
+                
+                // Update local user context if needed (though usually we'd refresh the whole user)
+                // For now, assume the toast suggests success
+                toast.success('Studio settings saved successfully')
+                
+                // Refresh user to get updated studio embedded data
+                const userRes = await api.get('/core/users/me/')
+                setCurrentUser(userRes.data)
 
-            if (settingsType.toLowerCase() === 'appearance') {
-                setTimeout(() => {
-                    window.location.reload()
-                }, 500)
+            } else {
+                // Handle User Preferences (Appearance, Communication, Notifications)
+                const updatedPreferences = {
+                    ...currentUser?.preferences,
+                    [settingsType.toLowerCase()]: settings
+                }
+
+                const response = await api.patch('/core/users/me/', {
+                    preferences: updatedPreferences
+                })
+
+                setCurrentUser(response.data)
+                toast.success(`${settingsType} settings saved successfully`)
+
+                if (settingsType.toLowerCase() === 'appearance') {
+                    setTimeout(() => {
+                        window.location.reload()
+                    }, 500)
+                }
             }
         } catch (error) {
             console.error(`Failed to save ${settingsType} settings:`, error)
@@ -694,13 +739,13 @@ export default function SettingsPage() {
                                     <p className="text-xs text-gray-500 mb-4">Choose your preferred accent color for buttons, links, and highlights throughout the dashboard</p>
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                         {[
-                                            { value: 'orange', color: '#1ABC9C', name: 'Orange' },
+                                            { value: 'orange', color: '#F39C12', name: 'Orange' },
                                             { value: 'blue', color: '#3498DB', name: 'Blue' },
-                                            { value: 'green', color: '#27AE60', name: 'Green' },
+                                            { value: 'green', color: '#2ECC71', name: 'Green' },
                                             { value: 'purple', color: '#9B59B6', name: 'Purple' },
                                             { value: 'red', color: '#E74C3C', name: 'Red' },
                                             { value: 'teal', color: '#1ABC9C', name: 'Teal' },
-                                            { value: 'indigo', color: '#5D6D7E', name: 'Indigo' },
+                                            { value: 'indigo', color: '#34495E', name: 'Indigo' },
                                             { value: 'pink', color: '#EC7063', name: 'Pink' }
                                         ].map(scheme => (
                                             <button

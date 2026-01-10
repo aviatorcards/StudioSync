@@ -53,6 +53,20 @@ export interface QuickSettings {
   default_lesson_duration: number
   business_start_hour: number
   business_end_hour: number
+  
+  // Billing
+  default_hourly_rate?: number
+  tax_rate?: number
+  charge_tax_on_lessons?: boolean
+  invoice_due_days?: number
+  invoice_footer_text?: string
+
+  // Scheduling
+  cancellation_notice_period?: number
+  enable_online_booking?: boolean
+
+  // Events
+  default_event_duration?: number
 }
 
 export interface EmailSettings {

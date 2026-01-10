@@ -1,4 +1,5 @@
 export const colorSchemes = {
+  // Classic/Legacy
   terracotta: {
     name: 'Terracotta',
     primary: '#D98880',
@@ -6,33 +7,72 @@ export const colorSchemes = {
     primaryLight: '#FADBD8',
     primaryDark: '#B03A2E',
   },
-  ocean: {
-    name: 'Ocean',
-    primary: '#5DADE2',
-    primaryHover: '#3498DB',
+  
+  // Modern Palette
+  orange: {
+    name: 'Orange',
+    primary: '#F39C12',
+    primaryHover: '#D68910',
+    primaryLight: '#FDEBD0',
+    primaryDark: '#B9770E',
+  },
+  blue: {
+    name: 'Blue',
+    primary: '#3498DB',
+    primaryHover: '#2980B9',
     primaryLight: '#D6EAF8',
-    primaryDark: '#2874A6',
+    primaryDark: '#21618C',
   },
-  sky: {
-    name: 'Sky',
-    primary: '#85C1E9',
-    primaryHover: '#5DADE2',
-    primaryLight: '#EBF5FB',
-    primaryDark: '#2E86C1',
+  green: {
+    name: 'Green',
+    primary: '#2ECC71',
+    primaryHover: '#27AE60',
+    primaryLight: '#D5F5E3',
+    primaryDark: '#1E8449',
   },
-  slate: {
-    name: 'Slate',
-    primary: '#AAB7B8',
-    primaryHover: '#909497',
-    primaryLight: '#EAECEE',
-    primaryDark: '#566573',
+  purple: {
+    name: 'Purple',
+    primary: '#9B59B6',
+    primaryHover: '#8E44AD',
+    primaryLight: '#EBDEF0',
+    primaryDark: '#7D3C98',
+  },
+  red: {
+    name: 'Red',
+    primary: '#E74C3C',
+    primaryHover: '#C0392B',
+    primaryLight: '#FADBD8',
+    primaryDark: '#943126',
+  },
+  teal: {
+    name: 'Teal',
+    primary: '#1ABC9C',
+    primaryHover: '#16A085',
+    primaryLight: '#D1F2EB',
+    primaryDark: '#117864',
+  },
+  indigo: {
+    name: 'Indigo',
+    primary: '#34495E',
+    primaryHover: '#2C3E50',
+    primaryLight: '#D6DBDF',
+    primaryDark: '#17202A',
+  },
+  pink: {
+    name: 'Pink',
+    primary: '#EC7063',
+    primaryHover: '#E74C3C',
+    primaryLight: '#FADBD8',
+    primaryDark: '#943126',
   },
 } as const
 
 export type ColorScheme = keyof typeof colorSchemes
 
 export function applyColorScheme(scheme: ColorScheme) {
-  const colors = colorSchemes[scheme]
+  const colors = colorSchemes[scheme] || colorSchemes.blue // Fallback to blue if undefined
+  
+  if (!colors) return // Safety check
 
   // Apply CSS variables to root
   const root = document.documentElement
@@ -46,9 +86,9 @@ export function applyColorScheme(scheme: ColorScheme) {
 }
 
 export function getStoredColorScheme(): ColorScheme {
-  if (typeof window === 'undefined') return 'terracotta'
+  if (typeof window === 'undefined') return 'blue'
   const stored = localStorage.getItem('colorScheme') as ColorScheme
-  return stored && stored in colorSchemes ? stored : 'terracotta'
+  return stored && stored in colorSchemes ? stored : 'blue'
 }
 
 export function initializeColorScheme() {

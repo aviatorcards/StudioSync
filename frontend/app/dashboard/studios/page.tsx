@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useStudios } from '@/hooks/useDashboardData'
 import {
     Loader2, Plus, Building2, MapPin, Globe, Phone, Mail, Settings,
-    Sparkles, Clock, DollarSign, Calendar
+    Sparkles, Clock, DollarSign, Calendar, Palette, Camera
 } from 'lucide-react'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation'
 export default function StudiosPage() {
     const { studios, loading: studiosLoading, refetch } = useStudios()
     const router = useRouter()
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     // Determine primary studio
     const activeStudio = studios && studios.length > 0 ? studios[0] : null
@@ -37,6 +38,25 @@ export default function StudiosPage() {
         timezone: 'UTC',
         is_active: true
     })
+
+    const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file || !activeStudio) return
+
+        const uploadData = new FormData()
+        uploadData.append('cover_image', file)
+
+        const toastId = toast.loading('Uploading cover image...')
+
+        try {
+            await api.patch('/core/studios/current/', uploadData)
+            toast.success('Cover image updated!', { id: toastId })
+            refetch()
+        } catch (error: any) {
+            console.error('Upload failed:', error)
+            toast.error('Failed to upload cover image', { id: toastId })
+        }
+    }
 
     // --- Modal Actions (Creation) ---
 
@@ -291,121 +311,213 @@ export default function StudiosPage() {
                         <Button
                             type="submit"
                             form="studio-creation-form"
-                            disabled={isSubmitting}
-                            className="flex-[2] gap-2 active:scale-95 transition-transform"
-                        >
-                            {isSubmitting ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    Initializing...
-                                </>
-                            ) : (
-                                'Complete Onboarding'
-                            )}
-                        </Button>
-                    </DialogFooter>
-                </Dialog>
-            </div>
-        )
+import { useRef } from 'react'
+import {
+    Loader2, Plus, Building2, MapPin, Globe, Phone, Mail, Settings,
+    Sparkles, Clock, DollarSign, Calendar, Palette, Camera
+} from 'lucide-react'
+
+// ... (existing imports)
+
+export default function StudiosPage() {
+    const { studios, loading: studiosLoading, refetch } = useStudios()
+    const router = useRouter()
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
+    // Determine primary studio
+    const activeStudio = studios && studios.length > 0 ? studios[0] : null
+
+    // ... (existing state)
+
+    const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file || !activeStudio) return
+
+        const uploadData = new FormData()
+        uploadData.append('cover_image', file)
+
+        const toastId = toast.loading('Uploading cover image...')
+
+        try {
+            await api.patch('/core/studios/current/', uploadData)
+            toast.success('Cover image updated!', { id: toastId })
+            refetch()
+        } catch (error: any) {
+            console.error('Upload failed:', error)
+            toast.error('Failed to upload cover image', { id: toastId })
+        }
     }
+
+    // ... (existing render logic)
 
     // Case 2: Studio Exists -> Simple Details View
     return (
-        <div className="max-w-5xl mx-auto px-6 py-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-                <div className="space-y-2">
-                    <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">{activeStudio.name}</h1>
-                    <p className="text-gray-500 font-medium flex items-center gap-2">
-                        <MapPin className="w-4 h-4" />
-                        {activeStudio.city}, {activeStudio.state} {activeStudio.country}
-                    </p>
-                </div>
-                <Button
-                    onClick={() => router.push('/dashboard/settings')}
-                    className="gap-2 px-6 py-6 shadow-xl shadow-primary/10 transition-all font-bold"
+        <div className="max-w-[1600px] mx-auto px-6 py-8 animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8">
+            {/* Hero Section */}
+            <div className="relative w-full h-64 md:h-80 rounded-[2.5rem] overflow-hidden group shadow-2xl">
+                {/* File Input */}
+                <input 
+                    type="file" 
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleCoverUpload}
+                />
+                
+                {/* Upload Button */}
+                <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute top-6 right-6 z-20 bg-black/30 hover:bg-black/50 text-white p-3 rounded-full backdrop-blur-md transition-all"
+                    title="Change Cover Image"
                 >
-                    <Settings className="w-4 h-4" />
-                    Configure Settings
-                </Button>
-            </div>
+                    <Camera className="w-5 h-5" />
+                </button>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Info Card */}
-                <div className="md:col-span-2 bg-white rounded-3xl border border-gray-100 p-8 shadow-sm space-y-8">
-                    <div className="flex items-center gap-4 border-b border-gray-50 pb-6">
-                        <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
-                            <Building2 className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h3 className="text-lg font-black text-gray-900">Studio Details</h3>
-                            <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Operational Information</p>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-8 gap-x-12">
-                        <div className="space-y-1">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Address</span>
-                            <p className="font-medium text-gray-900">
-                                {activeStudio.address_line1}<br />
-                                {activeStudio.address_line2 && <>{activeStudio.address_line2}<br /></>}
-                                {activeStudio.city}, {activeStudio.state} {activeStudio.postal_code}
-                            </p>
+                {/* Background Image / Gradient */}
+                <div 
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
+                    style={{ 
+                        backgroundImage: activeStudio.cover_image 
+                            ? `url(${activeStudio.cover_image})` 
+                            : activeStudio.settings?.cover_image 
+                                ? `url(${activeStudio.settings.cover_image})` 
+                                : 'none',
+                        background: (activeStudio.cover_image || activeStudio.settings?.cover_image) 
+                            ? undefined 
+                            : 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)'
+                    }}
+                />
+                <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors duration-500" />
+                
+                {/* Content */}
+                <div className="absolute bottom-0 left-0 p-8 md:p-12 w-full flex flex-col md:flex-row items-end justify-between gap-6">
+                    <div className="flex items-end gap-6">
+                        {/* Logo */}
+                        <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-3xl shadow-xl flex items-center justify-center overflow-hidden border-4 border-white transform translate-y-4 md:translate-y-0 group-hover:-translate-y-2 transition-transform duration-500">
+                            {activeStudio.settings?.logo_url ? (
+                                <img src={activeStudio.settings.logo_url} alt="Logo" className="w-full h-full object-cover" />
+                            ) : (
+                                <Building2 className="w-10 h-10 md:w-12 md:h-12 text-gray-300" />
+                            )}
                         </div>
                         
-                         <div className="space-y-1">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contact</span>
-                            <div className="space-y-2 mt-1">
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <Mail className="w-3.5 h-3.5" />
-                                    {activeStudio.email}
-                                </div>
-                                {activeStudio.phone && (
-                                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                                        <Phone className="w-3.5 h-3.5" />
-                                        {activeStudio.phone}
-                                    </div>
-                                )}
-                                 {activeStudio.website && (
-                                    <div className="flex items-center gap-2 text-sm text-primary">
-                                        <Globe className="w-3.5 h-3.5" />
-                                        <a href={activeStudio.website} target="_blank" rel="noreferrer" className="hover:underline">
-                                            {activeStudio.website.replace(/^https?:\/\//, '')}
-                                        </a>
-                                    </div>
-                                )}
+                        <div className="mb-2 text-white shadow-sm">
+                            <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-2 drop-shadow-md">{activeStudio.name}</h1>
+                            <p className="font-medium text-white/90 flex items-center gap-2 text-sm md:text-base drop-shadow">
+                                <MapPin className="w-4 h-4" />
+                                {[activeStudio.city, activeStudio.state, activeStudio.country].filter(Boolean).join(', ')}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <Button
+                        onClick={() => router.push('/dashboard/settings')}
+                        className="bg-white/20 hover:bg-white/30 text-white border border-white/40 backdrop-blur-md gap-2 px-6 py-6 rounded-2xl transition-all font-bold mb-2 shadow-lg"
+                    >
+                        <Settings className="w-5 h-5" />
+                        Configure Studio
+                    </Button>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Info Card */}
+                <div className="lg:col-span-2 space-y-8">
+                     {/* Operational Details */}
+                    <div className="bg-white rounded-[2rem] border border-gray-100 p-8 shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <div className="flex items-center gap-4 border-b border-gray-50 pb-6 mb-8">
+                            <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
+                                <Globe className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-black text-gray-900">Operational Details</h3>
+                                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Contact & Location</p>
                             </div>
                         </div>
 
-                         <div className="space-y-1">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">System</span>
-                            <p className="text-sm font-medium text-gray-900 flex items-center gap-2">
-                                <Globe className="w-3.5 h-3.5 text-gray-400" />
-                                {activeStudio.timezone}
-                            </p>
-                             <p className="text-sm font-medium text-gray-900 flex items-center gap-2 mt-1">
-                                <DollarSign className="w-3.5 h-3.5 text-gray-400" />
-                                {activeStudio.currency}
-                            </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-10 gap-x-12">
+                            <div className="space-y-2">
+                                <span className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                    <MapPin className="w-3 h-3" /> Address
+                                </span>
+                                <p className="font-medium text-gray-900 leading-relaxed text-lg">
+                                    {activeStudio.address_line1}<br />
+                                    {activeStudio.address_line2 && <>{activeStudio.address_line2}<br /></>}
+                                    <span className="text-gray-500">{activeStudio.city}, {activeStudio.state} {activeStudio.postal_code}</span>
+                                </p>
+                            </div>
+                            
+                             <div className="space-y-2">
+                                <span className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                    <Phone className="w-3 h-3" /> Contact Methods
+                                </span>
+                                <div className="space-y-3 mt-1">
+                                    <div className="flex items-center gap-3 text-gray-700 bg-gray-50/50 p-3 rounded-xl border border-gray-100">
+                                        <Mail className="w-4 h-4 text-gray-400" />
+                                        <span className="font-medium">{activeStudio.email}</span>
+                                    </div>
+                                    {activeStudio.phone && (
+                                        <div className="flex items-center gap-3 text-gray-700 bg-gray-50/50 p-3 rounded-xl border border-gray-100">
+                                            <Phone className="w-4 h-4 text-gray-400" />
+                                            <span className="font-medium">{activeStudio.phone}</span>
+                                        </div>
+                                    )}
+                                     {activeStudio.website && (
+                                        <div className="flex items-center gap-3 text-indigo-600 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100/50 hover:bg-indigo-50 transition-colors cursor-pointer" onClick={() => window.open(activeStudio.website, '_blank')}>
+                                            <Globe className="w-4 h-4" />
+                                            <span className="font-bold">{activeStudio.website.replace(/^https?:\/\//, '')}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Quick Actions / Stats Placeholder */}
+                {/* Sidebar: Quick Actions & Branding */}
                 <div className="space-y-6">
-                    <div className="bg-primary text-white rounded-3xl p-8 shadow-xl shadow-primary/20 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
-                        <h3 className="text-lg font-black mb-1">Quick Actions</h3>
-                        <p className="text-primary-foreground/80 text-sm mb-6">Manage your studio operations</p>
+                    {/* Quick Actions */}
+                    <div className="bg-gray-900 text-white rounded-[2rem] p-8 shadow-2xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl opacity-30 group-hover:opacity-50 transition-opacity duration-700" />
+                        <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl opacity-20 group-hover:opacity-40 transition-opacity duration-700" />
+                        
+                        <h3 className="text-xl font-black mb-2 relative z-10">Studio Command</h3>
+                        <p className="text-gray-400 text-sm mb-8 relative z-10">Manage your daily operations</p>
                         
                         <div className="space-y-3 relative z-10">
                             <Button 
-                                variant="secondary" 
-                                className="w-full justify-start text-primary font-bold"
+                                className="w-full justify-start text-gray-900 bg-white hover:bg-gray-100 font-bold h-auto py-4 px-6 rounded-xl"
                                 onClick={() => router.push('/dashboard/schedule')}
                             >
-                                <Calendar className="w-4 h-4 mr-2" />
-                                View Schedule
+                                <Calendar className="w-5 h-5 mr-3 text-indigo-600" />
+                                Master Schedule
+                            </Button>
+                             <Button 
+                                variant="ghost"
+                                className="w-full justify-start text-white hover:bg-white/10 font-bold h-auto py-4 px-6 rounded-xl border border-white/10"
+                                onClick={() => router.push('/dashboard/students')}
+                            >
+                                <Sparkles className="w-5 h-5 mr-3 text-yellow-400" />
+                                Student Roster
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Branding Preview Mini-Card */}
+                    <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-[2rem] p-8 text-white relative overflow-hidden">
+                        <div className="relative z-10">
+                             <div className="flex items-center gap-3 mb-4">
+                                <Palette className="w-5 h-5 text-white/80" />
+                                <h4 className="font-bold text-lg">Identity & Theme</h4>
+                            </div>
+                            <p className="text-white/80 text-sm mb-6 leading-relaxed">
+                                Customize your studio's digital presence. Your brand color communicates your vibe.
+                            </p>
+                            <Button 
+                                onClick={() => router.push('/dashboard/settings?tab=appearance')}
+                                className="w-full bg-white text-indigo-600 hover:bg-gray-50 font-bold border-none shadow-lg py-6 rounded-xl"
+                            >
+                                Open Visual Editor
                             </Button>
                         </div>
                     </div>

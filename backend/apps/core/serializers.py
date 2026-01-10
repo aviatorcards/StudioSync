@@ -49,7 +49,7 @@ class FamilySerializer(serializers.ModelSerializer):
 class SimpleStudioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Studio
-        fields = ['id', 'name', 'address_line1', 'city', 'state', 'postal_code', 'country', 'settings']
+        fields = ['id', 'name', 'address_line1', 'city', 'state', 'postal_code', 'country', 'settings', 'cover_image']
 
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for user profile management"""
@@ -146,7 +146,7 @@ class StudioSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'subdomain', 'email', 'phone', 'website',
             'address_line1', 'address_line2', 'city', 'state', 'postal_code', 'country',
-            'timezone', 'currency', 'settings'
+            'timezone', 'currency', 'settings', 'cover_image'
         ]
         read_only_fields = ['id', 'owner']
 

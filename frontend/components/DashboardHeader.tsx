@@ -106,6 +106,12 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
         toast.success('All notifications marked as read')
     }
 
+    const clearAllNotifications = async () => {
+        setNotifications([])
+        await saveNotificationsToBackend([])
+        toast.success('All notifications cleared')
+    }
+
     const handleNotificationClick = async (notification: Notification) => {
         // Mark as read
         const updatedNotifications = notifications.map((n: Notification) =>
@@ -166,14 +172,25 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
                                 <div className="absolute right-0 mt-2 w-80 bg-white border rounded-lg shadow-lg z-50 animate-in fade-in zoom-in-95 duration-200 ring-1 ring-black/5 antialiased">
                                     <div className="p-3 border-b flex justify-between items-center bg-gray-50/50">
                                         <h3 className="font-semibold text-sm">Notifications</h3>
-                                        <Button
-                                            variant="link"
-                                            size="sm"
-                                            onClick={markAllAsRead}
-                                            className="h-auto p-0 text-xs text-primary hover:underline cursor-pointer shadow-none"
-                                        >
-                                            Mark all read
-                                        </Button>
+                                        <div className="flex gap-2">
+                                            <Button
+                                                variant="link"
+                                                size="sm"
+                                                onClick={markAllAsRead}
+                                                className="h-auto p-0 text-xs text-primary hover:underline cursor-pointer shadow-none"
+                                            >
+                                                Mark all read
+                                            </Button>
+                                            <span className="text-gray-300">|</span>
+                                            <Button
+                                                variant="link"
+                                                size="sm"
+                                                onClick={clearAllNotifications}
+                                                className="h-auto p-0 text-xs text-gray-500 hover:text-gray-700 hover:underline cursor-pointer shadow-none"
+                                            >
+                                                Clear all
+                                            </Button>
+                                        </div>
                                     </div>
                                     <div className="max-h-[300px] overflow-y-auto">
                                         {notifications.map((notification) => (

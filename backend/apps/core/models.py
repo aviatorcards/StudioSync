@@ -110,6 +110,7 @@ class Studio(models.Model):
     settings = models.JSONField(default=dict, blank=True)
     
     # Visual Layout
+    cover_image = models.ImageField(upload_to='studio_covers/', blank=True, null=True)
     layout_data = models.JSONField(default=dict, blank=True)
     
     # Flags

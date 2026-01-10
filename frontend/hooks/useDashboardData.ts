@@ -41,7 +41,54 @@ export function useDashboardStats() {
     fetchStats();
   }, []);
 
+
   return { stats, loading, error };
+}
+
+export interface RevenueData {
+  month: string;
+  revenue: number;
+}
+
+export interface StudentGrowthData {
+  month: string;
+  students: number;
+}
+
+export interface AttendanceData {
+  name: string;
+  value: number;
+}
+
+export interface DashboardAnalytics {
+  revenue_trend: RevenueData[];
+  student_growth: StudentGrowthData[];
+  attendance: AttendanceData[];
+}
+
+export function useDashboardAnalytics() {
+    const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchAnalytics = async () => {
+            try {
+                const response = await api.get("/core/analytics/");
+                setAnalytics(response.data);
+                setError(null);
+            } catch (err) {
+                console.error("Failed to fetch dashboard analytics", err);
+                setError("Failed to load analytics data");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchAnalytics();
+    }, []);
+
+    return { analytics, loading, error };
 }
 
 export function useStudents(params?: any) {

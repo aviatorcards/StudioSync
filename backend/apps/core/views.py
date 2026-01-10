@@ -428,10 +428,18 @@ class StudioViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # Users can only see studios they own or are associated with
-        if self.request.user.role == 'admin':
-            return Studio.objects.filter(owner=self.request.user)
-        # TODO: Add logic for teachers/students to see their studio details (read-only)
-        return Studio.objects.none()
+        user = self.request.user
+
+        if user.role == 'admin':
+            return Studio.objects.filter(owner=user)
+        elif hasattr(user, 'teacher_profile') and user.teacher_profile:
+            # Teachers see their studio (read-only via permissions)
+            return Studio.objects.filter(id=user.teacher_profile.studio.id)
+        elif hasattr(user, 'student_profile') and user.student_profile:
+            # Students see their studio (read-only via permissions)
+            return Studio.objects.filter(id=user.student_profile.studio.id)
+        else:
+            return Studio.objects.none()
 
     @action(detail=False, methods=['get', 'put', 'patch'])
     def current(self, request):

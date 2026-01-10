@@ -595,7 +595,7 @@ export default function Home() {
                 Join 500+ music studios
               </motion.div>
 
-              <h1 className="text-6xl md:text-8xl font-bold mb-6 leading-tight">
+              <h1 className="text-6xl md:text-8xl font-extrabold mb-6 leading-tight">
                 <span className="block bg-gradient-to-r from-earth-dark via-earth-primary to-earth-dark bg-clip-text text-transparent">
                   Orchestrate
                 </span>
@@ -604,11 +604,11 @@ export default function Home() {
                 </span>
               </h1>
 
-              <p className="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto mb-12 leading-relaxed font-light">
+              <p className="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto mb-12 leading-relaxed font-normal">
                 The all-in-one platform that harmonizes{' '}
-                <span className="font-semibold text-earth-dark">students</span>,{' '}
-                <span className="font-semibold text-olive-dark">scheduling</span>, and{' '}
-                <span className="font-semibold text-earth-primary">billing</span>{' '}
+                <span className="font-semibold bg-gradient-to-r from-earth-primary to-earth-dark bg-clip-text text-transparent">students</span>,{' '}
+                <span className="font-semibold bg-gradient-to-r from-olive-primary to-olive-dark bg-clip-text text-transparent">scheduling</span>, and{' '}
+                <span className="font-semibold bg-gradient-to-r from-earth-dark to-olive-primary bg-clip-text text-transparent">billing</span>{' '}
                 — so you can focus on what matters: making music.
               </p>
 

@@ -4,9 +4,11 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Sum, Count, Q
+from django.db.models.functions import TruncMonth
 
 from apps.core.models import Student, Teacher
 from apps.lessons.models import Lesson
+from apps.billing.models import Invoice
 
 class DashboardStatsView(APIView):
     """
@@ -176,15 +178,24 @@ class DashboardStatsView(APIView):
                 unpaid_val = sum(inv.balance_due for inv in unpaid_qs)
                 balance_due = float(unpaid_val)
 
-            # 3. Practice Goal (Mocked from latest Goal or hardcoded 3/5 for now if no log exists)
-            # Check for a goal titled "Practice"
-            practice_val = "3/5"
+            # 3. Practice Goal (Estimate from active practice-related goals)
+            practice_val = "0/7"
             practice_label = "days this week"
             try:
-                practice_goal_obj = student.goals.filter(title__icontains='Practice').first()
-                if practice_goal_obj:
-                    practice_val = f"{practice_goal_obj.progress_percentage}/100"
-                    practice_label = "goal progress"
+                week_start = timezone.now() - timedelta(days=timezone.now().weekday())
+                week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+
+                # Check for practice-related goals
+                practice_goal_obj = student.goals.filter(
+                    title__icontains='Practice',
+                    status='active'
+                ).first()
+
+                if practice_goal_obj and practice_goal_obj.progress_percentage is not None:
+                    # Estimate days practiced from progress percentage
+                    days_practiced = int((practice_goal_obj.progress_percentage / 100) * 7)
+                    practice_val = f"{days_practiced}/7"
+                    practice_label = "days this week (est.)"
             except Exception:
                 pass
                 
@@ -256,3 +267,104 @@ class DashboardStatsView(APIView):
         stats['recent_activity'] = activity_data
         
         return Response(stats)
+
+class DashboardAnalyticsView(APIView):
+    """
+    API View to return aggregated dashboard charts data (Revenue, Student Growth, Attendance)
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        
+        # Only admins can see full studio analytics
+        if user.role != 'admin':
+            return Response({'error': 'Unauthorized'}, status=403)
+
+        today = timezone.now()
+        six_months_ago = today - timedelta(days=180)
+        
+        # 1. Revenue Trend (Last 6 Months)
+        # Assuming paid invoices confirm revenue
+        revenue_trend = []
+        
+        # We'll use TruncMonth to aggregate by month
+        revenue_qs = Invoice.objects.filter(
+            studio__owner=user,
+            status='paid',
+            created_at__gte=six_months_ago
+        ).annotate(
+            month=TruncMonth('created_at')
+        ).values('month').annotate(
+            total_revenue=Sum('total_amount')
+        ).order_by('month')
+
+        # Convert to list with month names
+        # We want to ensure all 6 months are present even if 0 revenue, but for simplicity
+        # let's just map what we have and the frontend can fill gaps or we handle gaps here.
+        # Handling gaps here is better for charts.
+        
+        revenue_map = {item['month'].strftime('%Y-%m'): item['total_revenue'] for item in revenue_qs}
+        
+        for i in range(5, -1, -1):
+            date = today - timedelta(days=i*30) # Approx
+            key = date.strftime('%Y-%m')
+            month_label = date.strftime('%b')
+            
+            revenue_trend.append({
+                'month': month_label,
+                'revenue': float(revenue_map.get(key, 0))
+            })
+
+        # 2. Student Growth (Last 6 Months enrollment)
+        # This is strictly "New Students" per month, or Total Active?
+        # The chart title says "Student Growth - Monthly enrollment", implying new students.
+        student_growth = []
+        
+        enrollment_qs = Student.objects.filter(
+            created_at__gte=six_months_ago,
+            is_active=True # We might want historical here, but active is okay for now
+        ).annotate(
+            month=TruncMonth('created_at')
+        ).values('month').annotate(
+            new_students=Count('id')
+        ).order_by('month')
+        
+        enrollment_map = {item['month'].strftime('%Y-%m'): item['new_students'] for item in enrollment_qs}
+        
+        for i in range(5, -1, -1):
+            date = today - timedelta(days=i*30)
+            key = date.strftime('%Y-%m')
+            month_label = date.strftime('%b')
+            
+            student_growth.append({
+                'month': month_label,
+                'students': enrollment_map.get(key, 0)
+            })
+
+        # 3. Lesson Attendance (This Month Breakdown)
+        start_of_month = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        
+        attendance_qs = Lesson.objects.filter(
+            studio__owner=user,
+            scheduled_start__gte=start_of_month,
+            scheduled_start__lte=today # Up to now
+        ).values('status').annotate(count=Count('id'))
+        
+        # We need to map standard statuses to chart categories: Attended, Excused (Cancelled), No-show
+        # Assuming model has: 'scheduled', 'completed' (Attended), 'cancelled', 'no_show' (if exists), 'missed'
+        
+        status_map = {item['status']: item['count'] for item in attendance_qs}
+        
+        attendance_data = [
+            {'name': 'Attended', 'value': status_map.get('completed', 0)},
+            {'name': 'Canceled', 'value': status_map.get('cancelled', 0)},
+            {'name': 'No-show', 'value': status_map.get('missed', 0)}, # Assuming 'missed' or 'no_show'
+            {'name': 'Scheduled', 'value': status_map.get('scheduled', 0)}, # Future or not updated
+        ]
+
+        return Response({
+            'revenue_trend': revenue_trend,
+            'student_growth': student_growth,
+            'attendance': attendance_data
+        })

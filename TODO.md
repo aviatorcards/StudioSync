@@ -47,17 +47,19 @@
 - [x] Create `SetupStatus` model in `apps/core/models.py` `[backend]`
 - [x] Create `FeatureFlag` model in `apps/core/models.py` `[backend]`
 - [x] Create migration `0010_setup_wizard.py` `[backend]`
-- [ ] Apply migration: `docker compose run backend python manage.py migrate` `[backend]`
-- [ ] Create setup serializers in `apps/core/serializers.py` `[backend]`
-  - [ ] `SetupWizardSerializer` - handles complete setup data
-  - [ ] `FeatureFlagSerializer` - handles feature toggles
-- [ ] Create `SetupWizardView` API endpoint in `apps/core/views.py` `[backend]`
-  - [ ] GET `/api/setup/status/` - check if setup needed
-  - [ ] POST `/api/setup/complete/` - complete setup wizard
-  - [ ] Validate all input data
-  - [ ] Create studio, admin user, feature flags
-  - [ ] Return auth token for auto-login
-- [ ] Add setup routes to `apps/core/urls.py` `[backend]`
+- [x] Apply migration: `docker compose run backend python manage.py migrate` `[backend]`
+- [x] Create setup serializers in `apps/core/serializers.py` `[backend]`
+  - [x] `SetupWizardCompleteSerializer` - handles complete setup data
+  - [x] `FeatureFlagSerializer` - handles feature toggles
+  - [x] `SetupStatusSerializer` - handles setup status
+- [x] Create setup API endpoints in `apps/core/setup_views.py` `[backend]`
+  - [x] GET `/api/core/setup/status/` - check if setup needed
+  - [x] POST `/api/core/setup/complete/` - complete setup wizard
+  - [x] Validate all input data
+  - [x] Create studio, admin user, feature flags
+  - [x] Return auth token for auto-login
+  - [x] GET/PUT `/api/core/feature-flags/` - get/update feature flags
+- [x] Add setup routes to `apps/core/urls.py` `[backend]`
 - [ ] Create management commands `[backend]`
   - [ ] `check_setup.py` - display setup status on startup
   - [ ] `create_sample_data.py` - generate sample data for testing

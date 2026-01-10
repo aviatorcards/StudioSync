@@ -1,7 +1,7 @@
 import Image from 'next/image'
 
 export const Logo = ({ className = "w-8 h-8" }: { className?: string }) => {
-    const src = process.env.NODE_ENV === 'development' ? '/logo-dev.svg' : '/logo_final.png?v=2'
+    const src = '/logo-dev.svg'
 
     return (
         <div className={`relative ${className}`}>

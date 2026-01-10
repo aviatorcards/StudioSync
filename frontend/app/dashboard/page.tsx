@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { useUser } from '@/contexts/UserContext'
-import { useDashboardStats } from '@/hooks/useDashboardData'
+import { useDashboardStats, useDashboardAnalytics } from '@/hooks/useDashboardData'
 import { useSettings } from '@/hooks/useSettings'
 import {
     DndContext,
@@ -176,6 +176,7 @@ export default function DashboardPage() {
     const { currentUser } = useUser()
     const { updateProfile } = useSettings()
     const { stats, loading, error } = useDashboardStats()
+    const { analytics, loading: analyticsLoading } = useDashboardAnalytics()
 
     // State
     const [isEditing, setIsEditing] = useState(false)
@@ -253,31 +254,10 @@ export default function DashboardPage() {
         )
     }
 
-    // Mock data for charts
-    const revenueData = [
-        { month: 'Jan', revenue: 12000 },
-        { month: 'Feb', revenue: 14500 },
-        { month: 'Mar', revenue: 13800 },
-        { month: 'Apr', revenue: 16200 },
-        { month: 'May', revenue: 18500 },
-        { month: 'Jun', revenue: 19800 },
-    ]
-
-    const studentGrowthData = [
-        { month: 'Jan', students: 45 },
-        { month: 'Feb', students: 52 },
-        { month: 'Mar', students: 48 },
-        { month: 'Apr', students: 61 },
-        { month: 'May', students: 67 },
-        { month: 'Jun', students: 73 },
-    ]
-
-    const attendanceData = [
-        { name: 'Attended', value: 156 },
-        { name: 'Excused', value: 24 },
-        { name: 'No-show', value: 8 },
-        { name: 'Canceled', value: 12 },
-    ]
+    // Use analytics data if available, otherwise default to empty arrays to prevent crashes
+    const revenueData = analytics?.revenue_trend || []
+    const studentGrowthData = analytics?.student_growth || []
+    const attendanceData = analytics?.attendance || []
 
     const overview = stats.overview
 

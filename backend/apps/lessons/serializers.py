@@ -156,3 +156,43 @@ class LessonPlanSerializer(serializers.ModelSerializer):
         if resource_ids is not None:
              plan.resources.set(resource_ids)
         return plan
+
+
+class LessonNoteSerializer(serializers.ModelSerializer):
+    """Serializer for lesson notes"""
+    teacher_name = serializers.ReadOnlyField(source='teacher.user.get_full_name')
+
+    class Meta:
+        model = LessonNote
+        fields = [
+            'id', 'lesson', 'teacher', 'teacher_name', 'content',
+            'practice_assignments', 'homework', 'pieces_practiced',
+            'progress_rating', 'strengths', 'areas_for_improvement',
+            'attachments', 'visible_to_student', 'visible_to_parent',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['teacher', 'created_at', 'updated_at']
+
+
+class RecurringPatternSerializer(serializers.ModelSerializer):
+    """Serializer for recurring lesson patterns"""
+    teacher_name = serializers.ReadOnlyField(source='teacher.user.get_full_name')
+    student_name = serializers.ReadOnlyField(source='student.user.get_full_name')
+
+    class Meta:
+        model = RecurringPattern
+        fields = [
+            'id', 'teacher', 'teacher_name', 'student', 'student_name',
+            'frequency', 'day_of_week', 'time', 'duration_minutes',
+            'start_date', 'end_date', 'is_active', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+    def validate(self, data):
+        """Validate that end_date is after start_date"""
+        if data.get('end_date') and data.get('start_date'):
+            if data['end_date'] < data['start_date']:
+                raise serializers.ValidationError({
+                    "end_date": "End date must be after start date"
+                })
+        return data

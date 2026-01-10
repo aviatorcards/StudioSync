@@ -193,7 +193,7 @@ export default function InstructorsPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {filteredTeachers.length > 0 ? filteredTeachers.map((teacher) => (
+                            {filteredTeachers.map((teacher) => (
                                 <tr key={teacher.id} className="group hover:bg-gray-50/30 transition-all">
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">

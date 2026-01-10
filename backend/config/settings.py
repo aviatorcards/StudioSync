@@ -33,6 +33,7 @@ SITE_NAME = os.getenv('SITE_NAME', 'StudioSync')
 # Application definition
 INSTALLED_APPS = [
     # Admin theme (must be before django.contrib.admin)
+    'daphne',
     'jazzmin',
     
     'django.contrib.admin',

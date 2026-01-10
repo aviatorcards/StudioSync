@@ -2,10 +2,43 @@
 const nextConfig = {
     reactStrictMode: true,
     images: {
-        domains: [
-            'localhost',
-            'minio', // MinIO in Docker
+        remotePatterns: [
+            {
+                protocol: 'http',
+                hostname: 'localhost',
+            },
+            {
+                protocol: 'http',
+                hostname: 'minio',
+            },
+            {
+                protocol: 'https',
+                hostname: 'minio',
+            },
         ],
+    },
+    // Note: allowedDevOrigins will be available in future Next.js versions
+    // For now, cross-origin dev requests work but show warnings
+    async headers() {
+        return [
+            {
+                source: '/:path*',
+                headers: [
+                    {
+                        key: 'Access-Control-Allow-Origin',
+                        value: '*',
+                    },
+                    {
+                        key: 'Access-Control-Allow-Methods',
+                        value: 'GET, POST, PUT, DELETE, OPTIONS',
+                    },
+                    {
+                        key: 'Access-Control-Allow-Headers',
+                        value: 'X-Requested-With, Content-Type, Authorization',
+                    },
+                ],
+            },
+        ];
     },
     async rewrites() {
         return [

@@ -54,20 +54,20 @@ module.exports = {
                     foreground: "hsl(var(--card-foreground))",
                 },
                 earth: {
-                    primary: '#C4704F', // Warm Terracotta
-                    dark: '#A25A3D',    // Deep Terracotta
-                    light: '#E5B299',   // Peachy Terracotta
-                    lighter: '#E8F5E9', // Soft Mint
+                    primary: '#6366F1', // Vibrant Indigo
+                    dark: '#4F46E5',    // Deep Indigo
+                    light: '#A5B4FC',   // Soft Indigo
+                    lighter: '#EEF2FF', // Very Light Indigo
                 },
                 olive: {
-                    primary: '#6B8E23', // OliveDrab
-                    dark: '#556B2F',    // DarkOliveGreen
-                    light: '#B8D490',   // Light Olive
+                    primary: '#8B5CF6', // Purple
+                    dark: '#7C3AED',    // Deep Purple
+                    light: '#C4B5FD',   // Soft Purple
                 },
                 neutral: {
-                    light: '#EFF7F0',   // Very Light Sage
-                    medium: '#D8E4C8',  // Light Sage
-                    dark: '#5A6B4F',    // Muted Olive Gray
+                    light: '#F8FAFC',   // Very Light Slate
+                    medium: '#E2E8F0',  // Light Slate
+                    dark: '#475569',    // Slate Gray
                 }
             },
             borderRadius: {

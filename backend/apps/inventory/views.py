@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
+from django.db.models import Q
 from datetime import timedelta
 from .models import InventoryItem, CheckoutLog, PracticeRoom, RoomReservation
 from .serializers import (
@@ -35,8 +36,8 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
         search = self.request.query_params.get('search')
         if search:
             queryset = queryset.filter(
-                models.Q(name__icontains=search) | 
-                models.Q(location__icontains=search)
+                Q(name__icontains=search) |
+                Q(location__icontains=search)
             )
         
         return queryset

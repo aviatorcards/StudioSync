@@ -221,7 +221,7 @@ export default function StudentsPage() {
                     <select
                         value={filterInstrument}
                         onChange={(e) => setFilterInstrument(e.target.value)}
-                        className="px-6 py-3 bg-gray-50 border-none rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-700 focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm appearance-none min-w-[180px]"
+                        className="px-4 py-3 bg-white border-2 border-transparent focus:border-primary/20 focus:ring-2 focus:ring-primary/20 focus:ring-inset rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-700 outline-none transition-all shadow-sm appearance-none min-w-[140px] text-center"
                     >
                         <option value="all">Every Instrument</option>
                         {allInstruments.map(inst => <option key={inst} value={inst}>{inst}</option>)}

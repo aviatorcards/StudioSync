@@ -14,6 +14,7 @@ class Migration(migrations.Migration):
             sql="""
                 DROP TABLE IF EXISTS feature_flags_featureflagoverride CASCADE;
                 DROP TABLE IF EXISTS feature_flags_featureflag CASCADE;
+                DROP TABLE IF EXISTS feature_flags CASCADE;
             """,
             reverse_sql=migrations.RunSQL.noop,
         ),

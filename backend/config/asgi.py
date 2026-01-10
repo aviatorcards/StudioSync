@@ -9,11 +9,11 @@ from channels.auth import AuthMiddlewareStack
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 
 import apps.messaging.routing
-from channels.auth import AuthMiddlewareStack
+from apps.core.middleware import TokenAuthMiddleware
 
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),
-    "websocket": AuthMiddlewareStack(
+    "websocket": TokenAuthMiddleware(
         URLRouter(
             apps.messaging.routing.websocket_urlpatterns
         )

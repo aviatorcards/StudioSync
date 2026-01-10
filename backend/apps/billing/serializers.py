@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Invoice, InvoiceLineItem, Payment
+from .models import Invoice, InvoiceLineItem, Payment, PaymentMethod
 
 class InvoiceLineItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -68,5 +68,38 @@ class InvoiceSerializer(serializers.ModelSerializer):
                 for item_data in line_items_data:
                     InvoiceLineItem.objects.create(invoice=instance, **item_data)
                 instance.calculate_totals()
-                
+
         return instance
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    """Serializer for payments"""
+    invoice_number = serializers.ReadOnlyField(source='invoice.invoice_number')
+    processed_by_name = serializers.ReadOnlyField(source='processed_by.get_full_name')
+
+    class Meta:
+        model = Payment
+        fields = [
+            'id', 'invoice', 'invoice_number', 'amount', 'payment_method',
+            'status', 'transaction_id', 'notes', 'processed_by',
+            'processed_by_name', 'processed_at', 'refunded_at', 'created_at'
+        ]
+        read_only_fields = ['processed_by', 'processed_at', 'created_at']
+
+
+class PaymentMethodSerializer(serializers.ModelSerializer):
+    """Serializer for payment methods"""
+    display_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PaymentMethod
+        fields = [
+            'id', 'band', 'provider', 'provider_payment_method_id',
+            'card_last_four', 'card_brand', 'expiry_month', 'expiry_year',
+            'is_default', 'is_active', 'display_name', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+    def get_display_name(self, obj):
+        """Get friendly display name for payment method"""
+        return str(obj)

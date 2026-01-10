@@ -1,6 +1,7 @@
-from rest_framework import viewsets, permissions, filters, status
+from rest_framework import viewsets, permissions, filters, status, serializers as drf_serializers
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
+from django.db.models import Q
 from .models import Resource
 from .serializers import ResourceSerializer
 
@@ -14,7 +15,40 @@ class ResourceViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        # If Admin/Teacher, show studio resources
-        # If Student, show publicly shared resources?
-        # For MVP, assuming Admin context mostly.
-        return Resource.objects.filter(studio__owner=user)
+        qs = Resource.objects.select_related('studio', 'uploaded_by')
+
+        if user.role == 'admin':
+            # Admin sees all resources in their studio(s)
+            qs = qs.filter(studio__owner=user)
+        elif hasattr(user, 'teacher_profile') and user.teacher_profile:
+            # Teacher sees all resources in their studio
+            studio = user.teacher_profile.studio
+            qs = qs.filter(studio=studio)
+        elif hasattr(user, 'student_profile') and user.student_profile:
+            # Student sees public resources in their studio
+            student = user.student_profile
+            studio = student.studio
+            qs = qs.filter(studio=studio, is_public=True)
+        else:
+            qs = qs.none()
+
+        return qs
+
+    def perform_create(self, serializer):
+        """Assign studio and uploader based on user role"""
+        user = self.request.user
+        studio = None
+
+        # Determine studio based on user role
+        if hasattr(user, 'teacher_profile') and user.teacher_profile:
+            studio = user.teacher_profile.studio
+        elif hasattr(user, 'student_profile') and user.student_profile:
+            studio = user.student_profile.studio
+        elif user.role == 'admin':
+            from apps.core.models import Studio
+            studio = Studio.objects.filter(owner=user).first()
+
+        if not studio:
+            raise drf_serializers.ValidationError("Cannot determine studio context for this user")
+
+        serializer.save(uploaded_by=user, studio=studio)

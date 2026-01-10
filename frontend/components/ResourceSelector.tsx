@@ -51,8 +51,8 @@ export default function ResourceSelector({ selectedIds, onSelectionChange, isOpe
   })
 
   const toggleResource = (id: string) => {
-    setLocalSelectedIds(prev =>
-      prev.includes(id) ? prev.filter(rid => rid !== id) : [...prev, id]
+    setLocalSelectedIds((prev: string[]) =>
+      prev.includes(id) ? prev.filter((rid: string) => rid !== id) : [...prev, id]
     )
   }
 
@@ -87,13 +87,13 @@ export default function ResourceSelector({ selectedIds, onSelectionChange, isOpe
               placeholder="Search resources..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:ring-inset focus:border-primary/30 outline-none"
             />
           </div>
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:ring-inset focus:border-primary/30 outline-none"
           >
             <option value="all">All Types</option>
             <option value="pdf">PDFs</option>

@@ -1,7 +1,7 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import { UserProvider } from '@/contexts/UserContext'
+import { Providers } from '@/components/Providers'
 import GoogleCastScript from '@/components/GoogleCastScript'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -29,10 +29,10 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <body className={inter.className} suppressHydrationWarning>
-                <UserProvider>
+            <body className={`${inter.className} antialiased`} suppressHydrationWarning>
+                <Providers>
                     {children}
-                </UserProvider>
+                </Providers>
                 <GoogleCastScript />
             </body>
         </html>

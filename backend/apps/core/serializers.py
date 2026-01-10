@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Studio, Teacher, Student, Band, Family
+from .models import User, Studio, Teacher, Student, Band, Family, SetupStatus, SignedDocument
 
 class BandSerializer(serializers.ModelSerializer):
     """Serializer for Band/Group management"""
@@ -192,4 +192,98 @@ class StudentSerializer(serializers.ModelSerializer):
             'birth_date', 'total_lessons', 'last_lesson_date',
             'family', 'studio', 'notes', 'is_active', 'bands'
         ]
+
+
+# ============================================================================
+# Setup Wizard Serializers
+# ============================================================================
+
+class SetupStatusSerializer(serializers.ModelSerializer):
+    """Serializer for checking setup completion status"""
+    class Meta:
+        model = SetupStatus
+        fields = ['is_completed', 'completed_at', 'setup_version', 'features_enabled', 'setup_data']
+        read_only_fields = ['completed_at']
+
+
+class SetupWizardCompleteSerializer(serializers.Serializer):
+    """Serializer for completing the entire setup wizard"""
+
+    # Step 1: Language
+    language = serializers.CharField(max_length=10, default='en')
+
+    # Step 2: Studio Info
+    studio_name = serializers.CharField(max_length=200)
+    studio_email = serializers.EmailField()
+    studio_phone = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    address_line1 = serializers.CharField(max_length=200, required=False, allow_blank=True)
+    address_line2 = serializers.CharField(max_length=200, required=False, allow_blank=True)
+    city = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    state = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    postal_code = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    country = serializers.CharField(max_length=100, default='US')
+    timezone = serializers.CharField(max_length=50, default='UTC')
+    currency = serializers.CharField(max_length=3, default='USD')
+
+    # Step 3: Admin Account
+    admin_email = serializers.EmailField()
+    admin_first_name = serializers.CharField(max_length=100)
+    admin_last_name = serializers.CharField(max_length=100)
+    admin_password = serializers.CharField(write_only=True, min_length=8)
+    admin_phone = serializers.CharField(max_length=20, required=False, allow_blank=True)
+
+    # Step 4: Feature Selection
+    billing_enabled = serializers.BooleanField(default=True)
+    inventory_enabled = serializers.BooleanField(default=True)
+    messaging_enabled = serializers.BooleanField(default=True)
+    resources_enabled = serializers.BooleanField(default=True)
+    goals_enabled = serializers.BooleanField(default=True)
+    bands_enabled = serializers.BooleanField(default=True)
+    analytics_enabled = serializers.BooleanField(default=True)
+    practice_rooms_enabled = serializers.BooleanField(default=True)
+
+    # Step 5: Quick Settings
+    default_lesson_duration = serializers.IntegerField(default=60, min_value=15, max_value=240)
+    business_start_hour = serializers.IntegerField(default=9, min_value=0, max_value=23)
+    business_end_hour = serializers.IntegerField(default=18, min_value=0, max_value=23)
+
+    # Step: Email Settings
+    smtp_host = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    smtp_port = serializers.IntegerField(default=587)
+    smtp_username = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    smtp_password = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    smtp_from_email = serializers.EmailField(required=False, allow_blank=True)
+    smtp_use_tls = serializers.BooleanField(default=True)
+
+    # Step 6: Sample Data
+    create_sample_data = serializers.BooleanField(default=False)
+
+    def validate_admin_email(self, value):
+        """Ensure admin email is unique"""
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+
+    def validate(self, data):
+        """Cross-field validation"""
+        if data.get('business_end_hour', 18) <= data.get('business_start_hour', 9):
+            raise serializers.ValidationError({
+                'business_end_hour': 'End hour must be after start hour'
+            })
+        return data
+
+
+class SignedDocumentSerializer(serializers.ModelSerializer):
+    """Serializer for signed documents"""
+    family_name = serializers.ReadOnlyField(source='family.primary_parent.get_full_name')
+    signed_by_name = serializers.ReadOnlyField(source='signed_by.get_full_name')
+
+    class Meta:
+        model = SignedDocument
+        fields = [
+            'id', 'family', 'family_name', 'document_type', 'title',
+            'file', 'signed_by', 'signed_by_name', 'signed_at',
+            'ip_address', 'created_at'
+        ]
+        read_only_fields = ['signed_by', 'signed_at', 'ip_address', 'created_at']
 

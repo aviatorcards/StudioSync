@@ -1,10 +1,12 @@
 """
 Lesson API views
 """
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
+from django.db.models import Q
 from django.utils import timezone
 from datetime import timedelta
 
@@ -156,19 +158,53 @@ class LessonPlanViewSet(viewsets.ModelViewSet):
         return LessonPlanSerializer
         
     def get_queryset(self):
-        # Public plans OR plans created by me
         user = self.request.user
-        qs = LessonPlan.objects.all()
-        # For simplicity, returning all for now, or filter by studio logic if needed
+        qs = LessonPlan.objects.select_related('created_by__user', 'created_by__studio')
+
+        if user.role == 'admin':
+            # Admin sees all plans in their studio(s)
+            from apps.core.models import Studio
+            studios = Studio.objects.filter(owner=user)
+            qs = qs.filter(created_by__studio__in=studios)
+        elif hasattr(user, 'teacher_profile') and user.teacher_profile:
+            # Teacher sees: their own plans + public plans from same studio
+            studio = user.teacher_profile.studio
+            qs = qs.filter(
+                Q(created_by=user.teacher_profile) |
+                Q(is_public=True, created_by__studio=studio)
+            )
+        elif hasattr(user, 'student_profile') and user.student_profile:
+            # Students see only public plans from their studio
+            studio = user.student_profile.studio
+            qs = qs.filter(is_public=True, created_by__studio=studio)
+        else:
+            qs = qs.none()
+
         return qs
 
     def perform_create(self, serializer):
-        if hasattr(self.request.user, 'teacher_profile'):
-            serializer.save(created_by=self.request.user.teacher_profile)
+        user = self.request.user
+
+        if hasattr(user, 'teacher_profile') and user.teacher_profile:
+            serializer.save(created_by=user.teacher_profile)
+        elif user.role == 'admin':
+            # Admin must specify teacher
+            teacher_id = self.request.data.get('created_by')
+            if teacher_id:
+                from apps.core.models import Teacher
+                try:
+                    teacher = Teacher.objects.get(id=teacher_id)
+                    serializer.save(created_by=teacher)
+                except Teacher.DoesNotExist:
+                    raise serializers.ValidationError({
+                        "created_by": "Teacher with this ID does not exist"
+                    })
+            else:
+                raise serializers.ValidationError({
+                    "created_by": "Admin must specify a teacher ID"
+                })
         else:
-             # If admin, maybe link differently or skip?
-             # Raising error might block admin testing.
-             pass
+            raise PermissionDenied("Only teachers and admins can create lesson plans")
 
 
 class StudentGoalViewSet(viewsets.ModelViewSet):
@@ -184,16 +220,52 @@ class StudentGoalViewSet(viewsets.ModelViewSet):
         return StudentGoalSerializer  # Make sure to import this
         
     def get_queryset(self):
-        # Teacher: Goals for my students
-        # Student: My goals
         user = self.request.user
-        if hasattr(user, 'teacher_profile'):
+
+        if hasattr(user, 'teacher_profile') and user.teacher_profile:
+            # Teacher: Goals for their students only
             return StudentGoal.objects.filter(teacher=user.teacher_profile)
-        elif hasattr(user, 'student_profile'):
+        elif hasattr(user, 'student_profile') and user.student_profile:
+            # Student: Their own goals
             return StudentGoal.objects.filter(student=user.student_profile)
-        return StudentGoal.objects.all()  # Admin
+        elif user.role == 'admin':
+            # Admin: Goals for students in their studio(s) only
+            from apps.core.models import Studio, Student
+            studios = Studio.objects.filter(owner=user)
+            students = Student.objects.filter(studio__in=studios)
+            return StudentGoal.objects.filter(student__in=students)
+        else:
+            return StudentGoal.objects.none()
 
     def perform_create(self, serializer):
-        if hasattr(self.request.user, 'teacher_profile'):
-            serializer.save(teacher=self.request.user.teacher_profile)
+        user = self.request.user
+
+        if hasattr(user, 'teacher_profile') and user.teacher_profile:
+            # Teacher creating goal for a student
+            serializer.save(teacher=user.teacher_profile)
+        elif hasattr(user, 'student_profile') and user.student_profile:
+            # Student creating their own goal
+            student = user.student_profile
+            # Use primary teacher if available, otherwise require teacher in request
+            if hasattr(student, 'primary_teacher') and student.primary_teacher:
+                serializer.save(
+                    student=student,
+                    teacher=student.primary_teacher
+                )
+            else:
+                # Student must have teacher in validated_data
+                if 'teacher' not in serializer.validated_data:
+                    raise serializers.ValidationError({
+                        "teacher": "Teacher must be specified for this goal"
+                    })
+                serializer.save(student=student)
+        elif user.role == 'admin':
+            # Admin must specify both student and teacher
+            if 'student' not in serializer.validated_data or 'teacher' not in serializer.validated_data:
+                raise serializers.ValidationError({
+                    "error": "Admin must specify both student and teacher"
+                })
+            serializer.save()
+        else:
+            raise PermissionDenied("You don't have permission to create goals")
 

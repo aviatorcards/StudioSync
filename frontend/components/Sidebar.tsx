@@ -172,10 +172,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     // Check section role visibility
                     if (section.roles && (!currentUser || !section.roles.includes(currentUser.role))) return null
 
-                    // Filter items by role
-                    const visibleItems = section.items.filter(item =>
-                        !item.roles || (currentUser && item.roles.includes(currentUser.role))
-                    )
+                    // Filter items by role and feature flags
+                    const visibleItems = section.items.filter(item => {
+                        // Check role visibility
+                        const hasRoleAccess = !item.roles || (currentUser && item.roles.includes(currentUser.role))
+                        if (!hasRoleAccess) return false
+
+                        // All features are now enabled by default
+                        return true
+                    })
 
                     if (visibleItems.length === 0) return null
 

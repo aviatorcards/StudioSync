@@ -53,7 +53,7 @@ export function useMessages() {
             setMessages(res.data);
 
             // Mark as read locally
-            setThreads(prev => prev.map(t =>
+            setThreads((prev: MessageThread[]) => prev.map(t =>
                 t.id === threadId ? { ...t, unread_count: 0 } : t
             ));
         } catch (error) {
@@ -71,7 +71,7 @@ export function useMessages() {
                 subject,
                 message: body
             });
-            setThreads(prev => [res.data, ...prev]);
+            setThreads((prev: MessageThread[]) => [res.data, ...prev]);
             return res.data;
         } catch (error) {
             console.error(error);
@@ -83,11 +83,11 @@ export function useMessages() {
     const replyToThread = async (threadId: string, body: string) => {
         try {
             const res = await api.post(`/messaging/threads/${threadId}/reply/`, { body });
-            setMessages(prev => [...prev, res.data]);
+            setMessages((prev: Message[]) => [...prev, res.data]);
 
             // Update thread list with new last message
-            setThreads(prev => {
-                const updated = prev.map(t =>
+            setThreads((prev: MessageThread[]) => {
+                const updated = prev.map((t: MessageThread) =>
                     t.id === threadId
                         ? { ...t, last_message: res.data, updated_at: new Date().toISOString() }
                         : t
@@ -113,15 +113,30 @@ export function useMessages() {
     useEffect(() => {
         if (!activeThread?.id) return;
 
-        // Construct WebSocket URL
-        // From: http://localhost:8000/api -> ws://localhost:8000
-        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api')
+        // Construct WebSocket URL safely
+        let baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+        
+        if (!baseUrl.startsWith('http')) {
+            // It's a relative path or empty, use window location
+            if (typeof window !== 'undefined') {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const host = window.location.hostname;
+                // If we are on port 3000 (Next.js dev), use port 8000 (Django dev)
+                const port = window.location.port === '3000' ? '8000' : window.location.port;
+                baseUrl = `${protocol}//${host}${port ? `:${port}` : ''}${baseUrl}`;
+            } else {
+                baseUrl = 'ws://localhost:8000';
+            }
+        }
+
+        const finalBase = baseUrl
             .replace('/api', '')
             .replace(/^http/, 'ws');
 
-        const wsUrl = `${baseUrl}/ws/chat/${activeThread.id}/`;
+        const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+        const wsUrl = `${finalBase}/ws/chat/${activeThread.id}/${token ? `?token=${token}` : ''}`;
 
-        console.log('Connecting to WebSocket:', wsUrl);
+        console.log('Connecting to WebSocket:', wsUrl.split('?')[0]); // Log without token
         const socket = new WebSocket(wsUrl);
 
         socket.onopen = () => {
@@ -132,22 +147,22 @@ export function useMessages() {
             const data = JSON.parse(event.data);
             if (data.type === 'message') {
                 const newMessage = data.data;
-                setMessages(prev => {
+                setMessages((prev: Message[]) => {
                     // Avoid duplicates
-                    if (prev.some(m => m.id === newMessage.id)) {
+                    if (prev.some((m: Message) => m.id === newMessage.id)) {
                         return prev;
                     }
                     return [...prev, newMessage];
                 });
 
                 // Also update thread list preview if needed
-                setThreads(prev => {
-                    const updated = prev.map(t =>
+                setThreads((prev: MessageThread[]) => {
+                    const updated = prev.map((t: MessageThread) =>
                         t.id === activeThread.id
                             ? { ...t, last_message: newMessage, updated_at: newMessage.created_at }
                             : t
                     );
-                    updated.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+                    updated.sort((a: MessageThread, b: MessageThread) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
                     return updated;
                 });
             }

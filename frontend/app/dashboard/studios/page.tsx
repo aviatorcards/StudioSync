@@ -311,44 +311,25 @@ export default function StudiosPage() {
                         <Button
                             type="submit"
                             form="studio-creation-form"
-import { useRef } from 'react'
-import {
-    Loader2, Plus, Building2, MapPin, Globe, Phone, Mail, Settings,
-    Sparkles, Clock, DollarSign, Calendar, Palette, Camera
-} from 'lucide-react'
-
-// ... (existing imports)
-
-export default function StudiosPage() {
-    const { studios, loading: studiosLoading, refetch } = useStudios()
-    const router = useRouter()
-    const fileInputRef = useRef<HTMLInputElement>(null)
-
-    // Determine primary studio
-    const activeStudio = studios && studios.length > 0 ? studios[0] : null
-
-    // ... (existing state)
-
-    const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (!file || !activeStudio) return
-
-        const uploadData = new FormData()
-        uploadData.append('cover_image', file)
-
-        const toastId = toast.loading('Uploading cover image...')
-
-        try {
-            await api.patch('/core/studios/current/', uploadData)
-            toast.success('Cover image updated!', { id: toastId })
-            refetch()
-        } catch (error: any) {
-            console.error('Upload failed:', error)
-            toast.error('Failed to upload cover image', { id: toastId })
-        }
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Initializing...
+                                </>
+                            ) : (
+                                <>
+                                    <Sparkles className="w-4 h-4 mr-2" />
+                                    Initialize Headquarters
+                                </>
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </Dialog>
+            </div>
+        )
     }
-
-    // ... (existing render logic)
 
     // Case 2: Studio Exists -> Simple Details View
     return (

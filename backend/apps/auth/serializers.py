@@ -16,6 +16,11 @@ class UserSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['email', 'role', 'is_staff']
 
+    def get_avatar(self, obj):
+        if obj.avatar:
+            return obj.avatar.url
+        return None
+
     def get_initials(self, obj):
         first = obj.first_name[0] if obj.first_name else ''
         last = obj.last_name[0] if obj.last_name else ''

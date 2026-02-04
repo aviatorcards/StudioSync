@@ -20,27 +20,7 @@ export const WelcomeStep = ({ data, updateData, onNext }: StepProps) => {
                 </p>
             </div>
 
-            <div className="w-full max-w-md space-y-4">
-                <label className="block text-sm font-medium text-gray-700 text-left">
-                    Select Language
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                    {LANGUAGES.map((lang) => (
-                        <button
-                            key={lang.value}
-                            onClick={() => updateData('language', lang.value)}
-                            className={`
-                relative flex items-center justify-center px-4 py-3 border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500
-                ${data.language === lang.value
-                                    ? 'border-indigo-600 ring-2 ring-indigo-600 text-indigo-700 bg-indigo-50'
-                                    : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'}
-              `}
-                        >
-                            {lang.label}
-                        </button>
-                    ))}
-                </div>
-            </div>
+
 
             <div className="pt-8">
                 <button

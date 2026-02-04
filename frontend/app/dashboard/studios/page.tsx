@@ -370,9 +370,8 @@ export default function StudiosPage() {
                 />
                 <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors duration-500" />
                 
-                {/* Content */}
                 <div className="absolute bottom-0 left-0 p-8 md:p-12 w-full flex flex-col md:flex-row items-end justify-between gap-6">
-                    <div className="flex items-end gap-6">
+                    <div className="flex items-end gap-6 flex-1">
                         {/* Logo */}
                         <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-3xl shadow-xl flex items-center justify-center overflow-hidden border-4 border-white transform translate-y-4 md:translate-y-0 group-hover:-translate-y-2 transition-transform duration-500">
                             {activeStudio.settings?.logo_url ? (
@@ -382,18 +381,25 @@ export default function StudiosPage() {
                             )}
                         </div>
                         
-                        <div className="mb-2 text-white shadow-sm">
+                        <div className="mb-2 text-white shadow-sm flex-1">
                             <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-2 drop-shadow-md">{activeStudio.name}</h1>
-                            <p className="font-medium text-white/90 flex items-center gap-2 text-sm md:text-base drop-shadow">
-                                <MapPin className="w-4 h-4" />
-                                {[activeStudio.city, activeStudio.state, activeStudio.country].filter(Boolean).join(', ')}
-                            </p>
+                            <div className="flex flex-col gap-1">
+                                <p className="font-medium text-white/90 flex items-center gap-2 text-sm md:text-base drop-shadow">
+                                    <MapPin className="w-4 h-4" />
+                                    {[activeStudio.city, activeStudio.state, activeStudio.country].filter(Boolean).join(', ')}
+                                </p>
+                                {activeStudio.settings?.studio_description && (
+                                    <p className="text-white/80 text-xs md:text-sm line-clamp-2 max-w-2xl drop-shadow">
+                                        {activeStudio.settings.studio_description}
+                                    </p>
+                                )}
+                            </div>
                         </div>
                     </div>
                     
                     <Button
                         onClick={() => router.push('/dashboard/settings')}
-                        className="bg-white/20 hover:bg-white/30 text-white border border-white/40 backdrop-blur-md gap-2 px-6 py-6 rounded-2xl transition-all font-bold mb-2 shadow-lg"
+                        className="bg-white/20 hover:bg-white/30 text-white border border-white/40 backdrop-blur-md gap-2 px-6 py-6 rounded-2xl transition-all font-bold mb-2 shadow-lg whitespace-nowrap"
                     >
                         <Settings className="w-5 h-5" />
                         Configure Studio
@@ -417,38 +423,80 @@ export default function StudiosPage() {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-y-10 gap-x-12">
-                            <div className="space-y-2">
-                                <span className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                    <MapPin className="w-3 h-3" /> Address
-                                </span>
-                                <p className="font-medium text-gray-900 leading-relaxed text-lg">
-                                    {activeStudio.address_line1}<br />
-                                    {activeStudio.address_line2 && <>{activeStudio.address_line2}<br /></>}
-                                    <span className="text-gray-500">{activeStudio.city}, {activeStudio.state} {activeStudio.postal_code}</span>
-                                </p>
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <span className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                        <MapPin className="w-3 h-3" /> Physical Address
+                                    </span>
+                                    <div className="group/address relative">
+                                        <p className="font-medium text-gray-900 leading-relaxed text-lg">
+                                            {activeStudio.address_line1 || <span className="text-gray-300 italic">No address set</span>}<br />
+                                            {activeStudio.address_line2 && <>{activeStudio.address_line2}<br /></>}
+                                            <span className="text-gray-500">
+                                                {[activeStudio.city, activeStudio.state, activeStudio.postal_code].filter(Boolean).join(', ')}
+                                            </span>
+                                        </p>
+                                        {(activeStudio.address_line1 || activeStudio.city) && (
+                                            <button 
+                                                onClick={() => {
+                                                    const addr = `${activeStudio.address_line1} ${activeStudio.city} ${activeStudio.state} ${activeStudio.postal_code}`
+                                                    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`, '_blank')
+                                                }}
+                                                className="mt-3 flex items-center gap-2 text-xs font-bold text-primary hover:text-primary-hover transition-colors"
+                                            >
+                                                <Globe className="w-3 h-3" />
+                                                View on Google Maps
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="pt-4 border-t border-gray-50 grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Timezone</span>
+                                        <p className="text-sm font-bold text-gray-700">{activeStudio.timezone}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Currency</span>
+                                        <p className="text-sm font-bold text-gray-700">{activeStudio.currency}</p>
+                                    </div>
+                                </div>
                             </div>
                             
-                             <div className="space-y-2">
-                                <span className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                    <Phone className="w-3 h-3" /> Contact Methods
-                                </span>
-                                <div className="space-y-3 mt-1">
-                                    <div className="flex items-center gap-3 text-gray-700 bg-gray-50/50 p-3 rounded-xl border border-gray-100">
-                                        <Mail className="w-4 h-4 text-gray-400" />
-                                        <span className="font-medium">{activeStudio.email}</span>
-                                    </div>
-                                    {activeStudio.phone && (
+                             <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <span className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                        <Phone className="w-3 h-3" /> Contact Methods
+                                    </span>
+                                    <div className="space-y-3 mt-1">
                                         <div className="flex items-center gap-3 text-gray-700 bg-gray-50/50 p-3 rounded-xl border border-gray-100">
-                                            <Phone className="w-4 h-4 text-gray-400" />
-                                            <span className="font-medium">{activeStudio.phone}</span>
+                                            <Mail className="w-4 h-4 text-gray-400" />
+                                            <span className="font-medium">{activeStudio.email || <span className="text-gray-300 italic">No email set</span>}</span>
                                         </div>
-                                    )}
-                                     {activeStudio.website && (
-                                        <div className="flex items-center gap-3 text-indigo-600 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100/50 hover:bg-indigo-50 transition-colors cursor-pointer" onClick={() => window.open(activeStudio.website, '_blank')}>
-                                            <Globe className="w-4 h-4" />
-                                            <span className="font-bold">{activeStudio.website.replace(/^https?:\/\//, '')}</span>
-                                        </div>
-                                    )}
+                                        {activeStudio.phone && (
+                                            <div className="flex items-center gap-3 text-gray-700 bg-gray-50/50 p-3 rounded-xl border border-gray-100">
+                                                <Phone className="w-4 h-4 text-gray-400" />
+                                                <span className="font-medium">{activeStudio.phone}</span>
+                                            </div>
+                                        )}
+                                         {activeStudio.website && (
+                                            <div className="flex items-center gap-3 text-indigo-600 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100/50 hover:bg-indigo-50 transition-colors cursor-pointer" onClick={() => window.open(activeStudio.website, '_blank')}>
+                                                <Globe className="w-4 h-4" />
+                                                <span className="font-bold">{activeStudio.website.replace(/^https?:\/\//, '')}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="pt-4 border-t border-gray-50 grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Lesson Default</span>
+                                        <p className="text-sm font-bold text-gray-700">{activeStudio.settings?.default_lesson_duration || 60} min</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Notice Period</span>
+                                        <p className="text-sm font-bold text-gray-700">{activeStudio.settings?.cancellation_notice_period || 24} hrs</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>

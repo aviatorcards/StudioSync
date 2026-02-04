@@ -19,25 +19,27 @@ import {
     Code
 } from 'lucide-react'
 
-function FloatingOrb({ delay = 0, duration = 20, size = 300, opacity = 0.15, color = 'earth-primary' }) {
+// Optimized FloatingOrb using CSS animations instead of Framer Motion
+function FloatingOrb({
+    size = 300,
+    opacity = 0.15,
+    color = 'earth-primary',
+    variant = 'default',
+    className = ''
+}: {
+    size?: number
+    opacity?: number
+    color?: string
+    variant?: 'default' | 'alt'
+    className?: string
+}) {
     return (
-        <motion.div
-            className={`absolute rounded-full blur-3xl bg-${color}`}
+        <div
+            className={`absolute rounded-full blur-xl bg-${color} ${variant === 'alt' ? 'animate-float-orb-alt' : 'animate-float-orb'} ${className}`}
             style={{
                 width: size,
                 height: size,
                 opacity: opacity,
-            }}
-            animate={{
-                x: [0, 100, 0, -100, 0],
-                y: [0, -100, 0, 100, 0],
-                scale: [1, 1.2, 1, 0.8, 1],
-            }}
-            transition={{
-                duration,
-                repeat: Infinity,
-                delay,
-                ease: "easeInOut"
             }}
         />
     )
@@ -72,8 +74,8 @@ function PricingCard({ plan, index, onSelect }: any) {
 
             {/* Glassmorphic Card */}
             <div className={`relative rounded-3xl overflow-hidden ${plan.featured ? 'border-2 border-primary shadow-2xl shadow-purple-500/20' : ''}`}>
-                {/* Glass Background */}
-                <div className="absolute inset-0 bg-white/60 backdrop-blur-xl border border-white/20 rounded-3xl" />
+                {/* Glass Background - optimized */}
+                <div className="absolute inset-0 bg-white/80 border border-white/30 rounded-3xl" />
 
                 {/* Gradient Overlay on Hover */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${plan.color} opacity-0 hover:opacity-10 transition-opacity duration-500 rounded-3xl`} />
@@ -203,8 +205,8 @@ function FeatureComparison() {
                 className="hidden md:block rounded-2xl overflow-hidden shadow-xl"
             >
                 <div className="relative">
-                    {/* Glass Background */}
-                    <div className="absolute inset-0 bg-white/60 backdrop-blur-xl border border-white/20 pointer-events-none" />
+                    {/* Glass Background - optimized */}
+                    <div className="absolute inset-0 bg-white/85 border border-white/30 pointer-events-none" />
 
                     <table className="relative w-full border-collapse">
                         <thead>
@@ -247,7 +249,7 @@ function FeatureComparison() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
                         transition={{ duration: 0.4, delay: idx * 0.05 }}
-                        className="relative bg-white/70 backdrop-blur-lg border border-white/30 rounded-2xl p-5 shadow-sm overflow-hidden"
+                        className="relative bg-white/85 border border-white/40 rounded-2xl p-5 shadow-sm overflow-hidden"
                     >
                         <h3 className="text-gray-900 font-bold text-lg mb-4 text-center">{feature.name}</h3>
 
@@ -291,7 +293,7 @@ function FAQItem({ question, answer, index }: any) {
             transition={{ delay: index * 0.1 }}
             className="relative rounded-xl overflow-hidden"
         >
-            <div className="absolute inset-0 bg-white/60 backdrop-blur-xl border border-white/20" />
+            <div className="absolute inset-0 bg-white/80 border border-white/30" />
             <div className="relative">
                 <button
                     onClick={() => setIsOpen(!isOpen)}
@@ -421,11 +423,11 @@ export default function PricingPage() {
         <>
             <Navigation />
 
-            {/* Animated background */}
+            {/* Animated background - optimized with CSS animations */}
             <div className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-earth-lighter via-neutral-light to-olive-light">
-                <FloatingOrb delay={0} duration={25} size={400} opacity={0.12} color="earth-primary" />
-                <FloatingOrb delay={5} duration={30} size={300} opacity={0.1} color="olive-primary" />
-                <FloatingOrb delay={10} duration={35} size={350} opacity={0.08} color="earth-light" />
+                <FloatingOrb size={400} opacity={0.12} color="earth-primary" className="top-[10%] left-[10%]" />
+                <FloatingOrb size={300} opacity={0.1} color="olive-primary" variant="alt" className="top-[40%] right-[15%]" />
+                <FloatingOrb size={350} opacity={0.08} color="earth-light" className="bottom-[20%] left-[20%]" />
             </div>
 
             <main className="relative">
@@ -441,7 +443,7 @@ export default function PricingPage() {
                                 initial={{ scale: 0.5, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ duration: 0.5 }}
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-earth-light text-earth-dark font-medium mb-8"
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 border border-earth-light text-earth-dark font-medium mb-8"
                             >
                                 <Sparkles className="w-4 h-4" />
                                 Simple, Transparent Pricing
@@ -498,7 +500,7 @@ export default function PricingPage() {
                             <div className="relative p-8 md:p-12">
                                 <div className="grid md:grid-cols-2 gap-8 items-center">
                                     <div className="text-white">
-                                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-sm font-medium mb-4">
+                                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/25 border border-white/30 text-sm font-medium mb-4">
                                             <Code className="w-4 h-4" />
                                             Open Source
                                         </div>
@@ -509,15 +511,15 @@ export default function PricingPage() {
                                             Use our cloud-based solution for hassle-free management, or self-host for complete control and data ownership. All tiers support both options.
                                         </p>
                                         <div className="flex flex-wrap gap-3">
-                                            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/30 rounded-lg px-4 py-2">
+                                            <div className="flex items-center gap-2 bg-white/15 border border-white/30 rounded-lg px-4 py-2">
                                                 <Check className="w-5 h-5 text-green-300" />
                                                 <span className="font-medium">Cloud Hosted</span>
                                             </div>
-                                            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/30 rounded-lg px-4 py-2">
+                                            <div className="flex items-center gap-2 bg-white/15 border border-white/30 rounded-lg px-4 py-2">
                                                 <Check className="w-5 h-5 text-green-300" />
                                                 <span className="font-medium">Self Hosted</span>
                                             </div>
-                                            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/30 rounded-lg px-4 py-2">
+                                            <div className="flex items-center gap-2 bg-white/15 border border-white/30 rounded-lg px-4 py-2">
                                                 <Check className="w-5 h-5 text-green-300" />
                                                 <span className="font-medium">Docker Ready</span>
                                             </div>
@@ -530,7 +532,7 @@ export default function PricingPage() {
                                             whileHover={{ scale: 1.02 }}
                                             className="relative rounded-2xl overflow-hidden"
                                         >
-                                            <div className="absolute inset-0 bg-white/95 backdrop-blur-xl" />
+                                            <div className="absolute inset-0 bg-white/98" />
                                             <div className="relative p-6">
                                                 <div className="flex items-start gap-4">
                                                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
@@ -551,7 +553,7 @@ export default function PricingPage() {
                                             whileHover={{ scale: 1.02 }}
                                             className="relative rounded-2xl overflow-hidden"
                                         >
-                                            <div className="absolute inset-0 bg-white/95 backdrop-blur-xl" />
+                                            <div className="absolute inset-0 bg-white/98" />
                                             <div className="relative p-6">
                                                 <div className="flex items-start gap-4">
                                                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
@@ -643,7 +645,7 @@ export default function PricingPage() {
                                     transition={{ delay: index * 0.1 }}
                                     className="relative rounded-2xl overflow-hidden text-center p-8"
                                 >
-                                    <div className="absolute inset-0 bg-white/60 backdrop-blur-xl border border-white/20" />
+                                    <div className="absolute inset-0 bg-white/80 border border-white/30" />
                                     <div className="relative">
                                         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-earth-primary to-olive-dark flex items-center justify-center mx-auto mb-4">
                                             <item.icon className="w-7 h-7 text-white" />
@@ -719,7 +721,7 @@ export default function PricingPage() {
                                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                         <a
                                             href="mailto:sales@studiosync.app"
-                                            className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-md border-2 border-white/30 text-white rounded-2xl font-bold text-lg hover:bg-white/20 transition-all"
+                                            className="inline-flex items-center gap-2 px-8 py-4 bg-white/15 border-2 border-white/30 text-white rounded-2xl font-bold text-lg hover:bg-white/25 transition-all"
                                         >
                                             Contact Sales
                                         </a>

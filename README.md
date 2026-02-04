@@ -203,11 +203,9 @@
 ### 🐳 Deployment & Infrastructure
 
 - **One-Command Docker Deployment:**
-  - Fully containerized with Docker Compose
-  - PostgreSQL database with automatic migrations
-  - Redis caching for performance
-  - MinIO S3-compatible file storage
-  - Django Channels for WebSocket support
+  - Fully containerized with Docker Compose (v2 recommended)
+  - PostgreSQL database for data, caching, and task management
+  - Django Q for background tasks
   - Production-ready configuration
 
 ## 🚀 Quick Start
@@ -230,14 +228,14 @@
 2. **Launch Services**
 
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 3. **Initialize Database**
 
    ```bash
-   docker-compose exec backend python manage.py migrate
-   docker-compose exec backend python manage.py createsuperuser
+   docker compose exec backend python manage.py migrate
+   docker compose exec backend python manage.py createsuperuser
    ```
 
 4. **Access the App**
@@ -249,7 +247,7 @@
 
 ### Frontend
 
-- **Framework:** Next.js 14 (App Router)
+- **Framework:** Next.js 16 (App Router)
 - **Styling:** Tailwind CSS + Vanilla CSS
 - **State/Data:** React Query + Context API
 - **Icons:** Lucide React
@@ -261,10 +259,8 @@
 ### Backend
 
 - **Framework:** Django 5.0 + Django REST Framework
-- **Database:** PostgreSQL
-- **File Storage:** MinIO (S3-compatible)
-- **Real-time:** Django Channels (WebSocket support)
-- **Caching:** Redis
+- **Database:** PostgreSQL (Data, Cache, Background Tasks)
+- **Real-time:** Django Channels (InMemoryChannelLayer)
 
 ## 📂 Project Structure
 

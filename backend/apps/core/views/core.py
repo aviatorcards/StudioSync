@@ -4,8 +4,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
-from .models import User, Studio, Teacher, Student, Band, Family
-from .serializers import (
+from apps.core.models import User, Studio, Teacher, Student, Band, Family
+from apps.core.serializers import (
     UserSerializer, StudioSerializer, PublicTeacherSerializer, 
     TeacherSerializer, BandSerializer, FamilySerializer, StudentSerializer
 )
@@ -200,8 +200,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
         # Auto-create profile based on role
         try:
-             # Find admin's studio (or fallback)
-            from .models import Studio, Student, Teacher
+            # Find admin's studio (or fallback)
+            from apps.core.models import Studio, Student, Teacher
             studio = Studio.objects.filter(owner=request.user).first()
             if not studio:
                 # Fallback to first studio in system (for dev/demo)
@@ -388,7 +388,7 @@ The {smtp_from_name} Team
         if request.user.role != 'admin':
              return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
              
-        from .models import Studio
+        from apps.core.models import Studio
         studio = Studio.objects.filter(owner=request.user).first()
         
         # If no studio, just return the user themselves as a fallback or empty list

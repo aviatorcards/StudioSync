@@ -18,8 +18,8 @@ from django.core.mail import send_mail
 from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import SetupStatus, Studio, User, Teacher, Student
-from .serializers import SetupStatusSerializer, SetupWizardCompleteSerializer
+from apps.core.models import SetupStatus, Studio, User, Teacher, Student
+from apps.core.serializers import SetupStatusSerializer, SetupWizardCompleteSerializer
 
 
 @api_view(['GET'])

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import {
     Plus, Music, Users as UsersIcon, Loader2,
     Search, Edit, Mail, Trash2, Camera,
@@ -14,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
 
 export default function BandsPage() {
+    const router = useRouter()
     const { users } = useUsers()
     const students = users.filter((u: any) => u.role === 'student')
     const [bands, setBands] = useState<any[]>([])
@@ -285,11 +287,17 @@ export default function BandsPage() {
 
                             <div className="flex items-center gap-3 pt-8 mt-4 border-t border-gray-50 relative z-10">
                                 <Button
-                                    onClick={() => handleOpenEdit(band)}
+                                    onClick={() => router.push(`/dashboard/bands/${band.id}`)}
                                     className="flex-1 rounded-2xl font-black uppercase tracking-widest text-[10px] py-6 shadow-lg shadow-primary/10"
                                 >
-                                    <Edit className="w-4 h-4 mr-2" />
-                                    Configure
+                                    <ChevronRight className="w-4 h-4 mr-2" />
+                                    View Details
+                                </Button>
+                                <Button
+                                    onClick={() => handleOpenEdit(band)}
+                                    className="p-4 rounded-2xl text-gray-600 hover:text-primary hover:bg-primary/5 transition-all py-6 h-auto"
+                                >
+                                    <Edit className="w-5 h-5" />
                                 </Button>
                                 <Button
                                     variant="ghost"

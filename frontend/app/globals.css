@@ -124,6 +124,102 @@
   .animate-ripple {
     animation: ripple 600ms ease-out;
   }
+
+  /* Optimized floating orb animation - GPU accelerated */
+  @keyframes float-orb {
+    0%, 100% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    25% {
+      transform: translate3d(50px, -50px, 0) scale(1.1);
+    }
+    50% {
+      transform: translate3d(0, -25px, 0) scale(1);
+    }
+    75% {
+      transform: translate3d(-50px, -50px, 0) scale(0.95);
+    }
+  }
+
+  @keyframes float-orb-alt {
+    0%, 100% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    25% {
+      transform: translate3d(-40px, -60px, 0) scale(1.05);
+    }
+    50% {
+      transform: translate3d(-20px, -30px, 0) scale(1);
+    }
+    75% {
+      transform: translate3d(40px, -40px, 0) scale(0.9);
+    }
+  }
+
+  @keyframes float-card {
+    0%, 100% {
+      transform: translate3d(0, 0, 0);
+    }
+    50% {
+      transform: translate3d(0, -12px, 0);
+    }
+  }
+
+  .animate-float-orb {
+    animation: float-orb 25s ease-in-out infinite;
+    will-change: transform;
+    backface-visibility: hidden;
+  }
+
+  .animate-float-orb-alt {
+    animation: float-orb-alt 30s ease-in-out infinite;
+    will-change: transform;
+    backface-visibility: hidden;
+  }
+
+  .animate-float-card {
+    animation: float-card 4s ease-in-out infinite;
+    will-change: transform;
+    backface-visibility: hidden;
+  }
+
+  .animate-float-card-delayed {
+    animation: float-card 5s ease-in-out infinite;
+    animation-delay: 1s;
+    will-change: transform;
+    backface-visibility: hidden;
+  }
+
+  /* Respect user's motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-float-orb,
+    .animate-float-orb-alt,
+    .animate-float-card,
+    .animate-float-card-delayed {
+      animation: none;
+    }
+  }
+
+  /* Optimized glass effect - less blur for better performance */
+  .glass-light {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Safari-optimized blur fallback */
+  @supports not (backdrop-filter: blur(8px)) {
+    .glass-light,
+    .glass-card {
+      background: rgba(255, 255, 255, 0.92);
+    }
+  }
 }
 
 /* Custom Typography */

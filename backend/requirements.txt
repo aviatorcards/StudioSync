@@ -1,24 +1,24 @@
 Django==5.0.1
 djangorestframework==3.14.0
 django-cors-headers==4.3.1
+django-filter==24.2
 python-dotenv==1.0.0
-celery==5.3.6
-redis==5.0.1
-django-redis==5.4.0
-channels==4.0.0
-channels-redis==4.2.0
+# Background Tasks (Postgres-backed)
+django-q2==1.7.6
+psycopg2-binary==2.9.9
 daphne==4.1.0
+channels==4.0.0
 
 # Authentication
 djangorestframework-simplejwt==5.3.1
 django-allauth==0.60.1
 
 # S3/R2 compatibility
-urllib3<2.0.0
-django-storages>=1.14.2
-boto3>=1.35.0
-botocore>=1.35.0
-Pillow>=10.2.0
+urllib3==1.26.18
+django-storages==1.14.4
+boto3==1.35.76
+botocore==1.35.76
+Pillow==10.4.0
 
 # Email and SMS
 sendgrid==6.11.0
@@ -29,7 +29,7 @@ caldav==1.3.9
 icalendar==5.0.11
 
 # Payments
-stripe>=5.0.0
+stripe==11.5.0
 
 # Utilities
 
@@ -38,6 +38,13 @@ bleach==6.1.0
 markdown==3.5.2
 pytz==2024.1
 
+# Production server
+gunicorn==23.0.0
+uvicorn[standard]==0.34.0
+
+# API Documentation
+drf-spectacular==0.28.0
+
 # Dev tools
 django-debug-toolbar==4.2.0
 django-extensions==3.2.3
@@ -45,3 +52,18 @@ django-jazzmin==2.6.0
 psycopg2-binary==2.9.9
 dj-database-url==2.1.0
 whitenoise==6.6.0
+
+# Testing dependencies
+pytest==8.3.4
+pytest-django==4.9.0
+pytest-cov==6.0.0
+pytest-asyncio==0.25.2
+factory-boy==3.3.1
+faker==40.1.2
+moto==5.1.19  # For mocking AWS/S3 services
+
+# Code quality and linting
+black==24.10.0
+isort==5.13.2
+ruff==0.14.11
+pre-commit==4.0.1

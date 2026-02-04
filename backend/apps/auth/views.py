@@ -96,7 +96,7 @@ class PasswordResetRequestView(APIView):
         if user:
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
-            reset_link = f"http://localhost:3000/reset-password?uid={uid}&token={token}"
+            reset_link = f"{settings.FRONTEND_BASE_URL}/reset-password?uid={uid}&token={token}"
             
             send_mail(
                 'Password Reset Request',

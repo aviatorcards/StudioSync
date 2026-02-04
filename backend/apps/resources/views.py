@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions, filters, status, serializers as drf_serializers
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
 from .models import Resource
 from .serializers import ResourceSerializer
@@ -9,14 +10,26 @@ class ResourceViewSet(viewsets.ModelViewSet):
     serializer_class = ResourceSerializer
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['title', 'description', 'tags']
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
+    filterset_fields = ['resource_type', 'instrument', 'skill_level', 'category']
+    search_fields = ['title', 'description', 'tags', 'composer']
     ordering_fields = ['created_at', 'title']
 
     def get_queryset(self):
         user = self.request.user
         qs = Resource.objects.select_related('studio', 'uploaded_by')
 
+        # Filter by band if specified
+        band_id = self.request.query_params.get('band', None)
+        
+        if band_id:
+            # Filter resources for specific band
+            qs = qs.filter(band_id=band_id)
+        else:
+            # Default: show only studio-level resources (not band-specific)
+            qs = qs.filter(band__isnull=True)
+
+        # Apply role-based permissions
         if user.role == 'admin':
             # Admin sees all resources in their studio(s)
             qs = qs.filter(studio__owner=user)

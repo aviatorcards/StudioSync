@@ -25,7 +25,7 @@ export default function AddStudentPage() {
         setLoading(true)
 
         try {
-            await api.post('/students/students/', formData)
+            await api.post('/students/', formData)
             toast.success('Student created successfully!')
             router.push('/dashboard/students')
         } catch (error: any) {

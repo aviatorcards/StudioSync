@@ -135,12 +135,10 @@ export function useMessages() {
 
         const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
         const wsUrl = `${finalBase}/ws/chat/${activeThread.id}/${token ? `?token=${token}` : ''}`;
-
-        console.log('Connecting to WebSocket:', wsUrl.split('?')[0]); // Log without token
         const socket = new WebSocket(wsUrl);
 
         socket.onopen = () => {
-            console.log('WebSocket Connected');
+            // WebSocket connection established
         };
 
         socket.onmessage = (event) => {
@@ -169,7 +167,7 @@ export function useMessages() {
         };
 
         socket.onclose = () => {
-            console.log('WebSocket Disconnected');
+            // WebSocket connection closed
         };
 
         socket.onerror = (error) => {

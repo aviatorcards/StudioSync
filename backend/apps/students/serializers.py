@@ -41,7 +41,7 @@ class StudentDetailSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='user.get_full_name', read_only=True)
     email = serializers.EmailField(source='user.email', read_only=True)
     phone = serializers.CharField(source='user.phone', read_only=True)
-    avatar = serializers.FileField(source='user.avatar', read_only=True)
+    avatar = serializers.SerializerMethodField()
     teacher = serializers.SerializerMethodField()
     family_name = serializers.CharField(source='family.primary_parent.last_name', read_only=True, allow_null=True)
     
@@ -49,6 +49,11 @@ class StudentDetailSerializer(serializers.ModelSerializer):
         model = Student
         fields = '__all__'
         
+    def get_avatar(self, obj):
+        if obj.user.avatar:
+            return obj.user.avatar.url
+        return None
+
     def get_teacher(self, obj):
         if obj.primary_teacher:
             return {
@@ -94,7 +99,16 @@ class StudentCreateUpdateSerializer(serializers.ModelSerializer):
              # This relies on perform_create in view to pass studio or defaults
              pass
 
-        student = Student.objects.create(user=user, **validated_data)
+        # Check if student profile was already created by signal
+        if hasattr(user, 'student_profile'):
+            student = user.student_profile
+            # Update with validated data
+            for key, value in validated_data.items():
+                setattr(student, key, value)
+            student.save()
+        else:
+            student = Student.objects.create(user=user, **validated_data)
+            
         return student
 
     def update(self, instance, validated_data):

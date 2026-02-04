@@ -5,6 +5,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils import timezone
 import uuid
+from .validators import validate_avatar, validate_image
 
 
 class UserManager(BaseUserManager):
@@ -45,7 +46,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=20, blank=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='student')
     timezone = models.CharField(max_length=50, default='UTC')
-    avatar = models.FileField(upload_to='avatars/', blank=True, null=True)
+    avatar = models.FileField(
+        upload_to='avatars/', 
+        blank=True, 
+        null=True,
+        validators=[validate_avatar],
+        help_text='Profile picture (max 5MB, JPG/PNG/GIF/WebP)'
+    )
     
     # Preferences stored as JSON
     preferences = models.JSONField(default=dict, blank=True)
@@ -110,7 +117,13 @@ class Studio(models.Model):
     settings = models.JSONField(default=dict, blank=True)
     
     # Visual Layout
-    cover_image = models.ImageField(upload_to='studio_covers/', blank=True, null=True)
+    cover_image = models.ImageField(
+        upload_to='studio_covers/', 
+        blank=True, 
+        null=True,
+        validators=[validate_image],
+        help_text='Studio cover image (max 5MB, JPG/PNG/GIF/WebP)'
+    )
     layout_data = models.JSONField(default=dict, blank=True)
     
     # Flags
@@ -230,7 +243,13 @@ class Band(models.Model):
     genre = models.CharField(max_length=100, blank=True)
     
     # Visual identity
-    photo = models.ImageField(upload_to='bands/', blank=True, null=True)
+    photo = models.ImageField(
+        upload_to='bands/', 
+        blank=True, 
+        null=True,
+        validators=[validate_image],
+        help_text='Band/group photo (max 5MB, JPG/PNG/GIF/WebP)'
+    )
     
     # Billing information
     billing_email = models.EmailField()

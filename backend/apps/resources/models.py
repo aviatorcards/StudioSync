@@ -6,6 +6,7 @@ from django.utils import timezone
 import uuid
 
 from apps.core.models import Studio, User, Student
+from apps.core.validators import validate_document, validate_media, validate_image
 
 
 class Resource(models.Model):
@@ -19,6 +20,10 @@ class Resource(models.Model):
         ('image', 'Image'),
         ('physical', 'Physical Item'),
         ('link', 'External Link'),
+        ('sheet_music', 'Sheet Music'),
+        ('chord_chart', 'Chord Chart'),
+        ('tablature', 'Tablature'),
+        ('lyrics', 'Lyrics'),
         ('other', 'Other'),
     ]
     
@@ -26,13 +31,28 @@ class Resource(models.Model):
     studio = models.ForeignKey(Studio, on_delete=models.CASCADE, related_name='resources')
     uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='uploaded_resources')
     
+    # Band association (optional - if set, resource belongs to specific band)
+    band = models.ForeignKey(
+        'core.Band',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='resources',
+        help_text='If set, this resource belongs to a specific band/group'
+    )
+    
     # Resource details
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     resource_type = models.CharField(max_length=20, choices=RESOURCE_TYPE_CHOICES)
     
     # File information (for digital resources)
-    file = models.FileField(upload_to='resources/%Y/%m/', null=True, blank=True)
+    file = models.FileField(
+        upload_to='resources/%Y/%m/', 
+        null=True, 
+        blank=True,
+        help_text='Upload files (PDFs up to 10MB, media files up to 50MB)'
+    )
     file_size = models.BigIntegerField(null=True, blank=True) # Automatically set if accessed via file property, but useful for caching
     mime_type = models.CharField(max_length=100, blank=True)
     
@@ -42,6 +62,38 @@ class Resource(models.Model):
     # Organization
     tags = models.JSONField(default=list, blank=True)
     category = models.CharField(max_length=100, blank=True)
+    
+    # Music-specific fields
+    instrument = models.CharField(
+        max_length=100, 
+        blank=True, 
+        help_text='Primary instrument (Piano, Guitar, Drums, etc.)'
+    )
+    skill_level = models.CharField(
+        max_length=20,
+        choices=[
+            ('beginner', 'Beginner'),
+            ('intermediate', 'Intermediate'),
+            ('advanced', 'Advanced'),
+            ('professional', 'Professional'),
+        ],
+        blank=True
+    )
+    composer = models.CharField(
+        max_length=200, 
+        blank=True, 
+        help_text='Composer/Artist name'
+    )
+    key_signature = models.CharField(
+        max_length=20, 
+        blank=True, 
+        help_text='Musical key (C, G, Am, etc.)'
+    )
+    tempo = models.CharField(
+        max_length=50, 
+        blank=True, 
+        help_text='Tempo marking or BPM'
+    )
     
     # Physical item tracking
     is_physical_item = models.BooleanField(default=False)
@@ -66,6 +118,10 @@ class Resource(models.Model):
         indexes = [
             models.Index(fields=['resource_type']),
             models.Index(fields=['studio', 'is_public']),
+            models.Index(fields=['band']),
+            models.Index(fields=['instrument']),
+            models.Index(fields=['skill_level']),
+            models.Index(fields=['resource_type', 'instrument']),
         ]
     
     def __str__(self):

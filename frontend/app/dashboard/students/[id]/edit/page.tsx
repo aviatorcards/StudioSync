@@ -27,7 +27,7 @@ export default function EditStudentPage({ params }: { params: { id: string } }) 
                 // Fetch student details
                 // Note: The API likely returns nested user object. We need to flatten it or handle it.
                 // Checking previous view_file of StudentViewSet, it returns nested user serialized data.
-                const response = await api.get(`/students/students/${params.id}/`)
+                const response = await api.get(`/students/${params.id}/`)
                 const student = response.data
 
                 setFormData({
@@ -59,7 +59,7 @@ export default function EditStudentPage({ params }: { params: { id: string } }) 
         setSaving(true)
 
         try {
-            await api.patch(`/students/students/${params.id}/`, formData)
+            await api.patch(`/students/${params.id}/`, formData)
             toast.success('Student updated successfully!')
             router.push('/dashboard/students')
         } catch (error: any) {
@@ -82,7 +82,7 @@ export default function EditStudentPage({ params }: { params: { id: string } }) 
         if (!confirm('Are you sure you want to delete this student? This action cannot be undone.')) return
 
         try {
-            await api.delete(`/students/students/${params.id}/`)
+            await api.delete(`/students/${params.id}/`)
             toast.success('Student deleted')
             router.push('/dashboard/students')
         } catch (error) {

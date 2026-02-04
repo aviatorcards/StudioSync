@@ -57,15 +57,17 @@ def send_welcome_email(user_email, first_name):
     Trigger the async welcome email task.
     """
     from apps.core.tasks import send_email_async
+    from django.conf import settings
     
     subject = "Welcome to StudioSync! 🎵"
     context = {
         'first_name': first_name,
         'user_email': user_email, 
-        'dashboard_url': 'http://localhost:3000/login' # TODO: Make dynamic
+        'dashboard_url': f"{settings.FRONTEND_BASE_URL}/login"
     }
-    # Call the Celery task
-    send_email_async.delay(subject, user_email, 'emails/welcome_email.html', context)
+    # Call the background task
+    from django_q.tasks import async_task
+    async_task(send_email_async, subject, user_email, 'emails/welcome_email.html', context)
     return True
 
 def send_test_email(recipient_email, from_name='StudioSync'):

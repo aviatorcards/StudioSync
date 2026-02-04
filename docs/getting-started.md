@@ -14,7 +14,7 @@ cd music-studio-manager
 ### 2. Start the Environment
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 This will start the backend, frontend, database, and all necessary services.

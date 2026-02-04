@@ -80,7 +80,15 @@ export default function SettingsPage() {
     // Studio settings
     const [studioSettings, setStudioSettings] = useState({
         studio_name: '',
-        studio_address: '',
+        studio_email: '',
+        studio_phone: '',
+        studio_website: '',
+        address_line1: '',
+        address_line2: '',
+        city: '',
+        state: '',
+        postal_code: '',
+        country: 'US',
         default_lesson_duration: '60',
         cancellation_notice: '24',
         studio_description: ''
@@ -92,7 +100,15 @@ export default function SettingsPage() {
             const s = currentUser.studio
             setStudioSettings({
                 studio_name: s.name || '',
-                studio_address: s.address_line1 || '',
+                studio_email: s.email || '',
+                studio_phone: s.phone || '',
+                studio_website: s.website || '',
+                address_line1: s.address_line1 || '',
+                address_line2: s.address_line2 || '',
+                city: s.city || '',
+                state: s.state || '',
+                postal_code: s.postal_code || '',
+                country: s.country || 'US',
                 default_lesson_duration: s.settings?.default_lesson_duration?.toString() || '60',
                 cancellation_notice: s.settings?.cancellation_notice_period?.toString() || '24',
                 studio_description: s.settings?.studio_description || ''
@@ -236,7 +252,15 @@ export default function SettingsPage() {
                 // Prepare update payload
                 const updatePayload = {
                     name: settings.studio_name,
-                    address_line1: settings.studio_address,
+                    email: settings.studio_email,
+                    phone: settings.studio_phone,
+                    website: settings.studio_website,
+                    address_line1: settings.address_line1,
+                    address_line2: settings.address_line2,
+                    city: settings.city,
+                    state: settings.state,
+                    postal_code: settings.postal_code,
+                    country: settings.country,
                     settings: {
                         ...currentSettings,
                         default_lesson_duration: parseInt(settings.default_lesson_duration),
@@ -532,15 +556,88 @@ export default function SettingsPage() {
                                     />
                                 </div>
 
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Studio Email</label>
+                                        <input
+                                            type="email"
+                                            value={studioSettings.studio_email}
+                                            onChange={e => setStudioSettings({ ...studioSettings, studio_email: e.target.value })}
+                                            placeholder="contact@studio.com"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Studio Phone</label>
+                                        <input
+                                            type="tel"
+                                            value={studioSettings.studio_phone}
+                                            onChange={e => setStudioSettings({ ...studioSettings, studio_phone: e.target.value })}
+                                            placeholder="+1 (555) 000-0000"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                        />
+                                    </div>
+                                </div>
+
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
                                     <input
-                                        type="text"
-                                        value={studioSettings.studio_address}
-                                        onChange={e => setStudioSettings({ ...studioSettings, studio_address: e.target.value })}
-                                        placeholder="123 Music Lane, City, State 12345"
+                                        type="url"
+                                        value={studioSettings.studio_website}
+                                        onChange={e => setStudioSettings({ ...studioSettings, studio_website: e.target.value })}
+                                        placeholder="https://mystudio.com"
                                         className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                                     />
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label className="block text-sm font-medium text-gray-700">Address</label>
+                                    <input
+                                        type="text"
+                                        value={studioSettings.address_line1}
+                                        onChange={e => setStudioSettings({ ...studioSettings, address_line1: e.target.value })}
+                                        placeholder="Address Line 1"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={studioSettings.address_line2}
+                                        onChange={e => setStudioSettings({ ...studioSettings, address_line2: e.target.value })}
+                                        placeholder="Address Line 2 (Optional)"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                    />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <input
+                                            type="text"
+                                            value={studioSettings.city}
+                                            onChange={e => setStudioSettings({ ...studioSettings, city: e.target.value })}
+                                            placeholder="City"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                        />
+                                        <input
+                                            type="text"
+                                            value={studioSettings.state}
+                                            onChange={e => setStudioSettings({ ...studioSettings, state: e.target.value })}
+                                            placeholder="State"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <input
+                                            type="text"
+                                            value={studioSettings.postal_code}
+                                            onChange={e => setStudioSettings({ ...studioSettings, postal_code: e.target.value })}
+                                            placeholder="Postal Code"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                        />
+                                        <input
+                                            type="text"
+                                            value={studioSettings.country}
+                                            onChange={e => setStudioSettings({ ...studioSettings, country: e.target.value })}
+                                            placeholder="Country (ISO)"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                        />
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

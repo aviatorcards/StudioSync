@@ -35,7 +35,7 @@ echo ""
 # Show versions
 echo "📋 Versions:"
 docker --version
-docker-compose --version || docker compose version
+docker compose --version || docker compose version
 
 echo ""
 echo "🎉 Docker is ready! You can now run:"

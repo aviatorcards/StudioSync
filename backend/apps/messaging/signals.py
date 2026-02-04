@@ -1,5 +1,6 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.conf import settings
 from .models import Message
 from apps.core.tasks import send_email_async
 import logging
@@ -62,10 +63,12 @@ def notify_new_message(sender, instance, created, **kwargs):
                     'first_name': recipient.first_name,
                     'sender': message_sender,
                     'message_preview': instance.body,
-                    'message_url': f"http://localhost:3000/dashboard/messages/{thread.id}" # TODO: Make dynamic base URL
+                    'message_url': f"{settings.FRONTEND_BASE_URL}/dashboard/messages/{thread.id}"
                 }
                 
-                send_email_async.delay(
+                from django_q.tasks import async_task
+                async_task(
+                    send_email_async,
                     subject, 
                     recipient.email, 
                     'emails/new_message_notification.html', 

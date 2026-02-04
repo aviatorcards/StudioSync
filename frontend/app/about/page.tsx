@@ -8,25 +8,27 @@ import Link from 'next/link'
 import { Music, Heart, Zap, Users, Target, Code, Sparkles, ArrowRight, Github } from 'lucide-react'
 import { RippleCard } from '@/components/RippleCard'
 
-function FloatingOrb({ delay = 0, duration = 20, size = 300, opacity = 0.15, color = 'earth-primary' }) {
+// Optimized FloatingOrb using CSS animations instead of Framer Motion
+function FloatingOrb({
+    size = 300,
+    opacity = 0.15,
+    color = 'earth-primary',
+    variant = 'default',
+    className = ''
+}: {
+    size?: number
+    opacity?: number
+    color?: string
+    variant?: 'default' | 'alt'
+    className?: string
+}) {
     return (
-        <motion.div
-            className={`absolute rounded-full blur-3xl bg-${color}`}
+        <div
+            className={`absolute rounded-full blur-xl bg-${color} ${variant === 'alt' ? 'animate-float-orb-alt' : 'animate-float-orb'} ${className}`}
             style={{
                 width: size,
                 height: size,
                 opacity: opacity,
-            }}
-            animate={{
-                x: [0, 100, 0, -100, 0],
-                y: [0, -100, 0, 100, 0],
-                scale: [1, 1.2, 1, 0.8, 1],
-            }}
-            transition={{
-                duration,
-                repeat: Infinity,
-                delay,
-                ease: "easeInOut"
             }}
         />
     )
@@ -44,8 +46,8 @@ function ValueCard({ value, index }: any) {
             transition={{ duration: 0.5, delay: index * 0.1 }}
         >
             <RippleCard className="relative group h-full cursor-pointer rounded-3xl overflow-hidden">
-                {/* Glassmorphic background */}
-                <div className="absolute inset-0 bg-white/60 backdrop-blur-xl border border-white/20" />
+                {/* Glassmorphic background - optimized */}
+                <div className="absolute inset-0 bg-white/75 border border-white/30" />
 
                 {/* Gradient overlay on hover */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${value.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
@@ -83,8 +85,8 @@ function TimelineItem({ item, index }: any) {
             className="relative"
         >
             <div className="relative rounded-2xl overflow-hidden">
-                {/* Glass background */}
-                <div className="absolute inset-0 bg-white/60 backdrop-blur-xl border border-white/20" />
+                {/* Glass background - optimized */}
+                <div className="absolute inset-0 bg-white/80 border border-white/30" />
 
                 {/* Content */}
                 <div className="relative p-6">
@@ -120,7 +122,7 @@ function StatCard({ stat, index }: any) {
             transition={{ duration: 0.5, delay: index * 0.1 }}
             className="relative rounded-2xl overflow-hidden text-center p-8"
         >
-            <div className="absolute inset-0 bg-white/60 backdrop-blur-xl border border-white/20" />
+            <div className="absolute inset-0 bg-white/80 border border-white/30" />
             <div className="relative">
                 <div className="text-5xl font-bold bg-gradient-to-r from-earth-primary to-olive-dark bg-clip-text text-transparent mb-2">
                     {stat.value}
@@ -195,11 +197,11 @@ export default function AboutPage() {
         <>
             <Navigation />
 
-            {/* Animated background */}
+            {/* Animated background - optimized with CSS animations */}
             <div className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-earth-lighter via-neutral-light to-olive-light">
-                <FloatingOrb delay={0} duration={25} size={400} opacity={0.12} color="earth-primary" />
-                <FloatingOrb delay={5} duration={30} size={300} opacity={0.1} color="olive-primary" />
-                <FloatingOrb delay={10} duration={35} size={350} opacity={0.08} color="earth-light" />
+                <FloatingOrb size={400} opacity={0.12} color="earth-primary" className="top-[10%] left-[10%]" />
+                <FloatingOrb size={300} opacity={0.1} color="olive-primary" variant="alt" className="top-[40%] right-[15%]" />
+                <FloatingOrb size={350} opacity={0.08} color="earth-light" className="bottom-[20%] left-[20%]" />
 
                 {/* Musical staff lines */}
                 <div className="absolute inset-0 opacity-5">
@@ -226,7 +228,7 @@ export default function AboutPage() {
                                 initial={{ scale: 0.5, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ duration: 0.5 }}
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-earth-light text-earth-dark font-medium mb-8"
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 border border-earth-light text-earth-dark font-medium mb-8"
                             >
                                 <Sparkles className="w-4 h-4" />
                                 Our Story
@@ -269,8 +271,8 @@ export default function AboutPage() {
                             viewport={{ once: true }}
                             className="relative rounded-3xl overflow-hidden"
                         >
-                            {/* Glass background */}
-                            <div className="absolute inset-0 bg-white/60 backdrop-blur-xl border border-white/20" />
+                            {/* Glass background - optimized */}
+                            <div className="absolute inset-0 bg-white/80 border border-white/30" />
 
                             {/* Gradient accent */}
                             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-earth-primary via-olive-primary to-earth-light" />
@@ -370,7 +372,7 @@ export default function AboutPage() {
                             {/* Content */}
                             <div className="relative p-8 md:p-12 text-white">
                                 <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+                                    <div className="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center border border-white/20">
                                         <Github className="w-7 h-7" />
                                     </div>
                                     <h2 className="text-4xl font-bold">Open Source & Free</h2>
@@ -445,7 +447,7 @@ export default function AboutPage() {
                                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                         <Link
                                             href="/pricing"
-                                            className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-md border-2 border-white/30 text-white rounded-2xl font-bold text-lg hover:bg-white/20 transition-all"
+                                            className="inline-flex items-center gap-2 px-8 py-4 bg-white/15 border-2 border-white/30 text-white rounded-2xl font-bold text-lg hover:bg-white/25 transition-all"
                                         >
                                             View Pricing
                                         </Link>

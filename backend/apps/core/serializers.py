@@ -11,6 +11,7 @@ class BandSerializer(serializers.ModelSerializer):
         source='members',
         required=False
     )
+    photo = serializers.SerializerMethodField()
     
     class Meta:
         model = Band
@@ -19,6 +20,15 @@ class BandSerializer(serializers.ModelSerializer):
             'address_line1', 'address_line2', 'city', 'state', 'postal_code', 'country',
             'notes', 'members_count', 'member_ids', 'member_details'
         ]
+
+    def get_photo(self, obj):
+        """Return absolute URL for band photo"""
+        if obj.photo:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.photo.url)
+            return obj.photo.url
+        return None
 
     def get_members_count(self, obj):
         return obj.members.count()
@@ -47,9 +57,24 @@ class FamilySerializer(serializers.ModelSerializer):
         return obj.students.count()
 
 class SimpleStudioSerializer(serializers.ModelSerializer):
+    cover_image = serializers.SerializerMethodField()
+    
     class Meta:
         model = Studio
-        fields = ['id', 'name', 'address_line1', 'city', 'state', 'postal_code', 'country', 'settings', 'cover_image']
+        fields = [
+            'id', 'name', 'email', 'phone', 'website',
+            'address_line1', 'address_line2', 'city', 'state', 'postal_code', 'country', 
+            'settings', 'cover_image'
+        ]
+    
+    def get_cover_image(self, obj):
+        """Return absolute URL for cover image"""
+        if obj.cover_image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.cover_image.url)
+            return obj.cover_image.url
+        return None
 
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for user profile management"""
@@ -57,19 +82,86 @@ class UserSerializer(serializers.ModelSerializer):
     student_profile = serializers.SerializerMethodField()
     teacher_profile = serializers.SerializerMethodField()
     studio = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
+    bio = serializers.SerializerMethodField()
+    instrument = serializers.SerializerMethodField()
     
     class Meta:
         model = User
         fields = [
             'id', 'email', 'first_name', 'last_name', 'full_name', 
             'phone', 'role', 'timezone', 'avatar', 'preferences',
-            'student_profile', 'teacher_profile', 'studio', 'is_active'
+            'student_profile', 'teacher_profile', 'studio', 'is_active', 'bio', 'instrument'
         ]
         read_only_fields = ['id', 'email', 'full_name']
+        extra_kwargs = {
+            'bio': {'required': False},
+            'instrument': {'required': False},
+        }
+    
+    def get_avatar(self, obj):
+        """Return absolute URL for avatar"""
+        if obj.avatar:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.avatar.url)
+            return obj.avatar.url
+        return None
+    
+    def get_bio(self, obj):
+        """Return bio from teacher profile if exists"""
+        if hasattr(obj, 'teacher_profile'):
+            return obj.teacher_profile.bio
+        return ''
+    
+    def get_instrument(self, obj):
+        """Return instrument from student profile if exists"""
+        if hasattr(obj, 'student_profile'):
+            return obj.student_profile.instrument
+        return ''
+    
+    def to_internal_value(self, data):
+        """Handle avatar file upload and profile-specific fields in PATCH/PUT requests"""
+        # If avatar is in the request data and it's a file, handle it separately
+        avatar_file = None
+        if 'avatar' in data and hasattr(data.get('avatar'), 'read'):
+            avatar_file = data.pop('avatar')
+        
+        # Extract profile-specific fields that don't belong on User model
+        bio = data.pop('bio', None) if 'bio' in data else None
+        instrument = data.pop('instrument', None) if 'instrument' in data else None
+        
+        # Process the rest of the data normally
+        internal_value = super().to_internal_value(data)
+        
+        # Add avatar back if it was provided
+        if avatar_file:
+            internal_value['avatar'] = avatar_file
+        
+        # Store profile fields for later use in update()
+        if bio is not None:
+            internal_value['_bio'] = bio
+        if instrument is not None:
+            internal_value['_instrument'] = instrument
+        
+        return internal_value
 
     def update(self, instance, validated_data):
-        # Perform standard update
+        # Extract profile-specific fields
+        bio = validated_data.pop('_bio', None)
+        instrument = validated_data.pop('_instrument', None)
+        
+        # Perform standard update on User model
         instance = super().update(instance, validated_data)
+        
+        # Update related profiles if they exist
+        if bio is not None and hasattr(instance, 'teacher_profile'):
+            instance.teacher_profile.bio = bio
+            instance.teacher_profile.save()
+        
+        if instrument is not None and hasattr(instance, 'student_profile'):
+            instance.student_profile.instrument = instrument
+            instance.student_profile.save()
         
         # Sync is_active to related profiles if changed
         if 'is_active' in validated_data:
@@ -122,6 +214,7 @@ class UserSerializer(serializers.ModelSerializer):
             teacher = obj.teacher_profile
             return {
                 'id': teacher.id,
+                'bio': teacher.bio,
                 'students_count': teacher.primary_students.count(),
                 'studio_id': teacher.studio_id
             }
@@ -154,7 +247,7 @@ class PublicTeacherSerializer(serializers.ModelSerializer):
     """Serializer for public teacher profiles"""
     first_name = serializers.CharField(source='user.first_name')
     last_name = serializers.CharField(source='user.last_name')
-    avatar = serializers.ImageField(source='user.avatar')
+    avatar = serializers.SerializerMethodField()
     
     class Meta:
         model = Teacher
@@ -162,6 +255,15 @@ class PublicTeacherSerializer(serializers.ModelSerializer):
             'id', 'first_name', 'last_name', 'avatar',
             'bio', 'specialties', 'instruments'
         ]
+    
+    def get_avatar(self, obj):
+        """Return absolute URL for avatar"""
+        if obj.user.avatar:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.user.avatar.url)
+            return obj.user.avatar.url
+        return None
 
 class TeacherSerializer(serializers.ModelSerializer):
     """Full teacher serializer for admin management"""

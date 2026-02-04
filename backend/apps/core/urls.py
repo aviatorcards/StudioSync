@@ -1,10 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from apps.core.stats_views import DashboardStatsView, DashboardAnalyticsView
 from apps.core.views import (
-    UserViewSet, StudioViewSet, TeacherViewSet, StudentViewSet, BandViewSet, ReportsExportView
+    DashboardStatsView, DashboardAnalyticsView,
+    UserViewSet, StudioViewSet, TeacherViewSet, StudentViewSet, BandViewSet, ReportsExportView,
+    gdpr, setup
 )
-from apps.core import gdpr_views, setup_views
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
@@ -19,15 +19,15 @@ urlpatterns = [
     path('reports/export/', ReportsExportView.as_view(), name='reports-export'),
 
     # Setup Wizard Endpoints
-    path('setup/status/', setup_views.check_setup_status, name='setup-status'),
-    path('setup/complete/', setup_views.complete_setup_wizard, name='setup-complete'),
+    path('setup/status/', setup.check_setup_status, name='setup-status'),
+    path('setup/complete/', setup.complete_setup_wizard, name='setup-complete'),
 
     # GDPR Compliance Endpoints
-    path('gdpr/export-data/', gdpr_views.export_my_data, name='gdpr-export-data'),
-    path('gdpr/delete-account/', gdpr_views.request_account_deletion, name='gdpr-delete-account'),
-    path('gdpr/privacy-dashboard/', gdpr_views.privacy_dashboard, name='gdpr-privacy-dashboard'),
-    path('gdpr/privacy-settings/', gdpr_views.update_privacy_settings, name='gdpr-privacy-settings'),
-    path('gdpr/consent/', gdpr_views.record_consent, name='gdpr-consent'),
+    path('gdpr/export-data/', gdpr.export_my_data, name='gdpr-export-data'),
+    path('gdpr/delete-account/', gdpr.request_account_deletion, name='gdpr-delete-account'),
+    path('gdpr/privacy-dashboard/', gdpr.privacy_dashboard, name='gdpr-privacy-dashboard'),
+    path('gdpr/privacy-settings/', gdpr.update_privacy_settings, name='gdpr-privacy-settings'),
+    path('gdpr/consent/', gdpr.record_consent, name='gdpr-consent'),
     
     path('', include(router.urls)),
 ]

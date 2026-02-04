@@ -241,25 +241,28 @@ function AnimatedCounter({ value, inView }: { value: string, inView: boolean }) 
   return <span>{count}</span>
 }
 
-function FloatingOrb({ delay = 0, duration = 20, size = 300, opacity = 0.15, color = 'earth-primary' }) {
+// Optimized FloatingOrb using CSS animations instead of Framer Motion
+// CSS animations are GPU-accelerated and don't cause main thread jank
+function FloatingOrb({
+  size = 300,
+  opacity = 0.15,
+  color = 'earth-primary',
+  variant = 'default',
+  className = ''
+}: {
+  size?: number
+  opacity?: number
+  color?: string
+  variant?: 'default' | 'alt'
+  className?: string
+}) {
   return (
-    <motion.div
-      className={`absolute rounded-full blur-3xl bg-${color}`}
+    <div
+      className={`absolute rounded-full blur-xl bg-${color} ${variant === 'alt' ? 'animate-float-orb-alt' : 'animate-float-orb'} ${className}`}
       style={{
         width: size,
         height: size,
         opacity: opacity,
-      }}
-      animate={{
-        x: [0, 100, 0, -100, 0],
-        y: [0, -100, 0, 100, 0],
-        scale: [1, 1.2, 1, 0.8, 1],
-      }}
-      transition={{
-        duration,
-        repeat: Infinity,
-        delay,
-        ease: "easeInOut"
       }}
     />
   )
@@ -284,13 +287,13 @@ function FeatureModal({ feature, isOpen, onClose }: { feature: typeof features[0
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop - reduced blur for better performance */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/50 z-50"
           />
 
           {/* Modal */}
@@ -306,8 +309,8 @@ function FeatureModal({ feature, isOpen, onClose }: { feature: typeof features[0
               >
                 {/* Glassmorphic container */}
                 <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-                  {/* Glass background */}
-                  <div className="absolute inset-0 bg-white/90 backdrop-blur-2xl" />
+                  {/* Glass background - optimized blur */}
+                  <div className="absolute inset-0 bg-white/95" />
 
                   {/* Gradient accent bar */}
                   <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${feature.color}`} />
@@ -315,7 +318,7 @@ function FeatureModal({ feature, isOpen, onClose }: { feature: typeof features[0
                   {/* Content */}
                   <div className="relative max-h-[80vh] overflow-y-auto">
                     {/* Header */}
-                    <div className="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-gray-200 p-6 z-10">
+                    <div className="sticky top-0 bg-white border-b border-gray-200 p-6 z-10">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-4">
                           <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center shadow-lg`}>
@@ -391,7 +394,7 @@ function FeatureModal({ feature, isOpen, onClose }: { feature: typeof features[0
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={{ delay: 0.5 + idx * 0.05 }}
-                                className="flex items-start gap-2 bg-white/60 backdrop-blur-sm rounded-xl p-3"
+                                className="flex items-start gap-2 bg-white/80 rounded-xl p-3"
                               >
                                 <Sparkles className={`w-5 h-5 flex-shrink-0 mt-0.5 bg-gradient-to-br ${feature.color} bg-clip-text text-transparent`} style={{ WebkitTextFillColor: 'transparent' }} />
                                 <p className="text-gray-700 text-sm">{benefit}</p>
@@ -450,8 +453,8 @@ function FeatureCard({ feature, index, onClick }: { feature: typeof features[0],
       className={`group relative ${sizeClasses[feature.size]} rounded-3xl overflow-hidden cursor-pointer`}
       onClick={onClick}
     >
-      {/* Glassmorphic card */}
-      <div className="absolute inset-0 bg-white/40 backdrop-blur-xl border border-white/20 rounded-3xl" />
+      {/* Glassmorphic card - optimized with reduced blur */}
+      <div className="absolute inset-0 bg-white/70 border border-white/30 rounded-3xl" />
 
       {/* Gradient overlay on hover */}
       <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-3xl`} />
@@ -497,7 +500,7 @@ function TestimonialCard({ testimonial, index }: { testimonial: typeof testimoni
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="bg-white/60 backdrop-blur-lg border border-white/30 rounded-2xl p-8 shadow-xl h-full"
+      className="bg-white/80 border border-white/40 rounded-2xl p-8 shadow-xl h-full"
     >
       <div className="flex gap-1 mb-4">
         {[...Array(testimonial.rating)].map((_, i) => (
@@ -557,11 +560,11 @@ export default function Home() {
 
       <Navigation />
 
-      {/* Animated background */}
+      {/* Animated background - optimized with CSS animations */}
       <div className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-earth-lighter via-neutral-light to-olive-light">
-        <FloatingOrb delay={0} duration={25} size={400} opacity={0.12} color="earth-primary" />
-        <FloatingOrb delay={5} duration={30} size={300} opacity={0.1} color="olive-primary" />
-        <FloatingOrb delay={10} duration={35} size={350} opacity={0.08} color="earth-light" />
+        <FloatingOrb size={400} opacity={0.12} color="earth-primary" className="top-[10%] left-[10%]" />
+        <FloatingOrb size={300} opacity={0.1} color="olive-primary" variant="alt" className="top-[40%] right-[15%]" />
+        <FloatingOrb size={350} opacity={0.08} color="earth-light" className="bottom-[20%] left-[20%]" />
 
         {/* Musical staff lines */}
         <div className="absolute inset-0 opacity-5">
@@ -589,7 +592,7 @@ export default function Home() {
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-earth-light text-earth-dark font-medium mb-8"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 border border-earth-light text-earth-dark font-medium mb-8"
               >
                 <Sparkles className="w-4 h-4" />
                 Join 500+ music studios
@@ -624,7 +627,7 @@ export default function Home() {
                 </motion.div>
 
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <button className="px-8 py-4 bg-white/60 backdrop-blur-md border border-white/50 text-gray-900 rounded-2xl font-semibold text-lg hover:bg-white/80 transition-all flex items-center gap-2">
+                  <button className="px-8 py-4 bg-white/90 border border-gray-200 text-gray-900 rounded-2xl font-semibold text-lg hover:bg-white transition-all flex items-center gap-2">
                     <Music className="w-5 h-5" />
                     Watch Demo
                   </button>
@@ -644,8 +647,8 @@ export default function Home() {
               className="mt-20 relative"
             >
               <div className="relative max-w-5xl mx-auto">
-                {/* Glassmorphic mockup */}
-                <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-earth-primary/20 border border-white/30 bg-white/40 backdrop-blur-xl">
+                {/* Dashboard mockup - optimized */}
+                <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-earth-primary/20 border border-white/30 bg-white/80">
                   <div className="aspect-video relative">
                     {/* Dashboard Preview Image */}
                     <Image
@@ -658,12 +661,8 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Floating cards */}
-                <motion.div
-                  animate={{ y: [0, -20, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute -left-4 top-1/4 md:-left-12 bg-white/80 backdrop-blur-md rounded-2xl p-4 shadow-xl border border-white/50 hidden md:block"
-                >
+                {/* Floating cards - using CSS animations for better performance */}
+                <div className="absolute -left-4 top-1/4 md:-left-12 bg-white/85 rounded-2xl p-4 shadow-xl border border-white/50 hidden md:block animate-float-card">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-olive-primary flex items-center justify-center">
                       <Check className="w-6 h-6 text-white" />
@@ -673,13 +672,9 @@ export default function Home() {
                       <div className="text-xs text-gray-600">Sarah&apos;s piano lesson</div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
 
-                <motion.div
-                  animate={{ y: [0, 20, 0] }}
-                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                  className="absolute -right-4 top-1/3 md:-right-12 bg-white/80 backdrop-blur-md rounded-2xl p-4 shadow-xl border border-white/50 hidden md:block"
-                >
+                <div className="absolute -right-4 top-1/3 md:-right-12 bg-white/85 rounded-2xl p-4 shadow-xl border border-white/50 hidden md:block animate-float-card-delayed">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-earth-primary flex items-center justify-center">
                       <DollarSign className="w-6 h-6 text-white" />
@@ -689,7 +684,7 @@ export default function Home() {
                       <div className="text-xs text-gray-600">$250.00</div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               </div>
             </motion.div>
           </div>
@@ -821,7 +816,7 @@ export default function Home() {
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Link
                       href="/pricing"
-                      className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-md border-2 border-white/30 text-white rounded-2xl font-bold text-lg hover:bg-white/20 transition-all"
+                      className="inline-flex items-center gap-2 px-8 py-4 bg-white/15 border-2 border-white/30 text-white rounded-2xl font-bold text-lg hover:bg-white/25 transition-all"
                     >
                       View Pricing
                     </Link>

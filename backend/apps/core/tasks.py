@@ -1,16 +1,16 @@
-from celery import shared_task
+from django_q.tasks import async_task
 from django.core.mail import EmailMultiAlternatives, get_connection
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from django.conf import settings
 from .email_utils import get_email_settings
 import logging
 
 logger = logging.getLogger(__name__)
 
-@shared_task
 def send_email_async(subject, to_email, template_name, context, from_email=None, from_name=None):
     """
-    Celery task to send emails asynchronously using HTML templates.
+    Background task to send emails asynchronously using HTML templates.
     """
     try:
         email_settings = get_email_settings()
@@ -62,7 +62,6 @@ def send_email_async(subject, to_email, template_name, context, from_email=None,
         logger.error(f"❌ Failed to send email to {to_email}: {e}")
         return False
 
-@shared_task
 def check_upcoming_lessons():
     """
     Periodic task to check for upcoming lessons and send reminders.
@@ -90,14 +89,10 @@ def check_upcoming_lessons():
     for lesson in upcoming_lessons:
         # Check if reminder already sent to student
         student_reminder_exists = Notification.objects.filter(
-            related_lesson_id=lesson.id, # Note: models.py used IntegerField for this, might need casting if UUID
+            related_lesson_id=lesson.id, 
             notification_type='lesson_reminder',
             user=lesson.student.user
         ).exists()
-        
-        # UUID issue: related_lesson_id in Notification model is IntegerField? 
-        # Lesson ID is UUIDField. This is a schema mismatch bug I noticed earlier in models.py reading.
-        # Let's fix this hypothesis by checking Notification model again.
         
         if not student_reminder_exists:
              try:
@@ -107,8 +102,7 @@ def check_upcoming_lessons():
                      notification_type='lesson_reminder',
                      title='Upcoming Lesson Reminder',
                      message=f'Your {lesson.student_instrument} lesson is tomorrow at {lesson.scheduled_start.strftime("%I:%M %p")}',
-                     link=f'/dashboard/lessons/{lesson.id}',
-                     related_lesson_id=None # Skip ID if type mismatch
+                     link=f'/dashboard/lessons/{lesson.id}'
                  )
                  
                  # Send Email
@@ -117,12 +111,13 @@ def check_upcoming_lessons():
                      'lesson_start_time': lesson.scheduled_start.strftime("%A, %B %d at %I:%M %p"),
                      'location': lesson.location,
                      'student_name': lesson.student.user.get_full_name(),
-                     'instrument': lesson.student_instrument, # This field might not exist on Lesson, check models
+                     'instrument': lesson.student_instrument,
                      'duration_minutes': lesson.duration_minutes,
-                     'lesson_url': f"http://localhost:3000/dashboard/lessons/{lesson.id}"
+                     'lesson_url': f"{settings.FRONTEND_BASE_URL}/dashboard/lessons/{lesson.id}"
                  }
                  
-                 send_email_async.delay(
+                 async_task(
+                     send_email_async,
                      "Lesson Reminder 🎵",
                      lesson.student.user.email,
                      'emails/lesson_reminder.html',

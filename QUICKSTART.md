@@ -7,6 +7,7 @@ Get the demo up and running in **5 minutes**!
 ### 1. Install Docker Desktop
 
 **macOS:**
+
 ```bash
 # Option 1: Download from Docker website
 open https://www.docker.com/products/docker-desktop/
@@ -21,7 +22,7 @@ After installation, open Docker Desktop and wait for it to start.
 
 ```bash
 docker --version
-docker-compose --version
+docker compose --version
 ```
 
 You should see version numbers if Docker is installed correctly.
@@ -43,7 +44,8 @@ cd /Users/tristan/Documents/words/coaching/music-studio-manager
 ```
 
 This script will:
-- Start all Docker services
+
+- Start all Docker services (Postgres, Backend, Django Q, Frontend)
 - Run database migrations
 - Create a demo superuser
 - Display access URLs
@@ -57,6 +59,7 @@ Once the script completes:
 - **Admin Panel:** http://localhost:8000/admin
 
 **Demo Login:**
+
 - Email: `admin@demo.com`
 - Password: `demo123`
 
@@ -68,16 +71,16 @@ If you prefer to run commands manually:
 
 ```bash
 # 1. Start all services
-docker-compose up -d
+docker compose up -d
 
 # 2. Wait for services to be ready (about 30 seconds)
 sleep 30
 
 # 3. Run database migrations
-docker-compose exec backend python manage.py migrate
+docker compose exec backend python manage.py migrate
 
 # 4. Create superuser (follow prompts)
-docker-compose exec backend python manage.py createsuperuser
+docker compose exec backend python manage.py createsuperuser
 
 # 5. Access the app
 open http://localhost:3000
@@ -88,31 +91,35 @@ open http://localhost:3000
 ## Common Commands
 
 ### View Logs
+
 ```bash
 # All services
-docker-compose logs -f
+docker compose logs -f
 
 # Specific service
-docker-compose logs -f backend
-docker-compose logs -f frontend
+docker compose logs -f backend
+docker compose logs -f frontend
 ```
 
 ### Stop Services
+
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ### Restart Services
+
 ```bash
-docker-compose restart
+docker compose restart
 ```
 
 ### Reset Database
+
 ```bash
 # WARNING: This deletes all data!
-docker-compose down -v
-docker-compose up -d
-docker-compose exec backend python manage.py migrate
+docker compose down -v
+docker compose up -d
+docker compose exec backend python manage.py migrate
 ```
 
 ---
@@ -139,13 +146,14 @@ lsof -i :5432  # PostgreSQL
 docker info
 
 # Restart Docker Desktop and try again
-docker-compose down
-docker-compose up -d
+docker compose down
+docker compose up -d
 ```
 
 ### Frontend Shows Connection Error
 
 Make sure backend is running:
+
 ```bash
 curl http://localhost:8000/admin
 ```
@@ -167,13 +175,14 @@ If you get a response, backend is running. The frontend might take a minute to c
 For the lightest possible demo, you can run just the essentials:
 
 ```bash
-# Use the minimal docker-compose
-docker-compose -f docker-compose.minimal.yml up -d
+# Use the minimal docker compose
+docker compose -f docker-compose.minimal.yml up -d
 ```
 
 This runs only:
+
 - PostgreSQL
-- Django Backend
+- Django Backend (with Django Q)
 - Next.js Frontend
 
-(No Redis, MinIO, or Celery for simplicity)
+(No external Redis or Celery needed as functionality is consolidated into Postgres)

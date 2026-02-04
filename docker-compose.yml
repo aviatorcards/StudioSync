@@ -14,16 +14,13 @@ services:
       timeout: 5s
       retries: 5
 
-  redis:
-    image: redis:7-alpine
-    volumes:
-      - redis_data:/data
 
   # Django Backend
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      target: development  # Use development stage for local dev with runserver
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./backend:/app
@@ -32,8 +29,7 @@ services:
     environment:
       DEBUG: "True" # <-- Enabled for dev debugging & preventing SSL redirects
       DATABASE_URL: postgresql://studio_user:studio_password@db:5432/studiosync
-      CELERY_BROKER_URL: redis://redis:6379/0
-      CELERY_RESULT_BACKEND: redis://redis:6379/0
+
       # Cloudflare R2 / S3 Configuration
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
@@ -45,8 +41,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      redis:
-        condition: service_started
     develop:
       watch:
         - action: sync
@@ -59,53 +53,23 @@ services:
         - action: rebuild
           path: ./backend/requirements.txt
 
-  celery_worker:
+  # Background Task Worker (Postgres-backed)
+  q_cluster:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    command: celery -A config worker --loglevel=info
+      target: development
+    command: python manage.py qcluster
     volumes:
       - ./backend:/app
     environment:
-      # DEBUG: "True"
       DATABASE_URL: postgresql://studio_user:studio_password@db:5432/studiosync
-      CELERY_BROKER_URL: redis://redis:6379/0
-      CELERY_RESULT_BACKEND: redis://redis:6379/0
-      # Cloudflare R2 / S3 Configuration
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
-      AWS_STORAGE_BUCKET_NAME: ${AWS_STORAGE_BUCKET_NAME:-}
-      AWS_S3_ENDPOINT_URL: ${AWS_S3_ENDPOINT_URL:-}
-      AWS_S3_USE_SSL: ${AWS_S3_USE_SSL:-}
       SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
     depends_on:
-      - db
-      - redis
-      - backend
-
-  celery_beat:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    command: celery -A config beat --loglevel=info
-    volumes:
-      - ./backend:/app
-    environment:
-      # DEBUG: "True"
-      DATABASE_URL: postgresql://studio_user:studio_password@db:5432/studiosync
-      CELERY_BROKER_URL: redis://redis:6379/0
-      CELERY_RESULT_BACKEND: redis://redis:6379/0
-      # Cloudflare R2 / S3 Configuration
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
-      AWS_STORAGE_BUCKET_NAME: ${AWS_STORAGE_BUCKET_NAME:-}
-      AWS_S3_ENDPOINT_URL: ${AWS_S3_ENDPOINT_URL:-}
-      AWS_S3_USE_SSL: ${AWS_S3_USE_SSL:-}
-      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
-    depends_on:
-      - db
-      - redis
-      - backend
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_started
 
   # Next.js Frontend
   frontend:
@@ -139,4 +103,3 @@ volumes:
   postgres_data:
   frontend_node_modules:
   frontend_next:
-  redis_data:

@@ -11,7 +11,8 @@ class ResourceSerializer(serializers.ModelSerializer):
             'id', 'title', 'description', 'resource_type', 
             'file', 'file_url', 'external_url', 'tags', 'category',
             'uploaded_by', 'uploaded_by_name', 'created_at',
-            'is_public', 'is_lendable', 'quantity_available'
+            'is_public', 'is_lendable', 'quantity_available', 'band',
+            'instrument', 'skill_level', 'composer', 'key_signature', 'tempo'
         ]
         read_only_fields = ['uploaded_by', 'file_size']
 
@@ -35,6 +36,19 @@ class ResourceSerializer(serializers.ModelSerializer):
 
         # Note: uploaded_by and studio are now set in perform_create()
         return super().create(validated_data)
+
+    def validate(self, data):
+        """Validate that music resources have required fields"""
+        resource_type = data.get('resource_type')
+        music_types = ['sheet_music', 'chord_chart', 'tablature', 'lyrics']
+        
+        if resource_type in music_types:
+            if not data.get('instrument'):
+                raise serializers.ValidationError({
+                    'instrument': 'Instrument is required for music resources'
+                })
+        
+        return data
 
 
 class ResourceCheckoutSerializer(serializers.ModelSerializer):

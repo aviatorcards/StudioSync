@@ -1,0 +1,14 @@
+# Playwright E2E Tests - Ignore Files
+
+# Test results
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Videos and screenshots from test runs
+*.webm
+*.png
+trace.zip
+
+# Playwright state
+.auth/

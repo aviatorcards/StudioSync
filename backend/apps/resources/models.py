@@ -170,3 +170,50 @@ class ResourceCheckout(models.Model):
         if self.status == 'returned':
             return False
         return timezone.now().date() > self.due_date
+
+
+class Setlist(models.Model):
+    """
+    A collection or "setlist" of resources, like a songbook for a recital.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    studio = models.ForeignKey(Studio, on_delete=models.CASCADE, related_name='setlists')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_setlists')
+
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    
+    resources = models.ManyToManyField(
+        Resource,
+        through='SetlistResource',
+        related_name='setlists'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'resource_setlists'
+        ordering = ['-created_at']
+        unique_together = ('studio', 'name')
+
+    def __str__(self):
+        return self.name
+
+
+class SetlistResource(models.Model):
+    """
+    Through model to link Resources to a Setlist, preserving order.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    setlist = models.ForeignKey(Setlist, on_delete=models.CASCADE)
+    resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
+    order = models.PositiveIntegerField()
+
+    class Meta:
+        db_table = 'resource_setlist_resources'
+        ordering = ['order']
+        unique_together = ('setlist', 'resource')
+
+    def __str__(self):
+        return f"{self.setlist.name} - {self.resource.title} (Order: {self.order})"

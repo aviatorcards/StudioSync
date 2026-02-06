@@ -85,6 +85,72 @@ pytest -m auth
 
 ### Frontend Tests
 
+#### End-to-End (E2E) Tests with Playwright
+
+E2E tests verify critical user flows to catch regressions before production.
+
+**Prerequisites:**
+
+- Docker services running (`docker compose up -d`)
+- Test data seeded (`docker compose exec backend python seed_data.py`)
+- Playwright browsers installed (`cd frontend && npx playwright install`)
+
+**Run all E2E tests:**
+
+```bash
+cd frontend
+npm run test:e2e
+```
+
+**Run specific test file:**
+
+```bash
+cd frontend
+npx playwright test auth.spec.ts
+npx playwright test bands.spec.ts
+npx playwright test students.spec.ts
+```
+
+**Run in UI mode (interactive debugging):**
+
+```bash
+cd frontend
+npm run test:e2e:ui
+```
+
+**Debug mode (step-by-step):**
+
+```bash
+cd frontend
+npm run test:e2e:debug
+```
+
+**View test report:**
+
+```bash
+cd frontend
+npm run test:e2e:report
+```
+
+**Using the helper script:**
+
+```bash
+# Automatically starts services, seeds data, and runs tests
+./scripts/run-e2e-tests.sh
+```
+
+**Test Coverage:**
+
+- ✅ Authentication (login, logout, session persistence)
+- ✅ Band management (create, view, search)
+- ✅ Student management (create, view, search)
+- ✅ Navigation and routing
+- ✅ Protected route access
+
+See `frontend/e2e/README.md` for detailed documentation on writing and debugging E2E tests.
+
+#### Unit Tests (Future)
+
 ```bash
 cd frontend
 

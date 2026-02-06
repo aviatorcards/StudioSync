@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Resource, ResourceCheckout
+from .models import Resource, ResourceCheckout, Setlist, SetlistResource
 
 class ResourceSerializer(serializers.ModelSerializer):
     uploaded_by_name = serializers.SerializerMethodField()
@@ -66,3 +66,28 @@ class ResourceCheckoutSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['checked_out_at', 'created_at', 'updated_at']
+
+
+class SetlistResourceSerializer(serializers.ModelSerializer):
+    """Serializer for items within a setlist"""
+    resource = ResourceSerializer(read_only=True)
+
+    class Meta:
+        model = SetlistResource
+        fields = ['id', 'order', 'resource']
+
+
+class SetlistSerializer(serializers.ModelSerializer):
+    """Serializer for a setlist of resources"""
+    resources = SetlistResourceSerializer(source='setlistresource_set', many=True, read_only=True)
+    created_by_name = serializers.ReadOnlyField(source='created_by.get_full_name')
+
+    class Meta:
+        model = Setlist
+        fields = [
+            'id', 'name', 'description', 'studio',
+            'created_by', 'created_by_name',
+            'created_at', 'updated_at',
+            'resources'
+        ]
+        read_only_fields = ['studio', 'created_by']

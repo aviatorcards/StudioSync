@@ -1,0 +1,27 @@
+{
+  "name": "studiosync",
+  "version": "1.0.0",
+  "description": "<div align=\"center\">   <img src=\"./frontend/public/logo.png\" alt=\"StudioSync Logo\" width=\"120\" height=\"120\" />   <h3>Sync your music studio, students, and schedule — all in one place.</h3>   <p>An open-source, self-hosted alternative to My Music Staff, built for the modern music educator.</p>",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aviatorcards/StudioSync.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/aviatorcards/StudioSync/issues"
+  },
+  "homepage": "https://github.com/aviatorcards/StudioSync#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.58.1",
+    "@types/node": "^25.2.1",
+    "cypress": "^15.10.0"
+  }
+}

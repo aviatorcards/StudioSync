@@ -20,7 +20,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
 from django.utils import timezone
-from apps.core.models import User, Studio, Teacher, Student
+from apps.core.models import User, Studio, Teacher, Student, SetupStatus
 
 # Security mode for CI/production
 SECURE_MODE = os.getenv('SEED_SECURE_MODE', 'false').lower() == 'true'
@@ -88,6 +88,27 @@ def seed():
     )
     if created:
         print(f"✅ Studio created: {studio.name}")
+
+    # 2.5 Ensure SetupStatus is complete (to prevent redirect to wizard)
+    setup_status, status_created = SetupStatus.objects.get_or_create(
+        defaults={
+            'is_completed': True,
+            'completed_at': timezone.now(),
+            'setup_version': '1.0',
+            'features_enabled': {
+                'billing': True, 'inventory': True, 'messaging': True, 
+                'resources': True, 'goals': True, 'bands': True, 
+                'analytics': True, 'practice_rooms': True
+            },
+            'setup_data': {'completed_by': admin.email}
+        }
+    )
+    if not setup_status.is_completed:
+        setup_status.is_completed = True
+        setup_status.save()
+        print("✅ SetupStatus marked as complete")
+    elif status_created:
+        print("✅ SetupStatus created (complete)")
 
     # 3. Create 5 Teachers
     teachers = []

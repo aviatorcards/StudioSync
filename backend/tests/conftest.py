@@ -5,6 +5,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from apps.core.models import Studio, Teacher, Student
+from apps.resources.models import Resource
 
 User = get_user_model()
 
@@ -108,3 +109,15 @@ def student_authenticated_client(api_client, student_user):
     """Return an API client authenticated as student user."""
     api_client.force_authenticate(user=student_user)
     return api_client
+
+
+@pytest.fixture
+def resource(db, studio, teacher_user):
+    """Create and return a test resource."""
+    return Resource.objects.create(
+        studio=studio,
+        uploaded_by=teacher_user,
+        title='Test Resource',
+        resource_type='sheet_music',
+        instrument='Piano',
+    )

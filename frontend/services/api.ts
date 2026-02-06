@@ -37,7 +37,7 @@ api.interceptors.response.use(
                     throw new Error('No refresh token')
                 }
 
-                const response = await axios.post(`${API_URL}/auth/token/refresh/`, {
+                const response = await axios.post(`${API_URL}/auth/token/refresh`, {
                     refresh: refreshToken
                 })
 
@@ -59,3 +59,9 @@ api.interceptors.response.use(
 )
 
 export default api
+
+export const getSetlists = () => api.get('/resources/setlists')
+export const createSetlist = (data: { name: string; description: string }) => api.post('/resources/setlists', data)
+export const addResourceToSetlist = (setlistId: string, resourceId: string) => api.post(`/resources/setlists/${setlistId}/add-resource`, { resource_id: resourceId })
+export const removeResourceFromSetlist = (setlistId: string, resourceId: string) => api.post(`/resources/setlists/${setlistId}/remove-resource`, { resource_id: resourceId })
+export const reorderSetlist = (setlistId: string, resourceIds: string[]) => api.post(`/resources/setlists/${setlistId}/reorder`, { resource_ids: resourceIds })

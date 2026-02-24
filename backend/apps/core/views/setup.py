@@ -34,6 +34,7 @@ def check_setup_status(request):
         - setup_required: bool
         - completed_at: datetime (optional)
         - setup_version: str (optional)
+        - features_enabled: dict of feature flags
     """
     setup = SetupStatus.objects.first()
 
@@ -41,14 +42,16 @@ def check_setup_status(request):
         return Response({
             'is_completed': False,
             'setup_required': True,
-            'message': 'Initial setup required'
+            'message': 'Initial setup required',
+            'features_enabled': {}
         })
 
     return Response({
         'is_completed': setup.is_completed,
         'setup_required': not setup.is_completed,
         'completed_at': setup.completed_at,
-        'setup_version': setup.setup_version
+        'setup_version': setup.setup_version,
+        'features_enabled': setup.features_enabled or {}
     })
 
 

@@ -1,4 +1,5 @@
 import { SetupWizardData, AdminAccount } from '@/types/setup'
+import { HelpTooltip } from '@/components/ui/help-tooltip'
 
 interface StepProps {
     data: SetupWizardData
@@ -65,8 +66,9 @@ export const AdminAccountStep = ({ data, updateAdminAccount, onNext, onBack }: S
                 </div>
 
                 <div className="sm:col-span-2">
-                    <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
+                    <label htmlFor="email" className="block text-sm flex items-center font-medium leading-6 text-gray-900">
                         Email Address *
+                        <HelpTooltip content="This email will be used to log into the StudioSync dashboard." />
                     </label>
                     <div className="mt-2">
                         <input

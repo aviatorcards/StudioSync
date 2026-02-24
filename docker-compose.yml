@@ -1,3 +1,8 @@
+# Full development stack: PostgreSQL + Redis + Celery worker/beat + Django + Next.js
+# Usage: docker compose up  (or: docker compose watch)
+# See docker-compose.minimal.yml for Postgres-only (no Redis/Celery)
+# See docker-compose.simple.yml for SQLite only (no Postgres/Redis/Celery)
+
 services:
   # PostgreSQL Database
   db:
@@ -9,7 +14,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U studio_user -d studiosync" ]
+      test: ["CMD-SHELL", "pg_isready -U studio_user -d studiosync"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -76,7 +81,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    command: sh -c "chmod +x node_modules/.bin/next && npm run build && npm start"
+    command: npm run dev
     volumes:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules

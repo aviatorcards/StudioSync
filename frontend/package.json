@@ -38,7 +38,7 @@
     "devDependencies": {
         "@playwright/test": "^1.49.0",
         "@types/node": "^20.19.27",
-        "@types/react": "^19.2.7",
+        "@types/react": "^19.2.9",
         "@types/react-dom": "^19.2.3",
         "@types/react-easy-crop": "^1.16.0",
         "autoprefixer": "^10.0.1",

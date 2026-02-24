@@ -18,7 +18,16 @@ docker compose up --build
 ```
 
 This will start the backend, frontend, database, and all necessary services.
-Visit `http://localhost:3000` to access the application.
+
+### 3. Initialize Database and Setup
+
+Run the following to initialize the database:
+
+```bash
+docker-compose exec backend python manage.py migrate
+```
+
+Visit the Setup Wizard at `http://localhost:3000/setup` to create your studio and admin account interactively. Then navigate to `http://localhost:3000` to access the application.
 
 ---
 
@@ -28,10 +37,10 @@ If you prefer to run services manually:
 
 ### 1. Prerequisites
 
-*   Python 3.10+
-*   Node.js 18+
-*   PostgreSQL
-*   MinIO (for local S3 storage)
+- Python 3.10+
+- Node.js 18+
+- PostgreSQL
+- MinIO (for local S3 storage)
 
 ### 2. Backend Setup
 

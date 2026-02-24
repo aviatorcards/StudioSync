@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUser, UserRole } from '@/contexts/UserContext'
+import { useFeatureFlags } from '@/hooks/useFeatureFlags'
+import { FeatureFlags } from '@/types/setup'
 import { Logo } from '@/components/Logo'
 import {
     LayoutDashboard,
@@ -49,6 +51,8 @@ interface SidebarItem {
     icon: any
     badge?: string | number
     roles?: UserRole[]
+    /** If set, the item is hidden when this feature flag is disabled */
+    featureFlag?: keyof FeatureFlags
 }
 
 interface SidebarSection {
@@ -65,6 +69,7 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname()
     const { currentUser } = useUser()
+    const { flags } = useFeatureFlags()
 
     // Close sidebar on route change (mobile)
     useEffect(() => {
@@ -105,21 +110,21 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             title: 'MANAGEMENT',
             items: [
                 { name: 'Students', href: '/dashboard/students', icon: Users, roles: ['admin', 'teacher'] },
-                { name: 'Bands', href: '/dashboard/bands', icon: Music, roles: ['admin', 'teacher', 'student'] },
+                { name: 'Bands', href: '/dashboard/bands', icon: Music, roles: ['admin', 'teacher', 'student'], featureFlag: 'bands_enabled' },
                 { name: 'Instructors', href: '/dashboard/teachers', icon: UserCheck, roles: ['admin'] },
                 { name: 'Schedule', href: '/dashboard/schedule', icon: Calendar, roles: ['admin', 'teacher', 'student'] },
                 { name: 'Lessons', href: '/dashboard/lessons', icon: BookOpen, roles: ['admin', 'teacher', 'student'] },
-                { name: 'Billing', href: '/dashboard/billing', icon: CreditCard, roles: ['admin', 'student'] },
+                { name: 'Billing', href: '/dashboard/billing', icon: CreditCard, roles: ['admin', 'student'], featureFlag: 'billing_enabled' },
             ],
         },
         {
             title: 'TOOLS',
             items: [
-                { name: 'Resources', href: '/dashboard/resources', icon: Library, roles: ['admin', 'teacher', 'student'] },
-                { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare, roles: ['admin', 'teacher', 'student'] },
-                { name: 'Goals', href: '/dashboard/goals', icon: Target, roles: ['admin', 'teacher', 'student'] },
-                { name: 'Inventory', href: '/dashboard/inventory', icon: Package, roles: ['admin', 'teacher'] },
-                { name: 'Reports', href: '/dashboard/reports', icon: BarChart3, roles: ['admin'] },
+                { name: 'Resources', href: '/dashboard/resources', icon: Library, roles: ['admin', 'teacher', 'student'], featureFlag: 'resources_enabled' },
+                { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare, roles: ['admin', 'teacher', 'student'], featureFlag: 'messaging_enabled' },
+                { name: 'Goals', href: '/dashboard/goals', icon: Target, roles: ['admin', 'teacher', 'student'], featureFlag: 'goals_enabled' },
+                { name: 'Inventory', href: '/dashboard/inventory', icon: Package, roles: ['admin', 'teacher'], featureFlag: 'inventory_enabled' },
+                { name: 'Reports', href: '/dashboard/reports', icon: BarChart3, roles: ['admin'], featureFlag: 'analytics_enabled' },
             ],
         },
         {
@@ -178,7 +183,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         const hasRoleAccess = !item.roles || (currentUser && item.roles.includes(currentUser.role))
                         if (!hasRoleAccess) return false
 
-                        // All features are now enabled by default
+                        // Check feature flag (items without a flag are always visible)
+                        if (item.featureFlag && !flags[item.featureFlag]) return false
+
                         return true
                     })
 

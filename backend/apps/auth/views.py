@@ -18,7 +18,6 @@ class MeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        print(f"DEBUG: MeView accessed by user: {request.user} (ID: {request.user.id}, Role: {request.user.role})")
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 

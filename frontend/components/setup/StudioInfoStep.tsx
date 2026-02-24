@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { SetupWizardData, TIMEZONES, CURRENCIES, StudioInfo } from '@/types/setup'
+import { HelpTooltip } from '@/components/ui/help-tooltip'
 
 interface StepProps {
     data: SetupWizardData
@@ -9,6 +11,45 @@ interface StepProps {
 
 export const StudioInfoStep = ({ data, updateStudioInfo, onNext, onBack }: StepProps) => {
     const { studio_info } = data
+
+    // Auto-detect timezone and currency on mount if defaults are present
+    useEffect(() => {
+        try {
+            // Detect Timezone
+            const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+            // Only update if current is UTC (default) and detected is valid
+            if (studio_info.timezone === 'UTC' && userTimezone) {
+                // Check if the detected timezone is in our allowed list
+                const isValidTimezone = TIMEZONES.some(t => t.value === userTimezone)
+                if (isValidTimezone) {
+                    updateStudioInfo({ timezone: userTimezone })
+                }
+            }
+
+            // Detect Currency (heuristic based on locale)
+            if (studio_info.currency === 'USD') {
+                const locale = navigator.language
+                let detectedCurrency = 'USD'
+
+                // Explicitly check for US to not "skip" it :)
+                if (locale.includes('US')) detectedCurrency = 'USD'
+                else if (locale.includes('GB')) detectedCurrency = 'GBP'
+                else if (locale.match(/EU|FR|DE|IT|ES|NL|BE|AT|FI|IE|PT|GR|SK|EE|LV|LT|CY|MT/)) detectedCurrency = 'EUR'
+                else if (locale.includes('CA')) detectedCurrency = 'CAD'
+                else if (locale.includes('AU')) detectedCurrency = 'AUD'
+                else if (locale.includes('JP')) detectedCurrency = 'JPY'
+
+                // Check if valid option
+                const isValidCurrency = CURRENCIES.some(c => c.value === detectedCurrency)
+
+                if (detectedCurrency !== 'USD' && isValidCurrency) {
+                    updateStudioInfo({ currency: detectedCurrency })
+                }
+            }
+        } catch (e) {
+            console.warn('Failed to auto-detect locale settings', e)
+        }
+    }, []) // Run once on mount
 
     const isValid = studio_info.studio_name && studio_info.studio_email && studio_info.timezone && studio_info.currency
 
@@ -29,8 +70,9 @@ export const StudioInfoStep = ({ data, updateStudioInfo, onNext, onBack }: StepP
             <div className="space-y-7">
                 <div className="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2">
                     <div className="sm:col-span-2">
-                        <label htmlFor="studio-name" className="block text-base font-medium leading-6 text-gray-900">
+                        <label htmlFor="studio-name" className="block text-base flex items-center font-medium leading-6 text-gray-900">
                             Studio Name *
+                            <HelpTooltip content="The official name of your music school or studio. Used on invoices and emails." />
                         </label>
                         <div className="mt-2.5">
                             <input
@@ -63,8 +105,9 @@ export const StudioInfoStep = ({ data, updateStudioInfo, onNext, onBack }: StepP
                     </div>
 
                     <div className="sm:col-span-1">
-                        <label htmlFor="timezone" className="block text-base font-medium leading-6 text-gray-900">
+                        <label htmlFor="timezone" className="block text-base flex items-center font-medium leading-6 text-gray-900">
                             Timezone *
+                            <HelpTooltip content="Affects all calendar events and notifications." />
                         </label>
                         <div className="mt-2.5">
                             <select
@@ -84,8 +127,9 @@ export const StudioInfoStep = ({ data, updateStudioInfo, onNext, onBack }: StepP
                     </div>
 
                     <div className="sm:col-span-1">
-                        <label htmlFor="currency" className="block text-base font-medium leading-6 text-gray-900">
+                        <label htmlFor="currency" className="block text-base flex items-center font-medium leading-6 text-gray-900">
                             Currency *
+                            <HelpTooltip content="The default currency for all invoicing and transactions." />
                         </label>
                         <div className="mt-2.5">
                             <select

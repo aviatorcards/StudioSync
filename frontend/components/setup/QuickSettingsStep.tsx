@@ -1,5 +1,6 @@
 import React from 'react'
 import { SetupWizardData, QuickSettings } from '@/types/setup'
+import { HelpTooltip } from '@/components/ui/help-tooltip'
 
 interface StepProps {
     data: SetupWizardData
@@ -69,7 +70,10 @@ export const QuickSettingsStep = ({ data, updateQuickSettings, onNext, onBack }:
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Default Lesson Duration (min)</label>
+                            <label className="block text-sm flex items-center font-medium text-gray-700">
+                                Default Lesson Duration (min)
+                                <HelpTooltip content="The standard length for a new lesson booking." />
+                            </label>
                             <input
                                 type="range"
                                 min="15"
@@ -85,7 +89,10 @@ export const QuickSettingsStep = ({ data, updateQuickSettings, onNext, onBack }:
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Cancellation Notice (Hours)</label>
+                            <label className="block text-sm flex items-center font-medium text-gray-700">
+                                Cancellation Notice (Hours)
+                                <HelpTooltip content="Minimum hours required to cancel without penalty." />
+                            </label>
                             <input
                                 type="number"
                                 min="0"
@@ -117,7 +124,10 @@ export const QuickSettingsStep = ({ data, updateQuickSettings, onNext, onBack }:
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Tax Rate (%)</label>
+                            <label className="block text-sm flex items-center font-medium text-gray-700">
+                                Tax Rate (%)
+                                <HelpTooltip content="Percentage tax applied to taxable invoice items." />
+                            </label>
                             <div className="flex items-center space-x-2">
                                 <input
                                     type="number"

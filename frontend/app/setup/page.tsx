@@ -16,6 +16,7 @@ import { SampleDataStep } from '@/components/setup/SampleDataStep'
 import { CompletionStep } from '@/components/setup/CompletionStep'
 
 import { Music } from 'lucide-react'
+import Image from 'next/image'
 
 export default function SetupPage() {
     const router = useRouter()
@@ -26,18 +27,18 @@ export default function SetupPage() {
         const checkStatus = async () => {
             try {
                 const res = await fetch('/api/core/setup/status/')
-                
+
                 const contentType = res.headers.get("content-type");
                 if (!contentType || !contentType.includes("application/json")) {
-                   const text = await res.text();
-                   console.error("Non-JSON response from setup status:", text);
-                   return; // Exit if not JSON
+                    const text = await res.text();
+                    console.error("Non-JSON response from setup status:", text);
+                    return; // Exit if not JSON
                 }
 
                 const data = await res.json()
                 if (data.is_completed && wizard.currentStep < 7) {
                     // If already setup, redirect to dashboard or login
-                    router.replace('/dashboard') 
+                    router.replace('/dashboard')
                 }
             } catch (err) {
                 console.error("Failed to check setup status", err)
@@ -110,8 +111,13 @@ export default function SetupPage() {
                 {/* Header */}
                 <div className="bg-white p-8 border-b border-gray-100 flex justify-between items-center">
                     <div className="flex items-center space-x-2">
-                        <div className="bg-indigo-600 p-2 rounded-lg">
-                            <Music className="h-6 w-6 text-white" />
+                        <div className="relative h-10 w-10">
+                            <Image
+                                src="/logo-dev.svg"
+                                alt="StudioSync Logo"
+                                fill
+                                className="object-contain"
+                            />
                         </div>
                         <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600">
                             StudioSync

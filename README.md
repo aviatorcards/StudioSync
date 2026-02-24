@@ -235,13 +235,17 @@
 
    ```bash
    docker compose exec backend python manage.py migrate
-   docker compose exec backend python manage.py createsuperuser
    ```
 
-4. **Access the App**
-   - **Frontend:** [http://localhost:3000](http://localhost:3000)
+4. **Complete Setup Wizard**
+
+   Navigate to the interactive Setup Wizard to configure your studio and admin account:
+   - **Setup Wizard:** [http://localhost:3000/setup](http://localhost:3000/setup)
+
+5. **Access the App**
+   - **Frontend Dashboard:** [http://localhost:3000](http://localhost:3000)
    - **API Docs:** [http://localhost:8000/api/docs](http://localhost:8000/api/docs)
-   - **Admin Portal:** [http://localhost:8000/admin](http://localhost:8000/admin)
+   - **Django Admin:** [http://localhost:8000/admin](http://localhost:8000/admin)
 
 ## 🛠️ Tech Stack
 

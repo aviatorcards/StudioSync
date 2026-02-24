@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { LANGUAGES, SetupWizardData } from '@/types/setup'
+import { SetupWizardData } from '@/types/setup'
 
 interface StepProps {
     data: SetupWizardData
@@ -20,7 +20,12 @@ export const WelcomeStep = ({ data, updateData, onNext }: StepProps) => {
                 </p>
             </div>
 
-
+            {/* Language selection removed - only English supported currently */}
+            <div className="w-full max-w-md space-y-4">
+                <p className="text-sm text-gray-500">
+                    Currently available in English
+                </p>
+            </div>
 
             <div className="pt-8">
                 <button

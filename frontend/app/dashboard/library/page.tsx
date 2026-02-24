@@ -33,7 +33,6 @@ interface SongbookResource {
     uploaded_by_name: string
     created_at: string
     instrument: string
-    skill_level: SkillLevel
     composer: string
     key_signature: string
     tempo: string
@@ -49,13 +48,6 @@ const INSTRUMENTS = [
     { value: 'Other', icon: Music2, color: 'gray' }
 ]
 
-const SKILL_LEVELS: { value: SkillLevel | 'all'; label: string; color: string }[] = [
-    { value: 'all', label: 'All Levels', color: 'gray' },
-    { value: 'beginner', label: 'Beginner', color: 'green' },
-    { value: 'intermediate', label: 'Intermediate', color: 'blue' },
-    { value: 'advanced', label: 'Advanced', color: 'purple' },
-    { value: 'professional', label: 'Professional', color: 'orange' }
-]
 
 const RESOURCE_TYPES: { value: MusicResourceType; label: string; icon: any }[] = [
     { value: 'sheet_music', label: 'Sheet Music', icon: FileMusic },
@@ -146,9 +138,6 @@ export default function LibraryPage() {
                                     <div className="flex flex-wrap gap-2">
                                         <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-${instInfo.color}-50 text-${instInfo.color}-700`}>
                                             {resource.instrument}
-                                        </span>
-                                        <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-purple-50 text-purple-700">
-                                            {resource.skill_level}
                                         </span>
                                         {resource.key_signature && (
                                             <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-50 text-blue-700">

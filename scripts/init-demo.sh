@@ -31,7 +31,8 @@ sleep 15
 # Check if backend is ready
 echo "⏳ Waiting for backend to start..."
 for i in {1..30}; do
-    if docker compose exec -T backend python -c "import sys; sys.exit(0)" 2>/dev/null; then
+    if docker compose exec -T backend python manage.py check >/dev/null 2>&1; then
+        echo "✅ Backend is strongly connected to database"
         break
     fi
     sleep 2
@@ -40,7 +41,10 @@ done
 # Run migrations
 echo ""
 echo "📊 Running database migrations..."
-docker compose exec -T backend python manage.py migrate
+if ! docker compose exec -T backend python manage.py migrate; then
+    echo "❌ Migrations failed! Please check the backend logs."
+    exit 1
+fi
 
 # Create superuser non-interactively
 echo ""

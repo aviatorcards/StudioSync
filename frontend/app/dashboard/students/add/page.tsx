@@ -14,7 +14,6 @@ export default function AddStudentPage() {
         last_name: '',
         email: '',
         instrument: '',
-        skill_level: 'beginner',
         birth_date: '',
         emergency_contact_name: '',
         emergency_contact_phone: '',
@@ -144,7 +143,7 @@ export default function AddStudentPage() {
                                 <Music className="w-5 h-5 text-[var(--color-primary)]" />
                                 Musical Details
                             </h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Instrument
@@ -157,22 +156,6 @@ export default function AddStudentPage() {
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
                                         placeholder="Piano, Guitar, Violin... (Optional)"
                                     />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Skill Level
-                                    </label>
-                                    <select
-                                        name="skill_level"
-                                        value={formData.skill_level}
-                                        onChange={handleChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none"
-                                    >
-                                        <option value="beginner">Beginner</option>
-                                        <option value="intermediate">Intermediate</option>
-                                        <option value="advanced">Advanced</option>
-                                        <option value="professional">Professional</option>
-                                    </select>
                                 </div>
                             </div>
                         </div>

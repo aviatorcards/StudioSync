@@ -21,7 +21,6 @@ export interface LessonPlan {
   title: string;
   description: string;
   content: string;
-  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
   estimated_duration_minutes: number;
   tags: string[];
   is_public: boolean;
@@ -37,15 +36,9 @@ export interface LessonPlanFormData {
   title: string;
   description: string;
   content: string;
-  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
   estimated_duration_minutes: number;
   tags: string[];
   is_public: boolean;
   resource_ids: string[];
 }
 
-export const DIFFICULTY_LEVELS = [
-  { value: 'beginner', label: 'Beginner', color: 'bg-green-100 text-green-800' },
-  { value: 'intermediate', label: 'Intermediate', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'advanced', label: 'Advanced', color: 'bg-red-100 text-red-800' },
-] as const;

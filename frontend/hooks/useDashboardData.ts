@@ -134,6 +134,35 @@ export function useStudents(params?: any) {
   return { students, meta, loading, refresh: fetchStudents };
 }
 
+export interface StudentStats {
+  total_students: number;
+  active_students: number;
+  unassigned_students: number;
+}
+
+export function useStudentStats() {
+  const [stats, setStats] = useState<StudentStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchStats = async () => {
+    try {
+      const response = await api.get("/students/stats/");
+      setStats(response.data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load student stats");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  return { stats, loading, refresh: fetchStats };
+}
+
 export function useLessons(params?: any) {
   const [lessons, setLessons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -185,23 +214,25 @@ export function useInvoices(params?: any) {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchInvoices = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get("/billing/invoices/", { params });
+      const data = response.data.results || response.data;
+      setInvoices(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load invoices");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchInvoices = async () => {
-      try {
-        const response = await api.get("/billing/invoices/", { params });
-        const data = response.data.results || response.data;
-        setInvoices(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error(err);
-        toast.error("Failed to load invoices");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchInvoices();
   }, [JSON.stringify(params)]);
 
-  return { invoices, loading };
+  return { invoices, loading, refetch: fetchInvoices };
 }
 
 export function useUsers(params?: any) {

@@ -13,6 +13,7 @@ Transform the Resources tab into a comprehensive knowledge base and lesson plann
 A centralized repository for all teaching materials:
 
 #### Resource Types:
+
 - 📄 **Documents** - PDFs, Word docs, lesson notes
 - 🎵 **Sheet Music** - Scores, chord charts, tabs
 - 🎬 **Videos** - Tutorial videos, performance recordings
@@ -23,6 +24,7 @@ A centralized repository for all teaching materials:
 - 📚 **Books** - Method books, theory books (metadata + files)
 
 #### Organization:
+
 ```
 Resources/
 ├── By Category/
@@ -36,10 +38,6 @@ Resources/
 │   ├── Guitar/
 │   ├── Violin/
 │   └── Voice/
-├── By Skill Level/
-│   ├── Beginner/
-│   ├── Intermediate/
-│   └── Advanced/
 └── By Tags/
     ├── #jazz
     ├── #classical
@@ -48,6 +46,7 @@ Resources/
 ```
 
 #### Features:
+
 - ✅ Drag-and-drop file upload
 - ✅ Bulk upload
 - ✅ Preview files in-browser
@@ -66,6 +65,7 @@ Resources/
 A structured knowledge repository for teaching concepts:
 
 #### Structure:
+
 ```
 Knowledge Base/
 ├── Music Theory/
@@ -97,6 +97,7 @@ Knowledge Base/
 ```
 
 #### Features:
+
 - 📝 Rich text editor (Markdown or WYSIWYG)
 - 🖼️ Embed images, videos, audio
 - 🔗 Internal linking between articles
@@ -115,11 +116,11 @@ Knowledge Base/
 Create custom lesson plans by combining resources:
 
 #### Lesson Plan Structure:
+
 ```json
 {
   "title": "Introduction to Major Scales",
   "duration": 60,
-  "skill_level": "beginner",
   "objectives": [
     "Understand major scale construction",
     "Play C major scale hands separately",
@@ -176,6 +177,7 @@ Create custom lesson plans by combining resources:
 ```
 
 #### Features:
+
 - 🎨 Drag-and-drop lesson builder
 - 📚 Resource picker (search and add from library)
 - ⏱️ Time allocation per section
@@ -196,6 +198,7 @@ Create custom lesson plans by combining resources:
 Pre-built templates for common lesson types:
 
 #### Template Categories:
+
 - **First Lesson** - Student assessment and goal setting
 - **Technique Focus** - Specific technical skills
 - **Theory Lesson** - Music theory concepts
@@ -206,6 +209,7 @@ Pre-built templates for common lesson types:
 - **Ensemble** - Group lesson plans
 
 #### Template Features:
+
 - 📋 Pre-filled structure
 - 🎯 Common objectives
 - 📚 Suggested resources
@@ -221,6 +225,7 @@ Pre-built templates for common lesson types:
 Connect resources and plans to actual lessons:
 
 #### During Lesson Creation:
+
 ```
 Create Lesson
 ├── Basic Info (date, time, student)
@@ -237,6 +242,7 @@ Create Lesson
 ```
 
 #### During/After Lesson:
+
 - ✅ Check off completed sections
 - 📝 Add real-time notes
 - 📊 Track time spent per section
@@ -252,6 +258,7 @@ Create Lesson
 Students can access their assigned resources:
 
 #### Student Portal Features:
+
 - 📚 View assigned resources
 - 📥 Download materials
 - 🎥 Watch videos
@@ -267,12 +274,14 @@ Students can access their assigned resources:
 ### 7. **Advanced Features**
 
 #### AI-Powered Suggestions:
+
 - 🤖 Suggest resources based on student level
 - 🎯 Recommend lesson plans for specific goals
 - 📊 Analyze which resources are most effective
 - 🔍 Auto-tag uploaded resources
 
 #### Collaboration:
+
 - 👥 Share resources with other instructors
 - 💬 Discuss teaching strategies
 - ⭐ Rate and review resources
@@ -280,6 +289,7 @@ Students can access their assigned resources:
 - 📦 Resource bundles/packages
 
 #### Analytics:
+
 - 📊 Most used resources
 - ⏱️ Average time spent on resources
 - 📈 Student engagement metrics
@@ -291,6 +301,7 @@ Students can access their assigned resources:
 ## 🗄️ Database Schema
 
 ### Resource Model:
+
 ```python
 class Resource(models.Model):
     RESOURCE_TYPES = [
@@ -302,30 +313,29 @@ class Resource(models.Model):
         ('text', 'Text Note'),
         ('exercise', 'Exercise'),
     ]
-    
+
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     resource_type = models.CharField(max_length=20, choices=RESOURCE_TYPES)
     file = models.FileField(upload_to='resources/', null=True, blank=True)
     url = models.URLField(null=True, blank=True)
     content = models.TextField(blank=True)  # For text notes
-    
+
     # Organization
     category = models.CharField(max_length=100)
     instrument = models.CharField(max_length=100, blank=True)
-    skill_level = models.CharField(max_length=50)
     tags = models.JSONField(default=list)
-    
+
     # Metadata
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_public = models.BooleanField(default=False)
-    
+
     # Sharing
     shared_with_students = models.ManyToManyField(Student, blank=True)
     shared_with_classes = models.ManyToManyField('Class', blank=True)
-    
+
     # Analytics
     view_count = models.IntegerField(default=0)
     download_count = models.IntegerField(default=0)
@@ -333,29 +343,30 @@ class Resource(models.Model):
 ```
 
 ### Lesson Plan Model:
+
 ```python
 class LessonPlan(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
     duration_minutes = models.IntegerField()
-    skill_level = models.CharField(max_length=50)
     instrument = models.CharField(max_length=100)
-    
+
     objectives = models.JSONField(default=list)
     sections = models.JSONField(default=list)  # Array of section objects
     homework = models.JSONField(default=list)
     assessment_criteria = models.JSONField(default=list)
-    
+
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     is_template = models.BooleanField(default=False)
     is_public = models.BooleanField(default=False)
-    
+
     # Usage tracking
     times_used = models.IntegerField(default=0)
     average_rating = models.DecimalField(max_digits=3, decimal_places=2, default=0)
 ```
 
 ### Knowledge Base Article Model:
+
 ```python
 class KnowledgeArticle(models.Model):
     title = models.CharField(max_length=200)
@@ -363,17 +374,17 @@ class KnowledgeArticle(models.Model):
     content = models.TextField()  # Markdown or HTML
     category = models.CharField(max_length=100)
     tags = models.JSONField(default=list)
-    
+
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     is_published = models.BooleanField(default=True)
     is_public = models.BooleanField(default=False)
-    
+
     # Related articles
     related_articles = models.ManyToManyField('self', blank=True)
-    
+
     # Analytics
     view_count = models.IntegerField(default=0)
     helpful_count = models.IntegerField(default=0)
@@ -384,11 +395,12 @@ class KnowledgeArticle(models.Model):
 ## 🎨 UI/UX Mockup Ideas
 
 ### Resource Library View:
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ 📚 Resource Library                    [+ Upload] [Create Plan] │
 ├─────────────────────────────────────────────────────────┤
-│ Filters: [All Types ▼] [All Instruments ▼] [All Levels ▼]      │
+│ Filters: [All Types ▼] [All Instruments ▼]                      │
 │ Search: [🔍 Search resources...]                                │
 ├─────────────────────────────────────────────────────────┤
 │ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐   │
@@ -401,11 +413,12 @@ class KnowledgeArticle(models.Model):
 ```
 
 ### Lesson Plan Builder:
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ Create Lesson Plan: "Introduction to Major Scales"      │
 ├─────────────────────────────────────────────────────────┤
-│ Duration: [60] min  Level: [Beginner ▼]  Instrument: [Piano ▼] │
+│ Duration: [60] min  Instrument: [Piano ▼]                       │
 │                                                          │
 │ Objectives:                                              │
 │ • Understand major scale construction                   │
@@ -430,24 +443,28 @@ class KnowledgeArticle(models.Model):
 ## 🚀 Implementation Priority
 
 ### Phase 1: Basic Resource Library (Week 1-2)
+
 - [ ] File upload and storage
 - [ ] Basic categorization
 - [ ] Search and filter
 - [ ] Resource viewing/download
 
 ### Phase 2: Lesson Plan Builder (Week 3-4)
+
 - [ ] Lesson plan model
 - [ ] Drag-and-drop builder UI
 - [ ] Resource picker
 - [ ] Save and reuse plans
 
 ### Phase 3: Knowledge Base (Week 5-6)
+
 - [ ] Article creation and editing
 - [ ] Category structure
 - [ ] Search and navigation
 - [ ] Public wiki option
 
 ### Phase 4: Integration & Polish (Week 7-8)
+
 - [ ] Connect to actual lessons
 - [ ] Student portal access
 - [ ] Analytics and tracking

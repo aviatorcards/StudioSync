@@ -267,7 +267,6 @@ def _create_sample_data(studio, admin_user):
             defaults={
                 'studio': studio,
                 'instrument': instrument,
-                'skill_level': 'beginner',
                 'primary_teacher': teacher,
                 'is_active': True
             }

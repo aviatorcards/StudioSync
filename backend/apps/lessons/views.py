@@ -188,21 +188,35 @@ class LessonPlanViewSet(viewsets.ModelViewSet):
         if hasattr(user, 'teacher_profile') and user.teacher_profile:
             serializer.save(created_by=user.teacher_profile)
         elif user.role == 'admin':
-            # Admin must specify teacher
+            # Admin can specify teacher_id in request.data.get('created_by')
             teacher_id = self.request.data.get('created_by')
+            teacher = None
+            
             if teacher_id:
                 from apps.core.models import Teacher
                 try:
                     teacher = Teacher.objects.get(id=teacher_id)
-                    serializer.save(created_by=teacher)
-                except Teacher.DoesNotExist:
+                except (Teacher.DoesNotExist, ValueError):
                     raise serializers.ValidationError({
                         "created_by": "Teacher with this ID does not exist"
                     })
-            else:
+            
+            if not teacher:
+                # Try to find a sensible default teacher for this admin
+                from apps.core.models import Teacher, Studio
+                studio = Studio.objects.filter(owner=user).first()
+                if studio:
+                    teacher = Teacher.objects.filter(studio=studio).first()
+                
+                if not teacher:
+                    teacher = Teacher.objects.first()
+            
+            if not teacher:
                 raise serializers.ValidationError({
-                    "created_by": "Admin must specify a teacher ID"
+                    "created_by": "No teacher found to assign this lesson plan to. Please create a teacher profile first."
                 })
+                
+            serializer.save(created_by=teacher)
         else:
             raise PermissionDenied("Only teachers and admins can create lesson plans")
 
@@ -260,12 +274,20 @@ class StudentGoalViewSet(viewsets.ModelViewSet):
                     })
                 serializer.save(student=student)
         elif user.role == 'admin':
-            # Admin must specify both student and teacher
-            if 'student' not in serializer.validated_data or 'teacher' not in serializer.validated_data:
+            # Admin must specify student
+            if 'student' not in serializer.validated_data:
                 raise serializers.ValidationError({
-                    "error": "Admin must specify both student and teacher"
+                    "student": "Admin must specify a student"
                 })
-            serializer.save()
+            
+            student = serializer.validated_data.get('student')
+            # If teacher is not in validated_data (it's read_only anyway), 
+            # try to use student's primary teacher.
+            teacher = serializer.validated_data.get('teacher')
+            if not teacher and student and hasattr(student, 'primary_teacher'):
+                teacher = student.primary_teacher
+                
+            serializer.save(teacher=teacher)
         else:
             raise PermissionDenied("You don't have permission to create goals")
 

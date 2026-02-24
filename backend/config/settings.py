@@ -193,7 +193,10 @@ CORS_EXPOSE_HEADERS = [
 ]
 CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
 
-# Disable automatic slash appending to prevent 301 redirects that bypass CORS
+# APPEND_SLASH=False: Django's auto-redirect to add trailing slashes causes
+# a redirect loop when requests go through the Next.js proxy (the proxy strips
+# the slash, Django redirects to the slash URL, repeat). Trailing slashes are
+# handled instead by using optional-slash URL patterns in each app's urls.py.
 APPEND_SLASH = False
 
 # REST Framework settings
@@ -257,6 +260,8 @@ CHANNEL_LAYERS = {
         'BACKEND': 'channels.layers.InMemoryChannelLayer',
     },
 }
+
+### Docs??? 
 
 # Email Configuration (Uses custom backend to read from DB)
 EMAIL_BACKEND = 'apps.core.email_backend.ParameterizedEmailBackend'

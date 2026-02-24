@@ -82,9 +82,7 @@ export default function LessonsPage() {
     const [showResourceSelector, setShowResourceSelector] = useState(false)
     const [formData, setFormData] = useState<LessonPlanFormData>({
         title: '',
-        description: '',
         content: '',
-        difficulty_level: 'beginner',
         estimated_duration_minutes: 60,
         tags: [],
         is_public: false,
@@ -279,7 +277,8 @@ export default function LessonsPage() {
                                 <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Date & Schedule</th>
                                 <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Student / Group</th>
                                 <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Instructor</th>
-                                <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Complexity</th>
+                                <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Type</th>
+
                                 <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
                                 <th className="px-6 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
                             </tr>
@@ -428,9 +427,7 @@ export default function LessonsPage() {
                                                 setEditingPlan(plan)
                                                 setFormData({
                                                     title: plan.title,
-                                                    description: plan.description,
                                                     content: plan.content,
-                                                    difficulty_level: plan.difficulty_level,
                                                     estimated_duration_minutes: plan.estimated_duration_minutes,
                                                     tags: plan.tags,
                                                     is_public: plan.is_public,
@@ -454,17 +451,13 @@ export default function LessonsPage() {
                                         </button>
                                     </div>
                                 </div>
-                                {plan.description && (
-                                    <p className="text-sm text-gray-600 line-clamp-2 mb-3">{plan.description}</p>
+                                {(plan.description || plan.content) && (
+                                    <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                                        {plan.description || plan.content}
+                                    </p>
                                 )}
                                 <div className="flex items-center gap-2 flex-wrap mb-3">
-                                    <span className={`text-xs px-2 py-1 rounded-lg font-semibold ${
-                                        plan.difficulty_level === 'beginner' ? 'bg-green-100 text-green-800' :
-                                        plan.difficulty_level === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
-                                        'bg-red-100 text-red-800'
-                                    }`}>
-                                        {plan.difficulty_level}
-                                    </span>
+
                                     <span className="text-xs text-gray-500">{plan.estimated_duration_minutes} min</span>
                                     {plan.resources && plan.resources.length > 0 && (
                                         <span className="text-xs text-gray-500 flex items-center gap-1">
@@ -500,9 +493,7 @@ export default function LessonsPage() {
                         setEditingPlan(null)
                         setFormData({
                             title: '',
-                            description: '',
                             content: '',
-                            difficulty_level: 'beginner',
                             estimated_duration_minutes: 60,
                             tags: [],
                             is_public: false,
@@ -526,20 +517,8 @@ export default function LessonsPage() {
                                 value={formData.title}
                                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                 className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-primary rounded-xl font-semibold text-gray-900 outline-none transition-all"
-                                placeholder="e.g., Beginner Piano - Week 1"
+                                placeholder="e.g., Theory Fundamentals - Week 1"
                                 required
-                            />
-                        </div>
-
-                        {/* Description */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Description</label>
-                            <textarea
-                                value={formData.description}
-                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                rows={2}
-                                className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-primary rounded-xl font-medium text-gray-900 outline-none transition-all resize-none"
-                                placeholder="Brief overview of this lesson plan..."
                             />
                         </div>
 
@@ -559,23 +538,11 @@ export default function LessonsPage() {
                             />
                         </div>
 
-                        {/* Difficulty & Duration */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Difficulty</label>
-                                <select
-                                    value={formData.difficulty_level}
-                                    onChange={(e) => setFormData({ ...formData, difficulty_level: e.target.value as any })}
-                                    className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-primary rounded-xl font-semibold text-gray-900 outline-none transition-all"
-                                >
-                                    <option value="beginner">Beginner</option>
-                                    <option value="intermediate">Intermediate</option>
-                                    <option value="advanced">Advanced</option>
-                                </select>
-                            </div>
+                        {/* Duration */}
+                        <div className="grid grid-cols-1 gap-4">
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
-                                    <Clock className="w-3 h-3" />
+                                    <Clock className="w-3 h-3 text-primary" />
                                     Duration (min)
                                 </label>
                                 <input
@@ -691,9 +658,7 @@ export default function LessonsPage() {
                                 setEditingPlan(null)
                                 setFormData({
                                     title: '',
-                                    description: '',
                                     content: '',
-                                    difficulty_level: 'beginner',
                                     estimated_duration_minutes: 60,
                                     tags: [],
                                     is_public: false,

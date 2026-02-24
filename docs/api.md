@@ -20,6 +20,7 @@ StudioSync uses JSON Web Tokens (JWT) for API authentication.
 **Endpoint:** `POST /api/auth/login/`
 
 **Request:**
+
 ```json
 {
   "email": "user@example.com",
@@ -28,6 +29,7 @@ StudioSync uses JSON Web Tokens (JWT) for API authentication.
 ```
 
 **Response:**
+
 ```json
 {
   "access": "eyJ0eXAiOiJKV1QiLCJhbGc...",
@@ -55,6 +57,7 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
 **Endpoint:** `POST /api/auth/refresh/`
 
 **Request:**
+
 ```json
 {
   "refresh": "eyJ0eXAiOiJKV1QiLCJhbGc..."
@@ -62,6 +65,7 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
 ```
 
 **Response:**
+
 ```json
 {
   "access": "new_access_token_here"
@@ -85,6 +89,7 @@ GET /api/core/users/me/
 ```
 
 **Response:**
+
 ```json
 {
   "id": "uuid",
@@ -105,6 +110,7 @@ PATCH /api/core/users/me/
 ```
 
 **Request:**
+
 ```json
 {
   "first_name": "Jane",
@@ -119,6 +125,7 @@ POST /api/core/users/change-password/
 ```
 
 **Request:**
+
 ```json
 {
   "old_password": "current_password",
@@ -151,6 +158,7 @@ PATCH /api/core/studios/{id}/
 ```
 
 **Request:**
+
 ```json
 {
   "name": "Updated Studio Name",
@@ -170,6 +178,7 @@ GET /api/core/teachers/
 ```
 
 **Query Parameters:**
+
 - `is_accepting_students`: Filter by availability
 - `specialty`: Filter by instrument/specialty
 
@@ -180,6 +189,7 @@ GET /api/core/teachers/{id}/
 ```
 
 **Response:**
+
 ```json
 {
   "id": "uuid",
@@ -211,9 +221,9 @@ GET /api/core/students/
 ```
 
 **Query Parameters:**
+
 - `family`: Filter by family ID
 - `teacher`: Filter by primary teacher
-- `skill_level`: Filter by skill level
 - `is_active`: Filter by active status
 
 #### Get Student Details
@@ -229,6 +239,7 @@ POST /api/core/students/
 ```
 
 **Request:**
+
 ```json
 {
   "user": {
@@ -239,7 +250,6 @@ POST /api/core/students/
   },
   "instrument": "violin",
   "specialties": ["violin"],
-  "skill_level": "beginner",
   "date_of_birth": "2010-05-15",
   "emergency_contact_name": "Parent Name",
   "emergency_contact_phone": "+1234567890"
@@ -273,6 +283,7 @@ POST /api/core/families/
 ```
 
 **Request:**
+
 ```json
 {
   "name": "Johnson Family",
@@ -294,6 +305,7 @@ GET /api/lessons/
 ```
 
 **Query Parameters:**
+
 - `teacher`: Filter by teacher ID
 - `student`: Filter by student ID
 - `status`: Filter by lesson status
@@ -301,6 +313,7 @@ GET /api/lessons/
 - `end_date`: Filter lessons before date
 
 **Response:**
+
 ```json
 {
   "count": 100,
@@ -328,6 +341,7 @@ POST /api/lessons/
 ```
 
 **Request:**
+
 ```json
 {
   "teacher": "teacher-uuid",
@@ -352,6 +366,7 @@ POST /api/lessons/{id}/cancel/
 ```
 
 **Request:**
+
 ```json
 {
   "cancellation_reason": "Student illness"
@@ -365,6 +380,7 @@ GET /api/lessons/calendar/
 ```
 
 **Query Parameters:**
+
 - `start`: Calendar start date (ISO format)
 - `end`: Calendar end date (ISO format)
 - `teacher`: Filter by teacher
@@ -387,6 +403,7 @@ POST /api/lessons/{lesson_id}/notes/
 ```
 
 **Request:**
+
 ```json
 {
   "summary": "Great progress on scales today",
@@ -408,6 +425,7 @@ GET /api/lessons/goals/
 ```
 
 **Query Parameters:**
+
 - `student`: Filter by student ID
 - `status`: Filter by status (active, achieved, abandoned)
 
@@ -418,6 +436,7 @@ POST /api/lessons/goals/
 ```
 
 **Request:**
+
 ```json
 {
   "student": "student-uuid",
@@ -435,6 +454,7 @@ PATCH /api/lessons/goals/{id}/
 ```
 
 **Request:**
+
 ```json
 {
   "progress_percentage": 50,
@@ -457,6 +477,7 @@ POST /api/lessons/recurring-patterns/
 ```
 
 **Request:**
+
 ```json
 {
   "teacher": "teacher-uuid",
@@ -479,8 +500,8 @@ GET /api/lessons/plans/
 ```
 
 **Query Parameters:**
+
 - `specialty`: Filter by instrument
-- `target_level`: Filter by skill level
 - `is_public`: Show only public plans
 
 #### Create Lesson Plan
@@ -500,6 +521,7 @@ GET /api/billing/invoices/
 ```
 
 **Query Parameters:**
+
 - `status`: Filter by invoice status
 - `band`: Filter by band/family
 - `start_date`, `end_date`: Filter by date range
@@ -511,6 +533,7 @@ GET /api/billing/invoices/{id}/
 ```
 
 **Response:**
+
 ```json
 {
   "id": "uuid",
@@ -542,6 +565,7 @@ POST /api/billing/invoices/
 ```
 
 **Request:**
+
 ```json
 {
   "band": "band-uuid",
@@ -580,6 +604,7 @@ POST /api/billing/payments/
 ```
 
 **Request:**
+
 ```json
 {
   "invoice": "invoice-uuid",
@@ -601,6 +626,7 @@ GET /api/inventory/
 ```
 
 **Query Parameters:**
+
 - `category`: Filter by category
 - `status`: Filter by status
 - `is_borrowable`: Filter borrowable items
@@ -618,6 +644,7 @@ POST /api/inventory/
 ```
 
 **Request:**
+
 ```json
 {
   "name": "Yamaha Acoustic Guitar",
@@ -641,6 +668,7 @@ GET /api/inventory/checkouts/
 ```
 
 **Query Parameters:**
+
 - `status`: Filter by checkout status
 - `student`: Filter by student
 - `item`: Filter by inventory item
@@ -652,6 +680,7 @@ POST /api/inventory/checkouts/
 ```
 
 **Request:**
+
 ```json
 {
   "item": "item-uuid",
@@ -673,6 +702,7 @@ POST /api/inventory/checkouts/{id}/return/
 ```
 
 **Request:**
+
 ```json
 {
   "return_notes": "Returned in good condition"
@@ -694,6 +724,7 @@ POST /api/inventory/room-reservations/
 ```
 
 **Request:**
+
 ```json
 {
   "room": "room-uuid",
@@ -714,6 +745,7 @@ GET /api/resources/
 ```
 
 **Query Parameters:**
+
 - `resource_type`: Filter by type (pdf, audio, video, etc.)
 - `category`: Filter by category
 - `tags`: Filter by tags (comma-separated)
@@ -732,12 +764,13 @@ POST /api/resources/
 ```
 
 **Request:** (multipart/form-data)
+
 ```
 file: <file upload>
 title: "Bach Prelude in C - Sheet Music"
-description: "Beginner piano piece"
+description: "Piano piece"
 category: "Sheet Music"
-tags: ["piano", "bach", "beginner", "classical"]
+tags: ["piano", "bach", "classical"]
 is_public: true
 ```
 
@@ -756,6 +789,7 @@ POST /api/resources/{id}/share/
 ```
 
 **Request:**
+
 ```json
 {
   "student_ids": ["uuid1", "uuid2", "uuid3"]
@@ -795,6 +829,7 @@ POST /api/messaging/threads/
 ```
 
 **Request:**
+
 ```json
 {
   "subject": "Question about lesson schedule",
@@ -818,6 +853,7 @@ POST /api/messaging/threads/{id}/messages/
 ```
 
 **Request:**
+
 ```json
 {
   "content": "Thank you for your message..."
@@ -841,9 +877,11 @@ GET /api/notifications/
 ```
 
 **Query Parameters:**
+
 - `is_read`: Filter by read status
 
 **Response:**
+
 ```json
 {
   "count": 15,
@@ -888,6 +926,7 @@ The API uses standard HTTP status codes:
 - `500 Internal Server Error`: Server error
 
 **Error Response Format:**
+
 ```json
 {
   "detail": "Error message here",
@@ -903,10 +942,12 @@ The API uses standard HTTP status codes:
 List endpoints support pagination:
 
 **Query Parameters:**
+
 - `page`: Page number (default: 1)
 - `page_size`: Results per page (default: 20, max: 100)
 
 **Response Format:**
+
 ```json
 {
   "count": 150,
@@ -921,11 +962,13 @@ List endpoints support pagination:
 Most list endpoints support filtering:
 
 **Common Query Parameters:**
+
 - `search`: Full-text search
 - `ordering`: Sort field (prefix with `-` for descending)
 - `created_after`, `created_before`: Date range filters
 
 **Example:**
+
 ```
 GET /api/lessons/?student=uuid&status=completed&ordering=-scheduled_start
 ```
@@ -938,6 +981,7 @@ API requests are rate-limited:
 - **Unauthenticated**: 100 requests/hour
 
 Rate limit headers included in responses:
+
 ```
 X-RateLimit-Limit: 1000
 X-RateLimit-Remaining: 999
@@ -952,6 +996,7 @@ Full interactive API documentation is available at:
 - **ReDoc**: `/api/redoc/`
 
 These provide:
+
 - Complete endpoint listings
 - Request/response schemas
 - Interactive testing
@@ -970,13 +1015,17 @@ ws://localhost:8000/ws/notifications/
 ### Authentication
 
 Include JWT token in connection:
+
 ```javascript
-const ws = new WebSocket(`ws://localhost:8000/ws/notifications/?token=${accessToken}`);
+const ws = new WebSocket(
+  `ws://localhost:8000/ws/notifications/?token=${accessToken}`,
+);
 ```
 
 ### Message Format
 
 **Incoming:**
+
 ```json
 {
   "type": "notification",
@@ -997,17 +1046,18 @@ Official client libraries:
 - **React Hooks**: `@studiosync/react-hooks`
 
 **Example (JavaScript):**
+
 ```javascript
-import StudioSync from '@studiosync/js-sdk';
+import StudioSync from "@studiosync/js-sdk";
 
 const client = new StudioSync({
-  apiUrl: 'http://localhost:8000/api',
-  token: 'your-jwt-token'
+  apiUrl: "http://localhost:8000/api",
+  token: "your-jwt-token",
 });
 
 const lessons = await client.lessons.list({
-  student: 'student-uuid',
-  status: 'scheduled'
+  student: "student-uuid",
+  status: "scheduled",
 });
 ```
 

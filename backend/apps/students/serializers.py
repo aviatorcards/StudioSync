@@ -13,7 +13,7 @@ class StudentListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
         fields = [
-            'id', 'name', 'email', 'instrument', 'skill_level', 
+            'id', 'name', 'email', 'instrument', 
             'teacher_name', 'primary_teacher', 'status', 'next_lesson', 'is_active'
         ]
     
@@ -72,7 +72,7 @@ class StudentCreateUpdateSerializer(serializers.ModelSerializer):
         model = Student
         fields = [
             'id', 'first_name', 'last_name', 'email', 
-            'instrument', 'skill_level', 'family', 'studio',
+            'instrument', 'family', 'studio',
             'birth_date', 'emergency_contact_name', 'emergency_contact_phone',
             'primary_teacher', 'is_active'
         ]

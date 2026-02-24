@@ -69,16 +69,6 @@ class Resource(models.Model):
         blank=True, 
         help_text='Primary instrument (Piano, Guitar, Drums, etc.)'
     )
-    skill_level = models.CharField(
-        max_length=20,
-        choices=[
-            ('beginner', 'Beginner'),
-            ('intermediate', 'Intermediate'),
-            ('advanced', 'Advanced'),
-            ('professional', 'Professional'),
-        ],
-        blank=True
-    )
     composer = models.CharField(
         max_length=200, 
         blank=True, 
@@ -120,7 +110,7 @@ class Resource(models.Model):
             models.Index(fields=['studio', 'is_public']),
             models.Index(fields=['band']),
             models.Index(fields=['instrument']),
-            models.Index(fields=['skill_level']),
+
             models.Index(fields=['resource_type', 'instrument']),
         ]
     

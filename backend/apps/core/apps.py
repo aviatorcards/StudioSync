@@ -7,3 +7,4 @@ class CoreConfig(AppConfig):
     
     def ready(self):
         import apps.core.signals
+        import apps.core.file_cleanup

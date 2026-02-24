@@ -57,3 +57,11 @@ class InvoiceViewSet(viewsets.ModelViewSet):
                 serializer.save(studio=studio)
             else:
                 raise serializer.ValidationError("No studio found to associate with this invoice.")
+
+    def destroy(self, request, *args, **kwargs):
+        if request.user.role != 'admin':
+            return Response(
+                {"detail": "Only admins can delete invoices."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().destroy(request, *args, **kwargs)

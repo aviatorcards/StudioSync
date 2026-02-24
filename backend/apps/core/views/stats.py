@@ -29,9 +29,13 @@ class DashboardStatsView(APIView):
         
         # ADMIN VIEW
         if user.role == 'admin':
-            # 1. Total Students
-            total_students = Student.objects.filter(is_active=True).count()
+            # 1. Total Students — scoped to this admin's studios
+            total_students = Student.objects.filter(
+                studio__owner=user,
+                is_active=True
+            ).count()
             students_last_month = Student.objects.filter(
+                studio__owner=user,
                 is_active=True,
                 created_at__lt=start_of_month
             ).count()

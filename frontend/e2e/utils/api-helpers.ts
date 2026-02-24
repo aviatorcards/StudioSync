@@ -78,7 +78,6 @@ export async function createTestStudent(
     last_name: string;
     email: string;
     instrument?: string;
-    skill_level?: string;
   }
 ) {
   const baseUrl = process.env.PLAYWRIGHT_API_URL || 'http://localhost:8000';

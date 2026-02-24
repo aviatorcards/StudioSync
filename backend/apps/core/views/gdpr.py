@@ -53,7 +53,6 @@ def export_my_data(request):
     if hasattr(user, 'student_profile'):
         student = user.student_profile
         user_data['student_info'] = {
-            'skill_level': student.skill_level,
             'primary_instrument': student.primary_instrument,
             'enrollment_date': student.enrollment_date.isoformat() if student.enrollment_date else None,
             'notes': student.notes,

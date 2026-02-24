@@ -43,7 +43,7 @@ export default function BandsPage() {
             setBands(Array.isArray(data) ? data : [])
         } catch (error) {
             console.error('Failed to fetch bands:', error)
-            toast.error('Failed to load ensembles')
+            toast.error('Failed to load bands')
         } finally {
             setLoading(false)
         }
@@ -110,12 +110,12 @@ export default function BandsPage() {
                 await api.patch(`/core/bands/${selectedBand.id}/`, submitData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 })
-                toast.success('Ensemble configuration synchronized')
+                toast.success('Band updated successfully')
             } else {
                 await api.post('/core/bands/', submitData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 })
-                toast.success('Ensemble initialized successfully')
+                toast.success('Band created successfully')
             }
             setIsDialogOpen(false)
             fetchBands()
@@ -128,14 +128,14 @@ export default function BandsPage() {
     }
 
     const handleDeleteBand = async (band: any) => {
-        if (!confirm(`Are you sure you want to disband ${band.name}?`)) return
+        if (!confirm(`Are you sure you want to delete ${band.name}?`)) return
 
         try {
             await api.delete(`/core/bands/${band.id}/`)
-            toast.success('Ensemble disbanded')
+            toast.success('Band deleted')
             fetchBands()
         } catch (error) {
-            toast.error('Failed to disband ensemble')
+            toast.error('Failed to delete band')
         }
     }
 
@@ -148,7 +148,7 @@ export default function BandsPage() {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-in fade-in duration-500">
                 <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Tuning Orchestration...</p>
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Loading Bands...</p>
             </div>
         )
     }
@@ -159,26 +159,26 @@ export default function BandsPage() {
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4">
                 <div className="space-y-2">
                     <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight flex items-center gap-3">
-                        Ensembles & Groups
+                        Bands & Groups
                         <div className="bg-primary/10 px-3 py-1 rounded-full text-xs font-black text-primary uppercase tracking-widest">
                             {bands.length} Active
                         </div>
                     </h1>
-                    <p className="text-gray-500 font-medium max-w-lg">Manage performance collectives, rehearsal dynamics, and group progression.</p>
+                    <p className="text-gray-500 font-medium max-w-lg">Manage your bands, rehearsal schedules, and student groups.</p>
                 </div>
                 <Button
                     onClick={handleOpenCreate}
                     className="gap-2 hover:scale-105 shadow-xl shadow-primary/20 transition-all py-6 px-10 font-black uppercase tracking-widest text-[10px]"
                 >
                     <Plus className="w-4 h-4" />
-                    Initialize Collective
+                    Create New Band
                 </Button>
             </header>
 
              {/* Stats */}
              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                  {[
-                    { label: 'Total Ensembles', value: bands.length, icon: Music, color: 'blue' },
+                    { label: 'Total Bands', value: bands.length, icon: Music, color: 'blue' },
                     { label: 'Active Musicians', value: bands.reduce((acc, b) => acc + (b.members_count || 0), 0), icon: UsersIcon, color: 'emerald' },
                     { label: 'Rehearsal Intensity', value: 'High', icon: Zap, color: 'purple' },
                     { label: 'Performance Ready', value: '82%', icon: Trophy, color: 'orange' }
@@ -316,15 +316,15 @@ export default function BandsPage() {
                                 <Music className="w-16 h-16 text-gray-200" />
                             </div>
                             <div className="space-y-2">
-                                <h3 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">Quiet Environment Detected</h3>
-                                <p className="text-gray-400 font-medium max-w-sm mx-auto leading-relaxed">No musical collectives match your search criteria or exist within your studio's ecosystem.</p>
+                                <h3 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">No Bands Found</h3>
+                                <p className="text-gray-400 font-medium max-w-sm mx-auto leading-relaxed">No bands match your search or exist in the studio yet.</p>
                             </div>
                             <Button
                                 onClick={handleOpenCreate}
                                 className="px-10 py-7 rounded-2xl shadow-xl shadow-primary/20 transition-all font-black uppercase tracking-widest text-[10px]"
                             >
                                 <Plus className="w-5 h-5 mr-1" />
-                                Form Initial Collective
+                                Create First Band
                             </Button>
                         </div>
                     </div>
@@ -337,12 +337,12 @@ export default function BandsPage() {
                 onOpenChange={setIsDialogOpen}
                 size="xl"
             >
-                <DialogHeader title={selectedBand ? "Collective Configuration" : "New Ensemble Initialization"} />
+                <DialogHeader title={selectedBand ? "Edit Band" : "Create New Band"} />
                 <DialogContent>
                     <form id="band-configuration-form" onSubmit={handleSubmit} className="space-y-10">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                              <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Collective Name</label>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Band Name</label>
                                 <input
                                     type="text"
                                     required
@@ -353,7 +353,7 @@ export default function BandsPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Stylistic Genre</label>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Genre</label>
                                 <input
                                     type="text"
                                     value={formData.genre}
@@ -375,7 +375,7 @@ export default function BandsPage() {
                                         <img src={formData.photoPreview} className="w-full h-full object-cover" alt="Band Preview" />
                                         <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500">
                                             <Camera className="w-10 h-10 text-white mb-2" />
-                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">Swap Visual Asset</span>
+                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">Change Photo</span>
                                         </div>
                                     </>
                                 ) : (
@@ -383,7 +383,7 @@ export default function BandsPage() {
                                         <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center group-hover:scale-110 group-hover:text-primary transition-all">
                                             <Plus className="w-8 h-8" />
                                         </div>
-                                        <span className="text-[10px] font-black uppercase tracking-widest">Synchronize Photo</span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Upload Photo</span>
                                     </div>
                                 )}
                                 <input
@@ -408,10 +408,10 @@ export default function BandsPage() {
                             <div className="flex items-center justify-between">
                                 <h3 className="text-xs font-black text-primary uppercase tracking-[0.2em] flex items-center gap-2">
                                     <Target className="w-4 h-4" />
-                                    Recruitment Roster
+                                    Band Members
                                 </h3>
                                 <span className="px-3 py-1 bg-white shadow-sm text-primary text-[10px] font-black uppercase tracking-widest rounded-full border border-primary/20">
-                                    {formData.member_ids.length} MUSICIANS
+                                    {formData.member_ids.length} MEMBERS
                                 </span>
                             </div>
 
@@ -419,7 +419,7 @@ export default function BandsPage() {
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 <input
                                     type="text"
-                                    placeholder="Filter available students by name or curriculum focus..."
+                                    placeholder="Search students..."
                                     value={studentSearchTerm}
                                     onChange={(e) => setStudentSearchTerm(e.target.value)}
                                     className="w-full pl-12 pr-6 py-4 bg-white border-transparent focus:border-primary border-2 rounded-2xl font-bold text-gray-700 outline-none transition-all"
@@ -471,24 +471,24 @@ export default function BandsPage() {
 
                         <div className="grid grid-cols-1 gap-8">
                              <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Administrative Email (Billing)</label>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Billing Email</label>
                                 <input
                                     type="email"
                                     required
                                     value={formData.billing_email}
                                     onChange={(e) => setFormData({ ...formData, billing_email: e.target.value })}
                                     className="w-full px-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-gray-900 transition-all"
-                                    placeholder="treasury@collective.com"
+                                    placeholder="billing@band.com"
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Evolutionary Notes & Manifest</label>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Notes</label>
                                 <textarea
                                     value={formData.notes}
                                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                                     className="w-full px-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-gray-900 transition-all min-h-[120px] resize-none"
-                                    placeholder="Define performance objectives, rehearsal dynamics, or group mission..."
+                                    placeholder="Add rehearsal notes, goals, or mission..."
                                 />
                             </div>
                         </div>
@@ -500,7 +500,7 @@ export default function BandsPage() {
                         onClick={() => setIsDialogOpen(false)}
                         className="flex-1"
                     >
-                        Abort
+                        Cancel
                     </Button>
                     <Button
                         onClick={handleSubmit}
@@ -510,12 +510,12 @@ export default function BandsPage() {
                         {isSubmitting ? (
                             <>
                                 <Loader2 className="w-4 h-4 animate-spin" />
-                                Synchronizing...
+                                Saving...
                             </>
                         ) : (
                             <>
                                 <Sparkles className="w-4 h-4" />
-                                {selectedBand ? 'Synchronize Collective' : 'Execute Initial Formation'}
+                                {selectedBand ? 'Update Band' : 'Create Band'}
                             </>
                         )}
                     </Button>

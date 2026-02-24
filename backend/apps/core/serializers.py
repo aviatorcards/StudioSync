@@ -89,7 +89,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id', 'email', 'first_name', 'last_name', 'full_name', 
+            'id', 'email', 'first_name', 'last_name', 'full_name', 'initials',
             'phone', 'role', 'timezone', 'avatar', 'preferences',
             'student_profile', 'teacher_profile', 'studio', 'is_active', 'bio', 'instrument'
         ]
@@ -122,17 +122,30 @@ class UserSerializer(serializers.ModelSerializer):
     
     def to_internal_value(self, data):
         """Handle avatar file upload and profile-specific fields in PATCH/PUT requests"""
-        # If avatar is in the request data and it's a file, handle it separately
+        # Create a mutable copy of the data
+        if hasattr(data, 'dict'):
+            mutable_data = data.dict()
+            # Django's QueryDict.dict() only returns the *last* value for a key.
+            # However, for an uploaded file, the last value is what we want.
+            # If we needed list values, we'd use dict(data.lists()).
+        else:
+            mutable_data = dict(data) if isinstance(data, dict) else data
+
         avatar_file = None
-        if 'avatar' in data and hasattr(data.get('avatar'), 'read'):
-            avatar_file = data.pop('avatar')
-        
+        if isinstance(mutable_data, dict) and 'avatar' in mutable_data:
+            avatar_val = mutable_data.get('avatar')
+            if isinstance(avatar_val, list) and len(avatar_val) > 0:
+                avatar_val = avatar_val[0]
+            if hasattr(avatar_val, 'read'):
+                avatar_file = avatar_val
+                mutable_data.pop('avatar', None)
+
         # Extract profile-specific fields that don't belong on User model
-        bio = data.pop('bio', None) if 'bio' in data else None
-        instrument = data.pop('instrument', None) if 'instrument' in data else None
+        bio = mutable_data.pop('bio', None) if isinstance(mutable_data, dict) and 'bio' in mutable_data else None
+        instrument = mutable_data.pop('instrument', None) if isinstance(mutable_data, dict) and 'instrument' in mutable_data else None
         
         # Process the rest of the data normally
-        internal_value = super().to_internal_value(data)
+        internal_value = super().to_internal_value(mutable_data)
         
         # Add avatar back if it was provided
         if avatar_file:
@@ -309,7 +322,7 @@ class StudentSerializer(serializers.ModelSerializer):
         model = Student
         fields = [
             'id', 'user', 'user_id', 'email', 'first_name', 'last_name', 'phone',
-            'instrument', 'skill_level', 'primary_teacher', 'enrollment_date',
+            'instrument', 'primary_teacher', 'enrollment_date',
             'birth_date', 'total_lessons', 'last_lesson_date',
             'family', 'studio', 'notes', 'is_active', 'bands'
         ]

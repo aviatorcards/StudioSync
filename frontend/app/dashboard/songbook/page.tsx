@@ -44,7 +44,6 @@ interface SongbookResource {
     uploaded_by_name: string
     created_at: string
     instrument: string
-    skill_level: SkillLevel
     composer: string
     key_signature: string
     tempo: string
@@ -60,13 +59,6 @@ const INSTRUMENTS = [
     { value: 'Other', icon: Music2, color: 'gray' }
 ]
 
-const SKILL_LEVELS: { value: SkillLevel | 'all'; label: string; color: string }[] = [
-    { value: 'all', label: 'All Levels', color: 'gray' },
-    { value: 'beginner', label: 'Beginner', color: 'green' },
-    { value: 'intermediate', label: 'Intermediate', color: 'blue' },
-    { value: 'advanced', label: 'Advanced', color: 'purple' },
-    { value: 'professional', label: 'Professional', color: 'orange' }
-]
 
 const RESOURCE_TYPES: { value: MusicResourceType; label: string; icon: any }[] = [
     { value: 'sheet_music', label: 'Sheet Music', icon: FileMusic },
@@ -82,7 +74,6 @@ export default function SongbookPage() {
     const [isDragging, setIsDragging] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [filterInstrument, setFilterInstrument] = useState<string>('all')
-    const [filterSkillLevel, setFilterSkillLevel] = useState<SkillLevel | 'all'>('all')
     const [filterType, setFilterType] = useState<MusicResourceType | 'all'>('all')
     const [deleting, setDeleting] = useState<string | null>(null)
 
@@ -97,7 +88,6 @@ export default function SongbookPage() {
         category: '',
         tags: [] as string[],
         instrument: '',
-        skill_level: 'beginner' as SkillLevel,
         composer: '',
         key_signature: '',
         tempo: ''
@@ -168,8 +158,6 @@ export default function SongbookPage() {
             formData.append('category', uploadForm.category)
             formData.append('tags', JSON.stringify(uploadForm.tags))
             formData.append('instrument', uploadForm.instrument)
-            formData.append('skill_level', uploadForm.skill_level)
-            formData.append('composer', uploadForm.composer)
             formData.append('key_signature', uploadForm.key_signature)
             formData.append('tempo', uploadForm.tempo)
             formData.append('file', uploadForm.file)
@@ -190,7 +178,6 @@ export default function SongbookPage() {
                 category: '',
                 tags: [],
                 instrument: '',
-                skill_level: 'beginner',
                 composer: '',
                 key_signature: '',
                 tempo: ''
@@ -242,9 +229,8 @@ export default function SongbookPage() {
                             resource.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             resource.composer?.toLowerCase().includes(searchQuery.toLowerCase())
         const matchesInstrument = filterInstrument === 'all' || resource.instrument === filterInstrument
-        const matchesSkillLevel = filterSkillLevel === 'all' || resource.skill_level === filterSkillLevel
         const matchesType = filterType === 'all' || resource.resource_type === filterType
-        return matchesSearch && matchesInstrument && matchesSkillLevel && matchesType
+        return matchesSearch && matchesInstrument && matchesType
     })
 
     if (loading) {
@@ -310,19 +296,6 @@ export default function SongbookPage() {
                         </select>
                     </div>
 
-                    {/* Skill Level Filter */}
-                    <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl border-2 border-gray-100 shadow-sm">
-                        <Filter className="w-4 h-4 text-gray-400" />
-                        <select
-                            value={filterSkillLevel}
-                            onChange={(e) => setFilterSkillLevel(e.target.value as SkillLevel | 'all')}
-                            className="bg-transparent text-sm font-bold text-gray-700 outline-none cursor-pointer"
-                        >
-                            {SKILL_LEVELS.map(level => (
-                                <option key={level.value} value={level.value}>{level.label}</option>
-                            ))}
-                        </select>
-                    </div>
 
                     {/* Type Filter */}
                     <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl border-2 border-gray-100 shadow-sm">
@@ -373,9 +346,6 @@ export default function SongbookPage() {
                                     <div className="flex flex-wrap gap-2">
                                         <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-${instInfo.color}-50 text-${instInfo.color}-700`}>
                                             {resource.instrument}
-                                        </span>
-                                        <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-purple-50 text-purple-700">
-                                            {resource.skill_level}
                                         </span>
                                         {resource.key_signature && (
                                             <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-50 text-blue-700">
@@ -555,19 +525,6 @@ export default function SongbookPage() {
                                     <option value="">Select instrument...</option>
                                     {INSTRUMENTS.map(inst => (
                                         <option key={inst.value} value={inst.value}>{inst.value}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Skill Level</label>
-                                <select
-                                    value={uploadForm.skill_level}
-                                    onChange={(e) => setUploadForm(prev => ({ ...prev, skill_level: e.target.value as SkillLevel }))}
-                                    className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:border-primary focus:bg-white rounded-xl outline-none font-bold text-gray-900 transition-all"
-                                >
-                                    {SKILL_LEVELS.filter(l => l.value !== 'all').map(level => (
-                                        <option key={level.value} value={level.value}>{level.label}</option>
                                     ))}
                                 </select>
                             </div>

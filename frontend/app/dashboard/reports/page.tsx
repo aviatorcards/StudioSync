@@ -2,11 +2,12 @@
 
 import {
     BarChart3, TrendingUp, Users, Download, Calendar, DollarSign,
-    Loader2, FileText, Info, FileSpreadsheet, FileDown
+    Loader2, FileText, Info, FileSpreadsheet, FileDown, Braces
 } from 'lucide-react'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
 import { useState } from 'react'
+import * as ExcelJS from 'exceljs'
 
 export default function ReportsPage() {
     const [downloading, setDownloading] = useState<string | null>(null)
@@ -97,6 +98,28 @@ export default function ReportsPage() {
         }
     }
 
+    const handleDownloadJSON = async (reportId: string) => {
+        setDownloading(`${reportId}-json`)
+        try {
+            const response = await api.get(`/core/reports/export/?type=${reportId}&format=json`)
+            const data = response.data
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+            const url = window.URL.createObjectURL(blob)
+            const link = document.createElement('a')
+            link.href = url
+            link.download = `${reportId}_report_${new Date().toISOString().split('T')[0]}.json`
+            document.body.appendChild(link)
+            link.click()
+            link.parentNode?.removeChild(link)
+            toast.success('JSON report downloaded')
+        } catch (error) {
+            console.error('JSON download failed', error)
+            toast.error('Failed to download JSON report')
+        } finally {
+            setDownloading(null)
+        }
+    }
+
     const handleDownloadExcel = async (reportId: string) => {
         setDownloading(`${reportId}-excel`)
         try {
@@ -112,37 +135,51 @@ export default function ReportsPage() {
             const worksheet = workbook.addWorksheet(reportId.replace(/-/g, ' ').toUpperCase())
 
             // Configure based on report type
-            if (reportId === 'students' || reportId === 'teachers' || reportId === 'users') {
-                // Example for user-based reports
+            if (reportId === 'students') {
+                worksheet.columns = [
+                    { header: 'Name', key: 'name', width: 25 },
+                    { header: 'Email', key: 'email', width: 30 },
+                    { header: 'Instrument', key: 'instrument', width: 18 },
+                    { header: 'Status', key: 'status', width: 12 },
+                    { header: 'Phone', key: 'phone', width: 18 },
+                    { header: 'Enrollment Date', key: 'enrollment_date', width: 18 },
+                ]
+                worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }
+                worksheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE67E22' } }
+                worksheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' }
+                worksheet.getRow(1).height = 25
+                if (Array.isArray(data)) {
+                    data.forEach((item: any) => worksheet.addRow(item))
+                }
+            } else if (reportId === 'teachers') {
+                worksheet.columns = [
+                    { header: 'Name', key: 'name', width: 25 },
+                    { header: 'Email', key: 'email', width: 30 },
+                    { header: 'Specialties', key: 'specialties', width: 25 },
+                    { header: 'Hourly Rate', key: 'hourly_rate', width: 14 },
+                    { header: 'Status', key: 'status', width: 12 },
+                ]
+                worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }
+                worksheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFAD1457' } }
+                worksheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' }
+                worksheet.getRow(1).height = 25
+                if (Array.isArray(data)) {
+                    data.forEach((item: any) => worksheet.addRow(item))
+                }
+            } else if (reportId === 'users') {
                 worksheet.columns = [
                     { header: 'Name', key: 'name', width: 25 },
                     { header: 'Email', key: 'email', width: 30 },
                     { header: 'Role', key: 'role', width: 15 },
-                    { header: 'Status', key: 'status', width: 12 },
-                    { header: 'Joined', key: 'joined', width: 15 }
+                    { header: 'Date Joined', key: 'date_joined', width: 15 },
+                    { header: 'Last Login', key: 'last_login', width: 15 },
                 ]
-
-                // Style the header row
                 worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }
-                worksheet.getRow(1).fill = {
-                    type: 'pattern',
-                    pattern: 'solid',
-                    fgColor: { argb: 'FF2C3E50' }
-                }
+                worksheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF00838F' } }
                 worksheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' }
                 worksheet.getRow(1).height = 25
-
-                // Add data rows (mock data for now - replace with actual API data)
                 if (Array.isArray(data)) {
-                    data.forEach((item: any) => {
-                        worksheet.addRow({
-                            name: item.full_name || `${item.first_name} ${item.last_name}`,
-                            email: item.email,
-                            role: item.role,
-                            status: item.is_active ? 'Active' : 'Inactive',
-                            joined: item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A'
-                        })
-                    })
+                    data.forEach((item: any) => worksheet.addRow(item))
                 }
             } else if (reportId === 'financial') {
                 worksheet.columns = [
@@ -185,6 +222,35 @@ export default function ReportsPage() {
                 }
                 worksheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' }
                 worksheet.getRow(1).height = 25
+
+                if (Array.isArray(data)) {
+                    data.forEach((item: any) => {
+                        worksheet.addRow(item)
+                    })
+                }
+            } else if (reportId === 'student-progress') {
+                worksheet.columns = [
+                    { header: 'Student', key: 'student', width: 25 },
+                    { header: 'Goal', key: 'goal', width: 35 },
+                    { header: 'Status', key: 'status', width: 15 },
+                    { header: 'Progress', key: 'progress', width: 15 },
+                    { header: 'Target Date', key: 'target_date', width: 15 }
+                ]
+
+                worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }
+                worksheet.getRow(1).fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FF8E44AD' }
+                }
+                worksheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' }
+                worksheet.getRow(1).height = 25
+
+                if (Array.isArray(data)) {
+                    data.forEach((item: any) => {
+                        worksheet.addRow(item)
+                    })
+                }
             }
 
             // Add borders to all cells
@@ -294,6 +360,24 @@ export default function ReportsPage() {
                                     </>
                                 )}
                             </button>
+
+                            <button
+                                onClick={() => handleDownloadJSON(report.id)}
+                                disabled={downloading === `${report.id}-json`}
+                                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                            >
+                                {downloading === `${report.id}-json` ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span className="hidden sm:inline">Exporting...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Braces className="w-4 h-4" />
+                                        <span>JSON</span>
+                                    </>
+                                )}
+                            </button>
                         </div>
                     </div>
                 ))}
@@ -315,7 +399,7 @@ export default function ReportsPage() {
             {/* Export Info */}
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <h4 className="text-sm font-semibold text-gray-900 mb-2">Export Formats</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-600">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-gray-600">
                     <div className="flex items-start gap-2">
                         <FileDown className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
                         <div>
@@ -326,6 +410,12 @@ export default function ReportsPage() {
                         <FileSpreadsheet className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
                         <div>
                             <strong className="text-gray-900">Excel:</strong> Rich formatting with styled headers and borders
+                        </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                        <Braces className="w-4 h-4 text-indigo-500 mt-0.5 shrink-0" />
+                        <div>
+                            <strong className="text-gray-900">JSON:</strong> Structured data for developers and integrations
                         </div>
                     </div>
                 </div>

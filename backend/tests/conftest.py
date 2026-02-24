@@ -85,8 +85,7 @@ def student(db, studio, teacher, student_user):
         user=student_user,
         studio=studio,
         primary_teacher=teacher,
-        instrument='Piano',
-        skill_level='beginner'
+        instrument='Piano'
     )
 
 

@@ -161,7 +161,12 @@ export default function SettingsPage() {
 
         try {
             const response = await api.patch('/core/users/me/', uploadData)
-            setCurrentUser(response.data)
+            const updatedUser = response.data
+            // Force cache refresh for the avatar image
+            if (updatedUser.avatar) {
+                updatedUser.avatar = `${updatedUser.avatar}${updatedUser.avatar.includes('?') ? '&' : '?'}t=${Date.now()}`
+            }
+            setCurrentUser(updatedUser)
             toast.success('Avatar updated successfully!')
         } catch (error: any) {
             console.error('Avatar upload failed:', error)
@@ -205,7 +210,12 @@ export default function SettingsPage() {
             uploadData.append('avatar', blob, 'avatar.png')
 
             const apiResponse = await api.patch('/core/users/me/', uploadData)
-            setCurrentUser(apiResponse.data)
+            const updatedUser = apiResponse.data
+            // Force cache refresh
+            if (updatedUser.avatar) {
+                updatedUser.avatar = `${updatedUser.avatar}${updatedUser.avatar.includes('?') ? '&' : '?'}t=${Date.now()}`
+            }
+            setCurrentUser(updatedUser)
             toast.success(`Avatar set for ${instrument} player!`)
         } catch (error) {
             console.error('Auto-select failed:', error)

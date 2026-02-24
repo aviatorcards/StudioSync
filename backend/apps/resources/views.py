@@ -15,7 +15,8 @@ class PublicResourceViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ResourceSerializer
     permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
-    filterset_fields = ['resource_type', 'instrument', 'skill_level', 'category']
+    filterset_fields = ['resource_type', 'instrument', 'category']
+
     search_fields = ['title', 'description', 'tags', 'composer']
     ordering_fields = ['created_at', 'title']
 
@@ -63,7 +64,8 @@ class ResourceViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
-    filterset_fields = ['resource_type', 'instrument', 'skill_level', 'category']
+    filterset_fields = ['resource_type', 'instrument', 'category']
+
     search_fields = ['title', 'description', 'tags', 'composer']
     ordering_fields = ['created_at', 'title']
 

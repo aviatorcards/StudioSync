@@ -259,11 +259,6 @@ class LessonPlan(models.Model):
     content = models.TextField(help_text="Markdown content describing the plan structure")
     
     # Metadata
-    difficulty_level = models.CharField(
-        max_length=20, 
-        choices=[('beginner', 'Beginner'), ('intermediate', 'Intermediate'), ('advanced', 'Advanced')],
-        default='beginner'
-    )
     estimated_duration_minutes = models.IntegerField(default=30)
     tags = models.JSONField(default=list, blank=True)
     

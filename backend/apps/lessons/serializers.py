@@ -44,7 +44,6 @@ class LessonDetailSerializer(serializers.ModelSerializer):
             'id': str(obj.student.id),
             'name': obj.student.user.get_full_name(),
             'instrument': obj.student.instrument,
-            'skill_level': obj.student.skill_level,
         }
     
     def get_teacher(self, obj):
@@ -133,7 +132,8 @@ class LessonPlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = LessonPlan
         fields = [
-            'id', 'title', 'description', 'content', 'difficulty_level',
+            'id', 'title', 'description', 'content',
+
             'estimated_duration_minutes', 'tags', 'is_public',
             'created_by', 'created_by_name', 'resources', 'resource_ids',
             'created_at', 'updated_at'

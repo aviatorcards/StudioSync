@@ -1,8 +1,9 @@
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from rest_framework.routers import DefaultRouter  # noqa: F401
+from config.routers import OptionalSlashRouter
 from .views import NotificationViewSet
 
-router = DefaultRouter()
+router = OptionalSlashRouter()
 router.register(r'', NotificationViewSet, basename='notification')
 
 urlpatterns = [

@@ -12,9 +12,9 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunSQL(
             sql="""
-                DROP TABLE IF EXISTS feature_flags_featureflagoverride CASCADE;
-                DROP TABLE IF EXISTS feature_flags_featureflag CASCADE;
-                DROP TABLE IF EXISTS feature_flags CASCADE;
+                DROP TABLE IF EXISTS feature_flags_featureflagoverride;
+                DROP TABLE IF EXISTS feature_flags_featureflag;
+                DROP TABLE IF EXISTS feature_flags;
             """,
             reverse_sql=migrations.RunSQL.noop,
         ),

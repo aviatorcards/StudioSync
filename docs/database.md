@@ -21,6 +21,7 @@ The database is organized into modular apps, each with its own set of models:
 The custom user model with email-based authentication.
 
 **Fields:**
+
 - `id` (UUID): Primary key
 - `email` (EmailField): Unique, used for login
 - `password` (CharField): Hashed password
@@ -32,6 +33,7 @@ The custom user model with email-based authentication.
 - `created_at`, `updated_at`, `last_login` (DateTimeField): Timestamps
 
 **Relationships:**
+
 - One-to-One with Teacher (via `teacher_profile`)
 - One-to-One with Student (via `student_profile`)
 
@@ -40,6 +42,7 @@ The custom user model with email-based authentication.
 Represents a music studio or school.
 
 **Fields:**
+
 - `id` (UUID): Primary key
 - `name` (CharField): Studio name
 - `slug` (SlugField): URL-friendly identifier
@@ -54,6 +57,7 @@ Represents a music studio or school.
 - `created_at`, `updated_at` (DateTimeField): Timestamps
 
 **Relationships:**
+
 - Has many Teachers
 - Has many Students
 - Has many Resources
@@ -64,6 +68,7 @@ Represents a music studio or school.
 Teacher profile extending User.
 
 **Fields:**
+
 - `id` (UUID): Primary key
 - `user` (OneToOneField → User): Associated user account
 - `studio` (ForeignKey → Studio): Studio affiliation
@@ -76,6 +81,7 @@ Teacher profile extending User.
 - `created_at`, `updated_at` (DateTimeField): Timestamps
 
 **Relationships:**
+
 - Belongs to User
 - Belongs to Studio
 - Has many Lessons (as teacher)
@@ -86,6 +92,7 @@ Teacher profile extending User.
 Student profile extending User.
 
 **Fields:**
+
 - `id` (UUID): Primary key
 - `user` (OneToOneField → User): Associated user account
 - `studio` (ForeignKey → Studio): Studio enrollment
@@ -93,7 +100,6 @@ Student profile extending User.
 - `primary_teacher` (ForeignKey → Teacher, nullable): Default teacher
 - `instrument` (CharField): Primary instrument
 - `specialties` (JSONField): List of instruments/subjects
-- `skill_level` (CharField): Beginner, Intermediate, Advanced, Professional
 - `date_of_birth` (DateField): Birth date
 - `emergency_contact_name`, `emergency_contact_phone` (CharField): Emergency info
 - `enrollment_date` (DateField): When student joined
@@ -102,6 +108,7 @@ Student profile extending User.
 - `created_at`, `updated_at` (DateTimeField): Timestamps
 
 **Relationships:**
+
 - Belongs to User
 - Belongs to Studio
 - Optionally belongs to Family
@@ -115,6 +122,7 @@ Student profile extending User.
 Groups multiple students for billing purposes.
 
 **Fields:**
+
 - `id` (UUID): Primary key
 - `studio` (ForeignKey → Studio): Studio association
 - `name` (CharField): Family name
@@ -125,6 +133,7 @@ Groups multiple students for billing purposes.
 - `created_at`, `updated_at` (DateTimeField): Timestamps
 
 **Relationships:**
+
 - Has many Students
 - Has many Invoices
 - Has many Payment Methods
@@ -134,6 +143,7 @@ Groups multiple students for billing purposes.
 Groups students into bands/ensembles for billing.
 
 **Fields:**
+
 - `id` (UUID): Primary key
 - `studio` (ForeignKey → Studio): Studio association
 - `name` (CharField): Band name
@@ -145,6 +155,7 @@ Groups students into bands/ensembles for billing.
 - `created_at`, `updated_at` (DateTimeField): Timestamps
 
 **Relationships:**
+
 - Has many User members
 - Has many Invoices
 - Has many Payment Methods
@@ -156,6 +167,7 @@ Groups students into bands/ensembles for billing.
 Individual lesson instance.
 
 **Fields:**
+
 - `id` (UUID): Primary key
 - `studio` (ForeignKey → Studio): Studio where lesson occurs
 - `teacher` (ForeignKey → Teacher): Instructor
@@ -170,11 +182,13 @@ Individual lesson instance.
 - `created_at`, `updated_at` (DateTimeField): Timestamps
 
 **Relationships:**
+
 - Belongs to Studio, Teacher, Student
 - Optionally belongs to RecurringPattern
 - Has many LessonNotes
 
 **Methods:**
+
 - `duration_minutes()`: Calculate lesson length
 
 ### RecurringPattern
@@ -182,6 +196,7 @@ Individual lesson instance.
 Defines recurring lesson schedules.
 
 **Fields:**
+
 - `id` (UUID): Primary key
 - `studio` (ForeignKey → Studio): Studio association
 - `teacher` (ForeignKey → Teacher): Assigned teacher
@@ -196,6 +211,7 @@ Defines recurring lesson schedules.
 - `created_at`, `updated_at` (DateTimeField): Timestamps
 
 **Relationships:**
+
 - Generates many Lessons
 
 ### LessonNote
@@ -203,6 +219,7 @@ Defines recurring lesson schedules.
 Detailed notes for a lesson.
 
 **Fields:**
+
 - `id` (UUID): Primary key
 - `lesson` (ForeignKey → Lesson): Associated lesson
 - `teacher` (ForeignKey → Teacher): Note author
@@ -217,6 +234,7 @@ Detailed notes for a lesson.
 Student progress goals.
 
 **Fields:**
+
 - `id` (UUID): Primary key
 - `student` (ForeignKey → Student): Goal owner
 - `teacher` (ForeignKey → Teacher): Goal creator
@@ -232,12 +250,12 @@ Student progress goals.
 Reusable lesson plan templates.
 
 **Fields:**
+
 - `id` (UUID): Primary key
 - `studio` (ForeignKey → Studio): Studio association
 - `teacher` (ForeignKey → Teacher): Plan creator
 - `title` (CharField): Plan name
 - `description` (TextField): Overview
-- `target_level` (CharField): Beginner, intermediate, advanced
 - `specialty` (CharField): Instrument/subject
 - `duration_minutes` (IntegerField): Recommended length
 - `objectives`, `materials`, `activities` (JSONField): Lesson components
@@ -252,6 +270,7 @@ Reusable lesson plan templates.
 Invoice for a family or band.
 
 **Fields:**
+
 - `id` (UUID): Primary key
 - `studio` (ForeignKey → Studio): Issuing studio
 - `band` (ForeignKey → Band): Billing entity
@@ -264,10 +283,12 @@ Invoice for a family or band.
 - `created_at`, `updated_at` (DateTimeField): Timestamps
 
 **Relationships:**
+
 - Has many InvoiceLineItems
 - Has many Payments
 
 **Methods:**
+
 - `balance_due()`: Calculate remaining balance
 - `is_overdue()`: Check if past due date
 - `calculate_totals()`: Recalculate from line items
@@ -277,6 +298,7 @@ Invoice for a family or band.
 Individual line on an invoice.
 
 **Fields:**
+
 - `id` (UUID): Primary key
 - `invoice` (ForeignKey → Invoice): Parent invoice
 - `description` (CharField): Item description
@@ -291,6 +313,7 @@ Individual line on an invoice.
 Payment record for invoices.
 
 **Fields:**
+
 - `id` (UUID): Primary key
 - `invoice` (ForeignKey → Invoice): Invoice being paid
 - `amount` (DecimalField): Payment amount
@@ -307,6 +330,7 @@ Payment record for invoices.
 Saved payment methods for recurring billing.
 
 **Fields:**
+
 - `id` (UUID): Primary key
 - `band` (ForeignKey → Band): Owner
 - `payment_type` (CharField): Credit card, bank account
@@ -322,6 +346,7 @@ Saved payment methods for recurring billing.
 Physical items tracked by the studio.
 
 **Fields:**
+
 - `name` (CharField): Item name
 - `category` (CharField): Instrument, equipment, sheet-music, accessories, other
 - `quantity`, `available_quantity` (IntegerField): Total and available
@@ -338,6 +363,7 @@ Physical items tracked by the studio.
 - `created_by` (ForeignKey → User): Who added item
 
 **Methods:**
+
 - `is_low_stock()`: Check if available quantity ≤ 2
 
 ### CheckoutLog
@@ -345,6 +371,7 @@ Physical items tracked by the studio.
 Track item checkouts.
 
 **Fields:**
+
 - `item` (ForeignKey → InventoryItem): Checked out item
 - `student` (ForeignKey → User): Who borrowed
 - `quantity` (IntegerField): How many
@@ -355,6 +382,7 @@ Track item checkouts.
 - `approved_at` (DateTimeField, nullable): Approval time
 
 **Methods:**
+
 - `is_overdue()`: Check if past due date
 
 ### PracticeRoom
@@ -362,6 +390,7 @@ Track item checkouts.
 Practice rooms available for reservation.
 
 **Fields:**
+
 - `name` (CharField): Room identifier
 - `capacity` (IntegerField): Max occupancy
 - `description` (TextField): Room description
@@ -374,6 +403,7 @@ Practice rooms available for reservation.
 Student practice room bookings.
 
 **Fields:**
+
 - `room` (ForeignKey → PracticeRoom): Reserved room
 - `student` (ForeignKey → User): Who reserved
 - `start_time`, `end_time` (DateTimeField): Reservation period
@@ -384,6 +414,7 @@ Student practice room bookings.
 - `created_at`, `updated_at` (DateTimeField): Timestamps
 
 **Methods:**
+
 - `save()`: Auto-calculate total_cost from duration and rate
 - `clean()`: Validate no overlapping reservations
 
@@ -394,6 +425,7 @@ Student practice room bookings.
 Digital and physical resources.
 
 **Fields:**
+
 - `id` (UUID): Primary key
 - `studio` (ForeignKey → Studio): Owning studio
 - `uploaded_by` (ForeignKey → User): Creator
@@ -418,6 +450,7 @@ Digital and physical resources.
 Track lending of physical resources.
 
 **Fields:**
+
 - `id` (UUID): Primary key
 - `resource` (ForeignKey → Resource): Borrowed resource
 - `student` (ForeignKey → Student): Borrower
@@ -427,6 +460,7 @@ Track lending of physical resources.
 - `created_at`, `updated_at` (DateTimeField): Timestamps
 
 **Methods:**
+
 - `is_overdue()`: Check if past due date
 
 ## Messaging Models
@@ -436,6 +470,7 @@ Track lending of physical resources.
 Conversation between users.
 
 **Fields:**
+
 - `id` (UUID): Primary key
 - `studio` (ForeignKey → Studio): Studio context
 - `participants` (ManyToManyField → User): Thread members
@@ -447,6 +482,7 @@ Conversation between users.
 Individual message in a thread.
 
 **Fields:**
+
 - `id` (UUID): Primary key
 - `thread` (ForeignKey → MessageThread): Parent thread
 - `sender` (ForeignKey → User): Message author
@@ -462,6 +498,7 @@ Individual message in a thread.
 System notifications for users.
 
 **Fields:**
+
 - `id` (UUID): Primary key
 - `user` (ForeignKey → User): Recipient
 - `title` (CharField): Notification title
@@ -476,21 +513,25 @@ System notifications for users.
 Key indexes for performance:
 
 **Lessons:**
+
 - `scheduled_start`
 - `teacher, scheduled_start`
 - `student, scheduled_start`
 - `status`
 
 **Invoices:**
+
 - `invoice_number` (unique)
 - `band, status`
 - `due_date`
 
 **Payments:**
+
 - `transaction_id`
 - `invoice, status`
 
 **Resources:**
+
 - `resource_type`
 - `studio, is_public`
 
@@ -499,6 +540,7 @@ Key indexes for performance:
 ### UUID Primary Keys
 
 All models use UUID primary keys for:
+
 - Security (non-sequential)
 - Distribution (no collision risk)
 - API design (clean URLs)
@@ -506,6 +548,7 @@ All models use UUID primary keys for:
 ### Timestamps
 
 All models include:
+
 - `created_at`: When record was created
 - `updated_at`: Last modification time
 
@@ -516,6 +559,7 @@ Many models use `is_active` instead of hard deletes to preserve history.
 ### JSON Fields
 
 Used for flexible, structured data:
+
 - `specialties`, `tags`, `objectives`, `activities`
 - Searchable using PostgreSQL JSON operators
 

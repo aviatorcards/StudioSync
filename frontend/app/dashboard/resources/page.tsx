@@ -135,7 +135,7 @@ export default function ResourcesPage() {
         }
 
         if (uploadForm.resource_type !== 'link' && !uploadForm.file) {
-            toast.error('Binary payload required (file)')
+            toast.error('File required')
             return
         }
 
@@ -160,7 +160,7 @@ export default function ResourcesPage() {
                 }
             })
 
-            toast.success('Asset synchronized successfully')
+            toast.success('Resource uploaded successfully')
             setShowUploadModal(false)
             setUploadForm({
                 title: '',
@@ -174,7 +174,7 @@ export default function ResourcesPage() {
             refetch()
         } catch (error: any) {
             console.error('Upload failed:', error)
-            toast.error(error.response?.data?.message || 'Synchronization failed')
+            toast.error(error.response?.data?.message || 'Upload failed')
         } finally {
             setUploading(false)
         }
@@ -187,32 +187,32 @@ export default function ResourcesPage() {
         }
 
         if (!resource.file_url) {
-            toast.error('Asset URL unavailable')
+            toast.error('File URL unavailable')
             return
         }
 
         try {
             window.open(resource.file_url, '_blank')
-            toast.success('Extraction initiated')
+            toast.success('Download started')
         } catch (error) {
             console.error('Download failed:', error)
-            toast.error('Extraction failed')
+            toast.error('Download failed')
         }
     }
 
     const handleDelete = async (resourceId: string) => {
-        if (!confirm('Are you sure you want to eliminate this asset?')) {
+        if (!confirm('Are you sure you want to delete this resource?')) {
             return
         }
 
         setDeleting(resourceId)
         try {
             await api.delete(`/resources/library/${resourceId}/`)
-            toast.success('Asset eliminated')
+            toast.success('Resource deleted')
             refetch()
         } catch (error) {
             console.error('Delete failed:', error)
-            toast.error('Elimination failed')
+            toast.error('Delete failed')
         } finally {
             setDeleting(null)
         }
@@ -226,20 +226,20 @@ export default function ResourcesPage() {
     })
 
     const resourceTypes: { value: ResourceType | 'all'; label: string }[] = [
-        { value: 'all', label: 'Consolidated Library' },
-        { value: 'pdf', label: 'Architectures (PDF)' },
-        { value: 'audio', label: 'Aural Assets' },
-        { value: 'video', label: 'Visual Tracks' },
-        { value: 'image', label: 'Media Graphics' },
-        { value: 'link', label: 'External Links' },
-        { value: 'other', label: 'Unclassified' }
+        { value: 'all', label: 'All Resources' },
+        { value: 'pdf', label: 'PDF Documents' },
+        { value: 'audio', label: 'Audio Files' },
+        { value: 'video', label: 'Video Files' },
+        { value: 'image', label: 'Images' },
+        { value: 'link', label: 'Links' },
+        { value: 'other', label: 'Other' }
     ]
 
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-in fade-in duration-500">
                 <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Scanning Repository...</p>
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Loading Library...</p>
             </div>
         )
     }
@@ -250,29 +250,29 @@ export default function ResourcesPage() {
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4">
                 <div className="space-y-2">
                     <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight flex items-center gap-3">
-                        Resource Repository
+                        Resources Library
                         <div className="bg-primary/10 px-3 py-1 rounded-full text-xs font-black text-primary uppercase tracking-widest">
-                            {resources.length} Assets
+                            {resources.length} Resources
                         </div>
                     </h1>
-                    <p className="text-gray-500 font-medium max-w-lg">Manage instructional assets, curriculum benchmarks, and media payloads.</p>
+                    <p className="text-gray-500 font-medium max-w-lg">Access and manage all your teaching materials and files.</p>
                 </div>
                 <Button
                     onClick={() => setShowUploadModal(true)}
                     className="gap-2 hover:scale-105 shadow-xl shadow-primary/20 transition-all py-6 px-10 font-black uppercase tracking-widest text-[10px]"
                 >
                     <Upload className="w-4 h-4" />
-                    Synchronize Asset
+                    Upload Resource
                 </Button>
             </header>
 
             {/* Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                  {[
-                    { label: 'Asset Total', value: resources.length, icon: Grid, color: 'blue' },
-                    { label: 'Binary Files', value: resources.filter((r: Resource) => r.file).length, icon: File, color: 'emerald' },
-                    { label: 'External Refs', value: resources.filter((r: Resource) => r.resource_type === 'link').length, icon: LinkIcon, color: 'purple' },
-                    { label: 'Active Domains', value: new Set(resources.map((r: Resource) => r.category).filter(Boolean)).size, icon: Target, color: 'orange' }
+                    { label: 'Total Resources', value: resources.length, icon: Grid, color: 'blue' },
+                    { label: 'Files', value: resources.filter((r: Resource) => r.file).length, icon: File, color: 'emerald' },
+                    { label: 'Links', value: resources.filter((r: Resource) => r.resource_type === 'link').length, icon: LinkIcon, color: 'purple' },
+                    { label: 'Collections', value: new Set(resources.map((r: Resource) => r.category).filter(Boolean)).size, icon: Target, color: 'orange' }
                 ].map((stat, i) => (
                     <div key={i} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
                          <div className="flex items-center justify-between mb-4">
@@ -294,7 +294,7 @@ export default function ResourcesPage() {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <input
                             type="text"
-                            placeholder="Lookup resource title, tags, or description..."
+                            placeholder="Search by title, tags, or description..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-sm text-gray-700 outline-none transition-all"
@@ -342,7 +342,7 @@ export default function ResourcesPage() {
                                     {resource.title}
                                 </h3>
                                 <p className="text-xs font-medium text-gray-500 line-clamp-3 leading-relaxed">
-                                    {resource.description || 'No descriptive payload provided.'}
+                                    {resource.description || 'No description provided.'}
                                 </p>
                             </div>
 
@@ -357,7 +357,7 @@ export default function ResourcesPage() {
                                     className="flex-1 px-4 rounded-[1.25rem] text-[10px] font-black uppercase tracking-widest gap-2 py-6 shadow-lg shadow-primary/10"
                                 >
                                     {resource.resource_type === 'link' ? <ExternalLink className="w-3.5 h-3.5" /> : <Download className="w-3.5 h-3.5" />}
-                                    {resource.resource_type === 'link' ? 'Open' : 'Extract'}
+                                    {resource.resource_type === 'link' ? 'Open' : 'Download'}
                                 </Button>
                                 <Button
                                     variant="ghost"
@@ -383,9 +383,9 @@ export default function ResourcesPage() {
                             <BookOpen className="w-12 h-12 text-gray-200" />
                         </div>
                         <div className="space-y-2">
-                            <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">Repository Empty</h3>
+                            <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">Library Empty</h3>
                             <p className="text-sm font-medium text-gray-500 max-w-sm mx-auto leading-relaxed">
-                                No assets matched your current lookup filters. Try adjusting your parameters or synchronize a new asset.
+                                No resources matched your current search. Try adjusting your filters or upload a new resource.
                             </p>
                         </div>
                         <Button
@@ -393,7 +393,7 @@ export default function ResourcesPage() {
                             className="px-10 py-6 rounded-2xl shadow-lg shadow-primary/10"
                         >
                             <Plus className="w-4 h-4 mr-1" />
-                            Synchronize New Asset
+                            Upload New Resource
                         </Button>
                     </div>
                 </div>
@@ -405,12 +405,12 @@ export default function ResourcesPage() {
                 onOpenChange={setShowUploadModal}
                 size="lg"
             >
-                <DialogHeader title="Asset Synchronization" />
+                <DialogHeader title="Upload Resource" />
                 <DialogContent>
                     <div className="space-y-8">
                             {/* Resource Type */}
                             <div className="space-y-4">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Architectural Tier</label>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Resource Type</label>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                     {(['pdf', 'audio', 'video', 'image', 'link', 'other'] as ResourceType[]).map(type => (
                                         <button
@@ -448,7 +448,7 @@ export default function ResourcesPage() {
                                 </div>
                             ) : (
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Binary Payload</label>
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Upload File</label>
                                     <div
                                         onDragOver={handleDragOver}
                                         onDragLeave={handleDragLeave}
@@ -472,7 +472,7 @@ export default function ResourcesPage() {
                                                 <div className="text-left space-y-1">
                                                     <p className="text-sm font-black text-gray-900 uppercase tracking-tighter line-clamp-1">{uploadForm.file.name}</p>
                                                     <p className="text-[10px] font-black text-primary uppercase tracking-widest">
-                                                        {(uploadForm.file.size / 1024 / 1024).toFixed(2)} MB Payload
+                                                        {(uploadForm.file.size / 1024 / 1024).toFixed(2)} MB
                                                     </p>
                                                 </div>
                                                 <Button
@@ -492,8 +492,8 @@ export default function ResourcesPage() {
                                                     <Upload className="w-6 h-6 text-gray-300 group-hover:text-primary transition-colors" />
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <p className="text-xs font-black text-gray-900 uppercase tracking-widest">Drop payload here</p>
-                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">or click to browse local storage</p>
+                                                    <p className="text-xs font-black text-gray-900 uppercase tracking-widest">Drop file here</p>
+                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">or click to browse files</p>
                                                 </div>
                                             </div>
                                         )}
@@ -504,33 +504,33 @@ export default function ResourcesPage() {
                             {/* Metadata */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2 md:col-span-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Asset Title</label>
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Title</label>
                                     <input
                                         type="text"
                                         required
                                         value={uploadForm.title}
                                         onChange={(e) => setUploadForm(prev => ({ ...prev, title: e.target.value }))}
-                                        placeholder="Enter definitive resource title..."
+                                        placeholder="Enter resource title..."
                                         className="w-full px-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-gray-900 transition-all"
                                     />
                                 </div>
                                 <div className="space-y-2 md:col-span-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Functional Description</label>
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Description</label>
                                     <textarea
                                         value={uploadForm.description}
                                         onChange={(e) => setUploadForm(prev => ({ ...prev, description: e.target.value }))}
-                                        placeholder="Add descriptive metadata..."
+                                        placeholder="Add a brief description..."
                                         rows={3}
                                         className="w-full px-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-gray-900 transition-all resize-none"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Taxonomy (Category)</label>
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Folder / Collection</label>
                                     <input
                                         type="text"
                                         value={uploadForm.category}
                                         onChange={(e) => setUploadForm(prev => ({ ...prev, category: e.target.value }))}
-                                        placeholder="e.g. Masterclass Focus"
+                                        placeholder="e.g. Piano Exercises, Sheet Music..."
                                         className="w-full px-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-gray-900 transition-all"
                                     />
                                 </div>
@@ -543,7 +543,7 @@ export default function ResourcesPage() {
                         onClick={() => setShowUploadModal(false)}
                         className="flex-1"
                     >
-                        Abort
+                        Cancel
                     </Button>
                     <Button
                         onClick={handleUpload}
@@ -553,12 +553,12 @@ export default function ResourcesPage() {
                         {uploading ? (
                             <>
                                 <Loader2 className="w-4 h-4 animate-spin" />
-                                Synchronizing...
+                                Uploading...
                             </>
                         ) : (
                             <>
                                 <Sparkles className="w-4 h-4" />
-                                Execute Synchronization
+                                Upload Resource
                             </>
                         )}
                     </Button>

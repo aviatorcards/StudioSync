@@ -1,7 +1,4 @@
-"""
-URL configuration for Music Studio Manager
-"""
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
@@ -16,7 +13,6 @@ urlpatterns = [
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='api-docs'),
 
-    # API endpoints
     path('api/auth/', include('apps.auth.urls')),
     path('api/core/', include('apps.core.urls')),
     path('api/students/', include('apps.students.urls')),

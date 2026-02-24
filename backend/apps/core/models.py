@@ -84,6 +84,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     def get_short_name(self):
         return self.first_name
+    @property
+    def initials(self):
+        return f"{self.first_name[0] if self.first_name else ''}{self.last_name[0] if self.last_name else ''}".upper()
+
 
 
 class Studio(models.Model):
@@ -287,12 +291,7 @@ class Student(models.Model):
     """
     Student profile linked to a User
     """
-    SKILL_LEVEL_CHOICES = [
-        ('beginner', 'Beginner'),
-        ('intermediate', 'Intermediate'),
-        ('advanced', 'Advanced'),
-        ('professional', 'Professional'),
-    ]
+
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_profile')
@@ -311,7 +310,7 @@ class Student(models.Model):
     
     # Musical information
     instrument = models.CharField(max_length=100, blank=True)
-    skill_level = models.CharField(max_length=20, choices=SKILL_LEVEL_CHOICES, default='beginner')
+
     goals_description = models.TextField(blank=True)  # Renamed to avoid conflict with StudentGoal.goals
     
     # Important dates

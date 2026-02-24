@@ -68,7 +68,6 @@ class TestSongbookAPI:
             'description': 'Classic piano piece',
             'resource_type': 'sheet_music',
             'instrument': 'Piano',
-            'skill_level': 'intermediate',
             'composer': 'Beethoven',
             'key_signature': 'A minor',
             'tempo': 'Andante',
@@ -80,7 +79,6 @@ class TestSongbookAPI:
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data['title'] == 'Für Elise'
         assert response.data['instrument'] == 'Piano'
-        assert response.data['skill_level'] == 'intermediate'
         assert response.data['composer'] == 'Beethoven'
 
     def test_music_resource_requires_instrument(self, setup_data):
@@ -97,7 +95,6 @@ class TestSongbookAPI:
         data = {
             'title': 'Test Chart',
             'resource_type': 'chord_chart',
-            'skill_level': 'beginner',
             'file': pdf_file
             # Missing instrument field
         }
@@ -119,7 +116,6 @@ class TestSongbookAPI:
             title='Piano Scales',
             resource_type='sheet_music',
             instrument='Piano',
-            skill_level='beginner'
         )
         
         # Create guitar resource
@@ -129,7 +125,6 @@ class TestSongbookAPI:
             title='Guitar Chords',
             resource_type='chord_chart',
             instrument='Guitar',
-            skill_level='beginner'
         )
         
         # Filter by Piano
@@ -138,38 +133,6 @@ class TestSongbookAPI:
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data) == 1
         assert response.data[0]['instrument'] == 'Piano'
-
-    def test_filter_by_skill_level(self, setup_data):
-        """Test filtering resources by skill level"""
-        client = APIClient()
-        client.force_authenticate(user=setup_data['teacher_user'])
-        
-        # Create beginner resource
-        Resource.objects.create(
-            studio=setup_data['studio'],
-            uploaded_by=setup_data['teacher_user'],
-            title='Beginner Scales',
-            resource_type='sheet_music',
-            instrument='Piano',
-            skill_level='beginner'
-        )
-        
-        # Create advanced resource
-        Resource.objects.create(
-            studio=setup_data['studio'],
-            uploaded_by=setup_data['teacher_user'],
-            title='Advanced Sonata',
-            resource_type='sheet_music',
-            instrument='Piano',
-            skill_level='advanced'
-        )
-        
-        # Filter by beginner
-        response = client.get('/api/resources/library/?skill_level=beginner')
-        
-        assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) == 1
-        assert response.data[0]['skill_level'] == 'beginner'
 
     def test_search_by_composer(self, setup_data):
         """Test searching resources by composer name"""
@@ -182,7 +145,6 @@ class TestSongbookAPI:
             title='Moonlight Sonata',
             resource_type='sheet_music',
             instrument='Piano',
-            skill_level='advanced',
             composer='Beethoven'
         )
         

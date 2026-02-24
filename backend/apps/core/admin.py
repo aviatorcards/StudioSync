@@ -59,8 +59,8 @@ class BandAdmin(admin.ModelAdmin):
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ('user', 'instrument', 'skill_level', 'primary_teacher', 'is_active', 'enrollment_date')
-    list_filter = ('is_active', 'skill_level', 'instrument', 'studio')
+    list_display = ('user', 'instrument', 'primary_teacher', 'is_active', 'enrollment_date')
+    list_filter = ('is_active', 'instrument', 'studio')
     search_fields = ('user__first_name', 'user__last_name', 'user__email', 'instrument')
     ordering = ('-enrollment_date',)
     readonly_fields = ('created_at', 'updated_at', 'total_lessons')

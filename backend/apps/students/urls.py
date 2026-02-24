@@ -1,8 +1,9 @@
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from rest_framework.routers import DefaultRouter  # noqa: F401
+from config.routers import OptionalSlashRouter
 from apps.students.views import StudentViewSet, FamilyViewSet
 
-router = DefaultRouter()
+router = OptionalSlashRouter()
 router.register(r'', StudentViewSet, basename='student')
 router.register(r'families', FamilyViewSet, basename='family')
 

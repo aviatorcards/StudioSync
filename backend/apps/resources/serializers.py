@@ -12,7 +12,7 @@ class ResourceSerializer(serializers.ModelSerializer):
             'file', 'file_url', 'external_url', 'tags', 'category',
             'uploaded_by', 'uploaded_by_name', 'created_at',
             'is_public', 'is_lendable', 'quantity_available', 'band',
-            'instrument', 'skill_level', 'composer', 'key_signature', 'tempo'
+            'instrument', 'composer', 'key_signature', 'tempo'
         ]
         read_only_fields = ['uploaded_by', 'file_size']
 

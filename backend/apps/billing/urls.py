@@ -1,9 +1,10 @@
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from rest_framework.routers import DefaultRouter  # noqa: F401
+from config.routers import OptionalSlashRouter
 from .views import InvoiceViewSet
 from .stripe_views import CreateCheckoutSessionView, StripeWebhookView
 
-router = DefaultRouter()
+router = OptionalSlashRouter()
 router.register(r'invoices', InvoiceViewSet, basename='invoice')
 
 urlpatterns = [

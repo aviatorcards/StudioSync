@@ -24,7 +24,6 @@ LAST_NAMES = [
     "Jackson", "Martin",
 ]
 INSTRUMENTS = ["Piano", "Guitar", "Violin", "Drums", "Vocal", "Saxophone", "Flute", "Cello"]
-LEVELS = ["beginner", "intermediate", "advanced"]
 
 
 class Command(BaseCommand):
@@ -135,7 +134,6 @@ class Command(BaseCommand):
                 defaults={
                     "studio": studio,
                     "instrument": random.choice(INSTRUMENTS),
-                    "skill_level": random.choice(LEVELS),
                     "primary_teacher": random.choice(teachers),
                     "enrollment_date": timezone.now().date(),
                 },

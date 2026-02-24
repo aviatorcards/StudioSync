@@ -127,8 +127,7 @@ class TestStudentAPI:
             'user': student_user.id,
             'studio': studio.id,
             'primary_teacher': teacher.id,
-            'instrument': 'Violin',
-            'skill_level': 'intermediate'
+            'instrument': 'Violin'
         }
         response = authenticated_client.post(url, data, format='json')
 
@@ -161,8 +160,7 @@ class TestStudentAPI:
             user=other_user,
             studio=student.studio,
             primary_teacher=student.primary_teacher,
-            instrument='Drums',
-            skill_level='beginner'
+            instrument='Drums'
         )
 
         url = reverse('student-detail', args=[other_student.id])

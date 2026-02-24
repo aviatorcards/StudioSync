@@ -46,6 +46,14 @@ export default function GoalsPage() {
         setCreating(true)
 
         const submitData: any = { ...formData }
+        
+        // Convert empty strings to null for optional fields
+        Object.keys(submitData).forEach(key => {
+            if (submitData[key] === '') {
+                submitData[key] = null
+            }
+        })
+
         if (isStudent) {
             delete submitData.student
         }

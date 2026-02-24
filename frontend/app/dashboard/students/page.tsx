@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/contexts/UserContext'
-import { useStudents, useTeachers } from '@/hooks/useDashboardData'
+import { useStudents, useTeachers, useStudentStats } from '@/hooks/useDashboardData'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
 import {
@@ -32,7 +32,6 @@ interface StudentData {
     name: string
     email: string
     instrument: string | null
-    skill_level: string | null
     teacher_name: string | null
     primary_teacher?: TeacherProfile | string | null 
     next_lesson: string | null
@@ -92,7 +91,7 @@ export default function StudentsPage() {
         last_name: '',
         email: '',
         instrument: '',
-        skill_level: '',
+
         primary_teacher: '',
         is_active: true
     })
@@ -106,6 +105,8 @@ export default function StudentsPage() {
             ? (currentUser as any).teacher_profile.id
             : undefined
     })
+
+    const { stats: studentStats, loading: statsLoading } = useStudentStats()
 
     // --- Derived Data ---
     const allInstruments = useMemo(() => {
@@ -126,7 +127,7 @@ export default function StudentsPage() {
             last_name: lastNameParts.join(' ') || '',
             email: student.email || '',
             instrument: student.instrument || '',
-            skill_level: student.skill_level || 'Beginner',
+
             primary_teacher: typeof student.primary_teacher === 'object' ? student.primary_teacher?.id : student.primary_teacher || student.teacher_id || '',
             is_active: student.is_active ?? true
         })
@@ -198,10 +199,10 @@ export default function StudentsPage() {
             {/* Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                  {[
-                    { label: 'Enrolled Total', value: meta?.count || 0, icon: GraduationCap, color: 'blue' },
-                    { label: 'Studio Retention', value: '94%', icon: Star, color: 'emerald' },
-                    { label: 'Active Progress', value: students.filter((s:any) => s.is_active).length, icon: Target, color: 'purple' },
-                    { label: 'Average Skill', value: 'Intermediate', icon: Trophy, color: 'orange' }
+                    { label: 'Total Roster', value: statsLoading ? '-' : (studentStats?.total_students || 0), icon: GraduationCap, color: 'blue' },
+                    { label: 'Active Members', value: statsLoading ? '-' : (studentStats?.active_students || 0), icon: Target, color: 'purple' },
+                    { label: 'Engagement Rate', value: statsLoading ? '-' : (studentStats?.total_students ? Math.round((studentStats.active_students / studentStats.total_students) * 100) + '%' : '0%'), icon: Star, color: 'emerald' },
+                    { label: 'Unassigned', value: statsLoading ? '-' : (studentStats?.unassigned_students || 0), icon: UserCog, color: 'orange' }
                 ].map((stat, i) => (
                     <div key={i} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex items-center justify-between mb-4">
@@ -451,20 +452,7 @@ export default function StudentsPage() {
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Proficiency Tier</label>
-                                    <select
-                                        value={formData.skill_level}
-                                        onChange={e => setFormData({ ...formData, skill_level: e.target.value })}
-                                        className="w-full px-5 py-3.5 bg-white border-transparent focus:border-primary border-2 rounded-2xl font-bold text-gray-700 outline-none transition-all appearance-none"
-                                    >
-                                        <option value="Beginner">Beginner / Foundation</option>
-                                        <option value="Intermediate">Intermediate / Development</option>
-                                        <option value="Advanced">Advanced / Mastery</option>
-                                        <option value="Professional">Professional / Performer</option>
-                                    </select>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Assigned Mentor</label>
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Lead Instructor</label>
                                     <select
                                         value={formData.primary_teacher}
                                         onChange={e => setFormData({ ...formData, primary_teacher: e.target.value })}
@@ -476,6 +464,7 @@ export default function StudentsPage() {
                                         ))}
                                     </select>
                                 </div>
+
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Enrollment Status</label>
                                     <div 

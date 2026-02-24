@@ -29,7 +29,6 @@ SECURE_MODE = os.getenv('SEED_SECURE_MODE', 'false').lower() == 'true'
 FIRST_NAMES = ["James", "Mary", "Robert", "Patricia", "John", "Jennifer", "Michael", "Linda", "William", "Elizabeth", "David", "Barbara", "Richard", "Susan", "Joseph", "Jessica", "Thomas", "Sarah", "Charles", "Karen"]
 LAST_NAMES = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin"]
 INSTRUMENTS = ["Piano", "Guitar", "Violin", "Drums", "Vocal", "Saxophone", "Flute", "Cello"]
-LEVELS = ["beginner", "intermediate", "advanced"]
 
 def get_password(env_var, default, role):
     """Get password from env var or use default in dev mode."""
@@ -167,7 +166,6 @@ def seed():
             defaults={
                 'studio': studio,
                 'instrument': random.choice(INSTRUMENTS),
-                'skill_level': random.choice(LEVELS),
                 'primary_teacher': random.choice(teachers),
                 'enrollment_date': timezone.now().date()
             }

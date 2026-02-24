@@ -151,11 +151,6 @@ class UserViewSet(viewsets.ModelViewSet):
         """Dedicated action to clear user avatar"""
         user = request.user
         if user.avatar:
-            # Optionally delete file from storage
-            try:
-                user.avatar.delete(save=False)
-            except Exception as e:
-                print(f"Error deleting avatar file: {e}")
             user.avatar = None
             user.save()
         return Response({"detail": "Avatar removed", "avatar": None})
@@ -430,6 +425,9 @@ class StudioViewSet(viewsets.ModelViewSet):
         # Users can only see studios they own or are associated with
         user = self.request.user
 
+        if not user.is_authenticated:
+            return Studio.objects.none()
+
         if user.role == 'admin':
             return Studio.objects.filter(owner=user)
         elif hasattr(user, 'teacher_profile') and user.teacher_profile:
@@ -540,112 +538,192 @@ class StudentViewSet(viewsets.ModelViewSet):
             
         return queryset
 
+    @action(detail=False, methods=['get'])
+    def stats(self, request):
+        """Get roster metrics for the current user's scope"""
+        queryset = self.get_queryset()
+        
+        total_students = queryset.count()
+        active_students = queryset.filter(is_active=True).count()
+        unassigned_students = queryset.filter(primary_teacher__isnull=True).count()
+        
+        return Response({
+            'total_students': total_students,
+            'active_students': active_students,
+            'unassigned_students': unassigned_students
+        })
 
-from django.http import HttpResponse
-import csv
+
+from django.http import HttpResponse, JsonResponse
+import csv, json
 from rest_framework.views import APIView
 
 class ReportsExportView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request):
-        report_type = request.query_params.get('type')
-        user = request.user
+    def _get_report_data(self, report_type, user):
+        """Return (headers, rows, records) for any report type.
         
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = f'attachment; filename="{report_type}_report.csv"'
+        headers  – list of column names (for CSV)
+        rows     – list of lists (for CSV)
+        records  – list of dicts (for JSON / Excel)
+        """
+        headers, rows, records = [], [], []
         
-        writer = csv.writer(response)
-        
+        # Robust Studio Lookup
+        from apps.core.models import Studio
+        studio = Studio.objects.filter(owner=user).first()
+        if not studio and user.role == 'admin':
+            # If admin but not technically owner in DB record, fallback to first studio
+            studio = Studio.objects.first()
+
         if report_type == 'financial':
-            writer.writerow(['Date', 'Invoice #', 'Bill To', 'Amount', 'Status'])
+            headers = ['date', 'description', 'category', 'amount', 'status']
             from apps.billing.models import Invoice
-            # Filter by admin's studio
-            try:
-                invoices = Invoice.objects.filter(studio__owner=user)
-                for inv in invoices:
-                    bill_to = inv.student.user.get_full_name() if inv.student else (inv.band.name if inv.band else "Unknown")
-                    writer.writerow([inv.created_at.date(), inv.invoice_number, bill_to, inv.total_amount, inv.status])
-            except Exception as e:
-                writer.writerow(['Error generating report', str(e)])
+            if studio:
+                try:
+                    invoices = Invoice.objects.filter(studio=studio).select_related(
+                        'student__user', 'band'
+                    )
+                    for inv in invoices:
+                        bill_to = (
+                            inv.student.user.get_full_name() if inv.student
+                            else (inv.band.name if inv.band else "Unknown")
+                        )
+                        row = [
+                            str(inv.created_at.date()),
+                            f"Invoice {inv.invoice_number} - {bill_to}",
+                            "Tuition" if inv.student else "Band/Group",
+                            str(inv.total_amount),
+                            inv.status.title()
+                        ]
+                        rows.append(row)
+                        records.append(dict(zip(headers, row)))
+                except Exception as e:
+                    rows.append(['Error generating report', str(e)])
 
         elif report_type == 'students':
-            writer.writerow(['Name', 'Email', 'Instrument', 'Skill Level', 'Status', 'Phone'])
-            from apps.core.models import Student, Studio
-            studio = Studio.objects.filter(owner=user).first()
+            headers = ['name', 'email', 'instrument', 'status', 'phone', 'enrollment_date']
+            from apps.core.models import Student
             if studio:
                 students = Student.objects.filter(studio=studio).select_related('user')
                 for s in students:
-                    writer.writerow([
+                    row = [
                         s.user.get_full_name(),
                         s.user.email,
-                        s.instrument,
-                        s.skill_level,
+                        s.instrument or '',
                         'Active' if s.is_active else 'Inactive',
-                        s.user.phone
-                    ])
+                        s.user.phone or '',
+                        str(s.enrollment_date) if s.enrollment_date else '',
+                    ]
+                    rows.append(row)
+                    records.append(dict(zip(headers, row)))
 
         elif report_type == 'teachers':
-            writer.writerow(['Name', 'Email', 'Specialties', 'Hourly Rate', 'Status'])
-            from apps.core.models import Teacher, Studio
-            studio = Studio.objects.filter(owner=user).first()
+            headers = ['name', 'email', 'specialties', 'hourly_rate', 'status']
+            from apps.core.models import Teacher
             if studio:
                 teachers = Teacher.objects.filter(studio=studio).select_related('user')
                 for t in teachers:
-                    writer.writerow([
+                    row = [
                         t.user.get_full_name(),
                         t.user.email,
-                        ", ".join(t.specialties) if t.specialties else "",
-                        t.hourly_rate,
-                        'Active' if t.is_active else 'Inactive'
-                    ])
+                        ", ".join(t.specialties) if t.specialties else '',
+                        str(t.hourly_rate) if t.hourly_rate else '',
+                        'Active' if t.is_active else 'Inactive',
+                    ]
+                    rows.append(row)
+                    records.append(dict(zip(headers, row)))
 
         elif report_type == 'users':
-            writer.writerow(['Name', 'Email', 'Role', 'Date Joined', 'Last Login'])
-            from apps.core.models import Studio
-            # Get all users linked to this admin's studio content
-            studio = Studio.objects.filter(owner=user).first()
+            headers = ['name', 'email', 'role', 'date_joined', 'last_login']
+            from django.db.models import Q
             if studio:
-                # Naive approach: filter users by role if they are associated
-                # Leveraging UserViewSet logic would be better but simple filter works for now
-                from django.db.models import Q
                 target_users = User.objects.filter(
                     Q(student_profile__studio=studio) |
                     Q(teacher_profile__studio=studio) |
                     Q(id=user.id)
                 ).distinct()
-                
                 for u in target_users:
-                    writer.writerow([
+                    row = [
                         u.get_full_name(),
                         u.email,
-                        u.role,
-                        u.created_at.date(),
-                        u.last_login.date() if u.last_login else 'Never'
-                    ])
+                        u.role.title(),
+                        str(u.created_at.date()),
+                        str(u.last_login.date()) if u.last_login else 'Never',
+                    ]
+                    rows.append(row)
+                    records.append(dict(zip(headers, row)))
 
         elif report_type == 'attendance':
-            writer.writerow(['Date', 'Student', 'Lesson Type', 'Status'])
+            headers = ['student', 'total', 'attended', 'cancelled', 'percentage']
             from apps.lessons.models import Lesson
-            lessons = Lesson.objects.filter(studio__owner=user)
-            for lesson in lessons:
-                st_name = lesson.student.user.get_full_name() if lesson.student else "Unknown"
-                writer.writerow([lesson.scheduled_start.date(), st_name, lesson.lesson_type, lesson.status])
+            from django.db.models import Count, Q
+            
+            if studio:
+                # Group by student and count lesson statuses
+                from apps.core.models import Student
+                student_stats = Student.objects.filter(studio=studio).annotate(
+                    total_count=Count('lessons'),
+                    attended_count=Count('lessons', filter=Q(lessons__status='completed')),
+                    cancelled_count=Count('lessons', filter=Q(lessons__status='cancelled'))
+                ).select_related('user')
                 
+                for s in student_stats:
+                    percentage = f"{(s.attended_count / s.total_count * 100):.1f}%" if s.total_count > 0 else "0.0%"
+                    row = [
+                        s.user.get_full_name(),
+                        s.total_count,
+                        s.attended_count,
+                        s.cancelled_count,
+                        percentage
+                    ]
+                    rows.append(row)
+                    records.append(dict(zip(headers, row)))
+
         elif report_type == 'student-progress':
-            writer.writerow(['Student', 'Goal', 'Status', 'Progress', 'Target Date'])
+            headers = ['student', 'goal', 'status', 'progress', 'target_date']
             from apps.lessons.models import StudentGoal
-            # Assuming user is teacher/admin
-            if hasattr(user, 'teacher_profile'):
-                goals = StudentGoal.objects.filter(teacher=user.teacher_profile)
-            else:
-                goals = StudentGoal.objects.filter(student__studio__owner=user)
+            
+            goals = StudentGoal.objects.none()
+            if studio:
+                goals = StudentGoal.objects.filter(student__studio=studio).select_related('student__user')
+            elif hasattr(user, 'teacher_profile'):
+                goals = StudentGoal.objects.filter(teacher=user.teacher_profile).select_related('student__user')
                 
             for goal in goals:
                 st_name = goal.student.user.get_full_name() if goal.student else "Unknown"
-                writer.writerow([st_name, goal.title, goal.status, f"{goal.progress_percentage}%", goal.target_date])
-        
-        else:
-             writer.writerow(['Error', 'Invalid report type'])
-             
+                row = [
+                    st_name, 
+                    goal.title, 
+                    goal.status.title(), 
+                    f"{goal.progress_percentage}%", 
+                    str(goal.target_date) if goal.target_date else ''
+                ]
+                rows.append(row)
+                records.append(dict(zip(headers, row)))
+
+        return headers, rows, records
+
+    def get(self, request):
+        report_type = request.query_params.get('type', '')
+        export_format = request.query_params.get('format', 'csv').lower()
+        user = request.user
+
+        headers, rows, records = self._get_report_data(report_type, user)
+
+        if export_format == 'json':
+            return JsonResponse(records, safe=False)
+
+        # Default: CSV
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="{report_type}_report.csv"'
+        writer = csv.writer(response)
+        if headers:
+            # Write a human-friendly header row (Title Case)
+            writer.writerow([h.replace('_', ' ').title() for h in headers])
+        if rows:
+            writer.writerows(rows)
+        elif not headers:
+            writer.writerow(['Error', 'Invalid report type'])
         return response

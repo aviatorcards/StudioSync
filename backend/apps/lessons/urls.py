@@ -1,8 +1,9 @@
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from rest_framework.routers import DefaultRouter  # noqa: F401
+from config.routers import OptionalSlashRouter
 from . import calendar_views, views
 
-router = DefaultRouter()
+router = OptionalSlashRouter()
 router.register(r'lessons', views.LessonViewSet, basename='lesson')
 router.register(r'plans', views.LessonPlanViewSet, basename='lesson-plan')
 router.register(r'goals', views.StudentGoalViewSet, basename='goal')

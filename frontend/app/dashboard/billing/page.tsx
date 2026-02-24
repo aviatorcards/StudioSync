@@ -134,7 +134,7 @@ export default function BillingPage() {
     }, 0)
 
     const handlePayInvoice = async (invoiceId: string) => {
-        const toastId = toast.loading('Initializing secure checkout...')
+        const toastId = toast.loading('Starting checkout...')
         try {
             const res = await api.post(`/billing/create-checkout-session/${invoiceId}/`)
             if (res.data.url) {
@@ -154,6 +154,21 @@ export default function BillingPage() {
             toast.success('Reminder sent successfully')
         } catch (error) {
             toast.error('Failed to send reminder')
+        }
+    }
+
+    const handleDeleteInvoice = async (invoiceId: string) => {
+        if (!confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
+            return
+        }
+
+        try {
+            await api.delete(`/billing/invoices/${invoiceId}/`)
+            toast.success('Invoice deleted successfully')
+            refetch()
+        } catch (error) {
+            console.error('Failed to delete invoice', error)
+            toast.error('Failed to delete invoice')
         }
     }
 
@@ -221,7 +236,7 @@ export default function BillingPage() {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-in fade-in duration-500">
                 <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Synchronizing Billing...</p>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Loading Billing...</p>
             </div>
         )
     }
@@ -393,6 +408,16 @@ export default function BillingPage() {
                                                     className="hover:scale-110 active:scale-95"
                                                 >
                                                     <Mail className="w-4 h-4 text-gray-400" />
+                                                </Button>
+                                            )}
+                                            {isManager && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => handleDeleteInvoice(invoice.id)}
+                                                    className="hover:scale-110 active:scale-95 text-red-400 hover:text-red-500 hover:bg-red-50"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
                                                 </Button>
                                             )}
                                             {invoice.status !== 'paid' && invoice.status !== 'cancelled' ? (

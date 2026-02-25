@@ -51,6 +51,44 @@ class StudentViewSet(viewsets.ModelViewSet):
         # Fallback
         return queryset.none()
     
+    @action(detail=False, methods=['get'], url_path='instruments')
+    def instruments(self, request):
+        """Return sorted unique instrument list: studio curated list + instruments used by existing students."""
+        from apps.core.models import Studio
+
+        # 1. Instruments already assigned to students
+        student_instruments = (
+            self.get_queryset()
+            .exclude(instrument='')
+            .exclude(instrument__isnull=True)
+            .values_list('instrument', flat=True)
+            .distinct()
+        )
+
+        # 2. Curated list stored in studio settings
+        curated: list = []
+        studio = Studio.objects.filter(owner=request.user).first()
+        if not studio:
+            studio = Studio.objects.first()
+        if studio and isinstance(studio.settings, dict):
+            curated = studio.settings.get('instruments', [])
+
+        merged = sorted({i.strip().title() for i in list(student_instruments) + curated if i and i.strip()})
+        return Response(merged)
+
+    @action(detail=False, methods=['get'], url_path='stats')
+    def stats(self, request):
+        """Return aggregate stats for the students the current user can access."""
+        qs = self.get_queryset()
+        total = qs.count()
+        active = qs.filter(is_active=True).count()
+        unassigned = qs.filter(primary_teacher__isnull=True).count()
+        return Response({
+            'total_students': total,
+            'active_students': active,
+            'unassigned_students': unassigned,
+        })
+
     def perform_create(self, serializer):
         # Automatically assign the studio from the admin's owned studio
         # For MVP, we'll use the first studio or admin's owned studio

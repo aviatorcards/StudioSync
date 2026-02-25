@@ -4,60 +4,30 @@ import { useState, useEffect, useRef } from 'react'
 import { useUser } from '@/contexts/UserContext'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Settings, Bell, Search, LogOut, User, GraduationCap, FileText, BookOpen, Menu } from 'lucide-react'
+import { Settings, Bell, Search, LogOut, GraduationCap, FileText, BookOpen, Menu } from 'lucide-react'
 import { Logo } from '@/components/Logo'
-import api from '@/services/api'
 import { toast } from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
-
-interface Notification {
-    id: string
-    title: string
-    message: string
-    time: string
-    read: boolean
-    type?: 'welcome' | 'system' | 'student' | 'lesson' | 'payment' | 'message'
-    link?: string
-}
+import { useNotifications, NOTIFICATION_TYPE_META } from '@/hooks/useNotifications'
 
 interface DashboardHeaderProps {
     onMenuClick: () => void
 }
 
 export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
-    const { currentUser, logout, setCurrentUser } = useUser()
+    const { currentUser, logout } = useUser()
     const router = useRouter()
     const [showUserMenu, setShowUserMenu] = useState(false)
     const [showNotifications, setShowNotifications] = useState(false)
     const notificationRef = useRef<HTMLDivElement>(null)
 
-    // Load notifications from user preferences or use defaults
-    const [notifications, setNotifications] = useState<Notification[]>(() => {
-        const savedNotifications = currentUser?.preferences?.notifications_list
-        if (savedNotifications && Array.isArray(savedNotifications)) {
-            return savedNotifications
-        }
-        return [
-            {
-                id: '1',
-                title: 'Welcome to StudioSync!',
-                message: 'Your dashboard is ready. Try adding your first student.',
-                time: '2 mins ago',
-                read: false,
-                type: 'welcome',
-                link: '/dashboard/students'
-            },
-            {
-                id: '2',
-                title: 'System Update',
-                message: 'New themes are now available in Settings.',
-                time: '1 hour ago',
-                read: false,
-                type: 'system',
-                link: '/dashboard/settings'
-            }
-        ]
-    })
+    const {
+        notifications,
+        unreadCount,
+        markRead,
+        markAllRead,
+        clearAll,
+    } = useNotifications(30000)
 
     // Close dropdowns on Escape key
     useEffect(() => {
@@ -85,51 +55,29 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
         }
     }, [showNotifications])
 
-    const saveNotificationsToBackend = async (updatedNotifications: Notification[]) => {
-        try {
-            const response = await api.patch('/core/users/me/', {
-                preferences: {
-                    ...currentUser?.preferences,
-                    notifications_list: updatedNotifications
-                }
-            })
-            setCurrentUser(response.data)
-        } catch (error) {
-            console.error('Failed to save notification status:', error)
-        }
-    }
-
-    const markAllAsRead = async () => {
-        const updatedNotifications = notifications.map((n: Notification) => ({ ...n, read: true }))
-        setNotifications(updatedNotifications)
-        await saveNotificationsToBackend(updatedNotifications)
+    const handleMarkAllRead = async () => {
+        await markAllRead()
         toast.success('All notifications marked as read')
     }
 
-    const clearAllNotifications = async () => {
-        setNotifications([])
-        await saveNotificationsToBackend([])
+    const handleClearAll = async () => {
+        await clearAll()
         toast.success('All notifications cleared')
     }
 
-    const handleNotificationClick = async (notification: Notification) => {
-        // Mark as read
-        const updatedNotifications = notifications.map((n: Notification) =>
-            n.id === notification.id ? { ...n, read: true } : n
-        )
-        setNotifications(updatedNotifications)
-        await saveNotificationsToBackend(updatedNotifications)
-
-        // Close dropdown
+    const handleNotificationClick = async (notification: typeof notifications[0]) => {
+        if (!notification.read) {
+            await markRead(notification.id)
+        }
         setShowNotifications(false)
-
-        // Navigate to link if provided
         if (notification.link) {
             router.push(notification.link)
         }
     }
 
-    const unreadCount = notifications.filter((n: Notification) => !n.read).length
+    const getTypeMeta = (type: string) => {
+        return NOTIFICATION_TYPE_META[type] ?? NOTIFICATION_TYPE_META['system_update']
+    }
 
     return (
         <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
@@ -153,68 +101,111 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
 
                 {/* Right: Actions */}
                 <div className="flex items-center space-x-2 md:space-x-3">
-                    {/* Utility Icons */}
                     <div className="flex items-center space-x-1 md:space-x-2">
+
+                        {/* Notification Bell */}
                         <div className="relative" ref={notificationRef}>
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => setShowNotifications(!showNotifications)}
                                 className="relative text-gray-500"
+                                aria-label="Notifications"
                             >
                                 <Bell className="w-5 h-5" />
                                 {unreadCount > 0 && (
-                                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                                    <span className="absolute top-1.5 right-1.5 min-w-[8px] h-2 bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
+                                        {unreadCount > 9 && (
+                                            <span className="text-white text-[7px] font-black leading-none px-0.5">{unreadCount > 99 ? '99+' : unreadCount}</span>
+                                        )}
+                                    </span>
                                 )}
                             </Button>
 
                             {showNotifications && (
-                                <div className="absolute right-0 mt-2 w-80 bg-white border rounded-lg shadow-lg z-50 animate-in fade-in zoom-in-95 duration-200 ring-1 ring-black/5 antialiased">
-                                    <div className="p-3 border-b flex justify-between items-center bg-gray-50/50">
-                                        <h3 className="font-semibold text-sm">Notifications</h3>
+                                <div className="absolute right-0 mt-2 w-96 bg-white border rounded-xl shadow-xl z-50 animate-in fade-in zoom-in-95 duration-200 ring-1 ring-black/5 overflow-hidden">
+                                    {/* Header */}
+                                    <div className="p-3 border-b flex justify-between items-center bg-gray-50/70">
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="font-bold text-sm text-gray-900">Notifications</h3>
+                                            {unreadCount > 0 && (
+                                                <span className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full leading-none">
+                                                    {unreadCount}
+                                                </span>
+                                            )}
+                                        </div>
                                         <div className="flex gap-2">
+                                            {unreadCount > 0 && (
+                                                <Button
+                                                    variant="link"
+                                                    size="sm"
+                                                    onClick={handleMarkAllRead}
+                                                    className="h-auto p-0 text-xs text-primary hover:underline cursor-pointer shadow-none"
+                                                >
+                                                    Mark all read
+                                                </Button>
+                                            )}
+                                            {unreadCount > 0 && <span className="text-gray-300">|</span>}
                                             <Button
                                                 variant="link"
                                                 size="sm"
-                                                onClick={markAllAsRead}
-                                                className="h-auto p-0 text-xs text-primary hover:underline cursor-pointer shadow-none"
-                                            >
-                                                Mark all read
-                                            </Button>
-                                            <span className="text-gray-300">|</span>
-                                            <Button
-                                                variant="link"
-                                                size="sm"
-                                                onClick={clearAllNotifications}
-                                                className="h-auto p-0 text-xs text-gray-500 hover:text-gray-700 hover:underline cursor-pointer shadow-none"
+                                                onClick={handleClearAll}
+                                                className="h-auto p-0 text-xs text-gray-500 hover:text-red-600 hover:underline cursor-pointer shadow-none"
                                             >
                                                 Clear all
                                             </Button>
                                         </div>
                                     </div>
-                                    <div className="max-h-[300px] overflow-y-auto">
-                                        {notifications.map((notification) => (
-                                            <div
-                                                key={notification.id}
-                                                onClick={() => handleNotificationClick(notification)}
-                                                className="p-3 hover:bg-gray-50 border-b cursor-pointer transition-colors"
-                                            >
-                                                <div className="flex gap-3">
-                                                    <div className={`w-2 h-2 mt-2 ${notification.read ? 'bg-gray-300' : 'bg-blue-500'} rounded-full flex-shrink-0`} />
-                                                    <div>
-                                                        <p className={`text-sm ${notification.read ? 'text-gray-700' : 'font-medium text-gray-900'}`}>
-                                                            {notification.title}
-                                                        </p>
-                                                        <p className="text-xs text-gray-500 mt-0.5">{notification.message}</p>
-                                                        <p className="text-[10px] text-gray-400 mt-1">{notification.time}</p>
-                                                    </div>
-                                                </div>
+
+                                    {/* Notification List */}
+                                    <div className="max-h-[360px] overflow-y-auto divide-y divide-gray-50">
+                                        {notifications.length === 0 ? (
+                                            <div className="flex flex-col items-center justify-center py-10 gap-3">
+                                                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-2xl">🔔</div>
+                                                <p className="text-sm font-medium text-gray-500">You're all caught up!</p>
+                                                <p className="text-xs text-gray-400">No notifications yet.</p>
                                             </div>
-                                        ))}
+                                        ) : (
+                                            notifications.slice(0, 10).map((notification) => {
+                                                const meta = getTypeMeta(notification.notification_type)
+                                                return (
+                                                    <div
+                                                        key={notification.id}
+                                                        onClick={() => handleNotificationClick(notification)}
+                                                        className={`p-3 hover:bg-gray-50 cursor-pointer transition-colors flex gap-3 ${!notification.read ? 'bg-blue-50/30' : ''}`}
+                                                    >
+                                                        {/* Icon */}
+                                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-base ${meta.color}`}>
+                                                            {meta.emoji}
+                                                        </div>
+
+                                                        {/* Content */}
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-start justify-between gap-1">
+                                                                <p className={`text-sm leading-tight truncate ${!notification.read ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
+                                                                    {notification.title}
+                                                                </p>
+                                                                {!notification.read && (
+                                                                    <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1" />
+                                                                )}
+                                                            </div>
+                                                            <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{notification.message}</p>
+                                                            <p className="text-[10px] text-gray-400 mt-1 font-medium">{notification.time_ago}</p>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })
+                                        )}
                                     </div>
-                                    <div className="p-2 border-t text-center">
-                                        <Link href="/dashboard/settings" className="text-xs text-gray-500 hover:text-gray-900">
-                                            View notification settings
+
+                                    {/* Footer */}
+                                    <div className="p-2.5 border-t bg-gray-50/50 text-center">
+                                        <Link
+                                            href="/dashboard/notifications"
+                                            onClick={() => setShowNotifications(false)}
+                                            className="text-xs font-semibold text-primary hover:underline"
+                                        >
+                                            View all notifications →
                                         </Link>
                                     </div>
                                 </div>
@@ -323,7 +314,6 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
                                         {/* Account Settings */}
                                         <div className="p-2 border-b border-gray-100">
                                             <p className="px-2 py-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Account</p>
-
                                             <Link
                                                 href="/dashboard/settings"
                                                 className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"

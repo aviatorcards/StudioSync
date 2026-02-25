@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus, Filter, Calendar as CalendarIcon, User, X, Edit2, Trash2, Loader2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Plus, Filter, Calendar as CalendarIcon, User, X, Edit2, Trash2, Loader2, HardDrive } from 'lucide-react'
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 
@@ -99,8 +99,19 @@ const mockColumns: Column[] = [
     }
 ]
 
+const STORAGE_KEY = 'studiosync_kanban_v1'
+
 export default function KanbanPage() {
-    const [columns, setColumns] = useState<Column[]>(mockColumns)
+    const [columns, setColumns] = useState<Column[]>(() => {
+        if (typeof window === 'undefined') return mockColumns
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY)
+            if (saved) return JSON.parse(saved) as Column[]
+        } catch {
+            // ignore
+        }
+        return mockColumns
+    })
     const [selectedTask, setSelectedTask] = useState<Task | null>(null)
     const [showAddModal, setShowAddModal] = useState(false)
     const [newTask, setNewTask] = useState({
@@ -112,6 +123,15 @@ export default function KanbanPage() {
     })
     const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null)
     const [dragOverColumnId, setDragOverColumnId] = useState<string | null>(null)
+
+    // Persist to localStorage whenever columns change
+    useEffect(() => {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(columns))
+        } catch {
+            // storage quota exceeded or unavailable
+        }
+    }, [columns])
 
     const handleAddCard = (e: React.FormEvent) => {
         e.preventDefault()

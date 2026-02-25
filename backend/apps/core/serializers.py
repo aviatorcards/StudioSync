@@ -254,7 +254,20 @@ class StudioSerializer(serializers.ModelSerializer):
             'address_line1', 'address_line2', 'city', 'state', 'postal_code', 'country',
             'timezone', 'currency', 'settings', 'cover_image'
         ]
-        read_only_fields = ['id', 'owner']
+        read_only_fields = ['id', 'owner', 'subdomain']
+        extra_kwargs = {
+            'email': {'required': False, 'allow_blank': True},
+            'phone': {'required': False, 'allow_blank': True},
+            'website': {'required': False, 'allow_blank': True},
+            'address_line1': {'required': False, 'allow_blank': True},
+            'address_line2': {'required': False, 'allow_blank': True},
+            'city': {'required': False, 'allow_blank': True},
+            'state': {'required': False, 'allow_blank': True},
+            'postal_code': {'required': False, 'allow_blank': True},
+            'timezone': {'required': False, 'allow_blank': True},
+            'currency': {'required': False, 'allow_blank': True},
+        }
+
 
 class PublicTeacherSerializer(serializers.ModelSerializer):
     """Serializer for public teacher profiles"""

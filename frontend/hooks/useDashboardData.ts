@@ -149,8 +149,8 @@ export function useStudentStats() {
       const response = await api.get("/students/stats/");
       setStats(response.data);
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to load student stats");
+      console.error("Failed to load student stats:", err);
+      // Don't toast — stats are supplementary; avoid alarming users on load
     } finally {
       setLoading(false);
     }
@@ -505,4 +505,27 @@ export function useInventoryCheckouts(params?: any) {
   }, [JSON.stringify(params)]);
 
   return { checkouts, loading, refresh: fetchCheckouts };
+}
+
+/** Fetches the merged instrument list (studio curated + used by students). */
+export function useInstruments() {
+  const [instruments, setInstruments] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchInstruments = async () => {
+    try {
+      const response = await api.get("/students/instruments/");
+      setInstruments(Array.isArray(response.data) ? response.data : []);
+    } catch (err) {
+      console.error("Failed to load instruments:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInstruments();
+  }, []);
+
+  return { instruments, loading, refresh: fetchInstruments };
 }

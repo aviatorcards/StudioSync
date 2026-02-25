@@ -212,7 +212,7 @@ export default function SchedulePage() {
                     <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">Schedule</h1>
                     <p className="text-gray-500 font-medium max-w-lg">Orchestrate your weekly lesson calendar.</p>
                 </div>
-                <div className="grid grid-cols-4 gap-2 sm:gap-3 no-print">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 no-print">
                     <Button
                         variant="outline"
                         size="icon"
@@ -239,18 +239,9 @@ export default function SchedulePage() {
                         <span className="hidden sm:inline">Subscribe</span>
                     </Button>
                     <Button
+                        variant="default" // Changed from outline with inline style
                         onClick={handlePrint}
                         className="gap-2 w-full"
-                        style={{
-                            backgroundColor: 'var(--color-primary-dark)',
-                            color: 'white'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.opacity = '0.9'
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.opacity = '1'
-                        }}
                     >
                         <Printer className="w-4 h-4" />
                         <span className="hidden sm:inline">Print</span>
@@ -258,7 +249,7 @@ export default function SchedulePage() {
                     {['admin', 'teacher', 'student'].includes(currentUser?.role || '') && (
                         <Button
                             onClick={() => setShowBookingModal(true)}
-                            className="gap-2 hover:scale-105 col-span-4 w-full"
+                            className="gap-2 hover:scale-105 col-span-2 sm:col-span-4 w-full"
                         >
                             <Plus className="w-4 h-4" />
                             New Booking
@@ -305,18 +296,18 @@ export default function SchedulePage() {
             {/* Schedule Grid */}
             <div className="bg-white rounded-[2rem] border border-gray-100 shadow-xl overflow-hidden print-full-width flex flex-col h-[70vh]">
                 <div className="overflow-auto custom-scrollbar flex-1 relative">
-                    <table className="w-full min-w-[1000px] border-separate border-spacing-0">
+                    <table className="w-full min-w-full md:min-w-[1000px] border-separate border-spacing-0">
                         <thead className="bg-gray-50/80 backdrop-blur-sm sticky top-0 z-20">
                             <tr>
-                                <th className="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest w-24 sticky left-0 z-30 bg-gray-50 border-r border-b border-gray-100">
+                                <th className="px-2 py-3 sm:px-6 sm:py-4 text-center text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest w-24 sticky left-0 z-30 bg-gray-50 border-r border-b border-gray-100">
                                     Time
                                 </th>
                                 {weekDays.map((day, idx) => (
-                                    <th key={idx} className={`px-4 py-4 text-center min-w-[140px] border-b border-gray-100 ${idx < 6 ? 'border-r' : ''}`}>
-                                        <div className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isSameDay(day, new Date()) ? 'text-primary' : 'text-gray-400'}`}>
+                                    <th key={idx} className={`px-2 py-3 sm:px-4 sm:py-4 text-center min-w-[100px] sm:min-w-[140px] border-b border-gray-100 ${idx < 6 ? 'border-r' : ''}`}>
+                                        <div className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-1 ${isSameDay(day, new Date()) ? 'text-primary' : 'text-gray-400'}`}>
                                             {format(day, 'EEE')}
                                         </div>
-                                        <div className={`text-2xl font-black ${isSameDay(day, new Date()) ? 'text-primary' : 'text-gray-900'}`}>
+                                        <div className={`text-xl sm:text-2xl font-black ${isSameDay(day, new Date()) ? 'text-primary' : 'text-gray-900'}`}>
                                             {format(day, 'd')}
                                         </div>
                                     </th>
@@ -326,49 +317,48 @@ export default function SchedulePage() {
                         <tbody className="divide-y divide-gray-50">
                             {timeSlots.map((hour) => (
                                 <tr key={hour} className="group">
-                                    <td className="px-4 py-4 text-xs font-bold text-gray-400 border-r border-gray-100 bg-gray-50/30 sticky left-0 z-10 text-center">
+                                    <td className="px-2 py-3 sm:px-4 sm:py-4 text-xs font-bold text-gray-400 border-r border-gray-100 bg-gray-50/30 sticky left-0 z-10 text-center">
                                         {formatGridHour(hour)}
                                     </td>
                                     {weekDays.map((day, dayIdx) => {
                                         const slotLessons = getLessonsForSlot(dayIdx, hour)
                                         return (
-                                            <td key={dayIdx} className={`p-1 border-gray-50 h-24 align-top transition-colors hover:bg-gray-50/50 ${dayIdx < 6 ? 'border-r' : ''}`}>
+                                            <td key={dayIdx} className={`p-0.5 sm:p-1 border-gray-50 h-24 align-top transition-colors hover:bg-gray-50/50 ${dayIdx < 6 ? 'border-r' : ''}`}>
                                                 {slotLessons.length > 0 ? (
-                                                    <div className="space-y-1 h-full overflow-y-auto custom-scrollbar">
+                                                    <div className="space-y-0.5 sm:space-y-1 h-full overflow-y-auto custom-scrollbar">
                                                         {slotLessons.map((lesson: any) => (
-                                                            <div
-                                                                key={lesson.id}
-                                                                className={`
-                                                                    p-2 rounded-lg border-l-[3px] shadow-sm hover:shadow-md transition-all cursor-pointer group/card
-                                                                    ${lesson.status === 'scheduled' ? 'bg-primary/10 border-primary hover:bg-primary/20' : ''}
-                                                                    ${lesson.status === 'completed' ? 'bg-gray-100 border-gray-400' : ''}
-                                                                    ${lesson.status === 'cancelled' ? 'bg-red-50 border-red-400' : ''}
-                                                                `}
-                                                            >
-                                                                <div className="flex justify-between items-start gap-1">
-                                                                    <div className="font-bold text-gray-900 text-xs truncate leading-tight">
-                                                                        {lesson.lesson_type === 'group' && lesson.band_name
-                                                                            ? lesson.band_name
-                                                                            : lesson.student_name}
-                                                                    </div>
-                                                                    <div className="flex items-center gap-1">
-                                                                        {lesson.duration_minutes !== 60 && (
-                                                                            <span className="text-[9px] font-black uppercase bg-white/50 px-1 rounded text-gray-500">
-                                                                                {lesson.duration_minutes}m
-                                                                            </span>
-                                                                        )}
-                                                                        {lesson.room_name && (
-                                                                            <span className="text-[9px] font-black uppercase bg-blue-50 px-1 rounded text-blue-500 truncate max-w-[50px]">
-                                                                                {lesson.room_name}
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                                <p className="text-[10px] font-medium text-gray-500 mt-0.5 truncate group-hover/card:text-gray-700">
-                                                                    {lesson.student_instrument}
-                                                                </p>
-                                                            </div>
-                                                        ))}
+                                                                                                                            <div
+                                                                                                                                key={lesson.id}
+                                                                                                                                className={`
+                                                                                                                                    p-1 rounded-lg border-l-[3px] shadow-sm hover:shadow-md transition-all cursor-pointer group/card
+                                                                                                                                    ${lesson.status === 'scheduled' ? 'bg-primary/10 border-primary hover:bg-primary/20' : ''}
+                                                                                                                                    ${lesson.status === 'completed' ? 'bg-gray-100 border-gray-400' : ''}
+                                                                                                                                    ${lesson.status === 'cancelled' ? 'bg-red-50 border-red-400' : ''}
+                                                                                                                                `}
+                                                                                                                            >
+                                                                                                                                <div className="flex justify-between items-start gap-0.5 sm:gap-1">
+                                                                                                                                    <div className="font-bold text-gray-900 text-[10px] sm:text-xs truncate leading-tight">
+                                                                                                                                        {lesson.lesson_type === 'group' && lesson.band_name
+                                                                                                                                            ? lesson.band_name
+                                                                                                                                            : lesson.student_name}
+                                                                                                                                    </div>
+                                                                                                                                    <div className="flex items-center gap-0.5 sm:gap-1">
+                                                                                                                                        {lesson.duration_minutes !== 60 && (
+                                                                                                                                            <span className="text-[8px] sm:text-[9px] font-black uppercase bg-white/50 px-0.5 sm:px-1 rounded text-gray-500">
+                                                                                                                                                {lesson.duration_minutes}m
+                                                                                                                                            </span>
+                                                                                                                                        )}
+                                                                                                                                        {lesson.room_name && (
+                                                                                                                                            <span className="text-[8px] sm:text-[9px] font-black uppercase bg-blue-50 px-0.5 sm:px-1 rounded text-blue-500 truncate max-w-[35px] sm:max-w-[50px]">
+                                                                                                                                                {lesson.room_name}
+                                                                                                                                            </span>
+                                                                                                                                        )}
+                                                                                                                                    </div>
+                                                                                                                                </div>
+                                                                                                                                <p className="text-[9px] sm:text-[10px] font-medium text-gray-500 mt-0.5 truncate group-hover/card:text-gray-700">
+                                                                                                                                    {lesson.student_instrument}
+                                                                                                                                </p>
+                                                                                                                            </div>                                                        ))}
                                                     </div>
                                                 ) : null}
                                             </td>

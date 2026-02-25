@@ -66,6 +66,15 @@ const nextConfig = {
                 source: '/docs',
                 destination: '/docs/index.html',
             },
+            // Serve MkDocs subpages - map /docs/:path*/ to /docs/:path*/index.html
+            {
+                source: '/docs/:path*/',
+                destination: '/docs/:path*/index.html',
+            },
+            {
+                source: '/docs/:path*',
+                destination: '/docs/:path*/index.html',
+            },
         ];
     },
     trailingSlash: true,

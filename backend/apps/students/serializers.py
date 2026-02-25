@@ -67,11 +67,12 @@ class StudentCreateUpdateSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(write_only=True)
     last_name = serializers.CharField(write_only=True)
     email = serializers.EmailField(write_only=True)
+    phone = serializers.CharField(write_only=True, required=False, allow_blank=True)
     
     class Meta:
         model = Student
         fields = [
-            'id', 'first_name', 'last_name', 'email', 
+            'id', 'first_name', 'last_name', 'email', 'phone',
             'instrument', 'family', 'studio',
             'birth_date', 'emergency_contact_name', 'emergency_contact_phone',
             'primary_teacher', 'is_active'
@@ -83,6 +84,7 @@ class StudentCreateUpdateSerializer(serializers.ModelSerializer):
             'first_name': validated_data.pop('first_name'),
             'last_name': validated_data.pop('last_name'),
             'email': validated_data.pop('email'),
+            'phone': validated_data.pop('phone', ''),
             'role': 'student',
             'is_active': True 
         }
@@ -118,10 +120,12 @@ class StudentCreateUpdateSerializer(serializers.ModelSerializer):
             user.first_name = validated_data.pop('first_name')
         if 'last_name' in validated_data:
             user.last_name = validated_data.pop('last_name')
+        if 'phone' in validated_data:
+            user.phone = validated_data.pop('phone')
         if 'email' in validated_data:
             # Email update logic is sensitive, maybe skip for now or require re-verification
             # user.email = validated_data.pop('email')
-            pass
+            validated_data.pop('email', None)
         user.save()
         
         return super().update(instance, validated_data)

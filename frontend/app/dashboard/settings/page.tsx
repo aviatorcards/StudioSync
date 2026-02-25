@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { User, Building2, Bell, Palette, Mail, Camera, Wand2, Check, Server, Eye, EyeOff, Save, Loader2 } from 'lucide-react'
+import { useState, useRef, useEffect, KeyboardEvent } from 'react'
+import { User, Building2, Bell, Palette, Mail, Camera, Wand2, Check, Server, Eye, EyeOff, Save, Loader2, Music, X, Plus } from 'lucide-react'
 import { useUser } from '@/contexts/UserContext'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
@@ -94,8 +94,13 @@ export default function SettingsPage() {
         studio_description: ''
     })
 
-    // Initialize studio settings from user profile
-    useState(() => {
+    // Instrument list (curated by the studio admin)
+    const [instrumentList, setInstrumentList] = useState<string[]>([])
+    const [newInstrument, setNewInstrument] = useState('')
+    const [instrumentLoading, setInstrumentLoading] = useState(false)
+
+    // Load instruments from studio settings on mount
+    useEffect(() => {
         if (currentUser?.studio) {
             const s = currentUser.studio
             setStudioSettings({
@@ -113,8 +118,45 @@ export default function SettingsPage() {
                 cancellation_notice: s.settings?.cancellation_notice_period?.toString() || '24',
                 studio_description: s.settings?.studio_description || ''
             })
+            setInstrumentList(Array.isArray(s.settings?.instruments) ? s.settings.instruments : [])
         }
     }, [currentUser])
+
+    const handleAddInstrument = () => {
+        const trimmed = newInstrument.trim()
+        if (!trimmed) return
+        const normalised = trimmed.charAt(0).toUpperCase() + trimmed.slice(1)
+        if (instrumentList.includes(normalised)) {
+            toast.error(`"${normalised}" is already in the list`)
+            return
+        }
+        setInstrumentList(prev => [...prev, normalised].sort())
+        setNewInstrument('')
+    }
+
+    const handleInstrumentKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') { e.preventDefault(); handleAddInstrument() }
+    }
+
+    const handleRemoveInstrument = (name: string) => {
+        setInstrumentList(prev => prev.filter(i => i !== name))
+    }
+
+    const handleSaveInstruments = async () => {
+        setInstrumentLoading(true)
+        try {
+            const currentStudioRes = await api.get('/core/studios/current/')
+            const currentSettings = currentStudioRes.data.settings || {}
+            await api.patch('/core/studios/current/', {
+                settings: { ...currentSettings, instruments: instrumentList }
+            })
+            toast.success('Instrument list saved!')
+        } catch (err) {
+            toast.error('Failed to save instrument list')
+        } finally {
+            setInstrumentLoading(false)
+        }
+    }
 
     // Technical settings (SMTP/SMS) - Admin only
     const [technicalSettings, setTechnicalSettings] = useState({
@@ -688,6 +730,66 @@ export default function SettingsPage() {
                                         placeholder="Tell students about your studio..."
                                         className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                                     />
+                                </div>
+
+                                {/* Instrument List */}
+                                <div className="pt-6 border-t border-gray-100">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Music className="w-4 h-4 text-[var(--color-primary)]" />
+                                        <h3 className="text-sm font-semibold text-gray-900">Instrument / Course List</h3>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mb-4">These instruments appear in student dropdowns across the app. Instruments already assigned to students are also included automatically.</p>
+
+                                    {/* Tag chips */}
+                                    <div className="flex flex-wrap gap-2 mb-3 min-h-[36px]">
+                                        {instrumentList.length === 0 && (
+                                            <span className="text-xs text-gray-400 italic">No instruments added yet</span>
+                                        )}
+                                        {instrumentList.map(name => (
+                                            <span key={name} className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-full">
+                                                {name}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveInstrument(name)}
+                                                    className="hover:text-red-500 transition-colors"
+                                                    aria-label={`Remove ${name}`}
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </span>
+                                        ))}
+                                    </div>
+
+                                    {/* Add input */}
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={newInstrument}
+                                            onChange={e => setNewInstrument(e.target.value)}
+                                            onKeyDown={handleInstrumentKeyDown}
+                                            placeholder="e.g. Drums, Cello, Voice..."
+                                            className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleAddInstrument}
+                                            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-sm rounded-lg border border-indigo-200 transition-colors"
+                                        >
+                                            <Plus className="w-4 h-4" /> Add
+                                        </button>
+                                    </div>
+
+                                    <div className="mt-3">
+                                        <button
+                                            type="button"
+                                            onClick={handleSaveInstruments}
+                                            disabled={instrumentLoading}
+                                            className="flex items-center gap-2 px-5 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors font-medium text-sm disabled:opacity-50"
+                                        >
+                                            {instrumentLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                            {instrumentLoading ? 'Saving...' : 'Save Instrument List'}
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="pt-4 border-t border-gray-200">

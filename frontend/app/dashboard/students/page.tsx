@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/contexts/UserContext'
-import { useStudents, useTeachers, useStudentStats } from '@/hooks/useDashboardData'
+import { useStudents, useTeachers, useStudentStats, useInstruments } from '@/hooks/useDashboardData'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
 import {
@@ -107,16 +107,8 @@ export default function StudentsPage() {
     })
 
     const { stats: studentStats, loading: statsLoading } = useStudentStats()
+    const { instruments: allInstruments, refresh: refreshInstruments } = useInstruments()
 
-    // --- Derived Data ---
-    const allInstruments = useMemo(() => {
-        const set = new Set<string>()
-        teachers.forEach((t: any) => {
-            if (Array.isArray(t.specialties)) t.specialties.forEach((s: string) => set.add(s))
-            if (Array.isArray(t.instruments)) t.instruments.forEach((s: string) => set.add(s))
-        })
-        return Array.from(set).sort()
-    }, [teachers])
 
     // --- Event Handlers ---
     const handleOpenEdit = (student: any) => {
@@ -143,6 +135,7 @@ export default function StudentsPage() {
             toast.success('Member updated successfully')
             setIsEditModalOpen(false)
             if (refresh) refresh()
+            refreshInstruments() // update instrument list in case a new one was added
         } catch (error: any) {
             console.error('Update failed:', error)
             toast.error(error.response?.data?.detail || 'Failed to update member')
@@ -442,14 +435,16 @@ export default function StudentsPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Focus Instrument</label>
-                                    <select
+                                    <input
+                                        list="instrument-options"
                                         value={formData.instrument}
                                         onChange={e => setFormData({ ...formData, instrument: e.target.value })}
-                                        className="w-full px-5 py-3.5 bg-white border-transparent focus:border-primary border-2 rounded-2xl font-bold text-gray-700 outline-none transition-all appearance-none"
-                                    >
-                                        <option value="">Select Instrument...</option>
-                                        {allInstruments.map(i => <option key={i} value={i}>{i}</option>)}
-                                    </select>
+                                        placeholder="Select or type instrument..."
+                                        className="w-full px-5 py-3.5 bg-white border-transparent focus:border-primary border-2 rounded-2xl font-bold text-gray-700 outline-none transition-all"
+                                    />
+                                    <datalist id="instrument-options">
+                                        {allInstruments.map(i => <option key={i} value={i} />)}
+                                    </datalist>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Lead Instructor</label>

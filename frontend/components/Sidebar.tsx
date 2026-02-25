@@ -18,6 +18,7 @@ import {
     CreditCard,
     Library,
     MessageSquare,
+    Bell,
     Target,
     BarChart3,
     Settings,
@@ -27,8 +28,10 @@ import {
     FileText,
     Music,
     X,
-    ShieldCheck
+    ShieldCheck,
+    Pencil
 } from 'lucide-react'
+import { useNotifications } from '@/hooks/useNotifications'
 import { Button } from '@/components/ui/button'
 
 // Portal component for mobile menu to break out of parent stacking contexts
@@ -70,6 +73,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname()
     const { currentUser } = useUser()
     const { flags } = useFeatureFlags()
+    const { unreadCount } = useNotifications(60000)
 
     // Close sidebar on route change (mobile)
     useEffect(() => {
@@ -122,6 +126,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             items: [
                 { name: 'Resources', href: '/dashboard/resources', icon: Library, roles: ['admin', 'teacher', 'student'], featureFlag: 'resources_enabled' },
                 { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare, roles: ['admin', 'teacher', 'student'], featureFlag: 'messaging_enabled' },
+                { name: 'Notifications', href: '/dashboard/notifications', icon: Bell, badge: unreadCount > 0 ? unreadCount : undefined, roles: ['admin', 'teacher', 'student'] },
                 { name: 'Goals', href: '/dashboard/goals', icon: Target, roles: ['admin', 'teacher', 'student'], featureFlag: 'goals_enabled' },
                 { name: 'Inventory', href: '/dashboard/inventory', icon: Package, roles: ['admin', 'teacher'], featureFlag: 'inventory_enabled' },
                 { name: 'Reports', href: '/dashboard/reports', icon: BarChart3, roles: ['admin'], featureFlag: 'analytics_enabled' },
@@ -132,6 +137,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             roles: ['admin'],
             items: [
                 { name: 'Studios', href: '/dashboard/studios', icon: Building2, roles: ['admin'] },
+                { name: 'Studio Builder', href: '/dashboard/studio-builder', icon: Pencil, roles: ['admin'] },
                 { name: 'Users', href: '/dashboard/users', icon: UserCog, roles: ['admin'] },
             ],
         },

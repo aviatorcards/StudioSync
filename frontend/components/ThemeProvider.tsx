@@ -12,17 +12,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const root = document.documentElement;
 
-        // Remove 'dark' class first
-        root.classList.remove('dark');
-
-        // Apply theme variables
+        // Apply color-scheme CSS variables only.
+        // Do NOT touch the 'dark' class here — that is managed exclusively
+        // by AppearanceProvider based on the user's theme preference.
         Object.entries(theme.colors).forEach(([key, value]) => {
             root.style.setProperty(`--${key}`, value);
         });
-
-        // Handle specific theme classes if needed, but variables usually suffice
-        // If "Midnight" or "Dark" themes set is_dark flag in their definition, we could use that.
-        // For now, relies on base colors mapping.
 
     }, [theme]);
 

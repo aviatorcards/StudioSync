@@ -9,7 +9,6 @@ interface Props {
 const STEPS = [
     { name: 'Studio & Admin' },
     { name: 'Features' },
-    { name: 'Sample Data' },
     { name: 'Done' },
 ]
 

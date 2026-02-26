@@ -8,7 +8,6 @@ import { WizardProgress } from '@/components/setup/WizardProgress'
 // Steps
 import { StudioAdminStep } from '@/components/setup/StudioAdminStep'
 import { FeatureSelectionStep } from '@/components/setup/FeatureSelectionStep'
-import { SampleDataStep } from '@/components/setup/SampleDataStep'
 import { CompletionStep } from '@/components/setup/CompletionStep'
 
 import Image from 'next/image'
@@ -57,21 +56,12 @@ export default function SetupPage() {
                     <FeatureSelectionStep
                         data={wizard.data}
                         updateFeatures={wizard.updateFeatures}
-                        onNext={wizard.nextStep}
-                        onBack={wizard.prevStep}
-                    />
-                )
-            case 2:
-                return (
-                    <SampleDataStep
-                        data={wizard.data}
-                        updateData={wizard.updateData}
                         onNext={wizard.completeSetup}
                         onBack={wizard.prevStep}
                         isLoading={wizard.isLoading}
                     />
                 )
-            case 3:
+            case 2:
                 return <CompletionStep />
             default:
                 return null

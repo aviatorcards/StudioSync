@@ -69,7 +69,7 @@ export const useSetupWizard = () => {
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
-    const totalSteps = 4 // Studio & Admin, Features, Sample Data, Completion
+    const totalSteps = 3 // Studio & Admin, Features, Completion
 
     const updateData = (section: keyof SetupWizardData, value: any) => {
         setData((prev: SetupWizardData) => ({

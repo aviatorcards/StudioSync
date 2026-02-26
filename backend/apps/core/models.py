@@ -29,6 +29,9 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault("role", "admin")
         return self.create_user(email, password, **extra_fields)
 
+    def get_by_natural_key(self, email):
+        return self.get(email=email)
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     """
@@ -93,6 +96,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     def initials(self):
         return f"{self.first_name[0] if self.first_name else ''}{self.last_name[0] if self.last_name else ''}".upper()
 
+    def natural_key(self):
+        return (self.email,)
+    natural_key.fget = lambda self: (self.email,)
+
 
 class Studio(models.Model):
     """
@@ -148,6 +155,11 @@ class Studio(models.Model):
 
     def __str__(self):
         return self.name
+
+
+    def natural_key(self):
+        return (self.name,)
+    natural_key.fget = lambda self: (self.name,)
 
 
 class Teacher(models.Model):
@@ -228,6 +240,12 @@ class Family(models.Model):
         return f"Family of {self.primary_parent.last_name}"
 
 
+class BandManager(models.Manager):
+    def get_by_natural_key(self, studio_natural_key, name):
+        studio = Studio.objects.get_by_natural_key(*studio_natural_key)
+        return self.get(studio=studio, name=name)
+
+
 class Band(models.Model):
     """
     Represents a band/group for billing purposes
@@ -276,6 +294,8 @@ class Band(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    objects = BandManager()
+
     class Meta:
         db_table = "bands"
         verbose_name_plural = "Bands"
@@ -287,6 +307,10 @@ class Band(models.Model):
         if self.primary_contact:
             return f"{self.primary_contact.get_full_name()} Band"
         return f"Band {self.id}"
+
+    def natural_key(self):
+        return (self.studio.natural_key(), self.name)
+    natural_key.fget = lambda self: (self.studio.natural_key(), self.name)
 
 
 class Student(models.Model):

@@ -1,8 +1,12 @@
 import json
+import logging
 import os
 import shutil
 import tempfile
+import traceback
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 from django.conf import settings
 from django.core.management import call_command
@@ -83,36 +87,55 @@ def import_system(request):
     if not backup_file.name.endswith(".zip"):
         return Response({"error": "Only ZIP files are supported"}, status=status.HTTP_400_BAD_REQUEST)
 
-    with tempfile.TemporaryDirectory() as temp_dir:
-        # Save uploaded file to temp
-        zip_path = os.path.join(temp_dir, "backup.zip")
-        with open(zip_path, "wb") as f:
-            for chunk in backup_file.chunks():
-                f.write(chunk)
+    try:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Save uploaded file to temp
+            zip_path = os.path.join(temp_dir, "backup.zip")
+            with open(zip_path, "wb") as f:
+                for chunk in backup_file.chunks():
+                    f.write(chunk)
 
-        # Extract
-        extract_dir = os.path.join(temp_dir, "extract")
-        shutil.unpack_archive(zip_path, extract_dir)
+            # Extract
+            extract_dir = os.path.join(temp_dir, "extract")
+            shutil.unpack_archive(zip_path, extract_dir)
 
-        # Validate manifest
-        manifest_path = os.path.join(extract_dir, "manifest.json")
-        if not os.path.exists(manifest_path):
-            return Response({"error": "Invalid export: manifest.json missing"}, status=status.HTTP_400_BAD_REQUEST)
+            # Validate manifest
+            manifest_path = os.path.join(extract_dir, "manifest.json")
+            if not os.path.exists(manifest_path):
+                return Response({"error": "Invalid export: manifest.json missing"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 1. Restore Media (if applicable)
-        media_src = os.path.join(extract_dir, "media")
-        using_local_storage = not getattr(settings, "AWS_ACCESS_KEY_ID", None)
-        if using_local_storage and os.path.exists(media_src):
-            shutil.copytree(media_src, settings.MEDIA_ROOT, dirs_exist_ok=True)
+            # 1. Restore Media (if applicable)
+            media_src = os.path.join(extract_dir, "media")
+            using_local_storage = not getattr(settings, "AWS_ACCESS_KEY_ID", None)
+            if using_local_storage and os.path.exists(media_src):
+                shutil.copytree(media_src, settings.MEDIA_ROOT, dirs_exist_ok=True)
 
-        # 2. Restore Database
-        db_dump_path = os.path.join(extract_dir, "db_dump.json")
-        if os.path.exists(db_dump_path):
+            # 2. Restore Database
+            db_dump_path = os.path.join(extract_dir, "db_dump.json")
+            if not os.path.exists(db_dump_path):
+                return Response({"error": "Invalid export: db_dump.json missing"}, status=status.HTTP_400_BAD_REQUEST)
+
             try:
-                # Note: loaddata can be complex with foreign keys and content types.
-                # In a real migration, user might want to flush first.
-                call_command("loaddata", db_dump_path)
+                call_command(
+                    "loaddata",
+                    db_dump_path,
+                    ignorenonexistent=True,
+                    verbosity=0,
+                )
             except Exception as e:
-                return Response({"error": f"Database restore failed: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                tb = traceback.format_exc()
+                logger.error("loaddata failed during import:\n%s", tb)
+                return Response(
+                    {"error": f"Database restore failed: {str(e)}"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+
+    except Exception as e:
+        tb = traceback.format_exc()
+        logger.error("Unexpected error during system import:\n%s", tb)
+        return Response(
+            {"error": f"Import failed: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
     return Response({"message": "System restored successfully"})

@@ -6,22 +6,55 @@ Usage:
     docker compose run backend python manage.py create_sample_data
     docker compose run backend python manage.py create_sample_data --reset
 """
+
 import random
-from django.core.management.base import BaseCommand, CommandError
+
+from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-
 FIRST_NAMES = [
-    "James", "Mary", "Robert", "Patricia", "John", "Jennifer",
-    "Michael", "Linda", "William", "Elizabeth", "David", "Barbara",
-    "Richard", "Susan", "Joseph", "Jessica", "Thomas", "Sarah",
-    "Charles", "Karen",
+    "James",
+    "Mary",
+    "Robert",
+    "Patricia",
+    "John",
+    "Jennifer",
+    "Michael",
+    "Linda",
+    "William",
+    "Elizabeth",
+    "David",
+    "Barbara",
+    "Richard",
+    "Susan",
+    "Joseph",
+    "Jessica",
+    "Thomas",
+    "Sarah",
+    "Charles",
+    "Karen",
 ]
 LAST_NAMES = [
-    "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia",
-    "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez",
-    "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore",
-    "Jackson", "Martin",
+    "Smith",
+    "Johnson",
+    "Williams",
+    "Brown",
+    "Jones",
+    "Garcia",
+    "Miller",
+    "Davis",
+    "Rodriguez",
+    "Martinez",
+    "Hernandez",
+    "Lopez",
+    "Gonzalez",
+    "Wilson",
+    "Anderson",
+    "Thomas",
+    "Taylor",
+    "Moore",
+    "Jackson",
+    "Martin",
 ]
 INSTRUMENTS = ["Piano", "Guitar", "Violin", "Drums", "Vocal", "Saxophone", "Flute", "Cello"]
 
@@ -37,7 +70,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        from apps.core.models import User, Studio, Teacher, Student
+        from apps.core.models import Student, Studio, Teacher, User
 
         if options["reset"]:
             self.stdout.write("🗑️  Deleting existing sample data...")
@@ -111,7 +144,11 @@ class Command(BaseCommand):
             )
             teachers.append(teacher)
 
-        self.stdout.write(self.style.SUCCESS("  ✅ 5 teachers created (teacher1@test.com … teacher5@test.com / teacher123)"))
+        self.stdout.write(
+            self.style.SUCCESS(
+                "  ✅ 5 teachers created (teacher1@test.com … teacher5@test.com / teacher123)"
+            )
+        )
 
         # Students
         for i in range(1, 21):
@@ -139,5 +176,9 @@ class Command(BaseCommand):
                 },
             )
 
-        self.stdout.write(self.style.SUCCESS("  ✅ 20 students created (student1@test.com … student20@test.com / student123)"))
+        self.stdout.write(
+            self.style.SUCCESS(
+                "  ✅ 20 students created (student1@test.com … student20@test.com / student123)"
+            )
+        )
         self.stdout.write(self.style.SUCCESS("\n🎉 Sample data created successfully!"))

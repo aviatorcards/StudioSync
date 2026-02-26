@@ -1,12 +1,13 @@
 """
 Tests for the create_sample_data management command.
 """
+
 from io import StringIO
-from django.test import TestCase
+
 from django.core.management import call_command
+from django.test import TestCase
 
-from apps.core.models import User, Studio, Teacher, Student
-
+from apps.core.models import Student, Studio, Teacher, User
 
 ADMIN_EMAIL = "admin@test.com"
 STUDIO_NAME = "StudioSync Academy"

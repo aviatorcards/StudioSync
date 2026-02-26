@@ -27,10 +27,11 @@ export interface UserProfile {
     email: string;
     phone: string;
     timezone: string;
+    preferences?: Record<string, any>;
 }
 
 export function useSettings() {
-    const { currentUser: user } = useUser();
+    const { currentUser: user, setCurrentUser } = useUser();
     const [studio, setStudio] = useState<StudioSettings | null>(null);
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
@@ -67,6 +68,9 @@ export function useSettings() {
             setSaving(true);
             const res = await api.patch('/core/users/me/', data);
             setProfile(res.data);
+            if (setCurrentUser) {
+                setCurrentUser(res.data);
+            }
             toast.success('Profile updated successfully');
             return res.data;
         } catch (error) {

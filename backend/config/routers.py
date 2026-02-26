@@ -10,6 +10,7 @@ OptionalSlashRouter sets trailing_slash=False, which tells DRF to generate
 patterns without trailing slashes (e.g. `^studios$` instead of `^studios/$`),
 matching what the Next.js proxy actually forwards to Django.
 """
+
 from rest_framework.routers import DefaultRouter
 
 
@@ -18,4 +19,3 @@ class OptionalSlashRouter(DefaultRouter):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-

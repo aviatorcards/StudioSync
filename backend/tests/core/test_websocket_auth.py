@@ -1,10 +1,13 @@
 """
 Tests for WebSocket authentication middleware.
 """
-import pytest
-from channels.testing import WebsocketCommunicator
-from channels.routing import URLRouter
+
 from django.urls import path
+
+import pytest
+from channels.routing import URLRouter
+from channels.testing import WebsocketCommunicator
+
 from apps.messaging.consumers import NotificationConsumer
 from apps.messaging.middleware import TokenAuthMiddleware
 
@@ -18,15 +21,14 @@ class TestWebSocketAuth:
     async def test_websocket_connect_without_token(self):
         """Test WebSocket connection fails without auth token."""
         application = TokenAuthMiddleware(
-            URLRouter([
-                path('ws/notifications/', NotificationConsumer.as_asgi()),
-            ])
+            URLRouter(
+                [
+                    path("ws/notifications/", NotificationConsumer.as_asgi()),
+                ]
+            )
         )
 
-        communicator = WebsocketCommunicator(
-            application,
-            'ws/notifications/'
-        )
+        communicator = WebsocketCommunicator(application, "ws/notifications/")
 
         connected, _ = await communicator.connect()
 
@@ -38,14 +40,15 @@ class TestWebSocketAuth:
     async def test_websocket_connect_with_invalid_token(self):
         """Test WebSocket connection fails with invalid token."""
         application = TokenAuthMiddleware(
-            URLRouter([
-                path('ws/notifications/', NotificationConsumer.as_asgi()),
-            ])
+            URLRouter(
+                [
+                    path("ws/notifications/", NotificationConsumer.as_asgi()),
+                ]
+            )
         )
 
         communicator = WebsocketCommunicator(
-            application,
-            'ws/notifications/?token=invalid_token_string'
+            application, "ws/notifications/?token=invalid_token_string"
         )
 
         connected, _ = await communicator.connect()
@@ -63,15 +66,14 @@ class TestWebSocketAuth:
         token = str(AccessToken.for_user(admin_user))
 
         application = TokenAuthMiddleware(
-            URLRouter([
-                path('ws/notifications/', NotificationConsumer.as_asgi()),
-            ])
+            URLRouter(
+                [
+                    path("ws/notifications/", NotificationConsumer.as_asgi()),
+                ]
+            )
         )
 
-        communicator = WebsocketCommunicator(
-            application,
-            f'ws/notifications/?token={token}'
-        )
+        communicator = WebsocketCommunicator(application, f"ws/notifications/?token={token}")
 
         try:
             connected, _ = await communicator.connect()

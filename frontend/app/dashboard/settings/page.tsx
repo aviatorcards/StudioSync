@@ -17,6 +17,17 @@ export default function SettingsPage() {
     const [showSmsApiKey, setShowSmsApiKey] = useState(false)
     const [cropImage, setCropImage] = useState<string | null>(null)
 
+    const updateCurrentUserSafe = (userData: any) => {
+        if (userData?.avatar && currentUser?.avatar) {
+            const baseIncoming = userData.avatar.split('?')[0]
+            const baseCurrent = currentUser.avatar.split('?')[0]
+            if (baseIncoming === baseCurrent) {
+                userData.avatar = currentUser.avatar
+            }
+        }
+        setCurrentUser(userData)
+    }
+
     // Form state
     const [formData, setFormData] = useState({
         first_name: currentUser?.first_name || '',
@@ -226,7 +237,7 @@ export default function SettingsPage() {
         try {
             await api.post('/core/users/remove_avatar/')
             const meResponse = await api.get('/core/users/me/')
-            setCurrentUser(meResponse.data)
+            updateCurrentUserSafe(meResponse.data)
             toast.success('Avatar removed successfully')
         } catch (error) {
             console.error('Failed to remove avatar:', error)
@@ -267,13 +278,37 @@ export default function SettingsPage() {
         }
     }
 
+    const [testingEmail, setTestingEmail] = useState(false)
+
+    const handleTestEmail = async () => {
+        setTestingEmail(true)
+        try {
+            const payload = {
+                smtp_host: technicalSettings.smtp_host,
+                smtp_port: technicalSettings.smtp_port,
+                smtp_username: technicalSettings.smtp_username,
+                smtp_password: technicalSettings.smtp_password,
+                smtp_from_email: technicalSettings.smtp_from_email,
+                smtp_from_name: technicalSettings.smtp_from_name,
+                smtp_use_tls: technicalSettings.smtp_use_tls,
+            }
+            const res = await api.post('/core/users/send_test_email/', payload)
+            toast.success(res.data.detail || 'Test email sent successfully!')
+        } catch (error: any) {
+            console.error(error)
+            toast.error(error.response?.data?.detail || 'Failed to send test email')
+        } finally {
+            setTestingEmail(false)
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
         setJustSaved(false)
         try {
             const response = await api.patch('/core/users/me/', formData)
-            setCurrentUser(response.data)
+            updateCurrentUserSafe(response.data)
             setOriginalFormData({
                 first_name: response.data.first_name,
                 last_name: response.data.last_name,
@@ -329,7 +364,7 @@ export default function SettingsPage() {
                 
                 // Refresh user to get updated studio embedded data
                 const userRes = await api.get('/core/users/me/')
-                setCurrentUser(userRes.data)
+                updateCurrentUserSafe(userRes.data)
 
             } else {
                 // Handle User Preferences (Appearance, Communication, Notifications)
@@ -342,7 +377,7 @@ export default function SettingsPage() {
                     preferences: updatedPreferences
                 })
 
-                setCurrentUser(response.data)
+                updateCurrentUserSafe(response.data)
                 toast.success(`${settingsType} settings saved successfully`)
 
                 if (settingsType.toLowerCase() === 'appearance') {
@@ -1235,6 +1270,27 @@ export default function SettingsPage() {
                                                 className="w-4 h-4 text-primary rounded focus:ring-primary"
                                             />
                                         </label>
+
+                                        <div className="pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={handleTestEmail}
+                                                disabled={testingEmail}
+                                                className="w-full flex justify-center items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors font-semibold disabled:opacity-50"
+                                            >
+                                                {testingEmail ? (
+                                                    <>
+                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                        Sending Test Email...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Mail className="w-4 h-4" />
+                                                        Test Connection
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 

@@ -7,14 +7,15 @@ Covers:
 - Feature flag data surfaces in status response
 - Sample data creation flag
 """
+
 import json
+
 from django.test import TestCase
-from django.urls import reverse
-from rest_framework.test import APIClient
+
 from rest_framework import status
+from rest_framework.test import APIClient
 
-from apps.core.models import User, Studio, SetupStatus, Teacher, Student
-
+from apps.core.models import SetupStatus, Student, Studio, Teacher, User
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -64,6 +65,7 @@ def setup_url(name: str) -> str:
 # Setup Status Tests
 # ---------------------------------------------------------------------------
 
+
 class SetupStatusViewTests(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -102,6 +104,7 @@ class SetupStatusViewTests(TestCase):
 # ---------------------------------------------------------------------------
 # Complete Setup Tests
 # ---------------------------------------------------------------------------
+
 
 class CompleteSetupViewTests(TestCase):
     def setUp(self):
@@ -252,6 +255,7 @@ class CompleteSetupViewTests(TestCase):
 # Sample Data Tests
 # ---------------------------------------------------------------------------
 
+
 class SampleDataTests(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -284,6 +288,7 @@ class SampleDataTests(TestCase):
 # ---------------------------------------------------------------------------
 # SetupStatus model unit tests
 # ---------------------------------------------------------------------------
+
 
 class SetupStatusModelTests(TestCase):
     def test_is_setup_complete_returns_false_when_no_row(self):

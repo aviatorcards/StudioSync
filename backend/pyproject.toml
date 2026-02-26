@@ -21,7 +21,7 @@ extend-exclude = '''
 profile = "black"
 line_length = 100
 skip_glob = ["*/migrations/*"]
-known_django = ["django"]
+known_django = ["django", "django_filters"]
 known_first_party = ["apps", "config"]
 sections = ["FUTURE", "STDLIB", "DJANGO", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 
@@ -42,7 +42,6 @@ select = [
     "E",   # pycodestyle errors
     "W",   # pycodestyle warnings
     "F",   # pyflakes
-    "I",   # isort
     "C90", # mccabe complexity
     "N",   # pep8-naming
     "UP",  # pyupgrade
@@ -53,6 +52,8 @@ ignore = [
     "E501",  # line too long (handled by black)
     "B008",  # do not perform function calls in argument defaults
     "DJ001", # django nullable string-based fields
+    "DJ012", # model method ordering (style preference)
+    "B905",  # zip() without strict= (not needed for Django use)
 ]
 
 [tool.ruff.lint.mccabe]

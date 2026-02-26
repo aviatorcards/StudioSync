@@ -6,99 +6,72 @@ import { useSetupWizard } from '@/hooks/useSetupWizard'
 import { WizardProgress } from '@/components/setup/WizardProgress'
 
 // Steps
-import { WelcomeStep } from '@/components/setup/WelcomeStep'
-import { StudioInfoStep } from '@/components/setup/StudioInfoStep'
-import { AdminAccountStep } from '@/components/setup/AdminAccountStep'
+import { StudioAdminStep } from '@/components/setup/StudioAdminStep'
 import { FeatureSelectionStep } from '@/components/setup/FeatureSelectionStep'
-import { QuickSettingsStep } from '@/components/setup/QuickSettingsStep'
-import EmailSettingsStep from '@/components/setup/EmailSettingsStep'
 import { SampleDataStep } from '@/components/setup/SampleDataStep'
 import { CompletionStep } from '@/components/setup/CompletionStep'
 
-import { Music } from 'lucide-react'
 import Image from 'next/image'
 
 export default function SetupPage() {
     const router = useRouter()
     const wizard = useSetupWizard()
 
-    // Verify setup status on mount
+    // Verify setup status on mount — if already complete, send to dashboard
     useEffect(() => {
         const checkStatus = async () => {
             try {
                 const res = await fetch('/api/core/setup/status/')
 
-                const contentType = res.headers.get("content-type");
-                if (!contentType || !contentType.includes("application/json")) {
-                    const text = await res.text();
-                    console.error("Non-JSON response from setup status:", text);
-                    return; // Exit if not JSON
+                const contentType = res.headers.get('content-type')
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await res.text()
+                    console.error('Non-JSON response from setup status:', text)
+                    return
                 }
 
                 const data = await res.json()
-                if (data.is_completed && wizard.currentStep < 7) {
-                    // If already setup, redirect to dashboard or login
+                if (data.is_completed && wizard.currentStep < wizard.totalSteps - 1) {
                     router.replace('/dashboard')
                 }
             } catch (err) {
-                console.error("Failed to check setup status", err)
+                console.error('Failed to check setup status', err)
             }
         }
         checkStatus()
-    }, [router, wizard.currentStep])
+    }, [router, wizard.currentStep, wizard.totalSteps])
 
     const renderStep = () => {
         switch (wizard.currentStep) {
             case 0:
-                return <WelcomeStep
-                    data={wizard.data}
-                    updateData={wizard.updateData}
-                    onNext={wizard.nextStep}
-                />
+                return (
+                    <StudioAdminStep
+                        data={wizard.data}
+                        updateStudioInfo={wizard.updateStudioInfo}
+                        updateAdminAccount={wizard.updateAdminAccount}
+                        onNext={wizard.nextStep}
+                    />
+                )
             case 1:
-                return <StudioInfoStep
-                    data={wizard.data}
-                    updateStudioInfo={wizard.updateStudioInfo}
-                    onNext={wizard.nextStep}
-                    onBack={wizard.prevStep}
-                />
+                return (
+                    <FeatureSelectionStep
+                        data={wizard.data}
+                        updateFeatures={wizard.updateFeatures}
+                        onNext={wizard.nextStep}
+                        onBack={wizard.prevStep}
+                    />
+                )
             case 2:
-                return <AdminAccountStep
-                    data={wizard.data}
-                    updateAdminAccount={wizard.updateAdminAccount}
-                    onNext={wizard.nextStep}
-                    onBack={wizard.prevStep}
-                />
+                return (
+                    <SampleDataStep
+                        data={wizard.data}
+                        updateData={wizard.updateData}
+                        onNext={wizard.completeSetup}
+                        onBack={wizard.prevStep}
+                        isLoading={wizard.isLoading}
+                    />
+                )
             case 3:
-                return <FeatureSelectionStep
-                    data={wizard.data}
-                    updateFeatures={wizard.updateFeatures}
-                    onNext={wizard.nextStep}
-                    onBack={wizard.prevStep}
-                />
-            case 4:
-                return <QuickSettingsStep
-                    data={wizard.data}
-                    updateQuickSettings={wizard.updateQuickSettings}
-                    onNext={wizard.nextStep}
-                    onBack={wizard.prevStep}
-                />
-            case 5:
-                return <EmailSettingsStep
-                    data={wizard.data.email_settings}
-                    updateData={wizard.updateEmailSettings}
-                    onNext={wizard.nextStep}
-                    onBack={wizard.prevStep}
-                />
-            case 6:
-                return <SampleDataStep
-                    data={wizard.data}
-                    updateData={wizard.updateData}
-                    onNext={wizard.completeSetup} // This triggers submission
-                    onBack={wizard.prevStep}
-                    isLoading={wizard.isLoading}
-                />
-            case 7:
                 return <CompletionStep />
             default:
                 return null
@@ -128,8 +101,8 @@ export default function SetupPage() {
                     </div>
                 </div>
 
-                {/* Progress Bar (Skipped on Welcome and Completion for cleanliness, or keep consistent) */}
-                {wizard.currentStep > 0 && wizard.currentStep < 7 && (
+                {/* Progress Bar */}
+                {wizard.currentStep > 0 && wizard.currentStep < wizard.totalSteps - 1 && (
                     <div className="px-12 pt-8">
                         <WizardProgress currentStep={wizard.currentStep} totalSteps={wizard.totalSteps} />
                     </div>
@@ -137,7 +110,6 @@ export default function SetupPage() {
 
                 {/* Content Area */}
                 <div className="flex-1 px-12 py-10 overflow-y-auto">
-
                     {wizard.error && (
                         <div className="mb-6 rounded-md bg-red-50 p-4">
                             <div className="flex">
@@ -152,10 +124,9 @@ export default function SetupPage() {
                     )}
 
                     {renderStep()}
-
                 </div>
 
-                {/* Footer info (optional) */}
+                {/* Footer */}
                 <div className="bg-gray-50 p-4 border-t border-gray-100 text-center text-xs text-gray-400">
                     &copy; {new Date().getFullYear()} StudioSync. All rights reserved.
                 </div>

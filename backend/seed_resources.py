@@ -30,10 +30,7 @@ def seed_resources():
             "category": "Sheet Music",
             "instrument": "Piano",
             "composer": "Joseph Kosma",
-            "content": b"%PDF-1.4
-1 0 obj
-<< /Title (Autumn Leaves) >>
-endobj",
+            "content": b"%PDF-1.4\n1 0 obj\n<< /Title (Autumn Leaves) >>\nendobj",
             "filename": "autumn_leaves.pdf",
             "tags": ["jazz", "standard", "advanced"],
             "is_public": True
@@ -45,10 +42,7 @@ endobj",
             "category": "Education",
             "instrument": "Guitar",
             "tags": ["blues", "theory", "beginner"],
-            "content": b"%PDF-1.4
-1 0 obj
-<< /Title (Blues Scales) >>
-endobj",
+            "content": b"%PDF-1.4\n1 0 obj\n<< /Title (Blues Scales) >>\nendobj",
             "filename": "blues_scales.pdf",
             "is_public": True
         },

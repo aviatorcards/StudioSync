@@ -7,13 +7,10 @@ interface Props {
 }
 
 const STEPS = [
-    { name: 'Welcome' },
-    { name: 'Studio' },
-    { name: 'Admin' },
+    { name: 'Studio & Admin' },
     { name: 'Features' },
-    { name: 'Config' },
-    { name: 'Review' },
-    { name: 'Done' }
+    { name: 'Sample Data' },
+    { name: 'Done' },
 ]
 
 export const WizardProgress = ({ currentStep, totalSteps }: Props) => {

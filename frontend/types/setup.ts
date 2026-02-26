@@ -154,10 +154,10 @@ export const FEATURE_DESCRIPTIONS = {
  * Timezone options for studio configuration
  */
 export const TIMEZONES = [
-  { value: 'America/New_York', label: 'Eastern Time (ET)' },
-  { value: 'America/Chicago', label: 'Central Time (CT)' },
-  { value: 'America/Denver', label: 'Mountain Time (MT)' },
-  { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
+  { value: 'America/New_York', label: 'Eastern Time (EST)' },
+  { value: 'America/Chicago', label: 'Central Time (CST)' },
+  { value: 'America/Denver', label: 'Mountain Time (MST)' },
+  { value: 'America/Los_Angeles', label: 'Pacific Time (PST)' },
   { value: 'America/Anchorage', label: 'Alaska Time (AKT)' },
   { value: 'Pacific/Honolulu', label: 'Hawaii Time (HT)' },
   { value: 'UTC', label: 'UTC (Coordinated Universal Time)' },

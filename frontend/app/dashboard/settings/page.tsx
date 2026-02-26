@@ -1,16 +1,19 @@
 'use client'
 
 import { useState, useRef, useEffect, KeyboardEvent } from 'react'
-import { User, Building2, Bell, Palette, Mail, Camera, Wand2, Check, Server, Eye, EyeOff, Save, Loader2, Music, X, Plus } from 'lucide-react'
+import { User, Building2, Bell, Palette, Mail, Camera, Wand2, Check, Server, Eye, EyeOff, Save, Loader2, Music, X, Plus, Download, Upload, ShieldAlert, Database } from 'lucide-react'
 import { useUser } from '@/contexts/UserContext'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
 import ImageCropper from '@/components/ImageCropper'
+import { formatPhoneNumber } from '@/lib/utils'
 
 export default function SettingsPage() {
     const { currentUser, setCurrentUser } = useUser()
     const [activeTab, setActiveTab] = useState('profile')
     const [loading, setLoading] = useState(false)
+    const [isExporting, setIsExporting] = useState(false)
+    const [isImporting, setIsImporting] = useState(false)
     const [justSaved, setJustSaved] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [showSmtpPassword, setShowSmtpPassword] = useState(false)
@@ -191,6 +194,7 @@ export default function SettingsPage() {
         { id: 'appearance', label: 'Appearance', icon: Palette },
         { id: 'notifications', label: 'Notifications', icon: Bell },
         { id: 'technical', label: 'Technical', icon: Server, roles: ['admin'] },
+        { id: 'maintenance', label: 'Maintenance', icon: Database, roles: ['admin'] },
     ]
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -299,6 +303,58 @@ export default function SettingsPage() {
             toast.error(error.response?.data?.detail || 'Failed to send test email')
         } finally {
             setTestingEmail(false)
+        }
+    }
+
+    const handleExportSystem = async () => {
+        setIsExporting(true)
+        try {
+            // Use window.location.href or a direct link for file downloads in some cases,
+            // but since we need the auth header, we use axios and create a blob.
+            const response = await api.get('/core/system/export/', {
+                responseType: 'blob'
+            })
+
+            const url = window.URL.createObjectURL(new Blob([response.data]))
+            const link = document.createElement('a')
+            link.href = url
+            const timestamp = new Date().toISOString().split('T')[0]
+            link.setAttribute('download', `studiosync_backup_${timestamp}.zip`)
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+            toast.success('System export started!')
+        } catch (error) {
+            console.error('Export failed:', error)
+            toast.error('Failed to export system data')
+        } finally {
+            setIsExporting(false)
+        }
+    }
+
+    const handleImportSystem = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        if (!confirm('WARNING: This will overwrite existing data. Are you sure you want to proceed?')) {
+            e.target.value = ''
+            return
+        }
+
+        setIsImporting(true)
+        const formData = new FormData()
+        formData.append('file', file)
+
+        try {
+            await api.post('/core/system/import/', formData)
+            toast.success('System restored successfully! Reloading...')
+            setTimeout(() => window.location.reload(), 2000)
+        } catch (error: any) {
+            console.error('Import failed:', error)
+            toast.error(error.response?.data?.error || 'Failed to import system data')
+        } finally {
+            setIsImporting(false)
+            e.target.value = ''
         }
     }
 
@@ -564,7 +620,7 @@ export default function SettingsPage() {
                                     <input
                                         type="tel"
                                         value={formData.phone}
-                                        onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                                        onChange={e => setFormData({ ...formData, phone: formatPhoneNumber(e.target.value) })}
                                         className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                                         placeholder="+1 (555) 123-4567"
                                     />
@@ -659,7 +715,7 @@ export default function SettingsPage() {
                                         <input
                                             type="tel"
                                             value={studioSettings.studio_phone}
-                                            onChange={e => setStudioSettings({ ...studioSettings, studio_phone: e.target.value })}
+                                            onChange={e => setStudioSettings({ ...studioSettings, studio_phone: formatPhoneNumber(e.target.value) })}
                                             placeholder="+1 (555) 000-0000"
                                             className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                                         />
@@ -1354,7 +1410,7 @@ export default function SettingsPage() {
                                             <input
                                                 type="tel"
                                                 value={technicalSettings.sms_from_number}
-                                                onChange={e => setTechnicalSettings({ ...technicalSettings, sms_from_number: e.target.value })}
+                                                onChange={e => setTechnicalSettings({ ...technicalSettings, sms_from_number: formatPhoneNumber(e.target.value) })}
                                                 placeholder="+1234567890"
                                                 className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                                             />
@@ -1380,6 +1436,104 @@ export default function SettingsPage() {
                                             </>
                                         )}
                                     </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Maintenance Tab (Admin Only) */}
+                    {activeTab === 'maintenance' && currentUser?.role === 'admin' && (
+                        <div className="max-w-3xl">
+                            <h2 className="text-lg font-semibold text-gray-900 mb-6">System Maintenance & Migration</h2>
+                            <div className="space-y-8">
+                                {/* Export Section */}
+                                <div className="p-6 bg-blue-50 rounded-2xl border border-blue-100">
+                                    <div className="flex items-start gap-4">
+                                        <div className="p-3 bg-blue-100 rounded-xl text-blue-600">
+                                            <Download className="w-6 h-6" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="text-lg font-bold text-blue-900 mb-1">Export System Data</h3>
+                                            <p className="text-sm text-blue-700 mb-4">
+                                                Download a complete backup of your studio. This includes all database records (students, lessons, billing) and uploaded media files (avatars, attachments).
+                                                <br /><br />
+                                                Use this if you are moving from a laptop to a VPS or another host.
+                                            </p>
+                                            <button
+                                                onClick={handleExportSystem}
+                                                disabled={isExporting}
+                                                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all disabled:opacity-50 shadow-md shadow-blue-200"
+                                            >
+                                                {isExporting ? (
+                                                    <>
+                                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                                        Preparing Export...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Download className="w-5 h-5" />
+                                                        Download Migration Bundle (.zip)
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Import Section */}
+                                <div className="p-6 bg-orange-50 rounded-2xl border border-orange-100">
+                                    <div className="flex items-start gap-4">
+                                        <div className="p-3 bg-orange-100 rounded-xl text-orange-600">
+                                            <Upload className="w-6 h-6" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="text-lg font-bold text-orange-900 mb-1">Import System Data</h3>
+                                            <p className="text-sm text-orange-700 mb-2">
+                                                Restore your studio from a previously exported migration bundle.
+                                            </p>
+                                            <div className="flex items-center gap-2 mb-4 p-3 bg-white/50 rounded-lg border border-orange-200">
+                                                <ShieldAlert className="w-5 h-5 text-orange-600 shrink-0" />
+                                                <p className="text-xs font-bold text-orange-800">
+                                                    CRITICAL: This will overwrite ALL existing data in the current database. This action cannot be undone.
+                                                </p>
+                                            </div>
+                                            
+                                            <label className={`inline-flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-xl font-bold hover:bg-orange-700 transition-all cursor-pointer shadow-md shadow-orange-200 ${isImporting ? 'opacity-50 pointer-events-none' : ''}`}>
+                                                {isImporting ? (
+                                                    <>
+                                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                                        Restoring System...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Upload className="w-5 h-5" />
+                                                        Select Backup File (.zip)
+                                                    </>
+                                                )}
+                                                <input
+                                                    type="file"
+                                                    accept=".zip"
+                                                    onChange={handleImportSystem}
+                                                    className="hidden"
+                                                    disabled={isImporting}
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Migration Instructions */}
+                                <div className="p-6 bg-gray-50 rounded-2xl border border-gray-200">
+                                    <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                        <Server className="w-5 h-5" />
+                                        How to migrate to a new host:
+                                    </h3>
+                                    <ol className="space-y-3 text-sm text-gray-600 list-decimal pl-4">
+                                        <li><strong>On your current machine:</strong> Download the Migration Bundle using the button above.</li>
+                                        <li><strong>On your new VPS:</strong> Install StudioSync and run the initial setup wizard.</li>
+                                        <li><strong>In the new instance:</strong> Go to Settings &gt; Maintenance and upload the Migration Bundle.</li>
+                                        <li><strong>Verify:</strong> Check that your students, lessons, and media are all present.</li>
+                                    </ol>
                                 </div>
                             </div>
                         </div>

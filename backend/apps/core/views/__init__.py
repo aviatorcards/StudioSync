@@ -1,5 +1,6 @@
 # Expose modules for direct access
-from . import core, gdpr, setup, stats  # noqa: F401
+from . import backup, core, gdpr, setup, stats  # noqa: F401
+from .backup import export_system, import_system  # noqa: F401
 from .core import (  # noqa: F401
     BandViewSet,
     ReportsExportView,

@@ -6,15 +6,15 @@ Get the demo up and running in **5 minutes**!
 
 ### 1. Install Docker Desktop
 
-**macOS:**
+Download and install Docker Desktop for your operating system:
 
-```bash
-# Option 1: Download from Docker website
-open https://www.docker.com/products/docker-desktop/
+- **[Download Docker Desktop](https://www.docker.com/products/docker-desktop/)**
 
-# Option 2: Install via Homebrew
-brew install --cask docker
-```
+Alternatively, use a package manager:
+
+- **macOS:** `brew install --cask docker`
+- **Windows:** `winget install Docker.DockerDesktop`
+- **Linux:** Follow the [official installation guide](https://docs.docker.com/engine/install/) for your distribution.
 
 After installation, open Docker Desktop and wait for it to start.
 
@@ -33,11 +33,15 @@ You should see version numbers if Docker is installed correctly.
 
 ### 1. Navigate to the Project
 
+Open your terminal and navigate to the root directory of the project. If you just cloned it, you're likely already there:
+
 ```bash
-cd /Users/tristan/Documents/words/coaching/music-studio-manager
+cd StudioSync
 ```
 
 ### 2. Run the Setup Script
+
+On macOS or Linux, run the script directly. On Windows, use **Git Bash** or **WSL**:
 
 ```bash
 ./scripts/init-demo.sh
@@ -83,7 +87,7 @@ docker compose exec backend python manage.py migrate
 docker compose exec backend python manage.py createsuperuser
 
 # 5. Access the app
-open http://localhost:3000
+# Open http://localhost:3000 in your browser
 ```
 
 ---
@@ -131,13 +135,18 @@ docker compose exec backend python manage.py migrate
 If you see port conflicts:
 
 ```bash
-# Check what's using the ports
+# macOS / Linux:
 lsof -i :3000  # Frontend
 lsof -i :8000  # Backend
 lsof -i :5432  # PostgreSQL
 
-# Stop the conflicting process or change ports in docker-compose.yml
+# Windows (Command Prompt):
+netstat -ano | findstr :3000
+netstat -ano | findstr :8000
+netstat -ano | findstr :5432
 ```
+
+# Stop the conflicting process or change ports in docker-compose.yml
 
 ### Services Not Starting
 
@@ -166,7 +175,7 @@ If you get a response, backend is running. The frontend might take a minute to c
 
 1. **Explore the Admin Panel** - Add students, teachers, and schedule lessons
 2. **Check the API** - Visit http://localhost:8000/admin to see available endpoints
-3. **Review the Models** - See the [walkthrough](file:///Users/tristan/.gemini/antigravity/brain/fb6f429c-07b9-4481-a5d4-ffe2a23bcdeb/walkthrough.md) for database schema
+3. **Review the Models** - See the [README.md](./README.md) for more details.
 
 ---
 

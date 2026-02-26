@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, User, Mail, Phone, Music, Users, Info } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import api from '@/services/api'
+import { formatPhoneNumber } from '@/lib/utils'
 
 /** Returns the age in whole years given an ISO date string, or null if blank. */
 function calcAge(birthDate: string): number | null {
@@ -32,7 +33,6 @@ export default function AddStudentPage() {
     })
 
     const age = calcAge(formData.birth_date)
-    // Show parent section when: age is known and < 18, OR age is unknown (no birth date: let user decide)
     const isMinor = age !== null && age < 18
     const ageUnknown = age === null
     const showParentSection = isMinor || ageUnknown
@@ -54,7 +54,11 @@ export default function AddStudentPage() {
     }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
+        let value = e.target.value
+        if (e.target.type === 'tel') {
+            value = formatPhoneNumber(value)
+        }
+        setFormData(prev => ({ ...prev, [e.target.name]: value }))
     }
 
     const inputClass = 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none transition'

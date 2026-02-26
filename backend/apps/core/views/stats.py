@@ -30,12 +30,13 @@ class DashboardStatsView(APIView):
 
         # ADMIN VIEW
         if user.role == "admin":
-            # 1. Total Students — scoped to this admin's studios
-            total_students = Student.objects.filter(studio__owner=user, is_active=True).count()
-            students_last_month = Student.objects.filter(
-                studio__owner=user, is_active=True, created_at__lt=start_of_month
+            # 1. Total Students — all active students for admins
+            total_students = Student.objects.filter(is_active=True).count()
+            # Growth should be compared to start of month
+            students_before_month = Student.objects.filter(
+                is_active=True, created_at__lt=start_of_month
             ).count()
-            student_growth = total_students - students_last_month
+            student_growth = total_students - students_before_month
 
             # 2. Scheduled Lessons (This Week)
             week_start = today - timedelta(days=today.weekday())
@@ -44,12 +45,11 @@ class DashboardStatsView(APIView):
                 scheduled_start__range=[week_start, week_end], status="scheduled"
             ).count()
 
-            # 3. Revenue (Month) - Estimated from paid lessons
-            # Assuming 'rate' is populated on lessons
+            # 3. Revenue (Month) - Sum of total_amount from paid invoices issued this month
             revenue_month = (
-                Lesson.objects.filter(scheduled_start__gte=start_of_month, is_paid=True).aggregate(
-                    total=Sum("rate")
-                )["total"]
+                Invoice.objects.filter(
+                    status="paid", issue_date__gte=start_of_month.date()
+                ).aggregate(total=Sum("total_amount"))["total"]
                 or 0
             )
 
@@ -57,30 +57,28 @@ class DashboardStatsView(APIView):
             active_teachers = Teacher.objects.filter(is_active=True).count()
 
             # 5. Unpaid Invoices
-            from apps.billing.models import Invoice
-
             unpaid_qs = Invoice.objects.filter(
-                studio__owner=user, status__in=["sent", "overdue", "partial"]
+                status__in=["sent", "overdue", "partial"]
             )
             unpaid_val = sum(inv.balance_due for inv in unpaid_qs)
             unpaid_invoices = float(unpaid_val)
 
             # 6. Average Attendance
-            completed_c = Lesson.objects.filter(studio__owner=user, status="completed").count()
-            cancelled_c = Lesson.objects.filter(studio__owner=user, status="cancelled").count()
-            total_past = completed_c + cancelled_c
+            completed_c = Lesson.objects.filter(status="completed").count()
+            cancelled_c = Lesson.objects.filter(status="cancelled").count()
+            noshow_c = Lesson.objects.filter(status="no_show").count()
+            total_past = completed_c + cancelled_c + noshow_c
             rate_val = int(completed_c / total_past * 100) if total_past > 0 else 100
             avg_attendance = f"{rate_val}%"
 
             # 7. New Enquiries (Placeholder until Enquiry module exists)
-            # In real app: Enquiry.objects.filter(status='new').count()
             new_enquiries = 0
 
             stats["overview"] = {
                 "total_students": {
                     "value": total_students,
-                    "trend": f"{'+' if student_growth >= 0 else ''}{student_growth} this month",
-                    "positive": student_growth >= 0,
+                    "trend": f"{'+' if student_growth >= 0 else ''}{student_growth} new this month",
+                    "positive": student_growth > 0,
                 },
                 "weekly_lessons": {
                     "value": lessons_this_week,
@@ -160,8 +158,6 @@ class DashboardStatsView(APIView):
                 next_lesson_label = next_lesson_obj.scheduled_start.strftime("%I:%M %p")
 
             # 2. Balance Due
-            from apps.billing.models import Invoice
-
             balance_due = 0.0
             if student.bands.exists():
                 unpaid_qs = Invoice.objects.filter(
@@ -288,7 +284,7 @@ class DashboardAnalyticsView(APIView):
         # We'll use TruncMonth to aggregate by month
         revenue_qs = (
             Invoice.objects.filter(
-                studio__owner=user, status="paid", created_at__gte=six_months_ago
+                status="paid", created_at__gte=six_months_ago
             )
             .annotate(month=TruncMonth("created_at"))
             .values("month")
@@ -344,7 +340,6 @@ class DashboardAnalyticsView(APIView):
 
         attendance_qs = (
             Lesson.objects.filter(
-                studio__owner=user,
                 scheduled_start__gte=start_of_month,
                 scheduled_start__lte=today,  # Up to now
             )
@@ -360,11 +355,8 @@ class DashboardAnalyticsView(APIView):
         attendance_data = [
             {"name": "Attended", "value": status_map.get("completed", 0)},
             {"name": "Canceled", "value": status_map.get("cancelled", 0)},
-            {
-                "name": "No-show",
-                "value": status_map.get("missed", 0),
-            },  # Assuming 'missed' or 'no_show'
-            {"name": "Scheduled", "value": status_map.get("scheduled", 0)},  # Future or not updated
+            {"name": "No-show", "value": status_map.get("no_show", 0)},
+            {"name": "Scheduled", "value": status_map.get("scheduled", 0)},
         ]
 
         return Response(

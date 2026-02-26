@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.conf import settings
 from django.db import models
 
@@ -177,7 +179,7 @@ class RoomReservation(models.Model):
         """Calculate total cost based on duration and room rate"""
         if self.start_time and self.end_time and self.room:
             duration_hours = (self.end_time - self.start_time).total_seconds() / 3600
-            self.total_cost = duration_hours * self.room.hourly_rate
+            self.total_cost = Decimal(str(duration_hours)) * self.room.hourly_rate
         super().save(*args, **kwargs)
 
     def clean(self):

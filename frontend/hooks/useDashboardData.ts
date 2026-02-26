@@ -355,7 +355,7 @@ export function useRooms(params?: any) {
 
   const fetchRooms = async () => {
     try {
-      const response = await api.get("/inventory/rooms/", { params });
+      const response = await api.get("/inventory/practice-rooms/", { params });
       const data = response.data.results || response.data;
       setRooms(Array.isArray(data) ? data : []);
     } catch (err) {

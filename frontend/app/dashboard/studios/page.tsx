@@ -11,6 +11,7 @@ import { toast } from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
 import { useRouter } from 'next/navigation'
+import { formatPhoneNumber } from '@/lib/utils'
 
 export default function StudiosPage() {
     const { studios, loading: studiosLoading, refetch } = useStudios()
@@ -190,7 +191,7 @@ export default function StudiosPage() {
                                         <input
                                             type="tel"
                                             value={formData.phone}
-                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                            onChange={(e) => setFormData({ ...formData, phone: formatPhoneNumber(e.target.value) })}
                                             className="w-full px-6 py-4 bg-gray-50 border-transparent border-2 focus:border-primary focus:bg-white rounded-2xl outline-none font-bold text-gray-900 transition-all placeholder:text-gray-300"
                                             placeholder="+1 (555) 000-0000"
                                         />

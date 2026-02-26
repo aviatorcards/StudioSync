@@ -11,6 +11,7 @@ from apps.core.views import (
     StudioViewSet,
     TeacherViewSet,
     UserViewSet,
+    backup,
     gdpr,
     setup,
 )
@@ -43,6 +44,9 @@ urlpatterns = (
         path("gdpr/privacy-dashboard/", gdpr.privacy_dashboard, name="gdpr-privacy-dashboard"),
         path("gdpr/privacy-settings/", gdpr.update_privacy_settings, name="gdpr-privacy-settings"),
         path("gdpr/consent/", gdpr.record_consent, name="gdpr-consent"),
+        # System Migration/Backup
+        path("system/export/", backup.export_system, name="system-export"),
+        path("system/import/", backup.import_system, name="system-import"),
     ]
     + urlpatterns_manual
     + [

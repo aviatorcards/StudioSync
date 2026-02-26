@@ -23,6 +23,8 @@ interface LessonBooking {
     time: string
     duration: number
     lesson_type: string
+    is_online: boolean
+    online_meeting_url: string
 }
 
 export default function SchedulePage() {
@@ -68,7 +70,9 @@ export default function SchedulePage() {
         date: '',
         time: bookingDefaults.time,
         duration: 60,
-        lesson_type: 'private'
+        lesson_type: 'private',
+        is_online: false,
+        online_meeting_url: ''
     })
 
     const [bookingMode, setBookingMode] = useState<'individual' | 'band' | 'event'>('individual')
@@ -152,7 +156,10 @@ export default function SchedulePage() {
                     payload.student = newBooking.student
                 }
                 // Optional room for any mode
-                if (newBooking.room) {
+                if (newBooking.room === 'external') {
+                    payload.is_online = true
+                    payload.online_meeting_url = newBooking.online_meeting_url
+                } else if (newBooking.room) {
                     payload.room = newBooking.room
                 }
             }
@@ -160,7 +167,18 @@ export default function SchedulePage() {
             await api.post('/lessons/', payload)
             toast.success('Lesson booked successfully')
             setShowBookingModal(false)
-            setNewBooking({ student: '', teacher: '', band: '', room: '', date: '', time: bookingDefaults.time, duration: 60, lesson_type: 'private' })
+            setNewBooking({ 
+                student: '', 
+                teacher: '', 
+                band: '', 
+                room: '', 
+                date: '', 
+                time: bookingDefaults.time, 
+                duration: 60, 
+                lesson_type: 'private',
+                is_online: false,
+                online_meeting_url: ''
+            })
             refetchLessons()
         } catch (error) {
             console.error(error)
@@ -348,11 +366,15 @@ export default function SchedulePage() {
                                                                                                                                                 {lesson.duration_minutes}m
                                                                                                                                             </span>
                                                                                                                                         )}
-                                                                                                                                        {lesson.room_name && (
-                                                                                                                                            <span className="text-[8px] sm:text-[9px] font-black uppercase bg-blue-50 px-0.5 sm:px-1 rounded text-blue-500 truncate max-w-[35px] sm:max-w-[50px]">
-                                                                                                                                                {lesson.room_name}
-                                                                                                                                            </span>
-                                                                                                                                        )}
+                                                                                                                                        {lesson.room_name ? (
+                                                                                                              <span className="text-[8px] sm:text-[9px] font-black uppercase bg-blue-50 px-0.5 sm:px-1 rounded text-blue-500 truncate max-w-[35px] sm:max-w-[50px]">
+                                                                                                                  {lesson.room_name}
+                                                                                                              </span>
+                                                                                                          ) : lesson.is_online ? (
+                                                                                                              <span className="text-[8px] sm:text-[9px] font-black uppercase bg-purple-50 px-0.5 sm:px-1 rounded text-purple-500 truncate max-w-[35px] sm:max-w-[50px]">
+                                                                                                                  Online
+                                                                                                              </span>
+                                                                                                          ) : null}
                                                                                                                                     </div>
                                                                                                                                 </div>
                                                                                                                                 <p className="text-[9px] sm:text-[10px] font-medium text-gray-500 mt-0.5 truncate group-hover/card:text-gray-700">
@@ -474,7 +496,14 @@ export default function SchedulePage() {
                                     <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Room / location</label>
                                     <select
                                         value={newBooking.room}
-                                        onChange={(e) => setNewBooking({ ...newBooking, room: e.target.value })}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setNewBooking({ 
+                                                ...newBooking, 
+                                                room: val,
+                                                is_online: val === 'external'
+                                            });
+                                        }}
                                         className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all appearance-none"
                                     >
                                         <option value="">Select Room...</option>
@@ -483,6 +512,19 @@ export default function SchedulePage() {
                                     </select>
                                 </div>
                             </div>
+
+                            {newBooking.room === 'external' && (
+                                <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Online Meeting Link / Platform</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Zoom, Google Meet, or Meeting URL"
+                                        value={newBooking.online_meeting_url}
+                                        onChange={(e) => setNewBooking({ ...newBooking, online_meeting_url: e.target.value })}
+                                        className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-xl font-bold text-gray-700 outline-none transition-all"
+                                    />
+                                </div>
+                            )}
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">

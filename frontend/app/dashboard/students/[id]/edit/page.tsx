@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, User, Mail, Phone, Music, Users, Info, Trash2 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import api from '@/services/api'
+import { formatPhoneNumber } from '@/lib/utils'
 
 /** Returns the age in whole years given an ISO date string, or null if blank. */
 function calcAge(birthDate: string): number | null {
@@ -80,7 +81,11 @@ export default function EditStudentPage({ params }: { params: { id: string } }) 
     }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
+        let value = e.target.value
+        if (e.target.type === 'tel') {
+            value = formatPhoneNumber(value)
+        }
+        setFormData(prev => ({ ...prev, [e.target.name]: value }))
     }
 
     const handleDelete = async () => {

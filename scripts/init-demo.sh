@@ -46,6 +46,14 @@ if ! docker compose exec -T backend python manage.py migrate; then
     exit 1
 fi
 
+# Create cache table for database caching
+echo ""
+echo "🗄️ Creating cache table..."
+if ! docker compose exec -T backend python manage.py createcachetable; then
+    echo "❌ Failed to create cache table!"
+    exit 1
+fi
+
 # Create superuser non-interactively
 echo ""
 echo "👤 Creating demo admin user..."

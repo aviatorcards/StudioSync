@@ -376,8 +376,9 @@ These endpoints verify:
    - Ensure all dependencies are installed: `pip install -r requirements.txt`
    - Check Python version (3.12+ required)
 
-3. **Migration errors**
+3. **Migration and Cache errors**
    - Run migrations: `python manage.py migrate`
+   - Create cache table: `python manage.py createcachetable`
    - Check for pending migrations: `python manage.py showmigrations`
 
 4. **Pre-commit hook failures**

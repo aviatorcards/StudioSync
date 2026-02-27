@@ -80,8 +80,9 @@ docker compose up -d
 # 2. Wait for services to be ready (about 30 seconds)
 sleep 30
 
-# 3. Run database migrations
+# 3. Run database migrations and create cache table
 docker compose exec backend python manage.py migrate
+docker compose exec backend python manage.py createcachetable
 
 # 4. Create superuser (follow prompts)
 docker compose exec backend python manage.py createsuperuser
@@ -124,6 +125,7 @@ docker compose restart
 docker compose down -v
 docker compose up -d
 docker compose exec backend python manage.py migrate
+docker compose exec backend python manage.py createcachetable
 ```
 
 ---

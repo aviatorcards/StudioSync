@@ -71,6 +71,14 @@ else:
     print('ℹ️  Demo user already exists')
 EOF
 
+# Seed basic and advanced demo data
+echo ""
+echo "🌱 Seeding demo database..."
+docker compose exec -T backend python seed_data.py
+docker compose exec -T backend python seed_extra.py
+docker compose exec -T backend python seed_resources.py
+docker compose exec -T backend python seed_extra_resources.py
+
 echo ""
 echo "✅ Setup complete!"
 echo ""

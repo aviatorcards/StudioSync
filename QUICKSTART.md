@@ -41,9 +41,10 @@ cd StudioSync
 
 ### 2. Run the Setup Script
 
-On macOS or Linux, run the script directly. On Windows, use **Git Bash** or **WSL**:
+On macOS or Linux, you first need to make the script executable, then run it:
 
 ```bash
+chmod +x ./scripts/init-demo.sh
 ./scripts/init-demo.sh
 ```
 
@@ -66,6 +67,36 @@ Once the script completes:
 
 - Email: `admin@demo.com`
 - Password: `demo123`
+
+---
+
+## 🏗 Populate with Demo Data (Seeding)
+
+To see the application in action with realistic data (Students, Teachers, Lessons, Invoices, and Resources), use the built-in seeding scripts.
+
+**Run these from your terminal:**
+
+```bash
+# 1. Foundation: Admin, Studio, 5 Teachers, 20 Students
+docker compose exec backend python seed_data.py
+
+# 2. Activity: Families, Bands, Lessons, Invoices, Goals
+docker compose exec backend python seed_extra.py
+
+# 3. Library: PDF/Audio resources and Setlists
+docker compose exec backend python seed_resources.py
+docker compose exec backend python seed_extra_resources.py
+```
+
+### 🔐 Seeding Credentials
+
+After seeding, you can log in with these default accounts:
+
+| Role        | Email               | Password     |
+| :---------- | :------------------ | :----------- |
+| **Admin**   | `admin@test.com`    | `admin123`   |
+| **Teacher** | `teacher1@test.com` | `teacher123` |
+| **Student** | `student1@test.com` | `student123` |
 
 ---
 

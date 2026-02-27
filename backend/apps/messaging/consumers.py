@@ -1,3 +1,4 @@
+from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 
@@ -12,12 +13,22 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             return
 
         # Check if user is a participant in this thread
-        # We can implement this check later for security, for now assume access if logged in
+        if not await self.is_participant():
+            await self.close()
+            return
 
         # Join room group
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
 
         await self.accept()
+
+    @database_sync_to_async
+    def is_participant(self):
+        from .models import MessageThread
+
+        return MessageThread.objects.filter(
+            id=self.thread_id, participants=self.scope["user"]
+        ).exists()
 
     async def disconnect(self, close_code):
         # Leave room group

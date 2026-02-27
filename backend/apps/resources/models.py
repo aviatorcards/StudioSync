@@ -10,6 +10,38 @@ from django.utils import timezone
 from apps.core.models import Student, Studio, User
 
 
+class ResourceFolder(models.Model):
+    """
+    A virtual folder for organising digital resources, like a Google Drive folder.
+    Folders are scoped to a studio and support unlimited nesting via a self-referencing FK.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    studio = models.ForeignKey(Studio, on_delete=models.CASCADE, related_name="resource_folders")
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="children",
+        help_text="Parent folder. Null means this is a root-level folder.",
+    )
+    name = models.CharField(max_length=200)
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, related_name="created_folders"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "resource_folders"
+        ordering = ["name"]
+        unique_together = ("studio", "parent", "name")
+
+    def __str__(self):
+        return self.name
+
+
 class Resource(models.Model):
     """
     Digital or physical resources (sheet music, recordings, instruments, etc.)
@@ -68,6 +100,14 @@ class Resource(models.Model):
     # Organization
     tags = models.JSONField(default=list, blank=True)
     category = models.CharField(max_length=100, blank=True)
+    folder = models.ForeignKey(
+        "ResourceFolder",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="resources",
+        help_text="Virtual folder this resource belongs to. Null = root level.",
+    )
 
     # Music-specific fields
     instrument = models.CharField(

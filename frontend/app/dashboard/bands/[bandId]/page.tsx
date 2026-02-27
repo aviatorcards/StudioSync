@@ -12,6 +12,7 @@ import api from '@/services/api'
 import { toast } from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
+import { proxyFileUrl } from '@/lib/utils'
 
 type ResourceType = 'pdf' | 'audio' | 'video' | 'image' | 'link' | 'other'
 
@@ -220,8 +221,13 @@ export default function BandDetailPage() {
         }
 
         try {
-            window.open(resource.file_url, '_blank')
-            toast.success('Download initiated')
+            const downloadUrl = proxyFileUrl(resource.file_url)
+            if (downloadUrl) {
+                window.open(downloadUrl, '_blank')
+                toast.success('Download initiated')
+            } else {
+                toast.error('Could not generate download URL')
+            }
         } catch (error) {
             console.error('Download failed:', error)
             toast.error('Download failed')

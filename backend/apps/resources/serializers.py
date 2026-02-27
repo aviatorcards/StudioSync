@@ -1,11 +1,38 @@
 from rest_framework import serializers
 
-from .models import Resource, ResourceCheckout, Setlist, SetlistResource
+from .models import Resource, ResourceCheckout, ResourceFolder, Setlist, SetlistResource
+
+
+class ResourceFolderSerializer(serializers.ModelSerializer):
+    """Serializer for virtual resource folders."""
+
+    children_count = serializers.SerializerMethodField()
+    resources_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ResourceFolder
+        fields = [
+            "id",
+            "name",
+            "parent",
+            "children_count",
+            "resources_count",
+            "created_by",
+            "created_at",
+        ]
+        read_only_fields = ["created_by"]
+
+    def get_children_count(self, obj):
+        return obj.children.count()
+
+    def get_resources_count(self, obj):
+        return obj.resources.count()
 
 
 class ResourceSerializer(serializers.ModelSerializer):
     uploaded_by_name = serializers.SerializerMethodField()
     file_url = serializers.FileField(source="file", read_only=True)
+    folder_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Resource
@@ -19,6 +46,8 @@ class ResourceSerializer(serializers.ModelSerializer):
             "external_url",
             "tags",
             "category",
+            "folder",
+            "folder_name",
             "uploaded_by",
             "uploaded_by_name",
             "created_at",
@@ -38,6 +67,9 @@ class ResourceSerializer(serializers.ModelSerializer):
             return obj.uploaded_by.get_full_name()
         return "Unknown"
 
+    def get_folder_name(self, obj):
+        return obj.folder.name if obj.folder else None
+
     def create(self, validated_data):
         # Handle tags from FormData (may come as JSON string)
         if "tags" in validated_data and isinstance(validated_data["tags"], str):
@@ -52,7 +84,6 @@ class ResourceSerializer(serializers.ModelSerializer):
         if "file" in validated_data and validated_data["file"]:
             validated_data["file_size"] = validated_data["file"].size
 
-        # Note: uploaded_by and studio are now set in perform_create()
         return super().create(validated_data)
 
     def validate(self, data):

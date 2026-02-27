@@ -133,7 +133,7 @@ export function useMessages() {
             .replace('/api', '')
             .replace(/^http/, 'ws');
 
-        const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+        const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
         const wsUrl = `${finalBase}/ws/chat/${activeThread.id}/${token ? `?token=${token}` : ''}`;
         const socket = new WebSocket(wsUrl);
 

@@ -1,3 +1,5 @@
+import os
+
 from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import filters, permissions
@@ -9,8 +11,49 @@ from rest_framework.response import Response
 
 from apps.core.models import Student, Teacher
 
-from .models import Resource, Setlist, SetlistResource
-from .serializers import ResourceSerializer, SetlistSerializer
+from .models import Resource, ResourceFolder, Setlist, SetlistResource
+from .serializers import ResourceFolderSerializer, ResourceSerializer, SetlistSerializer
+
+from django.db.models import Q
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def _detect_resource_type(file) -> str:
+    """Derive a resource_type string from a file's content_type."""
+    content_type = getattr(file, "content_type", "") or ""
+    if content_type == "application/pdf":
+        return "pdf"
+    for prefix, rtype in [("audio/", "audio"), ("video/", "video"), ("image/", "image")]:
+        if content_type.startswith(prefix):
+            return rtype
+    return "other"
+
+
+def _get_studio_for_user(user):
+    """Return the studio associated with the requesting user, or None."""
+    if hasattr(user, "teacher_profile") and user.teacher_profile:
+        return user.teacher_profile.studio
+    if hasattr(user, "student_profile") and user.student_profile:
+        return user.student_profile.studio
+    if user.role == "admin":
+        from apps.core.models import Studio
+
+        # Try to find studio by owner
+        studio = Studio.objects.filter(owner=user).first()
+        if studio:
+            return studio
+        # Fallback: find any studio this user might be part of via profiles (if they have one)
+        # or just the first studio in the system if there's only one (dev mode)
+        return Studio.objects.first()
+    return None
+
+
+# ---------------------------------------------------------------------------
+# ViewSets
+# ---------------------------------------------------------------------------
 
 
 class PublicResourceViewSet(viewsets.ReadOnlyModelViewSet):
@@ -27,10 +70,6 @@ class PublicResourceViewSet(viewsets.ReadOnlyModelViewSet):
     ordering_fields = ["created_at", "title"]
 
     def get_queryset(self):
-        """
-        This view should return a list of all the public resources
-        for any user, even if they are not authenticated.
-        """
         return Resource.objects.filter(is_public=True).select_related("studio", "uploaded_by")
 
     @action(detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated])
@@ -40,16 +79,7 @@ class PublicResourceViewSet(viewsets.ReadOnlyModelViewSet):
         """
         original_resource = self.get_object()
         user = request.user
-        studio = None
-
-        if hasattr(user, "teacher_profile") and user.teacher_profile:
-            studio = user.teacher_profile.studio
-        elif hasattr(user, "student_profile") and user.student_profile:
-            studio = user.student_profile.studio
-        elif user.role == "admin":
-            from apps.core.models import Studio
-
-            studio = Studio.objects.filter(owner=user).first()
+        studio = _get_studio_for_user(user)
 
         if not studio:
             return Response(
@@ -62,11 +92,37 @@ class PublicResourceViewSet(viewsets.ReadOnlyModelViewSet):
         new_resource.pk = None
         new_resource.studio = studio
         new_resource.uploaded_by = user
-        new_resource.is_public = False  # Private by default in the user's songbook
+        new_resource.is_public = False
         new_resource.save()
 
         serializer = self.get_serializer(new_resource)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class ResourceFolderViewSet(viewsets.ModelViewSet):
+    """
+    CRUD for virtual resource folders, scoped to the user's studio.
+    """
+
+    serializer_class = ResourceFolderSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
+    filterset_fields = ["parent"]
+    search_fields = ["name"]
+
+    def get_queryset(self):
+        user = self.request.user
+        studio = _get_studio_for_user(user)
+        if not studio:
+            return ResourceFolder.objects.none()
+        return ResourceFolder.objects.filter(studio=studio).prefetch_related("children")
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        studio = _get_studio_for_user(user)
+        if not studio:
+            raise drf_serializers.ValidationError("Cannot determine studio context for this user.")
+        serializer.save(created_by=user, studio=studio)
 
 
 class ResourceViewSet(viewsets.ModelViewSet):
@@ -74,62 +130,155 @@ class ResourceViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
-    filterset_fields = ["resource_type", "instrument", "category"]
+    filterset_fields = ["resource_type", "instrument", "category", "folder"]
 
     search_fields = ["title", "description", "tags", "composer"]
     ordering_fields = ["created_at", "title"]
 
     def get_queryset(self):
         user = self.request.user
-        qs = Resource.objects.select_related("studio", "uploaded_by")
+        # Optimize with select_related
+        qs = Resource.objects.select_related("studio", "uploaded_by", "folder", "band")
 
-        # Filter by band if specified
-        band_id = self.request.query_params.get("band", None)
+        # 1. Determine the Studio context
+        studio = _get_studio_for_user(user)
+        if not studio:
+            # Fallback for superusers if they don't have a studio-specific role
+            if user.is_staff or user.is_superuser:
+                # Return everything if admin/staff and no studio context, 
+                # but usually they should be linked.
+                pass
+            else:
+                return Resource.objects.none()
 
-        if band_id:
-            # Filter resources for specific band
-            qs = qs.filter(band_id=band_id)
+        # 2. Filter by studio if we found one
+        if studio:
+            qs = qs.filter(studio=studio)
+
+        # 3. Role-based visibility
+        if user.role == "student" and hasattr(user, "student_profile"):
+            student = user.student_profile
+            # Students can see:
+            # - Public resources in their studio
+            # - Resources assigned to bands they are members of
+            # - Resources shared with them individually
+            qs = qs.filter(
+                Q(is_public=True) | 
+                Q(band__in=student.bands.all()) | 
+                Q(shared_with_students=student)
+            ).distinct()
+        # Admin and Teachers see all resources within their studio context
+
+        # 4. Handle Band filtering via query params
+        # This allows the frontend to show "Band Repository" vs "General Library"
+        band_param = self.request.query_params.get("band")
+        if band_param:
+            qs = qs.filter(band_id=band_param)
         else:
-            # Default: show only studio-level resources (not band-specific)
+            # By default (in the main library), only show resources NOT assigned to a band
+            # to prevent cluttering the main library with band-specific charts.
             qs = qs.filter(band__isnull=True)
 
-        # Apply role-based permissions
-        if user.role == "admin":
-            # Admin sees all resources in their studio(s)
-            qs = qs.filter(studio__owner=user)
-        elif hasattr(user, "teacher_profile") and user.teacher_profile:
-            # Teacher sees all resources in their studio
-            studio = user.teacher_profile.studio
-            qs = qs.filter(studio=studio)
-        elif hasattr(user, "student_profile") and user.student_profile:
-            # Student sees public resources in their studio
-            student = user.student_profile
-            studio = student.studio
-            qs = qs.filter(studio=studio, is_public=True)
-        else:
-            qs = qs.none()
+        # 5. Handle Folder filtering
+        folder_param = self.request.query_params.get("folder")
+        if folder_param == "root":
+            qs = qs.filter(folder__isnull=True)
+        elif folder_param:
+            qs = qs.filter(folder_id=folder_param)
 
         return qs
 
     def perform_create(self, serializer):
-        """Assign studio and uploader based on user role"""
+        """Assign studio and uploader based on user role."""
         user = self.request.user
-        studio = None
-
-        # Determine studio based on user role
-        if hasattr(user, "teacher_profile") and user.teacher_profile:
-            studio = user.teacher_profile.studio
-        elif hasattr(user, "student_profile") and user.student_profile:
-            studio = user.student_profile.studio
-        elif user.role == "admin":
-            from apps.core.models import Studio
-
-            studio = Studio.objects.filter(owner=user).first()
-
+        studio = _get_studio_for_user(user)
         if not studio:
             raise drf_serializers.ValidationError("Cannot determine studio context for this user")
-
         serializer.save(uploaded_by=user, studio=studio)
+
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="bulk-upload",
+        parser_classes=[MultiPartParser, FormParser],
+    )
+    def bulk_upload(self, request):
+        """
+        Upload multiple files in a single request.
+
+        Expected multipart fields:
+          - files           – one or more file fields (repeat the key for each file)
+          - resource_type   – optional; auto-detected from MIME type when missing
+          - category        – optional shared category for all files
+          - folder          – optional UUID of target ResourceFolder
+          - description     – optional shared description
+        """
+        user = request.user
+        studio = _get_studio_for_user(user)
+        if not studio:
+            return Response(
+                {"detail": "Cannot determine studio context for this user."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        files = request.FILES.getlist("files")
+        if not files:
+            return Response(
+                {"detail": "No files provided. Send at least one file under the key 'files'."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Optional shared metadata
+        shared_category = request.data.get("category", "")
+        shared_description = request.data.get("description", "")
+        folder_id = request.data.get("folder", None)
+        explicit_type = request.data.get("resource_type", None)
+
+        # Resolve folder
+        folder = None
+        if folder_id:
+            try:
+                folder = ResourceFolder.objects.get(id=folder_id, studio=studio)
+            except ResourceFolder.DoesNotExist:
+                return Response(
+                    {"detail": f"Folder '{folder_id}' not found in this studio."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        created = []
+        errors = []
+
+        for file in files:
+            resource_type = explicit_type or _detect_resource_type(file)
+            # Derive a clean title from the filename
+            title = os.path.splitext(file.name)[0].replace("_", " ").replace("-", " ").strip()
+
+            resource = Resource(
+                studio=studio,
+                uploaded_by=user,
+                title=title,
+                description=shared_description,
+                resource_type=resource_type,
+                category=shared_category,
+                folder=folder,
+                file=file,
+                file_size=file.size,
+                mime_type=getattr(file, "content_type", ""),
+            )
+            try:
+                resource.full_clean(exclude=["studio", "uploaded_by"])
+                resource.save()
+                created.append(resource)
+            except Exception as exc:  # noqa: BLE001
+                errors.append({"file": file.name, "error": str(exc)})
+
+        serializer = ResourceSerializer(created, many=True, context={"request": request})
+        response_data = {"created": serializer.data}
+        if errors:
+            response_data["errors"] = errors
+
+        http_status = status.HTTP_201_CREATED if created else status.HTTP_400_BAD_REQUEST
+        return Response(response_data, status=http_status)
 
 
 class SetlistViewSet(viewsets.ModelViewSet):
@@ -141,9 +290,6 @@ class SetlistViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        """
-        Users can only see setlists belonging to their studio.
-        """
         user = self.request.user
         studio = None
 
@@ -165,28 +311,15 @@ class SetlistViewSet(viewsets.ModelViewSet):
         return Setlist.objects.filter(studio=studio).prefetch_related("resources")
 
     def perform_create(self, serializer):
-        """
-        Automatically associate the setlist with the user's studio.
-        """
         user = self.request.user
-        studio = None
-        if hasattr(user, "teacher_profile") and user.teacher_profile:
-            studio = user.teacher_profile.studio
-        elif user.role == "admin":
-            from apps.core.models import Studio
-
-            studio = Studio.objects.filter(owner=user).first()
-
+        studio = _get_studio_for_user(user)
         if not studio:
             raise drf_serializers.ValidationError("Could not determine user's studio.")
-
         serializer.save(created_by=user, studio=studio)
 
     @action(detail=True, methods=["post"], url_path="add-resource")
     def add_resource(self, request, pk=None):
-        """
-        Add a resource to a setlist.
-        """
+        """Add a resource to a setlist."""
         setlist = self.get_object()
         resource_id = request.data.get("resource_id")
 
@@ -202,7 +335,6 @@ class SetlistViewSet(viewsets.ModelViewSet):
                 {"error": "Resource not found in this studio."}, status=status.HTTP_404_NOT_FOUND
             )
 
-        # Add the resource to the end of the setlist
         order = setlist.resources.count()
         SetlistResource.objects.create(setlist=setlist, resource=resource, order=order)
 
@@ -210,9 +342,7 @@ class SetlistViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="remove-resource")
     def remove_resource(self, request, pk=None):
-        """
-        Remove a resource from a setlist.
-        """
+        """Remove a resource from a setlist."""
         setlist = self.get_object()
         resource_id = request.data.get("resource_id")
 
@@ -229,7 +359,6 @@ class SetlistViewSet(viewsets.ModelViewSet):
                 {"error": "Resource not found in this setlist."}, status=status.HTTP_404_NOT_FOUND
             )
 
-        # Re-order the remaining items
         for i, item in enumerate(setlist.setlistresource_set.all()):
             item.order = i
             item.save()
@@ -238,10 +367,7 @@ class SetlistViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="reorder")
     def reorder(self, request, pk=None):
-        """
-        Re-order the resources in a setlist.
-        Expects a list of resource IDs in the desired order.
-        """
+        """Re-order the resources in a setlist."""
         setlist = self.get_object()
         resource_ids = request.data.get("resource_ids", [])
 
@@ -250,15 +376,12 @@ class SetlistViewSet(viewsets.ModelViewSet):
                 {"error": "`resource_ids` must be a list."}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Update the order for each resource
         for i, resource_id in enumerate(resource_ids):
             try:
                 item = SetlistResource.objects.get(setlist=setlist, resource_id=resource_id)
                 item.order = i
                 item.save()
             except SetlistResource.DoesNotExist:
-                # This could happen if a resource ID is invalid.
-                # We'll just ignore it and continue.
                 pass
 
         return Response(SetlistSerializer(setlist).data)

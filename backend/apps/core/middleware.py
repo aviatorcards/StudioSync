@@ -7,12 +7,16 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from apps.core.models import User
 
+from urllib.parse import unquote
+
 logger = logging.getLogger(__name__)
 
 
 @database_sync_to_async
 def get_user(token_key):
     try:
+        # Decode token if it was URL encoded
+        token_key = unquote(token_key)
         # Validate token
         access_token = AccessToken(token_key)
         user_id = access_token.payload.get("user_id")

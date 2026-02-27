@@ -28,6 +28,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
+import { proxyFileUrl } from '@/lib/utils'
 
 type MusicResourceType = 'sheet_music' | 'chord_chart' | 'tablature' | 'lyrics'
 type SkillLevel = 'beginner' | 'intermediate' | 'advanced' | 'professional'
@@ -198,8 +199,13 @@ export default function SongbookPage() {
         }
 
         try {
-            window.open(resource.file_url, '_blank')
-            toast.success('Opening chart...')
+            const downloadUrl = proxyFileUrl(resource.file_url)
+            if (downloadUrl) {
+                window.open(downloadUrl, '_blank')
+                toast.success('Opening chart...')
+            } else {
+                toast.error('Could not generate chart URL')
+            }
         } catch (error) {
             console.error('Download failed:', error)
             toast.error('Download failed')

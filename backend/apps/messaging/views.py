@@ -1,3 +1,5 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -83,6 +85,17 @@ class MessageThreadViewSet(viewsets.ModelViewSet):
         message.read_by.add(request.user)
 
         serializer = self.get_serializer(thread)
+        
+        # Notify via WebSocket
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{thread.id}",
+            {
+                "type": "chat_message",
+                "message": MessageSerializer(message).data
+            }
+        )
+        
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["post"])
@@ -99,6 +112,16 @@ class MessageThreadViewSet(viewsets.ModelViewSet):
 
         # Touch thread update time
         thread.save()  # Updates updated_at auto_now
+
+        # Notify via WebSocket
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{thread.id}",
+            {
+                "type": "chat_message",
+                "message": MessageSerializer(message).data
+            }
+        )
 
         return Response(MessageSerializer(message).data, status=status.HTTP_201_CREATED)
 

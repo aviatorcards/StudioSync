@@ -542,7 +542,8 @@ class TeacherViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # Admin: see all teachers in their studios
         if self.request.user.role == "admin":
-            return Teacher.objects.filter(studio__owner=self.request.user)
+            # Admin: see all teachers (consistent with UserViewSet)
+            return Teacher.objects.all()
         # Teachers: see self?
         if hasattr(self.request.user, "teacher_profile"):
             return Teacher.objects.filter(studio=self.request.user.teacher_profile.studio)
@@ -570,7 +571,7 @@ class StudentViewSet(viewsets.ModelViewSet):
 
         # Determine base queryset based on role
         if self.request.user.role == "admin":
-            queryset = Student.objects.filter(studio__owner=self.request.user, user__role="student")
+            queryset = Student.objects.all()
         elif self.request.user.role == "teacher":
             if hasattr(self.request.user, "teacher_profile"):
                 queryset = Student.objects.filter(

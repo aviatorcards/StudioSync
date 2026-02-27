@@ -183,8 +183,8 @@ export const useSetupWizard = () => {
 
             // Store tokens
             if (typeof window !== 'undefined') {
-                localStorage.setItem('access_token', result.tokens.access)
-                localStorage.setItem('refresh_token', result.tokens.refresh)
+                localStorage.setItem('accessToken', result.tokens.access)
+                localStorage.setItem('refreshToken', result.tokens.refresh)
             }
 
             // Move to completion step (last step)

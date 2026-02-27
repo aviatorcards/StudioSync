@@ -120,10 +120,17 @@ export default function UsersPage() {
                 })
 
                 if (formData.role === 'student' || updatedUser.role === 'student') {
-                    if (formData.band_ids.length > 0) {
-                        for (const bId of formData.band_ids) {
-                            await api.post(`/core/users/${updatedUser.id}/assign_to_band/`, { band_id: bId })
-                        }
+                    const originalBandIds = selectedUser.student_profile?.bands?.map((b: any) => b.id) || []
+                    const currentBandIds = formData.band_ids || []
+                    
+                    const toAdd = currentBandIds.filter(id => !originalBandIds.includes(id))
+                    const toRemove = originalBandIds.filter((id: string) => !currentBandIds.includes(id))
+
+                    for (const bId of toAdd) {
+                        await api.post(`/core/users/${updatedUser.id}/assign_to_band/`, { band_id: bId })
+                    }
+                    for (const bId of toRemove) {
+                        await api.post(`/core/users/${updatedUser.id}/remove_from_band/`, { band_id: bId })
                     }
 
                     if (formData.family_id) {

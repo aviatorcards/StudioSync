@@ -56,7 +56,7 @@ def get_email_settings():
         }
 
 
-def send_welcome_email(user_email, first_name):
+def send_welcome_email(user_email, first_name, temp_password=None):
     """
     Trigger the async welcome email task.
     """
@@ -69,6 +69,7 @@ def send_welcome_email(user_email, first_name):
         "first_name": first_name,
         "user_email": user_email,
         "dashboard_url": f"{settings.FRONTEND_BASE_URL}/login",
+        "temp_password": temp_password,
     }
     # Call the background task
     from django_q.tasks import async_task

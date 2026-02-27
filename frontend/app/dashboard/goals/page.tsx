@@ -47,12 +47,13 @@ export default function GoalsPage() {
 
         const submitData: any = { ...formData }
         
-        // Convert empty strings to null for optional fields
-        Object.keys(submitData).forEach(key => {
-            if (submitData[key] === '') {
-                submitData[key] = null
-            }
-        })
+        // Convert empty strings to null for optional fields (specifically dates)
+        if (submitData.target_date === '') {
+            submitData.target_date = null
+        }
+        if (submitData.description === null) {
+            submitData.description = ''
+        }
 
         if (isStudent) {
             delete submitData.student

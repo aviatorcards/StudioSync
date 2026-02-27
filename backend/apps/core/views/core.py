@@ -180,6 +180,29 @@ class UserViewSet(viewsets.ModelViewSet):
             user.save()
         return Response({"detail": "Avatar removed", "avatar": None})
 
+    @action(detail=False, methods=["post"])
+    def change_password(self, request):
+        """Allow user to change their password"""
+        user = request.user
+        current_password = request.data.get("current_password")
+        new_password = request.data.get("new_password")
+
+        if not current_password or not new_password:
+            return Response(
+                {"detail": "Both current and new passwords are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not user.check_password(current_password):
+            return Response(
+                {"detail": "Current password is incorrect."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.set_password(new_password)
+        user.save()
+        return Response({"detail": "Password updated successfully."})
+
     def create(self, request):
         """Create a new user (Admin only)"""
         # Only admins can create users
@@ -203,9 +226,9 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Create user with temporary password
-        # In a real app, we'd send an invite email here
-        temp_password = "TemporaryPassword123!"
+        # Create user with a generated temporary password
+        from django.utils.crypto import get_random_string
+        temp_password = get_random_string(length=12)
 
         user = User.objects.create_user(
             email=email,
@@ -219,7 +242,7 @@ class UserViewSet(viewsets.ModelViewSet):
         try:
             from apps.core.email_utils import send_welcome_email
 
-            send_welcome_email(user.email, user.first_name)
+            send_welcome_email(user.email, user.first_name, temp_password)
         except Exception as e:
             # Don't fail registration if email fails
             print(f"Failed to trigger welcome email: {e}")

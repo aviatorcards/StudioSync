@@ -189,6 +189,7 @@ export default function SettingsPage() {
 
     const tabs = [
         { id: 'profile', label: 'Profile', icon: User },
+        { id: 'security', label: 'Security', icon: ShieldAlert },
         { id: 'studio', label: 'Studio', icon: Building2 },
         { id: 'communication', label: 'Communication', icon: Mail },
         { id: 'appearance', label: 'Appearance', icon: Palette },
@@ -678,6 +679,88 @@ export default function SettingsPage() {
                                     {!hasChanges() && !justSaved && (
                                         <span className="text-xs text-gray-500">No changes to save</span>
                                     )}
+                                </div>
+                            </form>
+                        </div>
+                    )}
+
+                    {/* Security Tab */}
+                    {activeTab === 'security' && (
+                        <div className="max-w-2xl">
+                            <h2 className="text-2xl font-black text-gray-900 mb-6">Security Settings</h2>
+                            <form onSubmit={async (e) => {
+                                e.preventDefault()
+                                // Find password states from local DOM or create custom state here
+                                const form = e.currentTarget
+                                const current_password = (form.elements.namedItem('current_password') as HTMLInputElement).value
+                                const new_password = (form.elements.namedItem('new_password') as HTMLInputElement).value
+                                const confirm_password = (form.elements.namedItem('confirm_password') as HTMLInputElement).value
+                                
+                                if (new_password !== confirm_password) {
+                                    toast.error('New passwords do not match')
+                                    return
+                                }
+                                setLoading(true)
+                                try {
+                                    await api.post('/core/users/change_password/', {
+                                        current_password,
+                                        new_password
+                                    })
+                                    toast.success('Password changed successfully')
+                                    form.reset()
+                                } catch (error: any) {
+                                    toast.error(error.response?.data?.detail || 'Failed to change password')
+                                } finally {
+                                    setLoading(false)
+                                }
+                            }} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                                    <input
+                                        type="password"
+                                        name="current_password"
+                                        required
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                                    <input
+                                        type="password"
+                                        name="new_password"
+                                        required
+                                        minLength={8}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                                    <input
+                                        type="password"
+                                        name="confirm_password"
+                                        required
+                                        minLength={8}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                    />
+                                </div>
+                                <div className="pt-4 border-t border-gray-200 flex items-center gap-3">
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="flex items-center justify-center gap-2 px-6 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-hover transition-colors disabled:opacity-50"
+                                    >
+                                        {loading ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                Updating...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <ShieldAlert className="w-4 h-4" />
+                                                Change Password
+                                            </>
+                                        )}
+                                    </button>
                                 </div>
                             </form>
                         </div>

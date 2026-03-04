@@ -52,7 +52,7 @@ export default function LoginPage() {
                         Welcome back to your studio
                     </h1>
                     <p className="text-lg text-gray-300">
-                        Manage your music lessons, students, and schedule all in one beautiful place.
+                        Manage your music lessons, students, and schedule all in one place.
                     </p>
                 </div>
 

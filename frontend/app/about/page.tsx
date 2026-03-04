@@ -17,13 +17,13 @@ function ValueCard({ value, index }: any) {
             initial={{ opacity: 0, y: 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
-            className="bg-white rounded-2xl border border-gray-100 p-8 hover:shadow-md hover:border-gray-200 transition-all text-center group"
+            className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1 transition-all text-center group"
         >
-            <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${value.color} flex items-center justify-center mx-auto mb-5 group-hover:scale-105 transition-transform`}>
-                <value.icon className="w-7 h-7 text-white" />
+            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${value.color} flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform`}>
+                <value.icon className="w-8 h-8 text-white" />
             </div>
             <h3 className="text-xl font-bold mb-3 text-gray-900">{value.title}</h3>
-            <p className="text-gray-500 leading-relaxed text-sm">{value.description}</p>
+            <p className="text-gray-500 leading-relaxed text-sm font-medium">{value.description}</p>
         </motion.div>
     )
 }
@@ -35,23 +35,24 @@ function TimelineItem({ item, index }: any) {
     return (
         <motion.div
             ref={ref}
-            initial={{ opacity: 0, y: 20 }}
-            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ duration: 0.5, delay: index * 0.15 }}
-            className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-all"
+            initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
+            animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
+            transition={{ duration: 0.6, delay: index * 0.15 }}
+            className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm hover:shadow-md transition-all relative overflow-hidden group"
         >
-            <div className="flex items-start gap-4">
-                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center flex-shrink-0`}>
-                    <item.icon className="w-5 h-5 text-white" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gray-50 rounded-full -mr-16 -mt-16 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-6 relative z-10">
+                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center flex-shrink-0 shadow-lg`}>
+                    <item.icon className="w-6 h-6 text-white" />
                 </div>
-                <div>
+                <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                        <h4 className="font-bold text-gray-900">{item.title}</h4>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium">
+                        <h4 className="text-xl font-bold text-gray-900">{item.title}</h4>
+                        <span className="text-sm px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 font-bold border border-indigo-100">
                             {item.year}
                         </span>
                     </div>
-                    <p className="text-gray-500 leading-relaxed text-sm">{item.description}</p>
+                    <p className="text-gray-500 leading-relaxed font-medium">{item.description}</p>
                 </div>
             </div>
         </motion.div>
@@ -93,21 +94,21 @@ export default function AboutPage() {
             year: '2023',
             icon: Music,
             color: 'from-amber-500 to-orange-500',
-            description: 'Existing solutions were either too complex or cost $3,000+ annually. Independent instructors needed something better.'
+            description: 'Existing solutions were either too complex or cost thousands annually. Independent instructors needed something better.'
         },
         {
             title: 'The Solution',
             year: '2024',
             icon: Code,
             color: 'from-indigo-500 to-indigo-600',
-            description: 'Built StudioSync as an all-in-one platform: scheduling, billing, student management, and communication in one beautiful interface.'
+            description: 'Built StudioSync as an all-in-one platform: scheduling, billing, and communication in one beautiful interface.'
         },
         {
             title: 'Open Source',
             year: '2024',
             icon: Github,
             color: 'from-gray-700 to-gray-900',
-            description: 'Made it open source and affordable for all. Because every instructor deserves professional tools without breaking the bank.'
+            description: 'Made it open source and affordable for all. Because every instructor deserves professional tools regardless of studio size.'
         }
     ]
 
@@ -115,28 +116,33 @@ export default function AboutPage() {
         <>
             <Navigation />
 
-            <main className="bg-gray-50">
+            <main className="min-h-screen bg-gray-50 relative overflow-hidden">
+                {/* Background Decorations */}
+                <div className="absolute top-0 left-0 w-full h-[800px] bg-gradient-to-b from-white via-indigo-50/30 to-transparent pointer-events-none" />
+                <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-purple-100/50 rounded-full blur-[120px] pointer-events-none" />
+                <div className="absolute top-[60%] left-[-10%] w-[600px] h-[600px] bg-indigo-100/40 rounded-full blur-[120px] pointer-events-none" />
+
                 {/* Hero Section */}
-                <section className="bg-white border-b border-gray-100 px-4 py-20 md:py-28">
-                    <div className="max-w-4xl mx-auto text-center">
+                <section className="relative px-4 py-24 md:py-32 overflow-hidden">
+                    <div className="max-w-4xl mx-auto text-center relative z-10">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6 }}
                         >
-                            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-sm font-medium mb-6">
-                                <Sparkles className="w-3.5 h-3.5" />
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-sm font-bold mb-8">
+                                <Sparkles className="w-4 h-4" />
                                 Our Story
                             </div>
 
-                            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight text-gray-900">
+                            <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight text-gray-900 tracking-tight">
                                 Built by teachers,{' '}
-                                <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                                <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-500 bg-clip-text text-transparent">
                                     for teachers
                                 </span>
                             </h1>
 
-                            <p className="text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
+                            <p className="text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed font-medium">
                                 Empowering music instructors with tools that make studio management effortless,
                                 so you can focus on what you love—teaching music.
                             </p>
@@ -144,172 +150,179 @@ export default function AboutPage() {
                     </div>
                 </section>
 
-                {/* Mission Section */}
-                <section className="px-4 py-20">
-                    <div className="max-w-4xl mx-auto">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
-                        >
-                            <div className="p-8 md:p-10">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                                        <Music className="w-5 h-5 text-white" />
+                <div className="relative z-10">
+                    {/* Mission Section */}
+                    <section className="px-4 pb-24">
+                        <div className="max-w-4xl mx-auto">
+                            <motion.div
+                                initial={{ opacity: 0, y: 30 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.7 }}
+                                className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl shadow-indigo-500/5 overflow-hidden group"
+                            >
+                                <div className="p-10 md:p-14 relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full -mr-32 -mt-32 blur-3xl opacity-50 group-hover:opacity-80 transition-opacity" />
+                                    <div className="flex items-center gap-4 mb-8">
+                                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg">
+                                            <Music className="w-6 h-6 text-white" />
+                                        </div>
+                                        <h2 className="text-3xl font-bold text-gray-900">Our Mission</h2>
                                     </div>
-                                    <h2 className="text-2xl font-bold text-gray-900">Our Mission</h2>
-                                </div>
-                                <div className="space-y-4 text-gray-500 leading-relaxed">
-                                    <p>
-                                        StudioSync was built with a simple mission: to give music instructors and studio owners back their time
-                                        so they can focus on what they love most—teaching music.
-                                    </p>
-                                    <p>
-                                        We believe that managing a music studio shouldn't require juggling spreadsheets, multiple apps, and
-                                        endless paperwork. That's why we created an all-in-one platform that handles scheduling, billing,
-                                        student management, and communication in one beautiful, intuitive interface.
-                                    </p>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
-                </section>
-
-                {/* Values Section */}
-                <section className="px-4 pb-20">
-                    <div className="max-w-6xl mx-auto">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            className="text-center mb-12"
-                        >
-                            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
-                                Our Values
-                            </h2>
-                            <p className="text-lg text-gray-500">
-                                The principles that guide everything we build
-                            </p>
-                        </motion.div>
-
-                        <div className="grid md:grid-cols-3 gap-5">
-                            {values.map((value, index) => (
-                                <ValueCard key={index} value={value} index={index} />
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* Timeline Section */}
-                <section className="px-4 pb-20">
-                    <div className="max-w-4xl mx-auto">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            className="text-center mb-12"
-                        >
-                            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
-                                The Journey
-                            </h2>
-                            <p className="text-lg text-gray-500">
-                                From frustration to solution
-                            </p>
-                        </motion.div>
-
-                        <div className="space-y-4">
-                            {timeline.map((item, index) => (
-                                <TimelineItem key={index} item={item} index={index} />
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* Open Source Section */}
-                <section className="px-4 pb-20">
-                    <div className="max-w-4xl mx-auto">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            className="bg-gray-900 rounded-2xl overflow-hidden relative"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/15 via-transparent to-purple-600/15" />
-
-                            <div className="relative p-8 md:p-10 text-white">
-                                <div className="flex items-center gap-3 mb-5">
-                                    <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
-                                        <Github className="w-5 h-5" />
+                                    <div className="space-y-6 text-gray-500 text-lg leading-relaxed font-medium">
+                                        <p>
+                                            StudioSync was built with a simple mission: to give music instructors and studio owners back their time
+                                            so they can focus on what they love most—teaching music.
+                                        </p>
+                                        <p>
+                                            We believe that managing a music studio shouldn't require juggling spreadsheets, multiple apps, and
+                                            endless paperwork. That's why we created an all-in-one platform that handles scheduling, billing,
+                                            student management, and communication in one beautiful, intuitive interface.
+                                        </p>
                                     </div>
-                                    <h2 className="text-2xl font-bold">Open Source & Free</h2>
                                 </div>
-                                <div className="space-y-3 text-gray-300 leading-relaxed mb-6">
-                                    <p>
-                                        StudioSync is proudly open source. We believe in transparency, community collaboration, and giving
-                                        instructors the freedom to customize and self-host their own solution.
-                                    </p>
-                                    <p>
-                                        The code is available on GitHub, and contributions are always welcome. Because the best software
-                                        is built by the people who actually use it.
-                                    </p>
-                                </div>
-                                <a
-                                    href="https://github.com/aviatorcards/StudioSync"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-gray-900 rounded-xl hover:bg-gray-100 transition-colors font-semibold text-sm"
-                                >
-                                    <Github className="w-4 h-4" />
-                                    View on GitHub
-                                    <ArrowRight className="w-4 h-4" />
-                                </a>
-                                <p className="text-xs text-gray-500 mt-3">
-                                    Self-hosting instructions and deployment guides available in the repository
-                                </p>
-                            </div>
-                        </motion.div>
-                    </div>
-                </section>
+                            </motion.div>
+                        </div>
+                    </section>
 
-                {/* CTA Section */}
-                <section className="px-4 pb-20">
-                    <div className="max-w-4xl mx-auto">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.97 }}
-                            whileInView={{ opacity: 1, scale: 1 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5 }}
-                            className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
-                        >
-                            <div className="px-8 py-14 md:p-14 text-center">
-                                <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
-                                    Ready to transform your studio?
+                    {/* Values Section */}
+                    <section className="px-4 pb-24">
+                        <div className="max-w-6xl mx-auto">
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                className="text-center mb-16"
+                            >
+                                <h2 className="text-4xl md:text-5xl font-bold mb-5 text-gray-900 tracking-tight">
+                                    Our Values
                                 </h2>
-                                <p className="text-lg mb-8 text-gray-500 max-w-2xl mx-auto">
-                                    Try StudioSync and see how it can streamline your studio operations.
+                                <p className="text-xl text-gray-500 font-medium max-w-2xl mx-auto">
+                                    The principles that guide every pixel and line of code we write.
                                 </p>
+                            </motion.div>
 
-                                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                                    <Link
-                                        href="/signup"
-                                        className="inline-flex items-center gap-2 px-7 py-3.5 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-colors"
-                                    >
-                                        Start Free Trial
-                                        <ArrowRight className="w-4 h-4" />
-                                    </Link>
-
-                                    <Link
-                                        href="/pricing"
-                                        className="inline-flex items-center gap-2 px-7 py-3.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-100 transition-colors"
-                                    >
-                                        View Pricing
-                                    </Link>
-                                </div>
+                            <div className="grid md:grid-cols-3 gap-8">
+                                {values.map((value, index) => (
+                                    <ValueCard key={index} value={value} index={index} />
+                                ))}
                             </div>
-                        </motion.div>
-                    </div>
-                </section>
+                        </div>
+                    </section>
+
+                    {/* Timeline Section */}
+                    <section className="px-4 pb-24">
+                        <div className="max-w-4xl mx-auto">
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                className="text-center mb-16"
+                            >
+                                <h2 className="text-4xl md:text-5xl font-bold mb-5 text-gray-900 tracking-tight">
+                                    The Journey
+                                </h2>
+                                <p className="text-xl text-gray-500 font-medium">
+                                    From frustration to a global solution.
+                                </p>
+                            </motion.div>
+
+                            <div className="space-y-6">
+                                {timeline.map((item, index) => (
+                                    <TimelineItem key={index} item={item} index={index} />
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Open Source Section */}
+                    <section className="px-4 pb-24">
+                        <div className="max-w-4xl mx-auto">
+                            <motion.div
+                                initial={{ opacity: 0, y: 30 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                className="bg-gray-900 rounded-[2.5rem] overflow-hidden relative shadow-2xl shadow-indigo-900/20 group"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-transparent to-purple-500/20" />
+                                <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+
+                                <div className="relative p-12 md:p-16 text-white text-center md:text-left">
+                                    <div className="flex flex-col md:flex-row items-center gap-6 mb-8">
+                                        <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20 backdrop-blur-sm shadow-xl">
+                                            <Github className="w-8 h-8" />
+                                        </div>
+                                        <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Open Source & Free</h2>
+                                    </div>
+                                    <div className="space-y-6 text-gray-300 text-lg leading-relaxed mb-10 font-medium max-w-3xl">
+                                        <p>
+                                            StudioSync is proudly open source. We believe in transparency, community collaboration, and giving
+                                            instructors the freedom to customize and self-host their own solution.
+                                        </p>
+                                        <p>
+                                            The code is available on GitHub, and contributions are always welcome. Because the best software
+                                            is built by the people who actually use it every single day.
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                                        <a
+                                            href="https://github.com/aviatorcards/StudioSync"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="px-8 py-4 bg-white text-gray-900 rounded-2xl hover:bg-gray-100 transition-all font-bold flex items-center gap-3 shadow-lg active:scale-95"
+                                        >
+                                            <Github className="w-5 h-5" />
+                                            View on GitHub
+                                            <ArrowRight className="w-5 h-5 ml-2" />
+                                        </a>
+                                        <p className="text-sm text-gray-500 font-medium">
+                                            Self-hosting guides available inside
+                                        </p>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
+                    </section>
+
+                    {/* CTA Section */}
+                    <section className="px-4 pb-32">
+                        <div className="max-w-4xl mx-auto">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.97 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.5 }}
+                                className="bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-[3rem] overflow-hidden shadow-2xl shadow-indigo-500/20"
+                            >
+                                <div className="px-10 py-16 md:p-20 text-center relative overflow-hidden">
+                                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent" />
+                                    <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white tracking-tight relative z-10">
+                                        Join the movement.
+                                    </h2>
+                                    <p className="text-xl mb-10 text-indigo-100 max-w-2xl mx-auto font-medium relative z-10">
+                                        Experience the all-in-one platform built specifically for the modern music educator.
+                                    </p>
+
+                                    <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
+                                        <Link
+                                            href="/signup"
+                                            className="px-10 py-4 bg-white text-indigo-600 rounded-[1.5rem] font-bold shadow-xl hover:shadow-2xl transition-all active:scale-95"
+                                        >
+                                            Start Free Trial
+                                        </Link>
+
+                                        <Link
+                                            href="/pricing"
+                                            className="px-10 py-4 bg-indigo-500/20 border border-white/20 text-white rounded-[1.5rem] font-bold backdrop-blur-sm hover:bg-white/10 transition-all active:scale-95"
+                                        >
+                                            View Pricing
+                                        </Link>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
+                    </section>
+                </div>
             </main>
 
             <Footer />

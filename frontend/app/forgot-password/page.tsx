@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { Mail, Loader2, AlertCircle, CheckCircle, ArrowLeft, Send } from 'lucide-react'
 import Link from 'next/link'
+import { Logo } from '@/components/Logo'
+import { motion } from 'framer-motion'
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('')
@@ -23,7 +25,7 @@ export default function ForgotPasswordPage() {
             })
 
             if (!res.ok) {
-                throw new Error('Failed to send reset email')
+                throw new Error('No account found with this email address')
             }
 
             setSuccess(true)
@@ -35,102 +37,119 @@ export default function ForgotPasswordPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-6 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white via-[#F8FAFC] to-gray-100">
-            <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
+            {/* Background Orbs */}
+            <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-indigo-50 rounded-full blur-3xl opacity-50 -translate-x-1/2 -translate-y-1/2" />
+            <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-50 rounded-full blur-3xl opacity-50 translate-x-1/2 translate-y-1/2" />
+
+            <div className="w-full max-w-md relative z-10">
                 <div className="text-center mb-10">
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-[2.5rem] bg-white shadow-xl shadow-gray-100 mb-6 border border-gray-50 transform hover:scale-110 transition-transform duration-500">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                            <Mail className="w-6 h-6 text-primary" />
-                        </div>
+                    <div className="flex justify-center mb-8">
+                        <Logo className="h-10 w-auto" />
                     </div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-3">
-                        Lost Access?
-                    </h1>
-                    <p className="text-gray-500 font-medium px-4 leading-relaxed">
-                        Enter your professional email address and we&apos;ll orchestrate a secure recovery link.
-                    </p>
+                    
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                    >
+                        <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-3">
+                            Reset your password
+                        </h1>
+                        <p className="text-gray-500 font-medium">
+                            We&apos;ll send you a link to get back into your account.
+                        </p>
+                    </motion.div>
                 </div>
 
-                <div className="bg-white p-10 rounded-[3rem] shadow-2xl shadow-gray-200/50 border border-gray-100 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-primary/10 transition-colors duration-700" />
-
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4, delay: 0.1 }}
+                    className="bg-white p-8 md:p-10 rounded-2xl shadow-xl shadow-indigo-100/50 border border-gray-100"
+                >
                     {success ? (
                         <div className="text-center py-4 space-y-6">
-                            <div className="mx-auto flex items-center justify-center w-16 h-16 rounded-3xl bg-green-50 animate-bounce">
-                                <CheckCircle className="w-8 h-8 text-green-500" />
+                            <div className="mx-auto flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600">
+                                <CheckCircle className="w-8 h-8" />
                             </div>
                             <div>
-                                <h3 className="text-2xl font-black text-gray-900 mb-2 tracking-tight">Email Dispatched</h3>
-                                <p className="text-gray-500 text-sm font-medium leading-relaxed px-2">
-                                    We&apos;ve sent a password reset link to <span className="text-gray-900 font-bold underline decoration-primary/30 underline-offset-4">{email}</span>
+                                <h3 className="text-xl font-bold text-gray-900 mb-2">Check your email</h3>
+                                <p className="text-gray-500 text-sm leading-relaxed">
+                                    We&apos;ve sent a password reset link to <br />
+                                    <span className="text-gray-900 font-semibold">{email}</span>
                                 </p>
                             </div>
                             <div className="pt-4">
                                 <Link
                                     href="/login"
-                                    className="inline-flex items-center justify-center gap-2 text-sm font-black text-primary hover:gap-3 transition-all"
+                                    className="inline-flex items-center justify-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors"
                                 >
                                     <ArrowLeft className="w-4 h-4" />
-                                    RETURN TO SIGN IN
+                                    Back to sign in
                                 </Link>
                             </div>
                         </div>
                     ) : (
-                        <form className="space-y-8" onSubmit={handleSubmit}>
+                        <form className="space-y-6" onSubmit={handleSubmit}>
                             {error && (
-                                <div className="bg-red-50/50 border border-red-100 rounded-2xl p-4 flex items-center gap-4 text-red-600 animate-in slide-in-from-top-2">
+                                <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-center gap-3 text-red-600 animate-in slide-in-from-top-2">
                                     <AlertCircle className="w-5 h-5 shrink-0" />
-                                    <p className="text-xs font-bold uppercase tracking-wider leading-relaxed">{error}</p>
+                                    <p className="text-sm font-medium">{error}</p>
                                 </div>
                             )}
 
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Professional Email</label>
-                                <div className="relative group/input">
-                                    <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                                        <Mail className="h-5 w-5 text-gray-300 group-focus-within/input:text-primary transition-colors" />
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-gray-700 ml-1">Email address</label>
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <Mail className="h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
                                     </div>
                                     <input
                                         type="email"
                                         required
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full pl-14 pr-5 py-4 bg-gray-50/50 border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-[1.5rem] outline-none font-bold text-gray-900 text-sm transition-all shadow-sm focus:shadow-xl focus:shadow-primary/5"
+                                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 focus:border-indigo-600 focus:bg-white rounded-xl outline-none font-medium text-gray-900 text-sm transition-all shadow-sm"
                                         placeholder="you@studio.com"
                                     />
                                 </div>
                             </div>
 
-                            <div className="space-y-4 pt-2">
-                                <button
-                                    type="submit"
-                                    disabled={isLoading}
-                                    className="w-full py-5 bg-primary text-white rounded-[2rem] font-black text-xs uppercase tracking-widest hover:bg-primary/90 transition-all shadow-xl shadow-primary/25 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 relative group/btn overflow-hidden"
-                                >
-                                    <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000" />
-                                    {isLoading ? (
-                                        <>
-                                            <Loader2 className="w-5 h-5 animate-spin" />
-                                            <span>AUTHORIZING...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Send className="w-4 h-4" />
-                                            <span>SEND RECOVERY LINK</span>
-                                        </>
-                                    )}
-                                </button>
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full py-3.5 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-all shadow-lg active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3"
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span>Sending...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Send className="w-4 h-4" />
+                                        <span>Send reset link</span>
+                                    </>
+                                )}
+                            </button>
 
+                            <div className="text-center">
                                 <Link
                                     href="/login"
-                                    className="block text-center text-[10px] font-black text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-widest"
+                                    className="text-sm font-bold text-gray-400 hover:text-gray-900 transition-colors"
                                 >
-                                    Cancel and return to login
+                                    Back to login
                                 </Link>
                             </div>
                         </form>
                     )}
-                </div>
+                </motion.div>
+                
+                <p className="mt-8 text-center text-xs text-gray-400">
+                    Don&apos;t have an account?{' '}
+                    <Link href="/signup" className="text-indigo-600 font-bold hover:underline">Sign up</Link>
+                </p>
             </div>
         </div>
     )

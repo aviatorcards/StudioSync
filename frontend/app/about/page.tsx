@@ -46,11 +46,8 @@ function TimelineItem({ item, index }: any) {
                     <item.icon className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="mb-2">
                         <h4 className="text-xl font-bold text-gray-900">{item.title}</h4>
-                        <span className="text-sm px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 font-bold border border-indigo-100">
-                            {item.year}
-                        </span>
                     </div>
                     <p className="text-gray-500 leading-relaxed font-medium">{item.description}</p>
                 </div>
@@ -83,32 +80,28 @@ export default function AboutPage() {
 
     const timeline = [
         {
-            title: 'The Problem',
-            year: '2023',
+            title: 'The Challenge',
             icon: Target,
             color: 'from-red-500 to-pink-500',
-            description: 'Managing a growing music studio with spreadsheets and multiple apps became unsustainable. Hours lost to admin work instead of teaching.'
+            description: 'Managing a growing music studio with manual spreadsheets and disconnected apps was unsustainable. Teachers were losing hours to administration instead of doing what they love: teaching.'
         },
         {
-            title: 'The Search',
-            year: '2023',
+            title: 'The Discovery',
             icon: Music,
             color: 'from-amber-500 to-orange-500',
-            description: 'Existing solutions were either too complex or cost thousands annually. Independent instructors needed something better.'
+            description: 'Existing tools were often overly complex, outdated, or prohibitively expensive for independent instructors. We knew there had to be a better way to support the music education community.'
         },
         {
-            title: 'The Solution',
-            year: '2024',
+            title: 'The Innovation',
             icon: Code,
             color: 'from-indigo-500 to-indigo-600',
-            description: 'Built StudioSync as an all-in-one platform: scheduling, billing, and communication in one beautiful interface.'
+            description: 'We built StudioSync to unify everything. Scheduling, billing, and communication now live in a single, elegant interface designed to flow with the rhythm of a music studio.'
         },
         {
-            title: 'Open Source',
-            year: '2024',
+            title: 'Open For All',
             icon: Github,
             color: 'from-gray-700 to-gray-900',
-            description: 'Made it open source and affordable for all. Because every instructor deserves professional tools regardless of studio size.'
+            description: 'We chose to make StudioSync open source to ensure professional-grade tools are accessible to every instructor, regardless of studio size. No gatekeeping, just pure empowerment.'
         }
     ]
 
@@ -220,10 +213,10 @@ export default function AboutPage() {
                                 className="text-center mb-16"
                             >
                                 <h2 className="text-4xl md:text-5xl font-bold mb-5 text-gray-900 tracking-tight">
-                                    The Journey
+                                    The Evolution
                                 </h2>
                                 <p className="text-xl text-gray-500 font-medium">
-                                    From frustration to a global solution.
+                                    How we went from solving a personal challenge to empowering music educators everywhere.
                                 </p>
                             </motion.div>
 
@@ -308,7 +301,7 @@ export default function AboutPage() {
                                             href="/signup"
                                             className="px-10 py-4 bg-white text-indigo-600 rounded-[1.5rem] font-bold shadow-xl hover:shadow-2xl transition-all active:scale-95"
                                         >
-                                            Start Free Trial
+                                            Get Started Now
                                         </Link>
 
                                         <Link

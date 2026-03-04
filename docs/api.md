@@ -17,7 +17,7 @@ StudioSync uses JSON Web Tokens (JWT) for API authentication.
 
 #### Obtaining Tokens
 
-**Endpoint:** `POST /api/auth/login/`
+**Endpoint:** `POST /api/auth/token/`
 
 **Request:**
 
@@ -54,7 +54,7 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
 
 #### Refreshing Tokens
 
-**Endpoint:** `POST /api/auth/refresh/`
+**Endpoint:** `POST /api/auth/token/refresh/`
 
 **Request:**
 
@@ -71,12 +71,6 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
   "access": "new_access_token_here"
 }
 ```
-
-#### Logout
-
-**Endpoint:** `POST /api/auth/logout/`
-
-Invalidates the refresh token.
 
 ## Core Endpoints
 
@@ -121,7 +115,7 @@ PATCH /api/core/users/me/
 #### Change Password
 
 ```
-POST /api/core/users/change-password/
+POST /api/core/users/change_password/
 ```
 
 **Request:**
@@ -1035,30 +1029,6 @@ const ws = new WebSocket(
     "message": "You have a new message from John Doe"
   }
 }
-```
-
-## SDKs & Libraries
-
-Official client libraries:
-
-- **JavaScript/TypeScript**: `@studiosync/js-sdk`
-- **Python**: `studiosync-python`
-- **React Hooks**: `@studiosync/react-hooks`
-
-**Example (JavaScript):**
-
-```javascript
-import StudioSync from "@studiosync/js-sdk";
-
-const client = new StudioSync({
-  apiUrl: "http://localhost:8000/api",
-  token: "your-jwt-token",
-});
-
-const lessons = await client.lessons.list({
-  student: "student-uuid",
-  status: "scheduled",
-});
 ```
 
 ## Related Documentation

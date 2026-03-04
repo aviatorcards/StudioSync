@@ -157,8 +157,8 @@ const features = [
       overview: 'Multi-channel communication system to keep everyone connected. Send automated reminders, direct messages, and announcements through email, SMS, or in-app notifications.',
       capabilities: [
         'In-app messaging between teachers, students, and parents',
-        'Email notifications via SendGrid',
-        'SMS notifications via Twilio',
+        'Automatic email notifications',
+        'SMS notifications and alerts',
         'Automated lesson reminders',
         'Invoice and payment notifications',
         'Read/unread tracking',
@@ -298,7 +298,7 @@ function FeatureModal({ feature, isOpen, onClose }: { feature: typeof features[0
                         href="/signup"
                         className="inline-flex items-center gap-2 px-8 py-3.5 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-colors"
                       >
-                        Get Started Free
+                        Get Started Now
                         <ArrowRight className="w-4 h-4" />
                       </Link>
                     </div>
@@ -443,7 +443,7 @@ export default function Home() {
                   href="/signup"
                   className="group px-7 py-3.5 bg-gray-900 text-white rounded-xl font-semibold text-base hover:bg-gray-800 transition-all flex items-center gap-2 shadow-lg shadow-gray-900/10"
                 >
-                  Start Free Trial
+                  Get Started Now
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
 
@@ -454,7 +454,7 @@ export default function Home() {
               </div>
 
               <p className="mt-6 text-sm text-gray-400">
-                No credit card required · 30-day free trial · Cancel anytime
+                Free and open-source · Easy deployment · Community supported
               </p>
             </motion.div>
 
@@ -587,7 +587,7 @@ export default function Home() {
                     href="/signup"
                     className="inline-flex items-center gap-2 px-7 py-3.5 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-100 transition-colors"
                   >
-                    Start Your Free Trial
+                    Get Started Now
                     <ArrowRight className="w-4 h-4" />
                   </Link>
 
@@ -602,15 +602,15 @@ export default function Home() {
                 <div className="mt-8 flex items-center justify-center gap-5 text-sm text-gray-400">
                   <div className="flex items-center gap-1.5">
                     <Check className="w-3.5 h-3.5" />
-                    30-day free trial
+                    Open source
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Check className="w-3.5 h-3.5" />
-                    No credit card required
+                    Self-hosted
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Check className="w-3.5 h-3.5" />
-                    Cancel anytime
+                    Docker ready
                   </div>
                 </div>
               </div>

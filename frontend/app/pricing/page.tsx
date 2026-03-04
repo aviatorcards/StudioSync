@@ -17,7 +17,8 @@ import {
     ArrowRight,
     X,
     Code,
-    ChevronDown
+    ChevronDown,
+    Clock
 } from 'lucide-react'
 
 function PricingCard({ plan, index, onSelect }: any) {
@@ -60,9 +61,14 @@ function PricingCard({ plan, index, onSelect }: any) {
                         ) : plan.price === 'Free' ? (
                             <div className="text-3xl font-bold text-gray-900">Free</div>
                         ) : (
-                            <div className="flex items-baseline">
-                                <span className="text-4xl font-bold text-gray-900">${plan.price}</span>
-                                <span className="text-gray-400 ml-1.5 text-sm">/month</span>
+                             <div className="flex flex-col">
+                                <div className="flex items-baseline">
+                                    <span className="text-4xl font-bold text-gray-900">${plan.price}</span>
+                                    <span className="text-gray-400 ml-1.5 text-sm">/month</span>
+                                </div>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-500 mt-1">
+                                    Tentative Pricing
+                                </span>
                             </div>
                         )}
                     </div>
@@ -100,7 +106,7 @@ function PricingCard({ plan, index, onSelect }: any) {
 
                     {plan.featured && (
                         <p className="text-xs text-center text-gray-400 mt-3">
-                            14-day free trial · No credit card required
+                            Free forever with self-hosting
                         </p>
                     )}
                 </div>
@@ -265,7 +271,7 @@ export default function PricingPage() {
             price: '29',
             color: 'from-indigo-500 to-purple-500',
             icon: TrendingUp,
-            cta: 'Start Free Trial',
+            cta: 'Get Started',
             featured: true,
             features: [
                 { text: 'Unlimited students', included: true },
@@ -299,28 +305,24 @@ export default function PricingPage() {
 
     const faqs = [
         {
-            question: 'Is there a free trial?',
-            answer: 'Yes! The Professional plan comes with a 14-day free trial. No credit card required. You can explore all features and decide if it\'s right for your studio.'
+            question: 'Is there a free version?',
+            answer: 'Yes! StudioSync is open-source and free to self-host on your own infrastructure. Our cloud-hosted plans provide a managed experience for those who prefer not to handle the technical setup.'
         },
         {
-            question: 'Can I change plans later?',
-            answer: 'Absolutely. You can upgrade or downgrade at any time. Changes take effect immediately, and we\'ll prorate any charges.'
+            question: 'How do I self-host?',
+            answer: 'You can find our source code and deployment guides on GitHub. We provide a Docker Compose configuration that makes it easy to get started on any server.'
         },
         {
             question: 'What payment methods do you accept?',
-            answer: 'We accept all major credit cards (Visa, MasterCard, American Express) and ACH bank transfers for annual plans.'
+            answer: 'For our cloud-hosted plans, we accept all major credit cards (Visa, MasterCard, American Express) and ACH bank transfers.'
         },
         {
             question: 'Is my data secure?',
-            answer: 'Yes. We use industry-standard encryption and security practices to protect your data. All data is encrypted in transit and at rest, and we perform regular security audits.'
+            answer: 'Yes. Whether you use our cloud hosting or self-host, we prioritize security. Our code follows industry-standard security practices, including data encryption and regular audits.'
         },
         {
-            question: 'Can I cancel anytime?',
-            answer: 'Yes, you can cancel your subscription at any time. There are no long-term contracts or cancellation fees. Your data will remain accessible for 30 days after cancellation.'
-        },
-        {
-            question: 'Do you offer discounts for annual billing?',
-            answer: 'Yes! Save 20% when you pay annually. Contact us at sales@studiosync.app for annual pricing options.'
+            question: 'Can I migrate from cloud to self-hosted?',
+            answer: 'Yes, you can export your data at any time. We believe in data ownership and provide tools to help you move your studio data between hosting environments.'
         }
     ]
 
@@ -364,15 +366,15 @@ export default function PricingPage() {
                             <div className="flex items-center justify-center gap-5 text-sm text-gray-400">
                                 <div className="flex items-center gap-1.5">
                                     <Check className="w-3.5 h-3.5 text-emerald-500" />
-                                    30-day free trial
+                                    Open-source
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                     <Check className="w-3.5 h-3.5 text-emerald-500" />
-                                    No credit card required
+                                    Self-hostable
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                     <Check className="w-3.5 h-3.5 text-emerald-500" />
-                                    Cancel anytime
+                                    No Lock-in
                                 </div>
                             </div>
                         </motion.div>
@@ -423,7 +425,12 @@ export default function PricingPage() {
                                                     </svg>
                                                 </div>
                                                 <div>
-                                                    <h3 className="font-bold text-gray-900 text-sm mb-0.5">Cloud Hosted</h3>
+                                                    <div className="flex items-center gap-2 mb-0.5">
+                                                        <h3 className="font-bold text-gray-900 text-sm">Cloud Hosted</h3>
+                                                        <span className="text-[8px] font-bold uppercase tracking-widest bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded border border-amber-100">
+                                                            Soon
+                                                        </span>
+                                                    </div>
                                                     <p className="text-xs text-gray-500">We manage everything — updates, backups, and infrastructure.</p>
                                                 </div>
                                             </div>
@@ -459,11 +466,15 @@ export default function PricingPage() {
                             viewport={{ once: true }}
                             className="text-center mb-12"
                         >
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-100 text-amber-700 text-[10px] font-bold uppercase tracking-wider mb-4 mx-auto">
+                                <Clock className="w-3 h-3" />
+                                Coming Soon
+                            </div>
                             <h2 className="text-3xl md:text-4xl font-bold mb-3 text-gray-900">
                                 Cloud-Hosted Plans
                             </h2>
                             <p className="text-gray-500">
-                                Or self-host for free using our open-source code
+                                Or self-host for free today using our open-source code
                             </p>
                         </motion.div>
 
@@ -576,7 +587,7 @@ export default function PricingPage() {
                                         href="/signup"
                                         className="inline-flex items-center gap-2 px-7 py-3.5 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-100 transition-colors"
                                     >
-                                        Start Your Free Trial
+                                        Get Started Now
                                         <ArrowRight className="w-4 h-4" />
                                     </Link>
 

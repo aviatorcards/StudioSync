@@ -18,16 +18,17 @@ import {
   Music,
   Sparkles,
   Star,
-  X
+  X,
+  ChevronRight
 } from 'lucide-react'
 
 const features = [
   {
     icon: GraduationCap,
     title: 'Students',
-    description: 'Manage students, bands, and track progress',
-    color: 'from-earth-primary to-earth-dark',
-    size: 'large',
+    description: 'Manage students, bands, and track progress with detailed profiles and skill assessments.',
+    color: 'from-indigo-500 to-indigo-600',
+    iconBg: 'bg-indigo-50 text-indigo-600',
     details: {
       overview: 'Comprehensive student management system designed for music studios. Track individual progress, organize by bands or groups, and maintain detailed profiles for each student.',
       capabilities: [
@@ -49,9 +50,9 @@ const features = [
   {
     icon: Calendar,
     title: 'Scheduling',
-    description: 'Smart calendar with recurring lessons',
-    color: 'from-olive-primary to-olive-dark',
-    size: 'medium',
+    description: 'Smart calendar with recurring lessons, conflict detection, and calendar sync.',
+    color: 'from-emerald-500 to-teal-500',
+    iconBg: 'bg-emerald-50 text-emerald-600',
     details: {
       overview: 'Intelligent scheduling system that handles private lessons, group sessions, and recurring patterns. Built-in conflict detection ensures no double-bookings.',
       capabilities: [
@@ -74,9 +75,9 @@ const features = [
   {
     icon: DollarSign,
     title: 'Billing',
-    description: 'Automated invoices and payment tracking',
-    color: 'from-earth-light to-earth-primary',
-    size: 'medium',
+    description: 'Automated invoices, payment tracking, and consolidated band-level billing.',
+    color: 'from-purple-500 to-indigo-500',
+    iconBg: 'bg-purple-50 text-purple-600',
     details: {
       overview: 'Complete billing solution for music studios. Generate invoices automatically from lessons, track payments, and manage multiple payment methods.',
       capabilities: [
@@ -99,9 +100,9 @@ const features = [
   {
     icon: Notebook,
     title: 'Lesson Notes',
-    description: 'Rich lesson documentation and assignments',
-    color: 'from-olive-light to-olive-primary',
-    size: 'small',
+    description: 'Rich lesson documentation, assignments, and progress tracking for students.',
+    color: 'from-amber-500 to-orange-500',
+    iconBg: 'bg-amber-50 text-amber-600',
     details: {
       overview: 'Detailed lesson documentation system that helps teachers track student progress and assign practice materials. Students and parents can view notes and assignments.',
       capabilities: [
@@ -124,9 +125,9 @@ const features = [
   {
     icon: Library,
     title: 'Resources',
-    description: 'Digital library and lending management',
-    color: 'from-earth-lighter to-earth-light',
-    size: 'small',
+    description: 'Digital library, physical item lending, and organized resource sharing.',
+    color: 'from-cyan-500 to-blue-500',
+    iconBg: 'bg-cyan-50 text-cyan-600',
     details: {
       overview: 'Comprehensive resource management for both digital files and physical items. Share sheet music, recordings, and track instrument loans.',
       capabilities: [
@@ -149,9 +150,9 @@ const features = [
   {
     icon: MessageCircle,
     title: 'Messaging',
-    description: 'Communication with email and SMS',
-    color: 'from-neutral-medium to-neutral-dark',
-    size: 'small',
+    description: 'Multi-channel communication with email, SMS, and in-app notifications.',
+    color: 'from-pink-500 to-rose-500',
+    iconBg: 'bg-pink-50 text-pink-600',
     details: {
       overview: 'Multi-channel communication system to keep everyone connected. Send automated reminders, direct messages, and announcements through email, SMS, or in-app notifications.',
       capabilities: [
@@ -197,37 +198,7 @@ const testimonials = [
   }
 ]
 
-
-
-// Optimized FloatingOrb using CSS animations instead of Framer Motion
-// CSS animations are GPU-accelerated and don't cause main thread jank
-function FloatingOrb({
-  size = 300,
-  opacity = 0.15,
-  color = 'earth-primary',
-  variant = 'default',
-  className = ''
-}: {
-  size?: number
-  opacity?: number
-  color?: string
-  variant?: 'default' | 'alt'
-  className?: string
-}) {
-  return (
-    <div
-      className={`absolute rounded-full blur-xl bg-${color} ${variant === 'alt' ? 'animate-float-orb-alt' : 'animate-float-orb'} ${className}`}
-      style={{
-        width: size,
-        height: size,
-        opacity: opacity,
-      }}
-    />
-  )
-}
-
 function FeatureModal({ feature, isOpen, onClose }: { feature: typeof features[0] | null, isOpen: boolean, onClose: () => void }) {
-  // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
@@ -245,16 +216,14 @@ function FeatureModal({ feature, isOpen, onClose }: { feature: typeof features[0
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop - reduced blur for better performance */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 z-50"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
           />
 
-          {/* Modal */}
           <div className="fixed inset-0 z-50 overflow-y-auto">
             <div className="min-h-full flex items-center justify-center p-4">
               <motion.div
@@ -265,124 +234,76 @@ function FeatureModal({ feature, isOpen, onClose }: { feature: typeof features[0
                 className="relative w-full max-w-3xl"
                 onClick={(e) => e.stopPropagation()}
               >
-                {/* Glassmorphic container */}
-                <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-                  {/* Glass background - optimized blur */}
-                  <div className="absolute inset-0 bg-white/95" />
-
-                  {/* Gradient accent bar */}
-                  <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${feature.color}`} />
-
-                  {/* Content */}
-                  <div className="relative max-h-[80vh] overflow-y-auto">
-                    {/* Header */}
-                    <div className="sticky top-0 bg-white border-b border-gray-200 p-6 z-10">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center shadow-lg`}>
-                            <feature.icon className="w-7 h-7 text-white" />
-                          </div>
-                          <div>
-                            <h2 className="text-3xl font-bold text-gray-900">{feature.title}</h2>
-                            <p className="text-gray-600 mt-1">{feature.description}</p>
-                          </div>
+                <div className="bg-white rounded-2xl overflow-hidden shadow-2xl border border-gray-100">
+                  {/* Header */}
+                  <div className="sticky top-0 bg-white border-b border-gray-100 p-6 z-10">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center`}>
+                          <feature.icon className="w-6 h-6 text-white" />
                         </div>
-                        <button
-                          onClick={onClose}
-                          className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
-                        >
-                          <X className="w-6 h-6 text-gray-500" />
-                        </button>
+                        <div>
+                          <h2 className="text-2xl font-bold text-gray-900">{feature.title}</h2>
+                          <p className="text-gray-500 mt-0.5">{feature.description}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+                      >
+                        <X className="w-5 h-5 text-gray-400" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Body */}
+                  <div className="p-6 max-h-[70vh] overflow-y-auto space-y-8">
+                    {/* Overview */}
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Overview</h3>
+                      <p className="text-gray-600 leading-relaxed">{feature.details.overview}</p>
+                    </div>
+
+                    {/* Capabilities */}
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Capabilities</h3>
+                      <div className="space-y-2.5">
+                        {feature.details.capabilities.map((capability, idx) => (
+                          <div key={idx} className="flex items-start gap-3">
+                            <div className="w-5 h-5 rounded-md bg-indigo-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                              <Check className="w-3.5 h-3.5 text-indigo-600" />
+                            </div>
+                            <p className="text-gray-600 text-sm">{capability}</p>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
-                    {/* Body */}
-                    <div className="p-6 space-y-8">
-                      {/* Overview */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                      >
-                        <h3 className="text-xl font-bold text-gray-900 mb-3">Overview</h3>
-                        <p className="text-gray-700 leading-relaxed">{feature.details.overview}</p>
-                      </motion.div>
-
-                      {/* Capabilities */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                      >
-                        <h3 className="text-xl font-bold text-gray-900 mb-4">Capabilities</h3>
-                        <div className="space-y-3">
-                          {feature.details.capabilities.map((capability, idx) => (
-                            <motion.div
-                              key={idx}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: 0.3 + idx * 0.05 }}
-                              className="flex items-start gap-3"
-                            >
-                              <div className={`w-6 h-6 rounded-lg bg-gradient-to-br ${feature.color} flex items-center justify-center flex-shrink-0 mt-0.5`}>
-                                <Check className="w-4 h-4 text-white" />
-                              </div>
-                              <p className="text-gray-700">{capability}</p>
-                            </motion.div>
-                          ))}
-                        </div>
-                      </motion.div>
-
-                      {/* Benefits */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 }}
-                        className="relative rounded-2xl overflow-hidden"
-                      >
-                        {/* Gradient background */}
-                        <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-10`} />
-
-                        <div className="relative p-6">
-                          <h3 className="text-xl font-bold text-gray-900 mb-4">Key Benefits</h3>
-                          <div className="grid md:grid-cols-2 gap-3">
-                            {feature.details.benefits.map((benefit, idx) => (
-                              <motion.div
-                                key={idx}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.5 + idx * 0.05 }}
-                                className="flex items-start gap-2 bg-white/80 rounded-xl p-3"
-                              >
-                                <Sparkles className={`w-5 h-5 flex-shrink-0 mt-0.5 bg-gradient-to-br ${feature.color} bg-clip-text text-transparent`} style={{ WebkitTextFillColor: 'transparent' }} />
-                                <p className="text-gray-700 text-sm">{benefit}</p>
-                              </motion.div>
-                            ))}
+                    {/* Benefits */}
+                    <div className="bg-gray-50 rounded-xl p-6">
+                      <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Key Benefits</h3>
+                      <div className="grid md:grid-cols-2 gap-3">
+                        {feature.details.benefits.map((benefit, idx) => (
+                          <div key={idx} className="flex items-start gap-2.5 bg-white rounded-lg p-3 border border-gray-100">
+                            <Sparkles className="w-4 h-4 text-indigo-500 flex-shrink-0 mt-0.5" />
+                            <p className="text-gray-600 text-sm">{benefit}</p>
                           </div>
-                        </div>
-                      </motion.div>
+                        ))}
+                      </div>
+                    </div>
 
-                      {/* CTA */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.6 }}
-                        className="text-center pt-4"
+                    {/* CTA */}
+                    <div className="text-center pt-2">
+                      <Link
+                        href="/signup"
+                        className="inline-flex items-center gap-2 px-8 py-3.5 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-colors"
                       >
-                        <Link
-                          href="/signup"
-                          className={`inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r ${feature.color} text-white rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all`}
-                        >
-                          Sign Up Now
-                          <ArrowRight className="w-5 h-5" />
-                        </Link>
-                      </motion.div>
+                        Get Started Free
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
                     </div>
                   </div>
                 </div>
-
-                {/* Decorative blur */}
-                <div className={`absolute -bottom-20 -right-20 w-64 h-64 bg-gradient-to-br ${feature.color} rounded-full opacity-20 blur-3xl -z-10`} />
               </motion.div>
             </div>
           </div>
@@ -394,59 +315,33 @@ function FeatureModal({ feature, isOpen, onClose }: { feature: typeof features[0
 
 function FeatureCard({ feature, index, onClick }: { feature: typeof features[0], index: number, onClick: () => void }) {
   const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: "-100px" })
-
-  const sizeClasses: Record<string, string> = {
-    large: 'md:col-span-2 md:row-span-2',
-    medium: 'md:col-span-1 md:row-span-2',
-    small: 'md:col-span-1 md:row-span-1'
-  }
+  const isInView = useInView(ref, { once: true, margin: "-80px" })
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 50 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      className={`group relative ${sizeClasses[feature.size]} rounded-3xl overflow-hidden cursor-pointer`}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+      transition={{ duration: 0.5, delay: index * 0.08 }}
+      className="group bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-lg hover:border-gray-200 transition-all duration-300 cursor-pointer"
       onClick={onClick}
     >
-      {/* Glassmorphic card - optimized with reduced blur */}
-      <div className="absolute inset-0 bg-white/70 border border-white/30 rounded-3xl" />
-
-      {/* Gradient overlay on hover */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-3xl`} />
-
-      {/* Content */}
-      <div className="relative h-full p-8 flex flex-col justify-between">
-        <div>
-          <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-6 transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300`}>
-            <feature.icon className="w-8 h-8 text-white" />
-          </div>
-
-          <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-earth-primary group-hover:to-olive-dark transition-all">
-            {feature.title}
-          </h3>
-
-          <p className="text-gray-600 leading-relaxed">
-            {feature.description}
-          </p>
-        </div>
-
-        {/* Learn more button - shown on all cards */}
-        <div className="mt-8">
-          <motion.div
-            whileHover={{ x: 5 }}
-            className="flex items-center text-earth-dark font-semibold group/btn"
-          >
-            Learn more
-            <ArrowRight className="w-5 h-5 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-          </motion.div>
-        </div>
+      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-5 group-hover:scale-105 transition-transform duration-300`}>
+        <feature.icon className="w-6 h-6 text-white" />
       </div>
 
-      {/* Decorative element */}
-      <div className={`absolute -bottom-20 -right-20 w-40 h-40 bg-gradient-to-br ${feature.color} rounded-full opacity-10 group-hover:opacity-20 blur-2xl transition-opacity duration-500`} />
+      <h3 className="text-lg font-bold text-gray-900 mb-2">
+        {feature.title}
+      </h3>
+
+      <p className="text-gray-500 text-sm leading-relaxed mb-4">
+        {feature.description}
+      </p>
+
+      <div className="flex items-center text-indigo-600 text-sm font-semibold group-hover:gap-2 transition-all">
+        Learn more
+        <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-0.5 transition-transform" />
+      </div>
     </motion.div>
   )
 }
@@ -454,30 +349,29 @@ function FeatureCard({ feature, index, onClick }: { feature: typeof features[0],
 function TestimonialCard({ testimonial, index }: { testimonial: typeof testimonials[0], index: number }) {
   return (
     <motion.div
-      initial={{ opacity: 0, x: -50 }}
-      whileInView={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="bg-white/80 border border-white/40 rounded-2xl p-8 shadow-xl h-full"
+      className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-all"
     >
       <div className="flex gap-1 mb-4">
         {[...Array(testimonial.rating)].map((_, i) => (
-          <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
+          <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
         ))}
       </div>
 
-      <p className="text-gray-700 mb-6 leading-relaxed italic">
+      <p className="text-gray-600 mb-5 leading-relaxed text-sm">
         &ldquo;{testimonial.content}&rdquo;
       </p>
 
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-earth-primary to-olive-dark flex items-center justify-center text-white font-bold text-lg">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
           {testimonial.name.split(' ').map(n => n[0]).join('')}
         </div>
         <div>
-          <div className="font-bold text-gray-900">{testimonial.name}</div>
-          <div className="text-sm text-gray-600">{testimonial.role}</div>
-          <div className="text-sm text-earth-dark">{testimonial.studio}</div>
+          <div className="font-semibold text-gray-900 text-sm">{testimonial.name}</div>
+          <div className="text-xs text-gray-500">{testimonial.role} · {testimonial.studio}</div>
         </div>
       </div>
     </motion.div>
@@ -500,145 +394,110 @@ export default function Home() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false)
-    setTimeout(() => setSelectedFeature(null), 300) // Wait for exit animation
+    setTimeout(() => setSelectedFeature(null), 300)
   }
 
   return (
     <>
-      {/* Feature Detail Modal */}
       <FeatureModal feature={selectedFeature} isOpen={isModalOpen} onClose={handleCloseModal} />
 
       {/* Scroll progress indicator */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-earth-primary via-olive-primary to-earth-light origin-left z-50"
+        className="fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 to-purple-500 origin-left z-50"
         style={{ scaleX }}
       />
 
       <Navigation />
 
-      {/* Animated background - optimized with CSS animations */}
-      <div className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-br from-earth-lighter via-neutral-light to-olive-light">
-        <FloatingOrb size={400} opacity={0.12} color="earth-primary" className="top-[10%] left-[10%]" />
-        <FloatingOrb size={300} opacity={0.1} color="olive-primary" variant="alt" className="top-[40%] right-[15%]" />
-        <FloatingOrb size={350} opacity={0.08} color="earth-light" className="bottom-[20%] left-[20%]" />
-
-        {/* Musical staff lines */}
-        <div className="absolute inset-0 opacity-5">
-          {[...Array(5)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute left-0 right-0 h-px bg-gray-900"
-              style={{ top: `${20 + i * 15}%` }}
-            />
-          ))}
-        </div>
-      </div>
-
-      <main className="relative">
+      <main className="bg-gray-50">
         {/* Hero Section */}
-        <section ref={heroRef} className="min-h-screen flex items-center justify-center px-4 py-20 md:py-32">
-          <div className="max-w-7xl mx-auto text-center">
+        <section ref={heroRef} className="relative overflow-hidden bg-white border-b border-gray-100">
+          {/* Subtle gradient bg */}
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/30" />
+          
+          <div className="relative max-w-7xl mx-auto px-4 pt-20 pb-24 md:pt-28 md:pb-32">
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="mb-8"
+              transition={{ duration: 0.6 }}
+              className="text-center max-w-4xl mx-auto"
             >
-              <motion.div
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 border border-earth-light text-earth-dark font-medium mb-8"
-              >
-                <Sparkles className="w-4 h-4" />
-                Built for music studios
-              </motion.div>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-sm font-medium mb-6">
+                <Sparkles className="w-3.5 h-3.5" />
+                Open source studio management
+              </div>
 
-              <h1 className="text-6xl md:text-8xl font-extrabold mb-6 leading-tight">
-                <span className="block bg-gradient-to-r from-earth-dark via-earth-primary to-earth-dark bg-clip-text text-transparent">
-                  Orchestrate
-                </span>
-                <span className="block bg-gradient-to-r from-earth-primary to-olive-dark bg-clip-text text-transparent">
-                  Your Studio
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-gray-900 mb-6 leading-[1.1] tracking-tight">
+                Orchestrate your{' '}
+                <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                  music studio
                 </span>
               </h1>
 
-              <p className="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto mb-12 leading-relaxed font-normal">
-                The all-in-one platform that harmonizes{' '}
-                <span className="font-semibold bg-gradient-to-r from-earth-primary to-earth-dark bg-clip-text text-transparent">students</span>,{' '}
-                <span className="font-semibold bg-gradient-to-r from-olive-primary to-olive-dark bg-clip-text text-transparent">scheduling</span>, and{' '}
-                <span className="font-semibold bg-gradient-to-r from-earth-dark to-olive-primary bg-clip-text text-transparent">billing</span>{' '}
-                — so you can focus on what matters: making music.
+              <p className="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed">
+                The all-in-one platform that harmonizes students, scheduling, and billing — so you can focus on what matters: making music.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Link
-                    href="/signup"
-                    className="group px-8 py-4 bg-gradient-to-r from-earth-primary to-olive-dark text-white rounded-2xl font-semibold text-lg shadow-xl shadow-earth-primary/30 hover:shadow-2xl hover:shadow-earth-primary/40 transition-all flex items-center gap-2"
-                  >
-                    Start Free Trial
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </motion.div>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                <Link
+                  href="/signup"
+                  className="group px-7 py-3.5 bg-gray-900 text-white rounded-xl font-semibold text-base hover:bg-gray-800 transition-all flex items-center gap-2 shadow-lg shadow-gray-900/10"
+                >
+                  Start Free Trial
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
 
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <button className="px-8 py-4 bg-white/90 border border-gray-200 text-gray-900 rounded-2xl font-semibold text-lg hover:bg-white transition-all flex items-center gap-2">
-                    <Music className="w-5 h-5" />
-                    Watch Demo
-                  </button>
-                </motion.div>
+                <button className="px-7 py-3.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold text-base hover:bg-gray-50 transition-all flex items-center gap-2">
+                  <Music className="w-4 h-4" />
+                  Watch Demo
+                </button>
               </div>
 
-              <p className="mt-8 text-sm text-gray-600">
-                No credit card required • 30-day free trial • Cancel anytime
+              <p className="mt-6 text-sm text-gray-400">
+                No credit card required · 30-day free trial · Cancel anytime
               </p>
             </motion.div>
 
-            {/* Hero illustration placeholder */}
+            {/* Dashboard Preview */}
             <motion.div
-              initial={{ opacity: 0, y: 50 }}
+              initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.3 }}
-              className="mt-20 relative"
+              className="mt-16 relative max-w-5xl mx-auto"
             >
-              <div className="relative max-w-5xl mx-auto">
-                {/* Dashboard mockup - optimized */}
-                <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-earth-primary/20 border border-white/30 bg-white/80">
-                  <div className="aspect-video relative">
-                    {/* Dashboard Preview Image */}
-                    <Image
-                      src="/dashboard_preview.png"
-                      alt="StudioSync Dashboard Preview"
-                      fill
-                      className="object-cover"
-                      priority
-                    />
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-gray-900/10 border border-gray-200 bg-white">
+                <div className="aspect-video relative">
+                  <Image
+                    src="/dashboard_preview.png"
+                    alt="StudioSync Dashboard Preview"
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                </div>
+              </div>
+
+              {/* Floating cards */}
+              <div className="absolute -left-4 top-1/4 md:-left-8 bg-white rounded-xl p-3.5 shadow-lg border border-gray-100 hidden md:block animate-float-card">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-emerald-500 flex items-center justify-center">
+                    <Check className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-gray-900">Lesson Confirmed</div>
+                    <div className="text-xs text-gray-400">Sarah&apos;s piano lesson</div>
                   </div>
                 </div>
+              </div>
 
-                {/* Floating cards - using CSS animations for better performance */}
-                <div className="absolute -left-4 top-1/4 md:-left-12 bg-white/85 rounded-2xl p-4 shadow-xl border border-white/50 hidden md:block animate-float-card">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-olive-primary flex items-center justify-center">
-                      <Check className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-gray-900">Lesson Confirmed</div>
-                      <div className="text-xs text-gray-600">Sarah&apos;s piano lesson</div>
-                    </div>
+              <div className="absolute -right-4 top-1/3 md:-right-8 bg-white rounded-xl p-3.5 shadow-lg border border-gray-100 hidden md:block animate-float-card-delayed">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-indigo-500 flex items-center justify-center">
+                    <DollarSign className="w-5 h-5 text-white" />
                   </div>
-                </div>
-
-                <div className="absolute -right-4 top-1/3 md:-right-12 bg-white/85 rounded-2xl p-4 shadow-xl border border-white/50 hidden md:block animate-float-card-delayed">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-earth-primary flex items-center justify-center">
-                      <DollarSign className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-gray-900">Payment Received</div>
-                      <div className="text-xs text-gray-600">$250.00</div>
-                    </div>
+                  <div>
+                    <div className="text-sm font-semibold text-gray-900">Payment Received</div>
+                    <div className="text-xs text-gray-400">$250.00</div>
                   </div>
                 </div>
               </div>
@@ -646,33 +505,25 @@ export default function Home() {
           </div>
         </section>
 
-
-
-        {/* Features Bento Grid */}
-        <section className="py-20 px-4">
+        {/* Features Grid */}
+        <section className="py-20 md:py-28 px-4">
           <div className="max-w-7xl mx-auto">
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="text-center mb-16"
+              transition={{ duration: 0.5 }}
+              className="text-center mb-14"
             >
-              <h2 className="text-5xl md:text-6xl font-bold mb-6">
-                <span className="bg-gradient-to-r from-neutral-dark to-neutral-medium bg-clip-text text-transparent">
-                  Everything You Need,
-                </span>
-                <br />
-                <span className="bg-gradient-to-r from-earth-primary to-olive-dark bg-clip-text text-transparent">
-                  Beautifully Simple
-                </span>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Everything you need, beautifully simple
               </h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              <p className="text-lg text-gray-500 max-w-2xl mx-auto">
                 Powerful features that work in harmony to run your studio smoothly
               </p>
             </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-fr">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {features.map((feature, index) => (
                 <FeatureCard
                   key={index}
@@ -685,26 +536,24 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Testimonials Section */}
-        <section className="py-20 px-4 overflow-hidden">
-          <div className="max-w-7xl mx-auto mb-12">
+        {/* Testimonials */}
+        <section className="py-20 md:py-28 px-4 bg-white border-y border-gray-100">
+          <div className="max-w-7xl mx-auto">
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-center"
+              className="text-center mb-14"
             >
-              <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-neutral-dark to-neutral-medium bg-clip-text text-transparent">
-                Loved by Music Educators
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Loved by music educators
               </h2>
-              <p className="text-xl text-gray-600">
+              <p className="text-lg text-gray-500">
                 See why music educators love StudioSync
               </p>
             </motion.div>
-          </div>
 
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
               {testimonials.map((testimonial, index) => (
                 <TestimonialCard key={index} testimonial={testimonial} index={index} />
               ))}
@@ -713,63 +562,54 @@ export default function Home() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-32 px-4">
+        <section className="py-20 md:py-28 px-4">
           <div className="max-w-4xl mx-auto">
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.97 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="relative rounded-3xl overflow-hidden"
+              transition={{ duration: 0.5 }}
+              className="bg-gray-900 rounded-2xl overflow-hidden relative"
             >
-              {/* Gradient background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-earth-primary via-olive-primary to-earth-light" />
+              {/* Subtle gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-transparent to-purple-600/20" />
 
-              {/* Animated orbs */}
-              <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
-              <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
-
-              {/* Content */}
               <div className="relative px-8 py-16 md:p-16 text-center text-white">
-                <h2 className="text-4xl md:text-5xl font-bold mb-6">
-                  Ready to Transform Your Studio?
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                  Ready to transform your studio?
                 </h2>
-                <p className="text-xl mb-10 text-white/90 max-w-2xl mx-auto">
+                <p className="text-lg mb-8 text-gray-300 max-w-2xl mx-auto">
                   Try StudioSync and manage students, schedules, and billing effortlessly.
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Link
-                      href="/signup"
-                      className="inline-flex items-center gap-2 px-8 py-4 bg-white text-earth-dark rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all"
-                    >
-                      Start Your Free Trial
-                      <ArrowRight className="w-5 h-5" />
-                    </Link>
-                  </motion.div>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Link
+                    href="/signup"
+                    className="inline-flex items-center gap-2 px-7 py-3.5 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-100 transition-colors"
+                  >
+                    Start Your Free Trial
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
 
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Link
-                      href="/pricing"
-                      className="inline-flex items-center gap-2 px-8 py-4 bg-white/15 border-2 border-white/30 text-white rounded-2xl font-bold text-lg hover:bg-white/25 transition-all"
-                    >
-                      View Pricing
-                    </Link>
-                  </motion.div>
+                  <Link
+                    href="/pricing"
+                    className="inline-flex items-center gap-2 px-7 py-3.5 bg-white/10 border border-white/20 text-white rounded-xl font-semibold hover:bg-white/15 transition-colors"
+                  >
+                    View Pricing
+                  </Link>
                 </div>
 
-                <div className="mt-8 flex items-center justify-center gap-6 text-sm text-white/80">
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4" />
+                <div className="mt-8 flex items-center justify-center gap-5 text-sm text-gray-400">
+                  <div className="flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5" />
                     30-day free trial
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4" />
+                  <div className="flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5" />
                     No credit card required
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4" />
+                  <div className="flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5" />
                     Cancel anytime
                   </div>
                 </div>

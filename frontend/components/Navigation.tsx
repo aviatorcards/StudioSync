@@ -53,32 +53,26 @@ export default function Navigation() {
   ]
 
   return (
-    <nav className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+    <nav className="bg-white border-b border-gray-100 sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-          >
-            <Link href="/" className="flex items-center space-x-3 group z-50">
-              <Logo className="w-10 h-10 shadow-sm group-hover:scale-110 transition-transform duration-300" />
-              <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                StudioSync
-              </span>
-            </Link>
-          </motion.div>
+          <Link href="/" className="flex items-center space-x-2.5 group z-50">
+            <Logo className="w-9 h-9 group-hover:scale-105 transition-transform duration-200" />
+            <span className="text-lg font-bold text-gray-900">
+              StudioSync
+            </span>
+          </Link>
 
           {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-1">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`transition-colors ${isActive(link.href)
-                  ? 'text-primary font-medium'
-                  : 'text-muted-foreground hover:text-foreground'
+                className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${isActive(link.href)
+                  ? 'text-indigo-600 bg-indigo-50'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
               >
                 {link.label}
@@ -87,16 +81,16 @@ export default function Navigation() {
           </div>
 
           {/* Desktop Auth Buttons */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-3">
             <Link
               href="/login"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-3 py-2"
             >
               Log in
             </Link>
             <Link
               href="/signup"
-              className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+              className="px-4 py-2 text-sm font-semibold bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
             >
               Sign up
             </Link>
@@ -108,7 +102,7 @@ export default function Navigation() {
             className="md:hidden z-50 p-2 rounded-lg hover:bg-gray-100 transition-colors"
             aria-label="Toggle menu"
           >
-            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>
@@ -121,93 +115,64 @@ export default function Navigation() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100] md:hidden bg-gradient-to-br from-indigo-950 via-purple-950 to-pink-950"
+              className="fixed inset-0 z-[100] md:hidden bg-white"
             >
-              {/* Menu Content */}
-              <div className="flex flex-col h-full overflow-hidden">
+              <div className="flex flex-col h-full">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-white/10 flex-shrink-0">
-                  <Link href="/" className="flex items-center space-x-3" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Logo className="w-10 h-10" />
-                    <span className="text-xl font-bold text-white">StudioSync</span>
+                <div className="flex items-center justify-between p-4 border-b border-gray-100">
+                  <Link href="/" className="flex items-center space-x-2.5" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Logo className="w-9 h-9" />
+                    <span className="text-lg font-bold text-gray-900">StudioSync</span>
                   </Link>
                   <button
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
+                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
                     aria-label="Close menu"
                   >
-                    <X className="w-6 h-6 text-white" />
+                    <X className="w-5 h-5 text-gray-600" />
                   </button>
                 </div>
 
-                {/* Scrollable Content */}
-                <motion.div
-                  className="flex-1 overflow-y-auto p-6"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  {/* Navigation Links */}
-                  <nav className="space-y-2 mb-8">
-                    {navLinks.map((link, index) => (
-                      <motion.div
-                        key={link.href}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.1 + index * 0.1 }}
+                {/* Navigation Links */}
+                <div className="flex-1 p-4 space-y-1">
+                  {navLinks.map((link, index) => (
+                    <motion.div
+                      key={link.href}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.05 + index * 0.05 }}
+                    >
+                      <Link
+                        href={link.href}
+                        className={`block px-4 py-3 rounded-xl text-base font-medium transition-colors ${isActive(link.href)
+                          ? 'bg-indigo-50 text-indigo-600'
+                          : 'text-gray-700 hover:bg-gray-50'
+                          }`}
+                        onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        <Link
-                          href={link.href}
-                          className={`block px-6 py-4 rounded-2xl text-lg font-medium transition-all ${isActive(link.href)
-                            ? 'bg-white text-purple-600 shadow-lg'
-                            : 'text-white/90 hover:bg-white/10'
-                            }`}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          {link.label}
-                        </Link>
-                      </motion.div>
-                    ))}
-                  </nav>
+                        {link.label}
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
 
-                  {/* Divider */}
-                  <div className="border-t border-white/10 mb-8" />
-
-                  {/* Auth Buttons */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="space-y-3 mb-8"
+                {/* Auth Buttons */}
+                <div className="p-4 border-t border-gray-100 space-y-2.5">
+                  <Link
+                    href="/login"
+                    className="block w-full px-4 py-3 text-center font-medium text-gray-700 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    <Link
-                      href="/login"
-                      className="block w-full px-6 py-4 text-center font-medium text-white bg-white/10 rounded-2xl hover:bg-white/20 transition-all border border-white/10"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      Log in
-                    </Link>
-                    <Link
-                      href="/signup"
-                      className="block w-full px-6 py-4 text-center font-medium bg-white text-purple-600 rounded-2xl hover:bg-white/90 transition-all shadow-lg"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      Sign up
-                    </Link>
-                  </motion.div>
-
-                  {/* Additional Info */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    className="text-center pb-8"
+                    Log in
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="block w-full px-4 py-3 text-center font-semibold bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    <p className="text-white/50 text-sm">
-                      Built for music studios everywhere
-                    </p>
-                  </motion.div>
-                </motion.div>
+                    Sign up
+                  </Link>
+                </div>
               </div>
             </motion.div>
           </MobileMenuPortal>

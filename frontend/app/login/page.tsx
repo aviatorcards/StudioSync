@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { useUser } from '@/contexts/UserContext'
-import { Mail, Lock, Loader2, AlertCircle, ArrowRight } from 'lucide-react'
+import { Mail, Lock, Loader2, AlertCircle, ArrowRight, Check } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { Logo } from '@/components/Logo'
 
 export default function LoginPage() {
     const { login } = useUser()
@@ -33,42 +34,29 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-earth-lighter via-neutral-light to-olive-light flex">
+        <div className="min-h-screen bg-gray-50 flex">
             {/* Left Side - Branding */}
-            <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-earth-primary via-olive-primary to-earth-light p-12 flex-col justify-between relative overflow-hidden">
-                {/* Decorative circles */}
-                <div className="absolute top-20 right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+            <div className="hidden lg:flex lg:w-1/2 bg-gray-900 p-12 flex-col justify-between relative overflow-hidden">
+                {/* Subtle gradient overlays */}
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/15 via-transparent to-purple-600/15" />
 
                 <div className="relative z-10">
-                    <Link href="/" className="flex items-center gap-3 group">
-                        <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform overflow-hidden">
-                            <Image src="/logo_final.png" alt="StudioSync" width={40} height={40} className="object-contain" />
-                        </div>
-                        <span className="text-3xl font-bold text-white">StudioSync</span>
+                    <Link href="/" className="flex items-center gap-2.5 group">
+                        <Logo className="w-10 h-10" />
+                        <span className="text-2xl font-bold text-white">StudioSync</span>
                     </Link>
                 </div>
 
                 <div className="relative z-10 space-y-6">
-                    <h1 className="text-5xl font-bold text-white leading-tight">
+                    <h1 className="text-4xl font-bold text-white leading-tight">
                         Welcome back to your studio
                     </h1>
-                    <p className="text-xl text-white/90">
+                    <p className="text-lg text-gray-300">
                         Manage your music lessons, students, and schedule all in one beautiful place.
                     </p>
-                    <div className="flex gap-8 pt-4">
-                        <div>
-                            <div className="text-3xl font-bold text-white">0</div>
-                            <div className="text-white/80">Lessons scheduled</div>
-                        </div>
-                        <div>
-                            <div className="text-3xl font-bold text-white">1</div>
-                            <div className="text-white/80">Music instructor(s)</div>
-                        </div>
-                    </div>
                 </div>
 
-                <div className="relative z-10 text-white/60 text-sm">
+                <div className="relative z-10 text-gray-500 text-sm">
                     © 2025 StudioSync. Open source and self-hostable.
                 </div>
             </div>
@@ -77,43 +65,39 @@ export default function LoginPage() {
             <div className="flex-1 flex items-center justify-center p-8">
                 <div className="w-full max-w-md">
                     {/* Mobile Logo */}
-                    <Link href="/" className="lg:hidden flex items-center gap-3 justify-center mb-8 group">
-                        <div className="w-12 h-12 bg-gradient-to-br from-earth-primary to-olive-dark rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform overflow-hidden">
-                            <Image src="/logo_final.png" alt="StudioSync" width={32} height={32} className="object-contain" />
-                        </div>
-                        <span className="text-2xl font-bold bg-gradient-to-r from-earth-primary to-olive-dark bg-clip-text text-transparent">
-                            StudioSync
-                        </span>
+                    <Link href="/" className="lg:hidden flex items-center gap-2.5 justify-center mb-8 group">
+                        <Logo className="w-10 h-10" />
+                        <span className="text-xl font-bold text-gray-900">StudioSync</span>
                     </Link>
 
-                    <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 ring-1 ring-black/5 antialiased">
-                        <div className="mb-8">
-                            <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-2">
+                    <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-100">
+                        <div className="mb-6">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-1">
                                 Sign in
                             </h2>
-                            <p className="text-gray-600">
+                            <p className="text-gray-500 text-sm">
                                 Don&apos;t have an account?{' '}
-                                <Link href="/signup" className="font-semibold text-earth-dark hover:text-earth-primary transition-colors">
+                                <Link href="/signup" className="font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">
                                     Sign up free
                                 </Link>
                             </p>
                         </div>
 
-                        <form className="space-y-5" onSubmit={handleSubmit}>
+                        <form className="space-y-4" onSubmit={handleSubmit}>
                             {error && (
-                                <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3 text-red-700 text-sm">
-                                    <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                                <div className="bg-red-50 border border-red-200 rounded-xl p-3.5 flex items-start gap-2.5 text-red-700 text-sm">
+                                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                                     <p>{error}</p>
                                 </div>
                             )}
 
                             <div>
-                                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                                <label htmlFor="email" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                                     Email address
                                 </label>
                                 <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <Mail className="h-5 w-5 text-gray-400" />
+                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                        <Mail className="h-4 w-4 text-gray-400" />
                                     </div>
                                     <input
                                         id="email"
@@ -123,19 +107,19 @@ export default function LoginPage() {
                                         required
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-earth-primary focus:border-transparent transition-all"
+                                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl bg-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
                                         placeholder="you@example.com"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
+                                <label htmlFor="password" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                                     Password
                                 </label>
                                 <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <Lock className="h-5 w-5 text-gray-400" />
+                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                        <Lock className="h-4 w-4 text-gray-400" />
                                     </div>
                                     <input
                                         id="password"
@@ -145,7 +129,7 @@ export default function LoginPage() {
                                         required
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-earth-primary focus:border-transparent transition-all"
+                                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl bg-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
                                         placeholder="••••••••"
                                     />
                                 </div>
@@ -157,54 +141,51 @@ export default function LoginPage() {
                                         id="remember-me"
                                         name="remember-me"
                                         type="checkbox"
-                                        className="h-4 w-4 text-earth-primary focus:ring-earth-primary border-gray-300 rounded"
+                                        className="h-3.5 w-3.5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                                     />
-                                    <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                                    <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-500">
                                         Remember me
                                     </label>
                                 </div>
 
-                                <Link href="/forgot-password" className="text-sm font-semibold text-earth-dark hover:text-earth-primary transition-colors">
+                                <Link href="/forgot-password" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">
                                     Forgot password?
                                 </Link>
                             </div>
 
-
-
-                            <Button
+                            <button
                                 type="submit"
                                 disabled={isLoading}
-                                variant="gradient"
-                                className="w-full h-12"
+                                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
                             >
                                 {isLoading ? (
                                     <>
-                                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                                        <Loader2 className="w-4 h-4 animate-spin" />
                                         Signing in...
                                     </>
                                 ) : (
                                     <>
                                         Sign in
-                                        <ArrowRight className="w-5 h-5 ml-2" />
+                                        <ArrowRight className="w-4 h-4" />
                                     </>
                                 )}
-                            </Button>
+                            </button>
                         </form>
 
-                        <div className="mt-6 text-center text-sm text-gray-500">
+                        <div className="mt-5 text-center text-xs text-gray-400">
                             By signing in, you agree to our{' '}
-                            <Link href="/terms" className="text-earth-dark hover:underline">
+                            <Link href="/terms" className="text-gray-500 hover:underline">
                                 Terms
                             </Link>
                             {' '}and{' '}
-                            <Link href="/privacy" className="text-earth-dark hover:underline">
+                            <Link href="/privacy" className="text-gray-500 hover:underline">
                                 Privacy Policy
                             </Link>
                         </div>
                     </div>
 
-                    <div className="mt-6 text-center">
-                        <Link href="/" className="text-sm text-gray-600 hover:text-gray-900 transition-colors inline-flex items-center gap-1">
+                    <div className="mt-5 text-center">
+                        <Link href="/" className="text-sm text-gray-400 hover:text-gray-600 transition-colors inline-flex items-center gap-1">
                             ← Back to home
                         </Link>
                     </div>

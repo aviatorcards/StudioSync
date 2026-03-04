@@ -36,11 +36,8 @@ class BandSerializer(serializers.ModelSerializer):
         ]
 
     def get_photo(self, obj):
-        """Return absolute URL for band photo"""
+        """Return relative URL for band photo to work with frontend proxy"""
         if obj.photo:
-            request = self.context.get("request")
-            if request:
-                return request.build_absolute_uri(obj.photo.url)
             return obj.photo.url
         return None
 
@@ -104,11 +101,8 @@ class SimpleStudioSerializer(serializers.ModelSerializer):
         ]
 
     def get_cover_image(self, obj):
-        """Return absolute URL for cover image"""
+        """Return relative URL for cover image to work with frontend proxy"""
         if obj.cover_image:
-            request = self.context.get("request")
-            if request:
-                return request.build_absolute_uri(obj.cover_image.url)
             return obj.cover_image.url
         return None
 
@@ -152,11 +146,8 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
     def get_avatar(self, obj):
-        """Return absolute URL for avatar"""
+        """Return relative URL for avatar to work with frontend proxy"""
         if obj.avatar:
-            request = self.context.get("request")
-            if request:
-                return request.build_absolute_uri(obj.avatar.url)
             return obj.avatar.url
         return None
 
@@ -378,11 +369,8 @@ class PublicTeacherSerializer(serializers.ModelSerializer):
         fields = ["id", "first_name", "last_name", "avatar", "bio", "specialties", "instruments"]
 
     def get_avatar(self, obj):
-        """Return absolute URL for avatar"""
+        """Return relative URL for avatar to work with frontend proxy"""
         if obj.user.avatar:
-            request = self.context.get("request")
-            if request:
-                return request.build_absolute_uri(obj.user.avatar.url)
             return obj.user.avatar.url
         return None
 
@@ -394,7 +382,7 @@ class TeacherSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source="user.first_name", read_only=True)
     last_name = serializers.CharField(source="user.last_name", read_only=True)
     phone = serializers.CharField(source="user.phone", read_only=True)
-    avatar = serializers.FileField(source="user.avatar", read_only=True)
+    avatar = serializers.SerializerMethodField()
     students_count = serializers.SerializerMethodField()
 
     class Meta:
@@ -420,6 +408,11 @@ class TeacherSerializer(serializers.ModelSerializer):
     def get_students_count(self, obj):
         # Count primary students
         return obj.primary_students.count()
+
+    def get_avatar(self, obj):
+        if obj.user.avatar:
+            return obj.user.avatar.url
+        return None
 
 
 class StudentSerializer(serializers.ModelSerializer):

@@ -17,37 +17,12 @@ import {
     Zap
 } from 'lucide-react'
 
-// Floating orb component
-function FloatingOrb({ delay = 0, duration = 20, size = 300, opacity = 0.15, color = 'earth-primary' }) {
-    return (
-        <motion.div
-            className={`absolute rounded-full blur-3xl bg-${color}`}
-            style={{
-                width: size,
-                height: size,
-                opacity: opacity
-            }}
-            animate={{
-                x: [0, 100, 0],
-                y: [0, -100, 0],
-                scale: [1, 1.1, 1]
-            }}
-            transition={{
-                duration: duration,
-                repeat: Infinity,
-                delay: delay,
-                ease: "easeInOut"
-            }}
-        />
-    )
-}
-
 const features = [
     {
         icon: RefreshCw,
         title: 'Recurring Lessons',
         description: 'Set up weekly, bi-weekly, or monthly lessons that automatically populate your calendar',
-        color: 'from-blue-500 to-cyan-500'
+        color: 'from-indigo-500 to-indigo-600'
     },
     {
         icon: Bell,
@@ -77,7 +52,7 @@ const features = [
         icon: Zap,
         title: 'Quick Rescheduling',
         description: 'Drag and drop to reschedule, with automatic student notifications',
-        color: 'from-violet-500 to-purple-500'
+        color: 'from-cyan-500 to-blue-500'
     }
 ]
 
@@ -95,121 +70,89 @@ export default function CalendarPage() {
         <>
             <Navigation />
 
-            <main className="min-h-screen bg-gradient-to-br from-earth-lighter via-neutral-light to-olive-light relative overflow-hidden">
-                {/* Floating orbs background */}
-                <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                    <FloatingOrb delay={0} duration={25} size={500} opacity={0.1} color="earth-primary" />
-                    <FloatingOrb delay={5} duration={20} size={400} opacity={0.08} color="olive-primary" />
-                    <FloatingOrb delay={10} duration={30} size={600} opacity={0.06} color="earth-light" />
-                </div>
-
+            <main className="bg-gray-50">
                 {/* Hero Section */}
-                <section className="relative px-4 pt-32 pb-20">
-                    <div className="max-w-6xl mx-auto text-center">
+                <section className="bg-white border-b border-gray-100 px-4 pt-20 pb-20 md:pt-28 md:pb-24">
+                    <div className="max-w-4xl mx-auto text-center">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6 }}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-white/20 text-sm font-medium text-earth-dark mb-6"
                         >
-                            <Calendar className="w-4 h-4" />
-                            Smart Scheduling for Music Studios
-                        </motion.div>
+                            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-sm font-medium mb-6">
+                                <Calendar className="w-3.5 h-3.5" />
+                                Smart Scheduling
+                            </div>
 
-                        <motion.h1
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0.1 }}
-                            className="text-5xl md:text-7xl font-bold mb-6"
-                        >
-                            <span className="bg-gradient-to-r from-earth-primary via-olive-primary to-earth-dark bg-clip-text text-transparent">
-                                Never Miss a Beat
-                            </span>
-                        </motion.h1>
+                            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight text-gray-900">
+                                Never miss{' '}
+                                <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                                    a beat
+                                </span>
+                            </h1>
 
-                        <motion.p
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0.2 }}
-                            className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed"
-                        >
-                            Intelligent scheduling that handles recurring lessons, prevents conflicts, and keeps everyone in sync.
-                        </motion.p>
+                            <p className="text-lg md:text-xl text-gray-500 mb-8 max-w-2xl mx-auto leading-relaxed">
+                                Intelligent scheduling that handles recurring lessons, prevents conflicts, and keeps everyone in sync.
+                            </p>
 
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0.3 }}
-                            className="flex flex-col sm:flex-row gap-4 justify-center"
-                        >
-                            <Link
-                                href="/signup"
-                                className="px-8 py-4 bg-gradient-to-r from-earth-primary to-olive-dark text-white rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105 inline-flex items-center justify-center gap-2"
-                            >
-                                Start Free Trial
-                                <ArrowRight className="w-5 h-5" />
-                            </Link>
-                            <Link
-                                href="/login"
-                                className="px-8 py-4 bg-white/60 backdrop-blur-md text-gray-900 rounded-2xl font-semibold border border-white/20 hover:bg-white/80 transition-all inline-flex items-center justify-center gap-2"
-                            >
-                                View Your Calendar
-                                <Calendar className="w-5 h-5" />
-                            </Link>
+                            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                                <Link
+                                    href="/signup"
+                                    className="px-7 py-3.5 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-colors inline-flex items-center justify-center gap-2"
+                                >
+                                    Start Free Trial
+                                    <ArrowRight className="w-4 h-4" />
+                                </Link>
+                                <Link
+                                    href="/login"
+                                    className="px-7 py-3.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors inline-flex items-center justify-center gap-2"
+                                >
+                                    View Your Calendar
+                                    <Calendar className="w-4 h-4" />
+                                </Link>
+                            </div>
                         </motion.div>
                     </div>
                 </section>
 
                 {/* Features Grid */}
-                <section className="relative px-4 py-20">
+                <section className="px-4 py-20 md:py-28">
                     <div className="max-w-7xl mx-auto">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
-                            className="text-center mb-16"
+                            className="text-center mb-14"
                         >
-                            <h2 className="text-4xl md:text-5xl font-bold mb-4 pb-2 leading-tight bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                                Scheduling Made Simple
+                            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
+                                Scheduling made simple
                             </h2>
-                            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
                                 Everything you need to manage your studio's schedule efficiently
                             </p>
                         </motion.div>
 
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
                             {features.map((feature, index) => (
                                 <motion.div
                                     key={index}
                                     initial={{ opacity: 0, y: 30 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
-                                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                                    className="group relative rounded-3xl overflow-hidden"
+                                    transition={{ duration: 0.5, delay: index * 0.08 }}
+                                    className="group bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md hover:border-gray-200 transition-all"
                                 >
-                                    {/* Glassmorphic card */}
-                                    <div className="absolute inset-0 bg-white/60 backdrop-blur-xl border border-white/20 rounded-3xl" />
-
-                                    {/* Gradient overlay on hover */}
-                                    <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-3xl`} />
-
-                                    {/* Content */}
-                                    <div className="relative p-8">
-                                        <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-6 transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300`}>
-                                            <feature.icon className="w-7 h-7 text-white" />
-                                        </div>
-
-                                        <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                                            {feature.title}
-                                        </h3>
-
-                                        <p className="text-gray-600 leading-relaxed">
-                                            {feature.description}
-                                        </p>
+                                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-5 group-hover:scale-105 transition-transform`}>
+                                        <feature.icon className="w-6 h-6 text-white" />
                                     </div>
 
-                                    {/* Decorative element */}
-                                    <div className={`absolute -bottom-10 -right-10 w-32 h-32 bg-gradient-to-br ${feature.color} rounded-full opacity-10 group-hover:opacity-20 blur-2xl transition-opacity duration-500`} />
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">
+                                        {feature.title}
+                                    </h3>
+
+                                    <p className="text-gray-500 text-sm leading-relaxed">
+                                        {feature.description}
+                                    </p>
                                 </motion.div>
                             ))}
                         </div>
@@ -217,46 +160,40 @@ export default function CalendarPage() {
                 </section>
 
                 {/* Benefits Section */}
-                <section className="relative px-4 py-20">
-                    <div className="max-w-5xl mx-auto">
+                <section className="px-4 pb-20">
+                    <div className="max-w-4xl mx-auto">
                         <motion.div
-                            initial={{ opacity: 0, y: 30 }}
+                            initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
-                            className="relative rounded-3xl overflow-hidden"
+                            className="bg-gray-900 rounded-2xl overflow-hidden relative"
                         >
-                            {/* Gradient background */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-earth-primary via-olive-primary to-earth-light" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/15 via-transparent to-purple-600/15" />
 
-                            {/* Decorative orbs */}
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-
-                            {/* Content */}
-                            <div className="relative p-12">
-                                <div className="text-center mb-10">
-                                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                                        Everything You Need in One Calendar
+                            <div className="relative p-8 md:p-10">
+                                <div className="text-center mb-8">
+                                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
+                                        Everything you need in one calendar
                                     </h2>
-                                    <p className="text-white/90 text-lg max-w-2xl mx-auto">
+                                    <p className="text-gray-400 max-w-xl mx-auto">
                                         Powerful features that make scheduling lessons effortless
                                     </p>
                                 </div>
 
-                                <div className="grid md:grid-cols-2 gap-4 max-w-3xl mx-auto">
+                                <div className="grid md:grid-cols-2 gap-3 max-w-3xl mx-auto">
                                     {benefits.map((benefit, index) => (
                                         <motion.div
                                             key={index}
-                                            initial={{ opacity: 0, x: -20 }}
+                                            initial={{ opacity: 0, x: -10 }}
                                             whileInView={{ opacity: 1, x: 0 }}
                                             viewport={{ once: true }}
-                                            transition={{ delay: index * 0.1 }}
-                                            className="flex items-center gap-3 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20"
+                                            transition={{ delay: index * 0.08 }}
+                                            className="flex items-center gap-3 bg-white/5 rounded-xl p-3.5 border border-white/10"
                                         >
-                                            <div className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
-                                                <Check className="w-4 h-4 text-white" />
+                                            <div className="w-5 h-5 rounded-md bg-white/10 flex items-center justify-center flex-shrink-0">
+                                                <Check className="w-3.5 h-3.5 text-white" />
                                             </div>
-                                            <span className="text-white font-medium">{benefit}</span>
+                                            <span className="text-white text-sm font-medium">{benefit}</span>
                                         </motion.div>
                                     ))}
                                 </div>
@@ -266,37 +203,37 @@ export default function CalendarPage() {
                 </section>
 
                 {/* CTA Section */}
-                <section className="relative px-4 py-20">
+                <section className="px-4 pb-20">
                     <div className="max-w-4xl mx-auto text-center">
                         <motion.div
-                            initial={{ opacity: 0, y: 30 }}
+                            initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                         >
-                            <Sparkles className="w-16 h-16 mx-auto mb-6 text-earth-dark" />
-                            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-earth-primary to-olive-dark bg-clip-text text-transparent">
-                                Ready to Streamline Your Schedule?
+                            <Sparkles className="w-12 h-12 mx-auto mb-5 text-indigo-500" />
+                            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
+                                Ready to streamline your schedule?
                             </h2>
-                            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+                            <p className="text-lg text-gray-500 mb-8 max-w-xl mx-auto">
                                 Try StudioSync and manage your studio calendar efficiently.
                             </p>
-                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            <div className="flex flex-col sm:flex-row gap-3 justify-center">
                                 <Link
                                     href="/signup"
-                                    className="px-10 py-5 bg-gradient-to-r from-earth-primary to-olive-dark text-white rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105 inline-flex items-center justify-center gap-2 text-lg"
+                                    className="px-7 py-3.5 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-colors inline-flex items-center justify-center gap-2"
                                 >
                                     Start Free Trial
-                                    <ArrowRight className="w-5 h-5" />
+                                    <ArrowRight className="w-4 h-4" />
                                 </Link>
                                 <Link
                                     href="/pricing"
-                                    className="px-10 py-5 bg-white/60 backdrop-blur-md text-gray-900 rounded-2xl font-semibold border border-white/20 hover:bg-white/80 transition-all inline-flex items-center justify-center text-lg"
+                                    className="px-7 py-3.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors inline-flex items-center justify-center"
                                 >
                                     View Pricing
                                 </Link>
                             </div>
-                            <p className="text-sm text-gray-500 mt-6">
-                                No credit card required • 30-day free trial • Cancel anytime
+                            <p className="text-sm text-gray-400 mt-5">
+                                No credit card required · 30-day free trial · Cancel anytime
                             </p>
                         </motion.div>
                     </div>

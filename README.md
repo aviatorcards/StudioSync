@@ -14,7 +14,7 @@
   <p>An open-source, self-hosted alternative to My Music Staff, built for the modern music educator.</p>
   
   [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-  [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
+  [![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
   [![Django](https://img.shields.io/badge/Django-5.0-092e20)](https://www.djangoproject.com/)
   [![Docker](https://img.shields.io/badge/Docker-Ready-2496ed)](https://www.docker.com/)
 </div>
@@ -25,204 +25,85 @@
 
 ### 🎓 Student & Family Management
 
-- **Comprehensive Student Profiles** - Track instrument, skill level (Beginner → Professional), enrollment status, and progress
-- **Family Account Linking** - Connect parents and students for shared billing and communication
-- **Band/Ensemble Organization** - Create groups with photo uploads, member management, and genre tracking
-- **Emergency Contacts** - Store medical information and emergency contact details
-- **Enrollment History** - Track lesson counts and student journey over time
+- **Comprehensive Student Profiles** – instrument, skill level, enrollment status, progress
+- **Family Account Linking** – shared billing & communication
+- **Band/Ensemble Organization** – groups, photos, members, genre
+- **Emergency Contacts** – medical info, emergency details
+- **Enrollment History** – lesson counts, journey tracking
 
 ### 📅 Intelligent Scheduling & Lessons
 
-- **Smart Calendar System:**
-  - Recurring lesson patterns (weekly, bi-weekly, monthly)
-  - Automatic conflict detection to prevent double-bookings
-  - Online and in-person lesson support
-  - Cancellation, rescheduling, and makeup lesson management
-  - No-show tracking and status management
-- **Rich Lesson Documentation:**
-  - Detailed lesson notes with practice assignments
-  - Progress ratings (1-5 scale) and repertoire tracking
-  - File attachments (audio, video, PDFs)
-  - Strengths and improvement area documentation
-  - Student and parent visibility controls
-- **Reusable Lesson Plans:**
-  - Template library for common lesson structures
-  - Skill level targeting and duration tracking
-  - Resource attachments and tag-based organization
-  - Public/private sharing between teachers
+- **Smart Calendar** – recurring patterns, conflict detection, online/in‑person lessons, cancellations, make‑ups, no‑show tracking
+- **Rich Lesson Docs** – notes, practice assignments, ratings, repertoire, file attachments, visibility controls
+- **Reusable Lesson Plans** – templates, skill‑level targeting, duration, tags, sharing
 
 ### 💰 Billing & Financial Management
 
-- **Automated Invoicing:**
-  - Auto-generate invoices from completed lessons
-  - Band-level consolidated billing
-  - Multiple line items with tax calculation
-  - Invoice status tracking (Draft, Sent, Paid, Partial, Overdue, Cancelled)
-- **Flexible Payment Processing:**
-  - Support for 8+ payment methods (Cash, Check, Credit/Debit Card, ACH, Venmo, PayPal, Zelle)
-  - Payment history and transaction tracking
-  - Partial payment support with balance calculations
-  - Refund tracking and management
-- **Financial Intelligence:**
-  - Automated late fee calculation
-  - Overdue invoice detection and alerts
-  - Saved payment methods for recurring billing
-  - Professional invoice generation with studio branding
+- **Automated Invoicing** – from lessons, band‑level billing, tax, status tracking
+- **Multiple Payment Methods** – cash, check, card, ACH, Venmo, PayPal, Zelle, etc.
+- **Financial Intelligence** – late‑fee automation, overdue alerts, saved payment methods, professional branding
 
 ### 📦 Inventory & Resource Management
 
-- **Physical Inventory Tracking:**
-  - Manage instruments, equipment, sheet music, and accessories
-  - Condition monitoring (Excellent, Good, Fair, Needs Repair)
-  - Status management (Available, Checked Out, Maintenance, Retired)
-  - Location tracking with serial numbers and values
-  - Purchase date and maintenance history
-  - Low stock alerts for consumables
-- **Student Checkout System:**
-  - Approval workflow for item borrowing
-  - Due date management with overdue detection
-  - Quantity tracking for multiple copies
-  - Damage reporting and return notes
-  - Automated availability updates
-- **Digital Resource Library:**
-  - File sharing (PDFs, audio, video, images, sheet music)
-  - External link management for online resources
-  - Tag-based organization and categorization
-  - Student-specific or public resource sharing
-  - File size and MIME type tracking
-- **Practice Room Reservations:**
-  - Room capacity and equipment tracking
-  - Hourly rate management with automated cost calculation
-  - Reservation scheduling with conflict detection
-  - Payment tracking for room usage
-  - No-show tracking and status management
+- **Physical Inventory** – instruments, equipment, condition, location, low‑stock alerts
+- **Student Checkout** – approval workflow, due dates, damage reporting, availability updates
+- **Digital Library** – PDFs, audio, video, external links, tagging, size/MIME tracking
+- **Practice Room Reservations** – capacity, equipment, hourly rates, conflict detection, payment tracking
 
 ### 💬 Communication & Notifications
 
-- **In-App Messaging:**
-  - Thread-based conversations between teachers, students, and parents
-  - Multi-participant support for group discussions
-  - File attachments and rich content
-  - Read/unread tracking for accountability
-  - Subject/topic organization
-- **Multi-Channel Notification System:**
-  - Email, SMS, In-App, and Push notification support
-  - Automated lesson reminders to reduce no-shows
-  - Invoice and payment notifications
-  - Lesson cancellation/rescheduling alerts
-  - Resource sharing notifications
-  - System announcements and updates
-  - Clickable action URLs for quick access
+- **In‑App Messaging** – threaded, multi‑participant, attachments, read/unread, topics
+- **Multi‑Channel Notifications** – email, SMS, push, lesson reminders, invoice alerts, resource notifications, system announcements
 
 ### 🎯 Goals & Progress Tracking
 
-- **Student Goal Management:**
-  - Individual goal setting with target dates
-  - Progress percentage tracking (0-100%)
-  - Goal status management (Active, Achieved, Abandoned)
-  - Notes and milestone documentation
-  - Teacher and student collaboration on objectives
+- **Student Goal Management** – targets, dates, percentage progress, status, notes, teacher collaboration
 
 ### 📊 Analytics & Reporting
 
-- **Real-Time Dashboard:**
-  - Customizable widget layout with drag-and-drop
-  - Quick stats (Students, Lessons, Revenue, Attendance)
-  - Upcoming lessons overview
-  - Recent activity feed
-  - At-a-glance studio health metrics
-- **Comprehensive Reports:**
-  - Student progress reports with custom date ranges
-  - Financial reports with revenue tracking
-  - Attendance and lesson completion reports
-  - CSV and Excel export functionality (ExcelJS)
-  - Filterable and sortable data views
+- **Real‑Time Dashboard** – customizable widgets, quick stats, upcoming lessons, activity feed, studio health metrics
+- **Exportable Reports** – student progress, financials, attendance, CSV/Excel via ExcelJS
 
 ### 🏢 Studio Management
 
-- **Multi-Tenancy Support:**
-  - Multiple studio/school profiles
-  - Subdomain support for branded access
-  - Custom branding (logo, colors, business info)
-  - Timezone and currency settings
-  - Business hours and contact information
-- **Interactive Studio Layout Editor:**
-  - 2D canvas designer powered by React-Konva
-  - Drag-and-drop room planning
-  - Item library (Instruments, Furniture, Equipment, Rooms)
-  - Rotation, resizing, and locking controls
-  - Save and print studio blueprints
-  - Desktop-optimized with mobile notice
-- **Teacher Management:**
-  - Teacher profiles with specializations and bios
-  - Hourly rate configuration
-  - Availability settings and scheduling preferences
-  - Booking buffer management
-  - Qualifications and experience tracking
+- **Multi‑Tenancy** – multiple studios, subdomains, branding, timezone, currency, business hours
+- **Studio Layout Editor** – 2D canvas (React‑Konva), drag‑drop rooms, item library, rotation, resizing, printing
+- **Teacher Management** – profiles, specialties, hourly rates, availability, booking buffers, qualifications
 
 ### 📋 Project & Task Management
 
-- **Kanban Board:**
-  - Visual task organization with drag-and-drop
-  - Status columns (To Do, In Progress, Done)
-  - Task details, descriptions, and assignments
-  - Project tracking for studio initiatives
-  - Color-coded priorities
+- **Kanban Board** – drag‑drop tasks, status columns, assignments, priorities, color‑coding
 
 ### 🎨 Design System & Customization
 
-- **Dynamic Theming:**
-  - 8+ color scheme options (Teal, Blue, Indigo, Purple, Pink, Red, Orange, Green)
-  - Real-time theme switching without page reload
-  - Earth tone palette (Terracotta, Olive, Sage)
-  - Dark mode support (coming soon)
-- **Appearance Customization:**
-  - Adjustable font sizes for accessibility
-  - Compact mode for information density
-  - Custom CSS variable system
-  - Premium glassmorphism UI effects
-  - Modern dialog and modal components
-- **Responsive Design:**
-  - Mobile-first approach for on-the-go access
-  - Tablet optimization for teaching scenarios
-  - Desktop power features for administration
-  - Touch-friendly interfaces throughout
+- **Dynamic Theming** – 8+ color schemes, real‑time switching, dark mode (coming soon)
+- **Appearance Customization** – font sizes, compact mode, CSS variables, glassmorphism, modern dialogs
+- **Responsive Design** – mobile‑first, tablet optimization, desktop power features, touch‑friendly UI
 
 ### 🔐 Security & Access Control
 
-- **Authentication:**
-  - Email-based secure authentication
-  - Password management and recovery
-  - Session handling and timeout
-- **Role-Based Permissions:**
-  - Four distinct roles (Admin, Teacher, Student, Parent)
-  - Granular permission controls
-  - Tailored dashboards per role
-  - Secure API endpoints with authentication
+- **Authentication** – email login, password recovery, session handling
+- **Role‑Based Permissions** – Admin, Teacher, Student, Parent with granular controls and tailored dashboards
 
 ### 🐳 Deployment & Infrastructure
 
-- **One-Command Docker Deployment:**
-  - Fully containerized with Docker Compose (v2 recommended)
-  - PostgreSQL database for data, caching, and task management
-  - Django Q for background tasks
-  - Production-ready configuration
+- **One‑Command Docker** – full stack (PostgreSQL, Redis, Celery, Django, Next.js) via Docker Compose
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Docker and Docker Compose
-- Node.js >= 20.9.0 (for local frontend development)
-- Python 3.11+ (for local backend development)
+- Docker & Docker Compose
+- Node.js >= 20.9.0 (frontend development)
+- Python 3.11+ (backend development)
 
 ### Installation (Docker Compose)
 
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/fddl-dev/studiosync.git
-   cd studiosync
+   git clone https://github.com/aviatorcards/StudioSync.git
+   cd StudioSync
    ```
 
 2. **Launch Services**
@@ -237,72 +118,73 @@
    docker compose exec backend python manage.py migrate
    ```
 
-4. **Complete Setup Wizard**
+4. **Run Setup Wizard**
 
-   Navigate to the interactive Setup Wizard to configure your studio and admin account:
-   - **Setup Wizard:** [http://localhost:3000/setup](http://localhost:3000/setup)
+   Open your browser and navigate to the interactive setup wizard to configure your studio and admin account:
+   - **Setup Wizard:** http://localhost:3000/setup
 
-5. **Access the App**
-   - **Frontend Dashboard:** [http://localhost:3000](http://localhost:3000)
-   - **API Docs:** [http://localhost:8000/api/docs](http://localhost:8000/api/docs)
-   - **Django Admin:** [http://localhost:8000/admin](http://localhost:8000/admin)
+5. **Access the Application**
+   - **Frontend Dashboard:** http://localhost:3000
+   - **API Docs:** http://localhost:8000/api/docs
+   - **Django Admin:** http://localhost:8000/admin
 
 ## 🛠️ Tech Stack
 
 ### Frontend
 
 - **Framework:** Next.js 16 (App Router)
-- **Styling:** Tailwind CSS + Vanilla CSS
-- **State/Data:** React Query + Context API
+- **Styling:** Tailwind CSS + vanilla CSS
+- **State/Data:** React Query, Context API
 - **Icons:** Lucide React
 - **Animations:** Framer Motion
-- **Interactivity:** dnd-kit (Dashboard), React-Konva (Studio Editor)
+- **Drag‑and‑Drop:** dnd-kit (Dashboard), React‑Konva (Studio Editor)
 - **Charts:** Recharts
 - **Reports:** ExcelJS (Excel export)
 
 ### Backend
 
 - **Framework:** Django 5.0 + Django REST Framework
-- **Database:** PostgreSQL (Data, Cache, Background Tasks)
-- **Real-time:** Django Channels (InMemoryChannelLayer)
+- **Database:** PostgreSQL (data, cache, background tasks)
+- **Real‑time:** Django Channels (InMemoryChannelLayer)
+- **Task Queue:** Django Q
 
 ## 📂 Project Structure
 
-```
+```text
 studiosync/
-├── backend/            # Django REST API & Core Logic
+├── backend/            # Django REST API & core logic
 │   ├── config/        # Settings & URL routing
 │   ├── apps/          # Modular apps (students, lessons, billing, etc.)
 │   └── scripts/       # Utility scripts
-├── frontend/           # Next.js Application
-│   ├── app/           # App Router (Pages & Layouts)
+├── frontend/           # Next.js application
+│   ├── app/           # App Router (pages & layouts)
 │   ├── components/    # Reusable UI components
-│   ├── contexts/      # Authentication & Appearance state
+│   ├── contexts/      # Auth & appearance state
 │   └── services/      # API communication layer
 ├── docs/               # Technical documentation
-├── scripts/            # Deployment & maintainance scripts
+├── scripts/            # Deployment & maintenance scripts
 └── docker-compose.yml  # Container orchestration
 ```
 
 ## 🎨 Design System
 
-StudioSync features a custom-built design system focused on performance and clarity:
+StudioSync features a custom‑built design system focused on performance and clarity:
 
-- **Dynamic Theming:** Users can choose their accent color (Teal, Blue, Indigo, Purple, Pink, Red, Orange, Green) in real-time.
-- **Glassmorphism:** Subtle blur effects and elevated surfaces for a modern feel.
-- **Mobile-First:** Every page is designed primarily for mobile usage without sacrificing desktop power.
+- **Dynamic Theming** – real‑time accent color switching (Teal, Blue, Indigo, Purple, Pink, Red, Orange, Green)
+- **Glassmorphism** – subtle blur and elevated surfaces for a modern feel
+- **Mobile‑First** – primary design for mobile without sacrificing desktop power
 
 ## 🤝 Contributing
 
 We welcome contributions of all kinds!
 
 1. Check the [Roadmap](ROADMAP.md) for upcoming tasks.
-2. Fork the repo and create your feature branch: `git checkout -b feature/cool-feature`.
+2. Fork the repo and create your feature branch: `git checkout -b feature/awesome-feature`.
 3. Submit a Pull Request.
 
 ## 📄 License
 
-Distributed under the GPL-3.0 License. See `LICENSE` for more information.
+Distributed under the GPL‑3.0 License. See `LICENSE` for more information.
 
 ---
 

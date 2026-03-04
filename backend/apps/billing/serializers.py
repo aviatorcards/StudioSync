@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Invoice, InvoiceLineItem, Payment, PaymentMethod
+from .models import Invoice, InvoiceLineItem, Payment, PaymentMethod, SubscriptionPlan, Subscription
 
 
 class InvoiceLineItemSerializer(serializers.ModelSerializer):
@@ -18,6 +18,13 @@ class InvoiceSerializer(serializers.ModelSerializer):
     # Display fields
     student_name = serializers.SerializerMethodField()
     band_name = serializers.SerializerMethodField()
+    stripe_transaction_id = serializers.SerializerMethodField()
+
+    def get_stripe_transaction_id(self, obj):
+        payment = obj.payments.filter(status='completed').order_by('-processed_at').first()
+        if payment and payment.transaction_id:
+            return payment.transaction_id
+        return obj.stripe_session_id or None
 
     def get_student_name(self, obj):
         if obj.student and obj.student.user:
@@ -50,6 +57,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "teacher",
             "band_name",
             "student_name",
+            "stripe_transaction_id",
         ]
         read_only_fields = [
             "invoice_number",
@@ -147,3 +155,41 @@ class PaymentMethodSerializer(serializers.ModelSerializer):
     def get_display_name(self, obj):
         """Get friendly display name for payment method"""
         return str(obj)
+
+class SubscriptionPlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubscriptionPlan
+        fields = [
+            "id",
+            "studio",
+            "name",
+            "description",
+            "price",
+            "interval",
+            "is_active",
+            "stripe_price_id",
+            "stripe_product_id",
+        ]
+        read_only_fields = ["studio"]
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    plan_details = SubscriptionPlanSerializer(source="plan", read_only=True)
+    student_name = serializers.ReadOnlyField(source="student.user.get_full_name")
+
+    class Meta:
+        model = Subscription
+        fields = [
+            "id",
+            "studio",
+            "plan",
+            "plan_details",
+            "student",
+            "student_name",
+            "status",
+            "stripe_subscription_id",
+            "current_period_start",
+            "current_period_end",
+            "cancel_at_period_end",
+        ]
+        read_only_fields = ["studio", "status", "stripe_subscription_id", "current_period_start", "current_period_end"]
+

@@ -35,6 +35,8 @@ import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/
 
 interface Lesson {
     id: string
+    student?: string
+    student_profile_id?: string
     student_name: string
     teacher_name: string
     student_instrument: string
@@ -43,12 +45,13 @@ interface Lesson {
     lesson_type: 'private' | 'group' | 'workshop' | 'recital' | 'makeup'
     status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'no_show'
     location: string
+    is_online?: boolean
     is_paid: boolean
 }
 
 export default function LessonsPage() {
     const { currentUser } = useUser()
-    const { lessons, loading } = useLessons()
+    const { lessons, loading, createLesson, updateLesson } = useLessons()
     const typedLessons = lessons as Lesson[]
     const { users } = useUsers({ page_size: 100 })
 
@@ -82,6 +85,7 @@ export default function LessonsPage() {
     const [showResourceSelector, setShowResourceSelector] = useState(false)
     const [formData, setFormData] = useState<LessonPlanFormData>({
         title: '',
+        description: '',
         content: '',
         estimated_duration_minutes: 60,
         tags: [],
@@ -90,6 +94,20 @@ export default function LessonsPage() {
     })
     const [tagInput, setTagInput] = useState('')
     const [submitting, setSubmitting] = useState(false)
+
+    // Regular Lesson State
+    const [showLessonModal, setShowLessonModal] = useState(false)
+    const [editingLessonId, setEditingLessonId] = useState<string | null>(null)
+    const [lessonSubmitting, setLessonSubmitting] = useState(false)
+    const [lessonData, setLessonData] = useState({
+        student: '',
+        lesson_type: 'private',
+        status: 'scheduled',
+        scheduled_start: '',
+        duration_minutes: 60,
+        location: '',
+        is_online: false,
+    })
 
     const getStatusBadge = (status: string) => {
         const styles = {
@@ -184,13 +202,35 @@ export default function LessonsPage() {
                     <p className="text-gray-500 font-medium max-w-lg">Orchestrate your pedagogical workflow and track student evolution.</p>
                 </div>
                 {currentUser && ['admin', 'teacher'].includes(currentUser.role) && (
-                    <Button
-                        onClick={() => setShowPlanModal(true)}
-                        className="gap-2 hover:scale-105 shadow-lg shadow-primary/20 transition-all"
-                    >
-                        <Plus className="w-4 h-4" />
-                        New Lesson Plan
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <Button
+                            onClick={() => {
+                                setEditingLessonId(null)
+                                setLessonData({
+                                    student: '',
+                                    lesson_type: 'private',
+                                    status: 'scheduled',
+                                    scheduled_start: new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
+                                    duration_minutes: 60,
+                                    location: '',
+                                    is_online: false,
+                                })
+                                setShowLessonModal(true)
+                            }}
+                            className="gap-2 shadow-lg shadow-primary/20 transition-all hover:scale-105"
+                        >
+                            <Calendar className="w-4 h-4" />
+                            New Lesson
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            onClick={() => setShowPlanModal(true)}
+                            className="gap-2 transition-all hover:scale-105 text-primary border-primary/20 bg-primary/5 hover:bg-primary/10"
+                        >
+                            <Plus className="w-4 h-4" />
+                            New Template
+                        </Button>
+                    </div>
                 )}
             </header>
 
@@ -330,13 +370,28 @@ export default function LessonsPage() {
                                                 {getStatusBadge(lesson.status)}
                                             </td>
                                             <td className="px-6 py-6 text-right">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="text-gray-300 hover:text-gray-600 hover:bg-gray-100/50"
-                                                >
-                                                    <MoreHorizontal className="w-5 h-5" />
-                                                </Button>
+                                                <div className="flex justify-end gap-2">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => {
+                                                            setEditingLessonId(lesson.id)
+                                                            setLessonData({
+                                                                student: lesson.student_profile_id || lesson.student || '',
+                                                                lesson_type: lesson.lesson_type,
+                                                                status: lesson.status,
+                                                                scheduled_start: new Date(new Date(start).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
+                                                                duration_minutes: duration,
+                                                                location: lesson.location || '',
+                                                                is_online: lesson.is_online || false,
+                                                            })
+                                                            setShowLessonModal(true)
+                                                        }}
+                                                        className="text-gray-400 hover:text-primary hover:bg-primary/5 active:scale-95"
+                                                    >
+                                                        <Edit className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
                                             </td>
                                         </tr>
                                     )
@@ -427,6 +482,7 @@ export default function LessonsPage() {
                                                 setEditingPlan(plan)
                                                 setFormData({
                                                     title: plan.title,
+                                                    description: plan.description || '',
                                                     content: plan.content,
                                                     estimated_duration_minutes: plan.estimated_duration_minutes,
                                                     tags: plan.tags,
@@ -493,6 +549,7 @@ export default function LessonsPage() {
                         setEditingPlan(null)
                         setFormData({
                             title: '',
+                            description: '',
                             content: '',
                             estimated_duration_minutes: 60,
                             tags: [],
@@ -658,6 +715,7 @@ export default function LessonsPage() {
                                 setEditingPlan(null)
                                 setFormData({
                                     title: '',
+                                    description: '',
                                     content: '',
                                     estimated_duration_minutes: 60,
                                     tags: [],
@@ -684,6 +742,124 @@ export default function LessonsPage() {
                                 {editingPlan ? 'Update Plan' : 'Create Plan'}
                             </>
                         )}
+                    </Button>
+                </DialogFooter>
+            </Dialog>
+
+            {/* Create/Edit Lesson Modal */}
+            <Dialog open={showLessonModal} onOpenChange={(open) => { setShowLessonModal(open); if (!open) setEditingLessonId(null) }} size="lg">
+                <DialogHeader title={editingLessonId ? 'Edit Lesson' : 'Create Lesson'} />
+                <DialogContent>
+                    <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">Student</label>
+                                <select
+                                    required
+                                    value={lessonData.student}
+                                    onChange={(e) => setLessonData({ ...lessonData, student: e.target.value })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-primary rounded-xl font-semibold text-gray-900 outline-none transition-all"
+                                >
+                                    <option value="">Select student...</option>
+                                    {students.map((student: any) => (
+                                        <option key={student.id} value={student.id}>{student.first_name} {student.last_name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">Date & Time</label>
+                                <input
+                                    type="datetime-local"
+                                    required
+                                    value={lessonData.scheduled_start}
+                                    onChange={(e) => setLessonData({ ...lessonData, scheduled_start: e.target.value })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-primary rounded-xl font-semibold text-gray-900 outline-none transition-all"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">Duration (min)</label>
+                                <input
+                                    type="number"
+                                    required
+                                    min="15"
+                                    step="15"
+                                    value={lessonData.duration_minutes}
+                                    onChange={(e) => setLessonData({ ...lessonData, duration_minutes: Number(e.target.value) })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-primary rounded-xl font-semibold text-gray-900 outline-none transition-all"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">Type</label>
+                                <select
+                                    value={lessonData.lesson_type}
+                                    onChange={(e) => setLessonData({ ...lessonData, lesson_type: e.target.value as any })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-primary rounded-xl font-semibold text-gray-900 outline-none transition-all"
+                                >
+                                    {['private', 'group', 'workshop', 'recital', 'makeup'].map(type => (
+                                        <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">Status</label>
+                                <select
+                                    value={lessonData.status}
+                                    onChange={(e) => setLessonData({ ...lessonData, status: e.target.value as any })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-primary rounded-xl font-semibold text-gray-900 outline-none transition-all"
+                                >
+                                    {['scheduled', 'in_progress', 'completed', 'cancelled', 'no_show'].map(type => (
+                                        <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ')}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">Location</label>
+                                <input
+                                    type="text"
+                                    value={lessonData.location}
+                                    placeholder="Room A, Zoom link, etc."
+                                    onChange={(e) => setLessonData({ ...lessonData, location: e.target.value })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-primary rounded-xl font-semibold text-gray-900 outline-none transition-all"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </DialogContent>
+                <DialogFooter>
+                    <Button variant="ghost" onClick={() => setShowLessonModal(false)} disabled={lessonSubmitting}>Cancel</Button>
+                    <Button
+                        disabled={lessonSubmitting || !lessonData.student || !lessonData.scheduled_start}
+                        onClick={async () => {
+                            setLessonSubmitting(true)
+                            try {
+                                const start = new Date(lessonData.scheduled_start)
+                                const end = new Date(start.getTime() + lessonData.duration_minutes * 60000)
+                                const payload = {
+                                    student: lessonData.student,
+                                    status: lessonData.status,
+                                    lesson_type: lessonData.lesson_type,
+                                    scheduled_start: start.toISOString(),
+                                    scheduled_end: end.toISOString(),
+                                    location: lessonData.location,
+                                    is_online: lessonData.is_online,
+                                }
+                                if (editingLessonId) {
+                                    await updateLesson(editingLessonId, payload)
+                                } else {
+                                    await createLesson(payload)
+                                }
+                                setShowLessonModal(false)
+                            } catch (e) {
+                                console.error('Lesson save issue', e)
+                            } finally {
+                                setLessonSubmitting(false)
+                            }
+                        }}
+                    >
+                        {lessonSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                        {editingLessonId ? 'Save Changes' : 'Create Lesson'}
                     </Button>
                 </DialogFooter>
             </Dialog>

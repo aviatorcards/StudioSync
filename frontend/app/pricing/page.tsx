@@ -634,8 +634,8 @@ export default function PricingPage() {
                         <div className="grid md:grid-cols-3 gap-8">
                             {[
                                 { icon: Shield, title: 'Secure & Compliant', description: 'Bank-level encryption and GDPR compliant' },
-                                { icon: Users, title: '500+ Studios', description: 'Trusted by music educators worldwide' },
-                                { icon: Zap, title: '99.9% Uptime', description: 'Reliable infrastructure you can count on' }
+                                { icon: Users, title: 'Trusted by Studios', description: 'Used by music educators worldwide' },
+                                { icon: Zap, title: 'Reliable Uptime', description: 'Infrastructure you can count on' }
                             ].map((item, index) => (
                                 <motion.div
                                     key={index}
@@ -704,7 +704,7 @@ export default function PricingPage() {
                                     Ready to Get Started?
                                 </h2>
                                 <p className="text-xl mb-10 text-white/90 max-w-2xl mx-auto">
-                                    Join hundreds of music studios using StudioSync to streamline their operations.
+                                    Try StudioSync and streamline your studio operations today.
                                 </p>
 
                                 <div className="flex flex-col sm:flex-row gap-4 justify-center">

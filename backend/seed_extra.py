@@ -7,7 +7,7 @@ Creates Families, Bands, Inventory, Lessons, Billing, and Resources.
 import os
 import random
 import uuid
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 import django
@@ -54,8 +54,16 @@ def seed_extra():
 
     # 1. Get existing core data
     try:
-        studio = Studio.objects.get(name="StudioSync Academy")
-        admin = User.objects.get(email="admin@test.com")
+        admin = User.objects.filter(email="admin@demo.com").first() or User.objects.filter(role="admin").first()
+        if not admin:
+            print("❌ Error: Demo admin found. Please run seed_data.py first.")
+            return
+
+        studio = Studio.objects.filter(owner=admin).first() or Studio.objects.filter(name="StudioSync Academy").first() or Studio.objects.first()
+        if not studio:
+            print("❌ Error: Studio found. Please run seed_data.py first.")
+            return
+        
         teachers = list(Teacher.objects.filter(studio=studio))
         students = list(Student.objects.filter(studio=studio))
     except (Studio.DoesNotExist, User.DoesNotExist):
@@ -274,49 +282,69 @@ def seed_extra():
     # 7. Create Billing (Invoices & Payments)
     print("💰 Creating Billing data...")
     # Invoices for students
-    for student in students[:10]:
-        # Create invoices for the last 4 months
-        for m in range(4):
-            issue_date = date.today() - timedelta(days=m * 30 + random.randint(0, 15))
+    billing_statuses = ["paid", "sent", "overdue", "partial", "draft"]
+    
+    for student in students[:15]:
+        # Create invoices for the last 6 months
+        for m in range(6):
+            issue_date = date.today() - timedelta(days=m * 30 + random.randint(0, 5))
+            status = random.choice(billing_statuses) if m == 0 else "paid"
+            
+            # Generate a unique invoice number for this specific seeding attempt
+            # We use a combination of student ID and month to make it repeatable but unique per student/period
+            invoice_num = f"INV-{issue_date.strftime('%Y%m')}-{str(student.id)[:4].upper()}-{m}"
+
             invoice, created = Invoice.objects.get_or_create(
-                studio=studio,
-                student=student,
-                issue_date=issue_date,
+                invoice_number=invoice_num,
                 defaults={
+                    "studio": studio,
+                    "student": student,
+                    "issue_date": issue_date,
                     "teacher": student.primary_teacher,
                     "due_date": issue_date + timedelta(days=14),
-                    "status": "paid" if m > 0 else random.choice(["sent", "paid", "partial", "overdue"]),
+                    "status": status,
                 }
             )
 
             if created:
-                # Add line items
+                # Add diverse line items
                 InvoiceLineItem.objects.create(
-                    invoice=invoice, description="Monthly Tuition - Private Lessons", unit_price=Decimal("200.00")
+                    invoice=invoice, description="Private Lesson - 1 Hour", unit_price=Decimal("65.00"), quantity=4
                 )
+                if random.choice([True, False]):
+                    InvoiceLineItem.objects.create(
+                        invoice=invoice, description="Sheet Music / Material Fee", unit_price=Decimal("15.00"), quantity=1
+                    )
+                
                 invoice.calculate_totals()
 
-                # Add payment for paid invoices
-                if invoice.status == "paid":
+                # Handle payments for Paid/Partial status
+                if invoice.status in ["paid", "partial"]:
+                    pay_amount = invoice.total_amount if invoice.status == "paid" else (invoice.total_amount / 2)
                     Payment.objects.create(
                         invoice=invoice,
-                        amount=invoice.total_amount,
-                        payment_method="credit_card",
+                        amount=pay_amount,
+                        payment_method=random.choice(["credit_card", "bank_transfer", "cash"]),
                         status="completed",
                         processed_by=admin,
-                        processed_at=timezone.make_aware(timezone.datetime.combine(issue_date, timezone.datetime.min.time())),
+                        processed_at=timezone.make_aware(datetime.combine(issue_date + timedelta(days=2), datetime.min.time())),
                     )
-                    invoice.amount_paid = invoice.total_amount
+                    invoice.amount_paid = pay_amount
                     invoice.save()
-                    # Backdate invoice created_at too (for charts that use created_at)
-                    Invoice.objects.filter(id=invoice.id).update(created_at=timezone.make_aware(timezone.datetime.combine(issue_date, timezone.datetime.min.time())))
+                    
+                    # Backdate invoice for charts
+                    Invoice.objects.filter(id=invoice.id).update(
+                        created_at=timezone.make_aware(datetime.combine(issue_date, datetime.min.time()))
+                    )
 
     # Invoices for bands
     for band in bands:
+        invoice_num = f"BAND-{str(band.id)[:8].upper()}"
         invoice, created = Invoice.objects.get_or_create(
-            studio=studio,
-            band=band,
+            invoice_number=invoice_num,
             defaults={
+                "studio": studio,
+                "band": band,
                 "due_date": date.today() + timedelta(days=14),
                 "status": "sent",
             }
@@ -328,11 +356,12 @@ def seed_extra():
             invoice.calculate_totals()
 
         # Add a Payment Method for the band
+        pm_id = f"pm_{str(band.id)[:12]}"
         PaymentMethod.objects.get_or_create(
-            band=band,
-            provider="stripe",
+            provider_payment_method_id=pm_id,
             defaults={
-                "provider_payment_method_id": f"pm_{uuid.uuid4().hex[:12]}",
+                "band": band,
+                "provider": "stripe",
                 "card_last_four": f"{random.randint(1000, 9999)}",
                 "card_brand": "Visa",
                 "is_default": True,
@@ -389,7 +418,167 @@ def seed_extra():
             )
             SetlistResource.objects.get_or_create(setlist=setlist, resource=resource, defaults={"order": i})
 
+    # 10. Create Lesson Plans & Detailed Lesson Data
+    seed_lesson_details(studio, teachers, students)
+
+    # 11. Create Calendar Chaos (Random events)
+    seed_calendar_chaos(studio, teachers, students, bands, rooms)
+
     print("🎉 Seeding complete!")
+
+
+def seed_calendar_chaos(studio, teachers, students, bands, rooms, days_back=30, days_forward=60, density=0.7):
+    print(f"🎲 Generating calendar chaos for the next {days_forward} days and past {days_back} days...")
+    
+    EVENT_TYPES = [
+        {"type": "workshop", "name": "Masterclass", "duration": 120, "prob": 0.05},
+        {"type": "recital", "name": "Studio Recital", "duration": 180, "prob": 0.02},
+        {"type": "group", "name": "Group Theory Class", "duration": 60, "prob": 0.1},
+        {"type": "makeup", "name": "Makeup Lesson", "duration": 45, "prob": 0.15},
+        {"type": "private", "name": "Ad-hoc Private Session", "duration": 60, "prob": 0.2},
+    ]
+
+    total_events = 0
+    start_date = date.today() - timedelta(days=days_back)
+    end_date = date.today() + timedelta(days=days_forward)
+    
+    current_date = start_date
+    while current_date <= end_date:
+        # Determine how many "extra" events happen today
+        num_events_today = random.randint(0, 5) if random.random() < density else 0
+        
+        for _ in range(num_events_today):
+            event_config = random.choices(
+                EVENT_TYPES, 
+                weights=[e["prob"] for e in EVENT_TYPES], 
+                k=1
+            )[0]
+            
+            teacher = random.choice(teachers)
+            student = None
+            band = None
+            
+            if event_config["type"] in ["private", "makeup", "group", "workshop"]:
+                student = random.choice(students)
+            
+            if bands and random.random() < 0.2:
+                band = random.choice(bands)
+                student = None
+            
+            room = random.choice(rooms) if rooms else None
+            hour = random.randint(9, 19)
+            minute = random.choice([0, 15, 30, 45])
+            
+            scheduled_start = timezone.make_aware(
+                datetime.combine(current_date, datetime.min.time().replace(hour=hour, minute=minute))
+            )
+            scheduled_end = scheduled_start + timedelta(minutes=event_config["duration"])
+            
+            # Check for overlaps
+            if Lesson.objects.filter(
+                teacher=teacher,
+                scheduled_start__lt=scheduled_end,
+                scheduled_end__gt=scheduled_start
+            ).exists():
+                continue
+
+            status = "scheduled"
+            if current_date < date.today():
+                status = random.choice(["completed", "no_show", "cancelled"])
+            elif current_date == date.today():
+                if scheduled_start < timezone.now():
+                    status = "completed"
+                else:
+                    status = "scheduled"
+
+            lesson, created = Lesson.objects.get_or_create(
+                studio=studio,
+                teacher=teacher,
+                scheduled_start=scheduled_start,
+                defaults={
+                    "student": student,
+                    "band": band,
+                    "room": room,
+                    "scheduled_end": scheduled_end,
+                    "lesson_type": event_config["type"],
+                    "status": status,
+                    "rate": teacher.hourly_rate or Decimal("50.00"),
+                    "summary": f"{event_config['name']} for {student.user.get_full_name() if student else (band.name if band else 'General')}",
+                    "location": room.name if room else "Main Hall",
+                }
+            )
+            
+            if created:
+                total_events += 1
+                if status == "completed":
+                    LessonNote.objects.create(
+                        lesson=lesson,
+                        teacher=teacher,
+                        content=fake.paragraph(nb_sentences=3),
+                        progress_rating=random.randint(3, 5)
+                    )
+
+        current_date += timedelta(days=1)
+    print(f"✅ Added {total_events} random events to the calendar.")
+
+
+def seed_lesson_details(studio, teachers, students):
+    print("📋 Creating detailed Lesson Plans and Notes...")
+    from apps.lessons.models import LessonPlan, LessonNote, Lesson
+    
+    MUSICAL_PIECES = [
+        "Für Elise", "Moonlight Sonata", "Clair de Lune", "Canon in D",
+        "The Entertainer", "Blue Danube", "Hallelujah", "Imagine",
+        "Bohemian Rhapsody", "Autumn Leaves", "Fly Me to the Moon",
+        "Wonderwall", "Blackbird", "Stairway to Heaven", "Let It Be"
+    ]
+    
+    TECHNIQUES = [
+        "Major Scales", "Minor Scales", "Arpeggios", "Vibrato",
+        "Sight Reading", "Ear Training", "Improvisation", "Fingerstyle",
+        "Breath Control", "Dynamics", "Articulation", "Staccato vs Legato"
+    ]
+
+    # Create Lesson Plans
+    lesson_plans = []
+    for teacher in teachers:
+        for i in range(3):
+            plan_title = f"{['Beginner', 'Intermediate', 'Advanced'][i]} {teacher.instruments[0] if teacher.instruments else 'Music'} Plan"
+            plan, _ = LessonPlan.objects.get_or_create(
+                title=plan_title,
+                created_by=teacher,
+                defaults={
+                    "description": f"A comprehensive lesson plan for {teacher.instruments[0] if teacher.instruments else 'general music'}.",
+                    "content": f"## Goals\n- Review {random.choice(TECHNIQUES)}\n- Work on {random.choice(MUSICAL_PIECES)}\n\n## Exercises\n1. 5 minutes warm-up\n2. 10 minutes technique\n3. 15 minutes repertoire",
+                    "estimated_duration_minutes": 30,
+                    "tags": ["standard", "curriculum"],
+                }
+            )
+            lesson_plans.append(plan)
+
+    # Update some existing lessons with detailed notes and plans
+    recent_lessons = Lesson.objects.filter(status="completed")[:50]
+    for lesson in recent_lessons:
+        # Assign a lesson plan if not present
+        if not lesson.lesson_plan:
+            lesson.lesson_plan = random.choice(lesson_plans)
+            lesson.save()
+
+        # Enhance or create LessonNote
+        note, created = LessonNote.objects.get_or_create(
+            lesson=lesson,
+            defaults={"teacher": lesson.teacher, "content": "Initial note content."}
+        )
+        
+        pieces = random.sample(MUSICAL_PIECES, random.randint(1, 3))
+        note.pieces_practiced = pieces
+        note.content = f"Today we focused on {', '.join(pieces)}. {fake.paragraph()}"
+        note.practice_assignments = f"Practice {random.choice(TECHNIQUES)} for 10 minutes daily. Focus on measures 12-24 of {pieces[0]}."
+        note.homework = f"Listen to 3 different recordings of {pieces[0]} and take notes on the dynamics."
+        note.strengths = f"Great {random.choice(TECHNIQUES)} today!"
+        note.areas_for_improvement = f"Need to work on {random.choice(TECHNIQUES)} transitions."
+        note.progress_rating = random.randint(3, 5)
+        note.save()
 
 
 if __name__ == "__main__":

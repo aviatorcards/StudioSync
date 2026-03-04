@@ -56,7 +56,7 @@ export default function Footer() {
                             <ul className="space-y-3">
                                 <li>
                                     <a
-                                        href="https://github.com/fddl-dev/studiosync"
+                                        href="https://github.com/aviatorcards/StudioSync"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-gray-600 hover:text-[#F39C12] transition-colors flex items-center justify-center md:justify-start gap-2"

@@ -252,3 +252,78 @@ class PaymentMethod(models.Model):
         if self.card_last_four:
             return f"{self.card_brand} ending in {self.card_last_four}"
         return f"{self.provider} payment method"
+
+
+class SubscriptionPlan(models.Model):
+    """
+    Recurring billing plans (e.g., Weekly Lesson, Monthly Access)
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    studio = models.ForeignKey(Studio, on_delete=models.CASCADE, related_name="subscription_plans")
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    interval = models.CharField(
+        max_length=20,
+        choices=[("day", "Daily"), ("week", "Weekly"), ("month", "Monthly"), ("year", "Yearly")],
+        default="month",
+    )
+    
+    # Provider IDs (optional if created in Stripe directly vs local first)
+    stripe_product_id = models.CharField(max_length=200, blank=True)
+    stripe_price_id = models.CharField(max_length=200, blank=True)
+    
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "subscription_plans"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.name} - ${self.price}/{self.interval}"
+
+
+class Subscription(models.Model):
+    """
+    A student's enrollment in a subscription plan
+    """
+
+    STATUS_CHOICES = [
+        ("active", "Active"),
+        ("past_due", "Past Due"),
+        ("canceled", "Canceled"),
+        ("unpaid", "Unpaid"),
+        ("trialing", "Trialing"),
+        ("incomplete", "Incomplete"),
+        ("incomplete_expired", "Incomplete Expired"),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    studio = models.ForeignKey(Studio, on_delete=models.CASCADE, related_name="subscriptions")
+    plan = models.ForeignKey(SubscriptionPlan, on_delete=models.RESTRICT, related_name="subscriptions")
+    student = models.ForeignKey(
+        "core.Student", on_delete=models.CASCADE, related_name="subscriptions"
+    )
+    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="incomplete")
+    
+    stripe_subscription_id = models.CharField(max_length=200, blank=True, db_index=True)
+    stripe_customer_id = models.CharField(max_length=200, blank=True)
+    
+    current_period_start = models.DateTimeField(null=True, blank=True)
+    current_period_end = models.DateTimeField(null=True, blank=True)
+    cancel_at_period_end = models.BooleanField(default=False)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "subscriptions"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.student} - {self.plan.name} ({self.status})"
+

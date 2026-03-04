@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useRef, useEffect, KeyboardEvent } from 'react'
-import { User, Building2, Bell, Palette, Mail, Camera, Wand2, Check, Server, Eye, EyeOff, Save, Loader2, Music, X, Plus, Download, Upload, ShieldAlert, Database } from 'lucide-react'
+import { User, Building2, Bell, Palette, Mail, Camera, Wand2, Check, Server, Eye, EyeOff, Save, Loader2, Music, X, Plus, Download, Upload, ShieldAlert, Database, Globe, DollarSign } from 'lucide-react'
 import { useUser } from '@/contexts/UserContext'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
 import ImageCropper from '@/components/ImageCropper'
 import { formatPhoneNumber } from '@/lib/utils'
+import { TIMEZONES, CURRENCIES } from '@/types/setup'
 
 export default function SettingsPage() {
     const { currentUser, setCurrentUser } = useUser()
@@ -103,6 +104,8 @@ export default function SettingsPage() {
         state: '',
         postal_code: '',
         country: 'US',
+        timezone: 'UTC',
+        currency: 'USD',
         default_lesson_duration: '60',
         cancellation_notice: '24',
         studio_description: ''
@@ -128,6 +131,8 @@ export default function SettingsPage() {
                 state: s.state || '',
                 postal_code: s.postal_code || '',
                 country: s.country || 'US',
+                timezone: s.timezone || 'UTC',
+                currency: s.currency || 'USD',
                 default_lesson_duration: s.settings?.default_lesson_duration?.toString() || '60',
                 cancellation_notice: s.settings?.cancellation_notice_period?.toString() || '24',
                 studio_description: s.settings?.studio_description || ''
@@ -405,6 +410,8 @@ export default function SettingsPage() {
                     state: settings.state,
                     postal_code: settings.postal_code,
                     country: settings.country,
+                    timezone: settings.timezone,
+                    currency: settings.currency,
                     settings: {
                         ...currentSettings,
                         default_lesson_duration: parseInt(settings.default_lesson_duration),
@@ -421,7 +428,17 @@ export default function SettingsPage() {
                 
                 // Refresh user to get updated studio embedded data
                 const userRes = await api.get('/core/users/me/')
-                updateCurrentUserSafe(userRes.data)
+                const userData = userRes.data
+                
+                // If the user's personal timezone doesn't match the studio's,
+                // and they are the admin, update the user timezone too for consistency
+                if (userData.role === 'admin' && userData.timezone !== settings.timezone) {
+                    await api.patch('/core/users/me/', { timezone: settings.timezone })
+                    const updatedUserRes = await api.get('/core/users/me/')
+                    updateCurrentUserSafe(updatedUserRes.data)
+                } else {
+                    updateCurrentUserSafe(userData)
+                }
 
             } else {
                 // Handle User Preferences (Appearance, Communication, Notifications)
@@ -863,6 +880,39 @@ export default function SettingsPage() {
                                             placeholder="Country (ISO)"
                                             className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                                         />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                                            <Globe className="w-3.5 h-3.5" /> Timezone
+                                        </label>
+                                        <select
+                                            id="studio-timezone"
+                                            value={studioSettings.timezone}
+                                            onChange={e => setStudioSettings({ ...studioSettings, timezone: e.target.value })}
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                        >
+                                            {TIMEZONES.map(tz => (
+                                                <option key={tz.value} value={tz.value}>{tz.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                                            <DollarSign className="w-3.5 h-3.5" /> Currency
+                                        </label>
+                                        <select
+                                            id="studio-currency"
+                                            value={studioSettings.currency}
+                                            onChange={e => setStudioSettings({ ...studioSettings, currency: e.target.value })}
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                        >
+                                            {CURRENCIES.map(c => (
+                                                <option key={c.value} value={c.value}>{c.label}</option>
+                                            ))}
+                                        </select>
                                     </div>
                                 </div>
 

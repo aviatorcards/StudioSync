@@ -183,7 +183,33 @@ export function useLessons(params?: any) {
     fetchLessons();
   }, [JSON.stringify(params)]);
 
-  return { lessons, loading, refetch: fetchLessons };
+  const createLesson = async (lessonData: any) => {
+    try {
+      const response = await api.post("/lessons/", lessonData);
+      toast.success("Lesson created successfully!");
+      fetchLessons();
+      return response.data;
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.detail || "Failed to create lesson");
+      throw err;
+    }
+  };
+
+  const updateLesson = async (id: string, lessonData: any) => {
+    try {
+      const response = await api.patch(`/lessons/${id}/`, lessonData);
+      toast.success("Lesson updated successfully!");
+      fetchLessons();
+      return response.data;
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.detail || "Failed to update lesson");
+      throw err;
+    }
+  };
+
+  return { lessons, loading, refetch: fetchLessons, createLesson, updateLesson };
 }
 
 export function useTeachers(params?: any) {
@@ -528,4 +554,52 @@ export function useInstruments() {
   }, []);
 
   return { instruments, loading, refresh: fetchInstruments };
+}
+
+export function useSubscriptionPlans(params?: any) {
+  const [plans, setPlans] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchPlans = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get("/billing/subscription-plans/", { params });
+      const data = response.data.results || response.data;
+      setPlans(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPlans();
+  }, [JSON.stringify(params)]);
+
+  return { plans, loading, refetch: fetchPlans };
+}
+
+export function useSubscriptions(params?: any) {
+  const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchSubscriptions = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get("/billing/subscriptions/", { params });
+      const data = response.data.results || response.data;
+      setSubscriptions(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSubscriptions();
+  }, [JSON.stringify(params)]);
+
+  return { subscriptions, loading, refetch: fetchSubscriptions };
 }

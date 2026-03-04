@@ -1,14 +1,39 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { CheckCircle2, ArrowLeft } from 'lucide-react'
+import { CheckCircle2, ArrowLeft, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import api from '@/services/api'
 
 export default function PaymentSuccessPage() {
     const searchParams = useSearchParams()
     const sessionId = searchParams.get('session_id')
+    const [verifying, setVerifying] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+
+    useEffect(() => {
+        if (!sessionId) {
+            setVerifying(false)
+            return
+        }
+
+        const verifySession = async () => {
+            try {
+                // Synchronously verify checkout so the db updates even if webhooks fail via CLI constraints
+                await api.post('/billing/verify-checkout-session/', { session_id: sessionId })
+            } catch (err: any) {
+                console.error("Verification error:", err)
+                // We do not strictly display an error on standard webhook setups because sometimes 
+                // the session takes a moment for stripe to process, but we log it.
+            } finally {
+                setVerifying(false)
+            }
+        }
+        
+        verifySession()
+    }, [sessionId])
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">

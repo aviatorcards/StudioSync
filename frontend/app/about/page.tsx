@@ -110,28 +110,7 @@ function TimelineItem({ item, index }: any) {
     )
 }
 
-function StatCard({ stat, index }: any) {
-    const ref = useRef(null)
-    const isInView = useInView(ref, { once: true })
 
-    return (
-        <motion.div
-            ref={ref}
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.5 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            className="relative rounded-2xl overflow-hidden text-center p-8"
-        >
-            <div className="absolute inset-0 bg-white/80 border border-white/30" />
-            <div className="relative">
-                <div className="text-5xl font-bold bg-gradient-to-r from-earth-primary to-olive-dark bg-clip-text text-transparent mb-2">
-                    {stat.value}
-                </div>
-                <div className="text-gray-600 font-medium">{stat.label}</div>
-            </div>
-        </motion.div>
-    )
-}
 
 export default function AboutPage() {
     const values = [
@@ -186,12 +165,7 @@ export default function AboutPage() {
         }
     ]
 
-    const stats = [
-        { value: '500+', label: 'Music Studios' },
-        { value: '50K+', label: 'Students Managed' },
-        { value: '99.9%', label: 'Uptime' },
-        { value: 'Open', label: 'Source' }
-    ]
+
 
     return (
         <>
@@ -251,16 +225,7 @@ export default function AboutPage() {
                     </div>
                 </section>
 
-                {/* Stats Section */}
-                <section className="px-4 pb-20">
-                    <div className="max-w-6xl mx-auto">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                            {stats.map((stat, index) => (
-                                <StatCard key={index} stat={stat} index={index} />
-                            ))}
-                        </div>
-                    </div>
-                </section>
+
 
                 {/* Mission Section */}
                 <section className="px-4 pb-20">
@@ -390,7 +355,7 @@ export default function AboutPage() {
                                 <motion.a
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    href="https://github.com/fddl-dev/studiosync"
+                                    href="https://github.com/aviatorcards/StudioSync"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-900 rounded-xl hover:bg-gray-100 transition-colors font-semibold"
@@ -430,7 +395,7 @@ export default function AboutPage() {
                                     Ready to Transform Your Studio?
                                 </h2>
                                 <p className="text-xl mb-10 text-white/90 max-w-2xl mx-auto">
-                                    Join hundreds of music instructors who are already using StudioSync to streamline their studios.
+                                    Try StudioSync and see how it can streamline your studio operations.
                                 </p>
 
                                 <div className="flex flex-col sm:flex-row gap-4 justify-center">

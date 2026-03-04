@@ -88,13 +88,23 @@ docker compose exec backend python seed_resources.py
 docker compose exec backend python seed_extra_resources.py
 ```
 
-### 🔐 Seeding Credentials
+### 🔐 Seeding Configuration
+
+You can customize the seed data using environment variables:
+
+| Variable               | Description                 | Default            |
+| :--------------------- | :-------------------------- | :----------------- |
+| `SEED_ADMIN_PASSWORD`  | Password for admin@demo.com | `demo123`          |
+| `SEED_STUDIO_TIMEZONE` | Default studio timezone     | `America/New_York` |
+| `SEED_STUDIO_CURRENCY` | Default studio currency     | `USD`              |
+
+**Run these from your terminal:**
 
 After seeding, you can log in with these default accounts:
 
 | Role        | Email               | Password     |
 | :---------- | :------------------ | :----------- |
-| **Admin**   | `admin@test.com`    | `admin123`   |
+| **Admin**   | `admin@demo.com`    | `demo123`    |
 | **Teacher** | `teacher1@test.com` | `teacher123` |
 | **Student** | `student1@test.com` | `student123` |
 

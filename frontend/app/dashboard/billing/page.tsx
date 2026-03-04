@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useUser } from '@/contexts/UserContext'
-import { useInvoices } from '@/hooks/useDashboardData'
+import { useInvoices, useSubscriptionPlans, useSubscriptions } from '@/hooks/useDashboardData'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
 import {
@@ -25,7 +25,8 @@ import {
     Receipt,
     ChevronRight,
     ArrowUpRight,
-    CreditCard
+    CreditCard,
+    Repeat
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
@@ -46,11 +47,17 @@ interface Invoice {
     student_name?: string
     band_name?: string
     created_at?: string
+    stripe_transaction_id?: string
 }
 
 export default function BillingPage() {
     const { currentUser } = useUser()
-    const { invoices, loading, refetch } = useInvoices()
+    const { invoices, loading: loadingInvoices, refetch: refetchInvoices } = useInvoices()
+    const { plans, loading: loadingPlans } = useSubscriptionPlans()
+    const { subscriptions, loading: loadingSubs, refetch: refetchSubs } = useSubscriptions()
+    
+    const [activeTab, setActiveTab] = useState<'invoices' | 'subscriptions'>('invoices')
+    
     const [showCreateModal, setShowCreateModal] = useState(false)
     const [viewingInvoice, setViewingInvoice] = useState<Invoice | null>(null)
     const [students, setStudents] = useState<any[]>([])
@@ -93,7 +100,7 @@ export default function BillingPage() {
                 line_items: [{ description: '', quantity: 1, unit_price: '' }]
             })
             toast.success('Invoice created successfully!')
-            refetch()
+            refetchInvoices()
         } catch (error) {
             console.error('Create invoice failed', error)
             toast.error('Failed to create invoice')
@@ -165,7 +172,7 @@ export default function BillingPage() {
         try {
             await api.delete(`/billing/invoices/${invoiceId}/`)
             toast.success('Invoice deleted successfully')
-            refetch()
+            refetchInvoices()
         } catch (error) {
             console.error('Failed to delete invoice', error)
             toast.error('Failed to delete invoice')
@@ -232,7 +239,7 @@ export default function BillingPage() {
 
     const isManager = currentUser && ['admin', 'teacher'].includes(currentUser.role)
 
-    if (loading) {
+    if (loadingInvoices || loadingPlans || loadingSubs) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-in fade-in duration-500">
                 <Loader2 className="w-10 h-10 text-primary animate-spin" />
@@ -245,13 +252,39 @@ export default function BillingPage() {
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header */}
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4">
-                <div className="space-y-2">
-                    <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">Billing & Invoices</h1>
-                    <p className="text-gray-500 font-medium max-w-lg">
-                        {isManager ? 'Manage invoices and track studio revenue.' : 'View your invoices and manage your subscription.'}
-                    </p>
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">Billing & Invoices</h1>
+                        <p className="text-gray-500 font-medium max-w-lg">
+                            {isManager ? 'Manage invoices and track studio revenue.' : 'View your invoices and manage your subscription.'}
+                        </p>
+                    </div>
+                    
+                    {/* Tabs */}
+                    <div className="flex gap-2 p-1 bg-gray-50 w-fit rounded-2xl border border-gray-100">
+                        <button
+                            onClick={() => setActiveTab('invoices')}
+                            className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${
+                                activeTab === 'invoices'
+                                    ? 'bg-white text-gray-900 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                        >
+                            Invoices
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('subscriptions')}
+                            className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${
+                                activeTab === 'subscriptions'
+                                    ? 'bg-white text-gray-900 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                        >
+                            Subscriptions
+                        </button>
+                    </div>
                 </div>
-                {isManager && (
+                {isManager && activeTab === 'invoices' && (
                     <Button
                         onClick={() => setShowCreateModal(true)}
                         className="gap-2 hover:scale-105"
@@ -262,8 +295,10 @@ export default function BillingPage() {
                 )}
             </header>
 
-            {/* Stats Overview */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {activeTab === 'invoices' && (
+                <>
+                    {/* Stats Overview */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
                     <div className="flex items-center justify-between mb-4">
                         <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600 group-hover:scale-110 transition-transform">
@@ -457,6 +492,97 @@ export default function BillingPage() {
                     </table>
                 </div>
             </div>
+            </>
+            )}
+
+            {activeTab === 'subscriptions' && (
+                <div className="space-y-8 animate-in fade-in duration-500">
+                    <div className="flex flex-col md:flex-row gap-8">
+                        {/* Subscriptions List (Left side for students, full width maybe for admins) */}
+                        <div className="flex-1 space-y-6">
+                            <h2 className="text-xl font-black text-gray-900 tracking-tight">Your Subscriptions</h2>
+                            <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+                                {subscriptions?.length > 0 ? (
+                                    <div className="divide-y divide-gray-50">
+                                        {subscriptions.map((sub: any) => (
+                                            <div key={sub.id} className="p-6 hover:bg-gray-50/50 transition-colors flex items-center justify-between">
+                                                <div>
+                                                    <h3 className="font-bold text-gray-900">{sub.plan_details?.name}</h3>
+                                                    <p className="text-sm font-medium text-gray-500">
+                                                        {isManager ? `Student: ${sub.student_name} ` : ''}
+                                                        (${sub.plan_details?.interval})
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                                                        sub.status === 'active' ? 'bg-green-50 text-green-600 border-green-100' :
+                                                        sub.status === 'past_due' ? 'bg-red-50 text-red-600 border-red-100' :
+                                                        'bg-gray-50 text-gray-500 border-gray-100'
+                                                    }`}>
+                                                        {sub.status}
+                                                    </span>
+                                                    <span className="font-black text-gray-900">${sub.plan_details?.price}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="p-12 text-center text-gray-400 font-bold text-sm">
+                                        <Repeat className="w-8 h-8 mx-auto mb-3 opacity-20" />
+                                        No active subscriptions
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Available Plans (Right side for students) */}
+                        <div className="md:w-96 space-y-6">
+                            <h2 className="text-xl font-black text-gray-900 tracking-tight">Available Plans</h2>
+                            <div className="space-y-4">
+                                {plans?.map((plan: any) => (
+                                    <div key={plan.id} className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform">
+                                            <Repeat className="w-24 h-24" />
+                                        </div>
+                                        <div className="relative z-10 space-y-4">
+                                            <div>
+                                                <h3 className="font-black text-lg text-gray-900 mb-1">{plan.name}</h3>
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="text-3xl font-black tracking-tight">${plan.price}</span>
+                                                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">/ {plan.interval}</span>
+                                                </div>
+                                                <p className="text-xs font-medium text-gray-500 mt-2">{plan.description || `Subscribe ${plan.interval}ly logic`}</p>
+                                            </div>
+                                            {!isManager && (
+                                                <Button 
+                                                  onClick={async () => {
+                                                    const tid = toast.loading('Starting checkout...');
+                                                    try {
+                                                        const res = await api.post(`/billing/create-subscription-checkout-session/${plan.id}/`);
+                                                        if (res.data.url) window.location.href = res.data.url;
+                                                        else toast.error('Checkout failed', {id: tid});
+                                                    } catch (e) {
+                                                        toast.error('Could not initiate checkout', {id: tid});
+                                                    }
+                                                  }}
+                                                  className="w-full bg-gray-900 hover:bg-gray-800"
+                                                >
+                                                    Subscribe Now
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                                {plans?.length === 0 && (
+                                    <div className="p-8 text-center text-gray-400 font-bold text-sm bg-white rounded-[2rem] border border-dashed border-gray-200">
+                                        No plans available right now.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Create Invoice Modal */}
             <Dialog
@@ -645,6 +771,11 @@ export default function BillingPage() {
                                                 {viewingInvoice.status}
                                             </span>
                                         </div>
+                                        {viewingInvoice.stripe_transaction_id && (
+                                            <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mt-1">
+                                                Stripe Ref: {viewingInvoice.stripe_transaction_id.slice(0, 16)}...
+                                            </p>
+                                        )}
                                     </div>
                                     <div className="text-right">
                                         <span className="text-4xl font-black tracking-tight">${Number(viewingInvoice.total_amount).toFixed(2)}</span>

@@ -197,49 +197,7 @@ const testimonials = [
   }
 ]
 
-const stats = [
-  { value: '500+', label: 'Music Studios' },
-  { value: '50K+', label: 'Students Managed' },
-  { value: '99.9%', label: 'Uptime' },
-  { value: '4.9/5', label: 'Rating' }
-]
 
-function AnimatedCounter({ value, inView }: { value: string, inView: boolean }) {
-  const [count, setCount] = useState('0')
-
-  useEffect(() => {
-    if (!inView) return
-
-    const numValue = value.replace(/[^0-9.]/g, '')
-    const hasDecimal = value.includes('.')
-    const suffix = value.replace(/[0-9.]/g, '')
-
-    if (hasDecimal) {
-      setCount(value)
-      return
-    }
-
-    const target = parseInt(numValue)
-    const duration = 2000
-    const steps = 50
-    const increment = target / steps
-    let current = 0
-
-    const timer = setInterval(() => {
-      current += increment
-      if (current >= target) {
-        setCount(value)
-        clearInterval(timer)
-      } else {
-        setCount(Math.floor(current) + suffix)
-      }
-    }, duration / steps)
-
-    return () => clearInterval(timer)
-  }, [inView, value])
-
-  return <span>{count}</span>
-}
 
 // Optimized FloatingOrb using CSS animations instead of Framer Motion
 // CSS animations are GPU-accelerated and don't cause main thread jank
@@ -531,8 +489,6 @@ export default function Home() {
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 })
 
   const heroRef = useRef(null)
-  const statsRef = useRef(null)
-  const statsInView = useInView(statsRef, { once: true })
 
   const [selectedFeature, setSelectedFeature] = useState<typeof features[0] | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -595,7 +551,7 @@ export default function Home() {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 border border-earth-light text-earth-dark font-medium mb-8"
               >
                 <Sparkles className="w-4 h-4" />
-                Join 500+ music studios
+                Built for music studios
               </motion.div>
 
               <h1 className="text-6xl md:text-8xl font-extrabold mb-6 leading-tight">
@@ -690,27 +646,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Stats Section */}
-        <section ref={statsRef} className="py-20 px-4">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              {stats.map((stat, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={statsInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.5 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="text-center"
-                >
-                  <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-earth-primary to-olive-dark bg-clip-text text-transparent mb-2">
-                    <AnimatedCounter value={stat.value} inView={statsInView} />
-                  </div>
-                  <div className="text-gray-600 font-medium">{stat.label}</div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
+
 
         {/* Features Bento Grid */}
         <section className="py-20 px-4">
@@ -762,7 +698,7 @@ export default function Home() {
                 Loved by Music Educators
               </h2>
               <p className="text-xl text-gray-600">
-                Join hundreds of studios making beautiful music
+                See why music educators love StudioSync
               </p>
             </motion.div>
           </div>
@@ -799,7 +735,7 @@ export default function Home() {
                   Ready to Transform Your Studio?
                 </h2>
                 <p className="text-xl mb-10 text-white/90 max-w-2xl mx-auto">
-                  Join 500+ music studios using StudioSync to manage students, schedules, and billing effortlessly.
+                  Try StudioSync and manage students, schedules, and billing effortlessly.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">

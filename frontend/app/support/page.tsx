@@ -20,10 +20,7 @@ export default function SupportPage() {
                                 Contact Information
                             </h3>
                             <p className="mt-1 text-sm text-gray-500">
-                                Email: <a href="mailto:tristan@fddl.dev" className="text-indigo-600 hover:text-indigo-500">support@studiosync.com</a>
-                            </p>
-                            <p className="mt-1 text-sm text-gray-500">
-                                Phone: +1 (317) 457-2302
+                                Email: <a href="mailto:tristan@fddl.dev" className="text-indigo-600 hover:text-indigo-500">tristan@fddl.dev</a>
                             </p>
                             <p className="mt-4 text-xs text-gray-400">
                                 Support Hours: Mon-Fri 9am - 5pm EST

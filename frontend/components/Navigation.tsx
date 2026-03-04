@@ -204,7 +204,7 @@ export default function Navigation() {
                     className="text-center pb-8"
                   >
                     <p className="text-white/50 text-sm">
-                      Join 500+ music studios using StudioSync
+                      Built for music studios everywhere
                     </p>
                   </motion.div>
                 </motion.div>

@@ -13,7 +13,7 @@ interface AppearanceContextType {
 
 const AppearanceContext = createContext<AppearanceContextType>({
     theme: 'light',
-    colorScheme: 'default',
+    colorScheme: 'blue',
     fontSize: 'medium',
     compactMode: false
 })

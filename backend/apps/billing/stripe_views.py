@@ -64,6 +64,88 @@ class CreateCheckoutSessionView(views.APIView):
             logger.error(f"Stripe Checkout Error: {str(e)}")
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+class CreateSubscriptionCheckoutSessionView(views.APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, plan_id):
+        from .models import SubscriptionPlan, Subscription
+        plan = get_object_or_404(SubscriptionPlan, id=plan_id)
+        
+        student = getattr(request.user, "student_profile", None)
+        if not student and request.user.role == "student":
+            from apps.core.models import Student
+            student = Student.objects.filter(user=request.user).first()
+
+        if not student:
+            return Response({"error": "Could not identify student profile."}, status=400)
+
+        domain_url = (
+            settings.CORS_ALLOWED_ORIGINS[0]
+            if settings.CORS_ALLOWED_ORIGINS
+            else "http://localhost:3000"
+        )
+        
+        try:
+            subscription = Subscription.objects.create(
+                studio=plan.studio,
+                plan=plan,
+                student=student,
+                status="incomplete"
+            )
+
+            checkout_session = stripe.checkout.Session.create(
+                client_reference_id=str(subscription.id),
+                success_url=domain_url + "/payment/success?session_id={CHECKOUT_SESSION_ID}",
+                cancel_url=domain_url + "/payment/cancel",
+                payment_method_types=["card"],
+                mode="subscription",
+                line_items=[
+                    {
+                        "price_data": {
+                            "currency": "usd",
+                            "product_data": {
+                                "name": plan.name,
+                                "description": plan.description or f"Subscription to {plan.name}",
+                            },
+                            "unit_amount": int(float(plan.price) * 100),
+                            "recurring": {
+                                "interval": plan.interval,
+                            }
+                        },
+                        "quantity": 1,
+                    }
+                ],
+                customer_email=request.user.email,
+                metadata={"subscription_id": str(subscription.id), "type": "subscription"},
+            )
+
+            return Response({"sessionId": checkout_session["id"], "url": checkout_session["url"]})
+        except Exception as e:
+            logger.error(f"Stripe Subscription Checkout Error: {str(e)}")
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class VerifyCheckoutSessionView(views.APIView):
+    # Important: Allow the frontend to verify standard payment synchronously 
+    # as a fallback if webhooks (stripe CLI) are not perfectly configured
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        session_id = request.data.get("session_id")
+        if not session_id:
+            return Response({"error": "session_id is required"}, status=400)
+            
+        try:
+            session = stripe.checkout.Session.retrieve(session_id)
+            if session.payment_status == "paid" or session.status == "complete":
+                # Reuse the existing webhook handler safely to apply states
+                webhook_view = StripeWebhookView()
+                webhook_view.handle_checkout_session(session)
+                return Response({"status": "success", "message": "Payment verified"})
+            return Response({"status": session.payment_status or session.status})
+        except Exception as e:
+            logger.error(f"Verify Session Error: {str(e)}")
+            return Response({"error": str(e)}, status=400)
 
 @method_decorator(csrf_exempt, name="dispatch")
 class StripeWebhookView(views.APIView):
@@ -90,6 +172,22 @@ class StripeWebhookView(views.APIView):
         return Response(status=status.HTTP_200_OK)
 
     def handle_checkout_session(self, session):
+        metadata = session.get("metadata", {})
+        if metadata.get("type") == "subscription":
+            sub_id = metadata.get("subscription_id") or session.get("client_reference_id")
+            if sub_id:
+                try:
+                    from .models import Subscription
+                    sub = Subscription.objects.get(id=sub_id)
+                    sub.status = "active"
+                    sub.stripe_subscription_id = session.get("subscription")
+                    sub.stripe_customer_id = session.get("customer")
+                    sub.save()
+                    logger.info(f"Subscription {sub.id} activated via Stripe.")
+                except Exception as e:
+                    logger.error(f"Subscription {sub_id} not found: {e}")
+            return
+
         invoice_id = session.get("client_reference_id")
         if invoice_id:
             try:
@@ -106,7 +204,7 @@ class StripeWebhookView(views.APIView):
                         payment_method="stripe",
                         status="completed",
                         transaction_id=session.get("payment_intent") or session.get("id"),
-                        payment_date=invoice.updated_at.date(),  # Or now
+                        processed_at=timezone.now(),
                     )
                     logger.info(f"Invoice {invoice.invoice_number} marked as paid via Stripe.")
             except Invoice.DoesNotExist:

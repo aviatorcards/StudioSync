@@ -105,7 +105,7 @@ export default function SignupPage() {
                         Start managing your studio today
                     </h1>
                     <p className="text-xl text-white/90">
-                        Join hundreds of music instructors who trust StudioSync to run their studios.
+                        Music instructors trust StudioSync to run their studios.
                     </p>
 
                     {/* Features */}

@@ -3,8 +3,8 @@ from django.db.models import Q
 from rest_framework import permissions, status, viewsets
 from rest_framework.response import Response
 
-from .models import Invoice
-from .serializers import InvoiceSerializer
+from .models import Invoice, SubscriptionPlan, Subscription
+from .serializers import InvoiceSerializer, SubscriptionPlanSerializer, SubscriptionSerializer
 
 
 class InvoiceViewSet(viewsets.ModelViewSet):
@@ -66,3 +66,47 @@ class InvoiceViewSet(viewsets.ModelViewSet):
                 {"detail": "Only admins can delete invoices."}, status=status.HTTP_403_FORBIDDEN
             )
         return super().destroy(request, *args, **kwargs)
+
+class SubscriptionPlanViewSet(viewsets.ModelViewSet):
+    serializer_class = SubscriptionPlanSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == "admin":
+            return SubscriptionPlan.objects.filter(studio__owner=user)
+        elif hasattr(user, "student_profile"):
+            return SubscriptionPlan.objects.filter(studio=user.student_profile.studio, is_active=True)
+        return SubscriptionPlan.objects.none()
+
+    def perform_create(self, serializer):
+        if self.request.user.role != "admin":
+            raise permissions.PermissionDenied("Only admins can create subscription plans.")
+        from apps.core.models import Studio
+        studio = Studio.objects.filter(owner=self.request.user).first()
+        if studio:
+            serializer.save(studio=studio)
+        else:
+            serializer.save(studio=Studio.objects.first())
+
+
+class SubscriptionViewSet(viewsets.ModelViewSet):
+    serializer_class = SubscriptionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == "admin":
+            return Subscription.objects.filter(studio__owner=user)
+        if hasattr(user, "student_profile"):
+            return Subscription.objects.filter(student=user.student_profile)
+        return Subscription.objects.none()
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        from apps.core.models import Studio
+        studio = Studio.objects.filter(owner=self.request.user).first() if user.role == "admin" else getattr(getattr(user, "student_profile", None), "studio", None)
+        if not studio:
+            studio = Studio.objects.first()
+        serializer.save(studio=studio)
+

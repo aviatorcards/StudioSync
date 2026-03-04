@@ -20,6 +20,9 @@ export interface User {
     phone?: string
     bio?: string
     instrument?: string
+    studio?: { id: string; name: string; [key: string]: any }
+    student_profile?: { id: string; [key: string]: any }
+    teacher_profile?: { id: string; studio?: { id: string }; [key: string]: any }
 }
 
 interface UserContextType {

@@ -16,9 +16,10 @@ export default async function StudioLayout({
     params,
 }: {
     children: React.ReactNode;
-    params: { studio: string };
+    params: Promise<{ studio: string }>;
 }) {
-    const studio = await getStudio(params.studio);
+    const resolvedParams = await params;
+    const studio = await getStudio(resolvedParams.studio);
 
     if (!studio) {
         notFound();

@@ -97,6 +97,8 @@ class SimpleStudioSerializer(serializers.ModelSerializer):
             "state",
             "postal_code",
             "country",
+            "timezone",
+            "currency",
             "settings",
             "cover_image",
         ]

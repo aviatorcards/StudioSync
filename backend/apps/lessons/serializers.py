@@ -17,6 +17,13 @@ class LessonListSerializer(serializers.ModelSerializer):
     room_name = serializers.CharField(source="room.name", read_only=True)
     lesson_plan_title = serializers.CharField(source="lesson_plan.title", read_only=True)
     duration_minutes = serializers.IntegerField(read_only=True)
+    student_profile_id = serializers.SerializerMethodField()
+
+    def get_student_profile_id(self, obj):
+        """Return the student profile UUID as a plain string for frontend matching."""
+        if obj.student:
+            return str(obj.student.id)
+        return None
 
     class Meta:
         model = Lesson
@@ -24,6 +31,7 @@ class LessonListSerializer(serializers.ModelSerializer):
             "id",
             "student",
             "student_name",
+            "student_profile_id",
             "teacher",
             "teacher_name",
             "student_instrument",

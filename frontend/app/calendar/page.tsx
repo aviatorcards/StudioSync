@@ -278,7 +278,7 @@ export default function CalendarPage() {
                                 Ready to Streamline Your Schedule?
                             </h2>
                             <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-                                Join hundreds of music studios using StudioSync to manage their calendars efficiently.
+                                Try StudioSync and manage your studio calendar efficiently.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                 <Link

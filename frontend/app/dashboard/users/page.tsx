@@ -524,17 +524,40 @@ export default function UsersPage() {
 
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Band Affiliations</label>
-                                        <select
-                                            multiple
-                                            value={formData.band_ids}
-                                            onChange={(e) => {
-                                                const values = Array.from(e.target.selectedOptions, option => option.value)
-                                                setFormData({ ...formData, band_ids: values })
-                                            }}
-                                            className="w-full px-5 py-3.5 bg-white border-transparent focus:border-green-400 border-2 rounded-2xl font-bold text-sm text-gray-700 outline-none transition-all min-h-[120px] custom-scrollbar"
-                                        >
-                                            {bands.map(b => <option key={b.id} value={b.id} className="py-2">{b.name}</option>)}
-                                        </select>
+                                        <div className="w-full bg-white border-gray-100 focus-within:border-green-400 border-2 rounded-2xl overflow-hidden min-h-[120px] max-h-[200px] overflow-y-auto custom-scrollbar transition-all">
+                                            {bands.length > 0 ? (
+                                                bands.map(b => {
+                                                    const isSelected = formData.band_ids.includes(b.id)
+                                                    return (
+                                                        <div
+                                                            key={b.id}
+                                                            onClick={() => {
+                                                                const newIds = isSelected 
+                                                                    ? formData.band_ids.filter(id => id !== b.id)
+                                                                    : [...formData.band_ids, b.id]
+                                                                setFormData({ ...formData, band_ids: newIds })
+                                                            }}
+                                                            className={`px-5 py-3 text-sm font-bold cursor-pointer transition-all border-b border-gray-50 last:border-0 flex items-center justify-between group ${
+                                                                isSelected ? 'bg-primary/5 text-primary' : 'text-gray-600 hover:bg-gray-50'
+                                                            }`}
+                                                        >
+                                                            <span>{b.name}</span>
+                                                            <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${
+                                                                isSelected 
+                                                                    ? 'bg-primary border-primary scale-110' 
+                                                                    : 'border-gray-200 group-hover:border-primary/30'
+                                                            }`}>
+                                                                {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                                                            </div>
+                                                        </div>
+                                                    )
+                                                })
+                                            ) : (
+                                                <div className="px-5 py-8 text-center text-gray-400 text-xs font-medium italic">
+                                                    No bands available in the studio system.
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="space-y-2">

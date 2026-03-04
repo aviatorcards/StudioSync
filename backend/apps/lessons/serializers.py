@@ -22,10 +22,14 @@ class LessonListSerializer(serializers.ModelSerializer):
         model = Lesson
         fields = [
             "id",
+            "student",
             "student_name",
+            "teacher",
             "teacher_name",
             "student_instrument",
+            "band",
             "band_name",
+            "room",
             "room_name",
             "lesson_type",
             "status",

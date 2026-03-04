@@ -7,9 +7,9 @@ from config.routers import OptionalSlashRouter
 from . import calendar_views, views
 
 router = OptionalSlashRouter()
-router.register(r"lessons", views.LessonViewSet, basename="lesson")
 router.register(r"plans", views.LessonPlanViewSet, basename="lesson-plan")
 router.register(r"goals", views.StudentGoalViewSet, basename="goal")
+router.register(r"", views.LessonViewSet, basename="lesson")
 
 urlpatterns = [
     # REST API

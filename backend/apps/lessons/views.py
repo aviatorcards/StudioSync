@@ -53,6 +53,7 @@ class LessonViewSet(viewsets.ModelViewSet):
         - Admins: See all lessons
         """
         user = self.request.user
+        # Default to full queryset
         queryset = Lesson.objects.select_related("student__user", "teacher__user", "studio")
 
         # Admin sees everything
@@ -69,7 +70,7 @@ class LessonViewSet(viewsets.ModelViewSet):
 
         # Fallback: If role unclear, show nothing (maximum privacy)
         else:
-            queryset = queryset.none()
+            queryset = Lesson.objects.none()
 
         # Date range filtering (same for all roles)
         start_date = self.request.query_params.get("start_date")
@@ -86,6 +87,15 @@ class LessonViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(status=status)
 
         return queryset
+
+    def paginate_queryset(self, queryset):
+        """
+        Disable pagination when fetching a specific date range for the calendar.
+        Calendar views need all events to render correctly.
+        """
+        if "start_date" in self.request.query_params and "end_date" in self.request.query_params:
+            return None
+        return super().paginate_queryset(queryset)
 
     @action(detail=False, methods=["get"])
     def upcoming(self, request):

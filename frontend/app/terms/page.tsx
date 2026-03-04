@@ -1,108 +1,148 @@
+'use client'
+
+import { motion } from 'framer-motion'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
+import { FileText, Scale, ShieldCheck, AlertCircle, ArrowRight } from 'lucide-react'
 
 export default function TermsPage() {
     return (
         <>
             <Navigation />
-            <main className="min-h-screen bg-gradient-to-b from-background to-gray-50">
+            <main className="min-h-screen bg-gray-50">
                 {/* Header */}
-                <div className="relative overflow-hidden bg-gradient-to-r from-primary/10 via-purple-500/10 to-pink-500/10 py-20">
-                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <h1 className="text-4xl md:text-5xl font-bold text-center mb-4">
-                            <span className="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">Terms of</span>{' '}
-                            <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">Service</span>
-                        </h1>
-                        <p className="text-center text-muted-foreground">
-                            Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                        </p>
+                <section className="relative overflow-hidden bg-white border-b border-gray-100 py-20 md:py-28">
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/30" />
+                    
+                    <div className="max-w-4xl mx-auto px-4 relative z-10 text-center">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6 }}
+                        >
+                            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-sm font-medium mb-6">
+                                <Scale className="w-3.5 h-3.5" />
+                                Legal Agreement
+                            </div>
+
+                            <h1 className="text-4xl md:text-6xl font-bold mb-6 text-gray-900 leading-tight">
+                                Terms of{' '}
+                                <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                                    Service
+                                </span>
+                            </h1>
+
+                            <p className="text-gray-500 font-medium">
+                                Last updated: March 4, 2026
+                            </p>
+                        </motion.div>
                     </div>
-                </div>
+                </section>
 
                 {/* Content */}
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-                    <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12 space-y-8">
-                        <section className="space-y-4">
-                            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                                <span className="text-primary">1.</span> Acceptance of Terms
-                            </h2>
-                            <p className="text-gray-600 leading-relaxed">
-                                By accessing or using StudioSync, you agree to be bound by these Terms of Service.
-                                If you do not agree to these terms, please do not use our services.
-                            </p>
-                        </section>
+                <section className="py-16 px-4">
+                    <div className="max-w-4xl mx-auto">
+                        <motion.div 
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden"
+                        >
+                            <div className="p-8 md:p-12 space-y-12">
+                                {/* Important Note */}
+                                <div className="flex gap-4 p-6 bg-amber-50 rounded-2xl border border-amber-100">
+                                    <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                                    <p className="text-amber-900 text-sm leading-relaxed">
+                                        <strong>Please read carefully:</strong> By using StudioSync, you agree to these terms. They cover your rights, our obligations, and how we handle disputes.
+                                    </p>
+                                </div>
 
-                        <section className="space-y-4">
-                            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                                <span className="text-primary">2.</span> Description of Service
-                            </h2>
-                            <p className="text-gray-600 leading-relaxed">
-                                StudioSync provides studio management software for music teachers and schools.
-                                Our service includes:
-                            </p>
-                            <ul className="list-disc list-inside text-gray-600 space-y-2 ml-4">
-                                <li>Student and lesson management</li>
-                                <li>Scheduling and calendar tools</li>
-                                <li>Billing and invoicing features</li>
-                                <li>Communication and messaging</li>
-                            </ul>
-                            <p className="text-gray-600 leading-relaxed">
-                                We reserve the right to modify or discontinue the service at any time with reasonable notice.
-                            </p>
-                        </section>
+                                {/* Section 1 */}
+                                <section className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">1</div>
+                                        <h2 className="text-2xl font-bold text-gray-900">Acceptance of Terms</h2>
+                                    </div>
+                                    <p className="text-gray-600 leading-relaxed">
+                                        By accessing or using StudioSync, you agree to be bound by these Terms of Service.
+                                        If you do not agree to these terms, please do not use our services.
+                                    </p>
+                                </section>
 
-                        <section className="space-y-4">
-                            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                                <span className="text-primary">3.</span> User Accounts
-                            </h2>
-                            <p className="text-gray-600 leading-relaxed">
-                                You are responsible for:
-                            </p>
-                            <ul className="list-disc list-inside text-gray-600 space-y-2 ml-4">
-                                <li>Maintaining the confidentiality of your account credentials</li>
-                                <li>All activities that occur under your account</li>
-                                <li>Promptly notifying us of any unauthorized use</li>
-                            </ul>
-                        </section>
+                                {/* Section 2 */}
+                                <section className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">2</div>
+                                        <h2 className="text-2xl font-bold text-gray-900">Description of Service</h2>
+                                    </div>
+                                    <p className="text-gray-600 leading-relaxed">
+                                        StudioSync provides studio management software for music teachers and schools.
+                                        Our service includes:
+                                    </p>
+                                    <div className="grid sm:grid-cols-2 gap-3 mt-4">
+                                        {[
+                                            'Student and lesson management',
+                                            'Scheduling and calendar tools',
+                                            'Billing and invoicing features',
+                                            'Communication and messaging'
+                                        ].map((item, i) => (
+                                            <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                                                <div className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                                    <ShieldCheck className="w-3 h-3" />
+                                                </div>
+                                                <span className="text-sm text-gray-700 font-medium">{item}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
 
-                        <section className="space-y-4">
-                            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                                <span className="text-primary">4.</span> Acceptable Use
-                            </h2>
-                            <p className="text-gray-600 leading-relaxed">
-                                You agree not to use StudioSync to:
-                            </p>
-                            <ul className="list-disc list-inside text-gray-600 space-y-2 ml-4">
-                                <li>Violate any laws or regulations</li>
-                                <li>Infringe on intellectual property rights</li>
-                                <li>Transmit harmful or malicious code</li>
-                                <li>Interfere with the service or other users</li>
-                            </ul>
-                        </section>
+                                {/* Section 3 */}
+                                <section className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">3</div>
+                                        <h2 className="text-2xl font-bold text-gray-900">User Accounts</h2>
+                                    </div>
+                                    <div className="space-y-4 text-gray-600 leading-relaxed">
+                                        <p>You are responsible for:</p>
+                                        <ul className="space-y-2 list-none">
+                                            {[
+                                                'Maintaining the confidentiality of your account credentials',
+                                                'All activities that occur under your account',
+                                                'Promptly notifying us of any unauthorized use'
+                                            ].map((li, i) => (
+                                                <li key={i} className="flex items-start gap-2">
+                                                    <div className="w-1 h-1 rounded-full bg-indigo-400 mt-2.5 flex-shrink-0" />
+                                                    {li}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </section>
 
-                        <section className="space-y-4">
-                            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                                <span className="text-primary">5.</span> Termination
-                            </h2>
-                            <p className="text-gray-600 leading-relaxed">
-                                We may terminate or suspend your account at any time for violations of these terms.
-                                You may cancel your account at any time through your account settings.
-                            </p>
-                        </section>
-
-                        <section className="space-y-4">
-                            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                                <span className="text-primary">6.</span> Contact
-                            </h2>
-                            <p className="text-gray-600 leading-relaxed">
-                                For any questions regarding these terms, please contact us at{' '}
-                                <a href="mailto:support@studiosync.app" className="text-primary hover:underline font-medium">
-                                    support@studiosync.app
-                                </a>
-                            </p>
-                        </section>
+                                {/* Section 6 - Contact */}
+                                <section className="space-y-4 pt-6 border-t border-gray-100">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm">6</div>
+                                        <h2 className="text-2xl font-bold text-gray-900">Contact</h2>
+                                    </div>
+                                    <p className="text-gray-600 leading-relaxed">
+                                        For any questions regarding these terms, please contact our legal team:
+                                    </p>
+                                    <div className="flex flex-col sm:flex-row gap-4">
+                                        <a 
+                                            href="mailto:support@studiosync.app"
+                                            className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-all"
+                                        >
+                                            <FileText className="w-4 h-4" />
+                                            support@studiosync.app
+                                            <ArrowRight className="w-4 h-4 ml-2" />
+                                        </a>
+                                    </div>
+                                </section>
+                            </div>
+                        </motion.div>
                     </div>
-                </div>
+                </section>
             </main>
             <Footer />
         </>

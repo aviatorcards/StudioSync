@@ -22,22 +22,31 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
 @receiver(pre_save, sender=User)
 def auto_delete_file_on_change(sender, instance, **kwargs):
     """
-    Deletes old file from filesystem
-    when corresponding User object is updated
-    with new file.
+    Stores old file path to be deleted in post_save
     """
     if not instance.pk:
-        return False
+        return
 
     try:
         old_file = User.objects.get(pk=instance.pk).avatar
     except User.DoesNotExist:
-        return False
+        return
 
     new_file = instance.avatar
     if not old_file == new_file:
-        if old_file and os.path.isfile(old_file.path):
-            os.remove(old_file.path)
+        instance._old_avatar_path = old_file.path if old_file else None
+
+
+@receiver(models.signals.post_save, sender=User)
+def auto_delete_file_post_save(sender, instance, **kwargs):
+    """
+    Deletes the old file after the new one is saved to allow Django
+    to generate a fresh filename for cache-busting.
+    """
+    if hasattr(instance, '_old_avatar_path') and instance._old_avatar_path:
+        if os.path.isfile(instance._old_avatar_path):
+            os.remove(instance._old_avatar_path)
+        delattr(instance, '_old_avatar_path')
 
 
 # Similar handlers for other models with files
@@ -51,15 +60,22 @@ def auto_delete_band_photo_on_delete(sender, instance, **kwargs):
 @receiver(pre_save, sender=Band)
 def auto_delete_band_photo_on_change(sender, instance, **kwargs):
     if not instance.pk:
-        return False
+        return
     try:
         old_file = Band.objects.get(pk=instance.pk).photo
     except Band.DoesNotExist:
-        return False
+        return
     new_file = instance.photo
     if not old_file == new_file:
-        if old_file and os.path.isfile(old_file.path):
-            os.remove(old_file.path)
+        instance._old_photo_path = old_file.path if old_file else None
+
+
+@receiver(models.signals.post_save, sender=Band)
+def auto_delete_band_photo_post_save(sender, instance, **kwargs):
+    if hasattr(instance, '_old_photo_path') and instance._old_photo_path:
+        if os.path.isfile(instance._old_photo_path):
+            os.remove(instance._old_photo_path)
+        delattr(instance, '_old_photo_path')
 
 
 @receiver(post_delete, sender=Studio)
@@ -72,15 +88,22 @@ def auto_delete_studio_cover_on_delete(sender, instance, **kwargs):
 @receiver(pre_save, sender=Studio)
 def auto_delete_studio_cover_on_change(sender, instance, **kwargs):
     if not instance.pk:
-        return False
+        return
     try:
         old_file = Studio.objects.get(pk=instance.pk).cover_image
     except Studio.DoesNotExist:
-        return False
+        return
     new_file = instance.cover_image
     if not old_file == new_file:
-        if old_file and os.path.isfile(old_file.path):
-            os.remove(old_file.path)
+        instance._old_cover_image_path = old_file.path if old_file else None
+
+
+@receiver(models.signals.post_save, sender=Studio)
+def auto_delete_studio_cover_post_save(sender, instance, **kwargs):
+    if hasattr(instance, '_old_cover_image_path') and instance._old_cover_image_path:
+        if os.path.isfile(instance._old_cover_image_path):
+            os.remove(instance._old_cover_image_path)
+        delattr(instance, '_old_cover_image_path')
 
 
 @receiver(post_delete, sender=Resource)
@@ -93,12 +116,19 @@ def auto_delete_resource_file_on_delete(sender, instance, **kwargs):
 @receiver(pre_save, sender=Resource)
 def auto_delete_resource_file_on_change(sender, instance, **kwargs):
     if not instance.pk:
-        return False
+        return
     try:
         old_file = Resource.objects.get(pk=instance.pk).file
     except Resource.DoesNotExist:
-        return False
+        return
     new_file = instance.file
     if not old_file == new_file:
-        if old_file and os.path.isfile(old_file.path):
-            os.remove(old_file.path)
+        instance._old_resource_path = old_file.path if old_file else None
+
+
+@receiver(models.signals.post_save, sender=Resource)
+def auto_delete_resource_file_post_save(sender, instance, **kwargs):
+    if hasattr(instance, '_old_resource_path') and instance._old_resource_path:
+        if os.path.isfile(instance._old_resource_path):
+            os.remove(instance._old_resource_path)
+        delattr(instance, '_old_resource_path')

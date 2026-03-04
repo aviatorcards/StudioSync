@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Mail, Lock, User, Loader2, AlertCircle, ArrowRight, Check } from 'lucide-react'
 import Image from 'next/image'
+import { Logo } from '@/components/Logo'
 
 export default function SignupPage() {
     const router = useRouter()
@@ -84,54 +85,45 @@ export default function SignupPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-earth-lighter via-neutral-light to-olive-light flex">
+        <div className="min-h-screen bg-gray-50 flex">
             {/* Left Side - Branding */}
-            <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-earth-primary via-olive-primary to-earth-light p-12 flex-col justify-between relative overflow-hidden">
-                {/* Decorative circles */}
-                <div className="absolute top-20 right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+            <div className="hidden lg:flex lg:w-1/2 bg-gray-900 p-12 flex-col justify-between relative overflow-hidden">
+                {/* Subtle gradient overlays */}
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/15 via-transparent to-purple-600/15" />
 
                 <div className="relative z-10">
-                    <Link href="/" className="flex items-center gap-3 group">
-                        <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform overflow-hidden">
-                            <Image src="/logo_final.png" alt="StudioSync" width={40} height={40} className="object-contain" />
-                        </div>
-                        <span className="text-3xl font-bold text-white">StudioSync</span>
+                    <Link href="/" className="flex items-center gap-2.5 group">
+                        <Logo className="w-10 h-10" />
+                        <span className="text-2xl font-bold text-white">StudioSync</span>
                     </Link>
                 </div>
 
                 <div className="relative z-10 space-y-6">
-                    <h1 className="text-5xl font-bold text-white leading-tight">
+                    <h1 className="text-4xl font-bold text-white leading-tight">
                         Start managing your studio today
                     </h1>
-                    <p className="text-xl text-white/90">
+                    <p className="text-lg text-gray-300">
                         Music instructors trust StudioSync to run their studios.
                     </p>
 
                     {/* Features */}
-                    <div className="space-y-4 pt-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-                                <Check className="w-4 h-4 text-white" />
+                    <div className="space-y-3 pt-2">
+                        {[
+                            'Free forever for up to 10 students',
+                            'No credit card required',
+                            'Set up in under 5 minutes'
+                        ].map((text) => (
+                            <div key={text} className="flex items-center gap-3">
+                                <div className="w-5 h-5 rounded-md bg-white/10 flex items-center justify-center">
+                                    <Check className="w-3.5 h-3.5 text-white" />
+                                </div>
+                                <span className="text-gray-300 text-sm">{text}</span>
                             </div>
-                            <span className="text-white/90">Free forever for up to 10 students</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-                                <Check className="w-4 h-4 text-white" />
-                            </div>
-                            <span className="text-white/90">No credit card required</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-                                <Check className="w-4 h-4 text-white" />
-                            </div>
-                            <span className="text-white/90">Set up in under 5 minutes</span>
-                        </div>
+                        ))}
                     </div>
                 </div>
 
-                <div className="relative z-10 text-white/60 text-sm">
+                <div className="relative z-10 text-gray-500 text-sm">
                     © 2025 StudioSync. Open source and self-hostable.
                 </div>
             </div>
@@ -140,23 +132,19 @@ export default function SignupPage() {
             <div className="flex-1 flex items-center justify-center p-8">
                 <div className="w-full max-w-md">
                     {/* Mobile Logo */}
-                    <Link href="/" className="lg:hidden flex items-center gap-3 justify-center mb-8 group">
-                        <div className="w-12 h-12 bg-gradient-to-br from-earth-primary to-olive-dark rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform overflow-hidden">
-                            <Image src="/logo_final.png" alt="StudioSync" width={32} height={32} className="object-contain" />
-                        </div>
-                        <span className="text-2xl font-bold bg-gradient-to-r from-earth-primary to-olive-dark bg-clip-text text-transparent">
-                            StudioSync
-                        </span>
+                    <Link href="/" className="lg:hidden flex items-center gap-2.5 justify-center mb-8 group">
+                        <Logo className="w-10 h-10" />
+                        <span className="text-xl font-bold text-gray-900">StudioSync</span>
                     </Link>
 
-                    <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-                        <div className="mb-8">
-                            <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-2">
+                    <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-100">
+                        <div className="mb-6">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-1">
                                 Create your account
                             </h2>
-                            <p className="text-gray-600">
+                            <p className="text-gray-500 text-sm">
                                 Already have an account?{' '}
-                                <Link href="/login" className="font-semibold text-earth-dark hover:text-earth-primary transition-colors">
+                                <Link href="/login" className="font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">
                                     Sign in
                                 </Link>
                             </p>
@@ -164,29 +152,29 @@ export default function SignupPage() {
 
                         {/* Selected Plan Badge */}
                         {selectedPlan && selectedPlan !== 'starter' && (
-                            <div className="mb-6 p-4 bg-gradient-to-r from-earth-primary/10 to-olive-primary/10 border border-earth-primary/20 rounded-xl">
+                            <div className="mb-5 p-3.5 bg-indigo-50 border border-indigo-100 rounded-xl">
                                 <p className="text-sm font-semibold text-gray-700">
-                                    Selected Plan: <span className="text-earth-dark capitalize">{selectedPlan}</span>
+                                    Selected Plan: <span className="text-indigo-600 capitalize">{selectedPlan}</span>
                                 </p>
                             </div>
                         )}
 
-                        <form className="space-y-5" onSubmit={handleSubmit}>
+                        <form className="space-y-4" onSubmit={handleSubmit}>
                             {error && (
-                                <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3 text-red-700 text-sm">
-                                    <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                                <div className="bg-red-50 border border-red-200 rounded-xl p-3.5 flex items-start gap-2.5 text-red-700 text-sm">
+                                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                                     <p>{error}</p>
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label htmlFor="firstName" className="block text-sm font-semibold text-gray-700 mb-2">
+                                    <label htmlFor="firstName" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                                         First Name
                                     </label>
                                     <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <User className="h-5 w-5 text-gray-400" />
+                                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                            <User className="h-4 w-4 text-gray-400" />
                                         </div>
                                         <input
                                             id="firstName"
@@ -195,13 +183,13 @@ export default function SignupPage() {
                                             required
                                             value={formData.firstName}
                                             onChange={handleChange}
-                                            className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-earth-primary focus:border-transparent transition-all"
+                                            className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl bg-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
                                             placeholder="John"
                                         />
                                     </div>
                                 </div>
                                 <div>
-                                    <label htmlFor="lastName" className="block text-sm font-semibold text-gray-700 mb-2">
+                                    <label htmlFor="lastName" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                                         Last Name
                                     </label>
                                     <input
@@ -211,19 +199,19 @@ export default function SignupPage() {
                                         required
                                         value={formData.lastName}
                                         onChange={handleChange}
-                                        className="block w-full px-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-earth-primary focus:border-transparent transition-all"
+                                        className="block w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
                                         placeholder="Doe"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                                <label htmlFor="email" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                                     Email address
                                 </label>
                                 <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <Mail className="h-5 w-5 text-gray-400" />
+                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                        <Mail className="h-4 w-4 text-gray-400" />
                                     </div>
                                     <input
                                         id="email"
@@ -232,14 +220,14 @@ export default function SignupPage() {
                                         required
                                         value={formData.email}
                                         onChange={handleChange}
-                                        className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-earth-primary focus:border-transparent transition-all"
+                                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl bg-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
                                         placeholder="you@example.com"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label htmlFor="role" className="block text-sm font-semibold text-gray-700 mb-2">
+                                <label htmlFor="role" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                                     I am a
                                 </label>
                                 <select
@@ -247,7 +235,7 @@ export default function SignupPage() {
                                     name="role"
                                     value={formData.role}
                                     onChange={handleChange}
-                                    className="block w-full px-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-earth-primary focus:border-transparent transition-all"
+                                    className="block w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
                                 >
                                     <option value="student">Student</option>
                                     <option value="teacher">Instructor</option>
@@ -257,12 +245,12 @@ export default function SignupPage() {
                             </div>
 
                             <div>
-                                <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
+                                <label htmlFor="password" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                                     Password
                                 </label>
                                 <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <Lock className="h-5 w-5 text-gray-400" />
+                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                        <Lock className="h-4 w-4 text-gray-400" />
                                     </div>
                                     <input
                                         id="password"
@@ -271,20 +259,20 @@ export default function SignupPage() {
                                         required
                                         value={formData.password}
                                         onChange={handleChange}
-                                        className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-earth-primary focus:border-transparent transition-all"
+                                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl bg-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
                                         placeholder="••••••••"
                                     />
                                 </div>
-                                <p className="mt-2 text-xs text-gray-500">At least 8 characters</p>
+                                <p className="mt-1 text-xs text-gray-400">At least 8 characters</p>
                             </div>
 
                             <div>
-                                <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
+                                <label htmlFor="confirmPassword" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                                     Confirm Password
                                 </label>
                                 <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <Lock className="h-5 w-5 text-gray-400" />
+                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                        <Lock className="h-4 w-4 text-gray-400" />
                                     </div>
                                     <input
                                         id="confirmPassword"
@@ -293,7 +281,7 @@ export default function SignupPage() {
                                         required
                                         value={formData.confirmPassword}
                                         onChange={handleChange}
-                                        className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-earth-primary focus:border-transparent transition-all"
+                                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl bg-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
                                         placeholder="••••••••"
                                     />
                                 </div>
@@ -302,36 +290,36 @@ export default function SignupPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-earth-primary to-olive-dark hover:from-earth-primary/90 hover:to-olive-dark/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earth-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
+                                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
                             >
                                 {loading ? (
                                     <>
-                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <Loader2 className="w-4 h-4 animate-spin" />
                                         Creating account...
                                     </>
                                 ) : (
                                     <>
                                         Create account
-                                        <ArrowRight className="w-5 h-5" />
+                                        <ArrowRight className="w-4 h-4" />
                                     </>
                                 )}
                             </button>
                         </form>
 
-                        <div className="mt-6 text-center text-sm text-gray-500">
+                        <div className="mt-5 text-center text-xs text-gray-400">
                             By signing up, you agree to our{' '}
-                            <Link href="/terms" className="text-earth-dark hover:underline">
+                            <Link href="/terms" className="text-gray-500 hover:underline">
                                 Terms
                             </Link>
                             {' '}and{' '}
-                            <Link href="/privacy" className="text-earth-dark hover:underline">
+                            <Link href="/privacy" className="text-gray-500 hover:underline">
                                 Privacy Policy
                             </Link>
                         </div>
                     </div>
 
-                    <div className="mt-6 text-center">
-                        <Link href="/" className="text-sm text-gray-600 hover:text-gray-900 transition-colors inline-flex items-center gap-1">
+                    <div className="mt-5 text-center">
+                        <Link href="/" className="text-sm text-gray-400 hover:text-gray-600 transition-colors inline-flex items-center gap-1">
                             ← Back to home
                         </Link>
                     </div>

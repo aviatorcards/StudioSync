@@ -236,11 +236,15 @@ export default function DashboardPage() {
     if (currentUser && currentUser.preferences && currentUser.preferences.dashboard_layout) {
       const savedLayout = currentUser.preferences.dashboard_layout as WidgetConfig[];
       if (Array.isArray(savedLayout)) {
-        const mergedWidgets = roleDefaults.map((def) => {
-          const existing = savedLayout.find((s) => s.id === def.id);
-          return existing || def;
-        });
-        setWidgets(mergedWidgets);
+        // Filter out any elements in savedLayout that are no longer in roleDefaults
+        const filteredSaved = savedLayout.filter((s) => roleDefaults.some((def) => def.id === s.id));
+
+        // Find items that are in defaults but NOT in savedLayout
+        const missingFromSaved = roleDefaults.filter(
+          (def) => !savedLayout.some((s) => s.id === def.id)
+        );
+
+        setWidgets([...filteredSaved, ...missingFromSaved]);
       } else {
         setWidgets(roleDefaults);
       }
@@ -500,7 +504,28 @@ export default function DashboardPage() {
                 onClick={() => {
                   setIsEditing(false);
                   const role = currentUser?.role || "admin";
-                  setWidgets(DEFAULT_WIDGETS[role] || DEFAULT_WIDGETS.admin);
+                  const roleDefaults = DEFAULT_WIDGETS[role] || DEFAULT_WIDGETS.admin;
+
+                  if (
+                    currentUser &&
+                    currentUser.preferences &&
+                    currentUser.preferences.dashboard_layout
+                  ) {
+                    const savedLayout = currentUser.preferences.dashboard_layout as WidgetConfig[];
+                    if (Array.isArray(savedLayout)) {
+                      const filteredSaved = savedLayout.filter((s) =>
+                        roleDefaults.some((def) => def.id === s.id)
+                      );
+                      const missingFromSaved = roleDefaults.filter(
+                        (def) => !savedLayout.some((s) => s.id === def.id)
+                      );
+                      setWidgets([...filteredSaved, ...missingFromSaved]);
+                    } else {
+                      setWidgets(roleDefaults);
+                    }
+                  } else {
+                    setWidgets(roleDefaults);
+                  }
                 }}
                 className="px-5 py-3 bg-white border-2 border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-all font-bold text-sm active:scale-95"
               >
@@ -684,13 +709,12 @@ function ActivityList({ activities }: { activities: any[] }) {
         >
           <div className="flex items-center gap-4">
             <div
-              className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                activity.type === "success"
-                  ? "bg-emerald-100 text-emerald-600"
-                  : activity.type === "warning"
-                    ? "bg-amber-100 text-amber-600"
-                    : "bg-blue-100 text-blue-600"
-              }`}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center ${activity.type === "success"
+                ? "bg-emerald-100 text-emerald-600"
+                : activity.type === "warning"
+                  ? "bg-amber-100 text-amber-600"
+                  : "bg-blue-100 text-blue-600"
+                }`}
             >
               <span className="text-lg font-bold">
                 {activity.type === "success" ? "✓" : activity.type === "warning" ? "⚠" : "ℹ"}

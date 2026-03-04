@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, User, Mail, Phone, Music, Users, Info, Trash2 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
@@ -18,7 +18,9 @@ function calcAge(birthDate: string): number | null {
     return age
 }
 
-export default function EditStudentPage({ params }: { params: { id: string } }) {
+export default function EditStudentPage({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
+    const params = use(paramsPromise)
+    const studentId = params.id
     const router = useRouter()
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
@@ -41,13 +43,21 @@ export default function EditStudentPage({ params }: { params: { id: string } }) 
     useEffect(() => {
         const fetchStudent = async () => {
             try {
-                const response = await api.get(`/students/${params.id}/`)
+                const response = await api.get(`/students/${studentId}/`)
                 const student = response.data
+                console.log('Fetched student data:', student)
+
+                // Fallback logic for fields that might be either top-level or on the nested 'user' object
+                const firstName = student.first_name || student.user?.first_name || (student.name ? student.name.split(' ')[0] : '')
+                const lastName = student.last_name || student.user?.last_name || (student.name ? student.name.split(' ').slice(1).join(' ') : '')
+                const email = student.email || student.user?.email || ''
+                const phone = student.phone || student.user?.phone || ''
+
                 setFormData({
-                    first_name: student.user?.first_name || '',
-                    last_name: student.user?.last_name || '',
-                    email: student.user?.email || '',
-                    phone: student.user?.phone || '',
+                    first_name: firstName,
+                    last_name: lastName,
+                    email: email,
+                    phone: phone,
                     instrument: student.instrument || '',
                     birth_date: student.birth_date || '',
                     emergency_contact_name: student.emergency_contact_name || '',
@@ -61,14 +71,14 @@ export default function EditStudentPage({ params }: { params: { id: string } }) 
                 setLoading(false)
             }
         }
-        if (params.id) fetchStudent()
-    }, [params.id, router])
+        if (studentId) fetchStudent()
+    }, [studentId, router])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setSaving(true)
         try {
-            await api.patch(`/students/${params.id}/`, formData)
+            await api.patch(`/students/${studentId}/`, formData)
             toast.success('Student updated successfully!')
             router.push('/dashboard/students')
         } catch (error: any) {
@@ -91,7 +101,7 @@ export default function EditStudentPage({ params }: { params: { id: string } }) 
     const handleDelete = async () => {
         if (!confirm('Are you sure you want to delete this student? This action cannot be undone.')) return
         try {
-            await api.delete(`/students/${params.id}/`)
+            await api.delete(`/students/${studentId}/`)
             toast.success('Student deleted')
             router.push('/dashboard/students')
         } catch (error) {

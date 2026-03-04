@@ -33,7 +33,7 @@ interface StudentData {
     email: string
     instrument: string | null
     teacher_name: string | null
-    primary_teacher?: TeacherProfile | string | null 
+    primary_teacher?: TeacherProfile | string | null
     next_lesson: string | null
     next_lesson_date?: string | null
     status: string
@@ -191,7 +191,7 @@ export default function StudentsPage() {
 
             {/* Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                 {[
+                {[
                     { label: 'Total Roster', value: statsLoading ? '-' : (studentStats?.total_students || 0), icon: GraduationCap, color: 'blue' },
                     { label: 'Active Members', value: statsLoading ? '-' : (studentStats?.active_students || 0), icon: Target, color: 'purple' },
                     { label: 'Engagement Rate', value: statsLoading ? '-' : (studentStats?.total_students ? Math.round((studentStats.active_students / studentStats.total_students) * 100) + '%' : '0%'), icon: Star, color: 'emerald' },
@@ -223,7 +223,7 @@ export default function StudentsPage() {
 
                     {currentUser?.role === 'teacher' && (
                         <div className="flex p-1 bg-gray-50 rounded-2xl border border-gray-100">
-                             <Button
+                            <Button
                                 variant={!showAllStudents ? 'secondary' : 'ghost'}
                                 size="sm"
                                 onClick={() => setShowAllStudents(false)}
@@ -256,7 +256,7 @@ export default function StudentsPage() {
             </div>
 
             {/* List */}
-             <div className="bg-white rounded-[2rem] border border-gray-100 shadow-2xl overflow-hidden">
+            <div className="bg-white rounded-[2rem] border border-gray-100 shadow-2xl overflow-hidden">
                 <div className="overflow-x-auto custom-scrollbar">
                     <table className="w-full border-separate border-spacing-0">
                         <thead className="bg-gray-50/50">
@@ -361,7 +361,7 @@ export default function StudentsPage() {
                         Page <span className="text-gray-900">{page}</span> of <span className="text-gray-900">{Math.max(1, Math.ceil((meta?.count || 0) / 20))}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                         <Button
+                        <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => setPage(p => Math.max(1, p - 1))}
@@ -462,11 +462,10 @@ export default function StudentsPage() {
 
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Enrollment Status</label>
-                                    <div 
+                                    <div
                                         onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
-                                        className={`flex items-center justify-between px-5 py-3.5 rounded-2xl border-2 transition-all cursor-pointer h-[54px] ${
-                                            formData.is_active ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-200'
-                                        }`}
+                                        className={`flex items-center justify-between px-5 py-3.5 rounded-2xl border-2 transition-all cursor-pointer h-[54px] ${formData.is_active ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-200'
+                                            }`}
                                     >
                                         <span className={`text-[10px] font-black uppercase tracking-widest ${formData.is_active ? 'text-emerald-600' : 'text-gray-400'}`}>
                                             {formData.is_active ? 'Active Roster' : 'Inactive'}

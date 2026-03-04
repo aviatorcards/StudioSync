@@ -414,7 +414,7 @@ export default function Home() {
         <section ref={heroRef} className="relative overflow-hidden bg-white border-b border-gray-100">
           {/* Subtle gradient bg */}
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/30" />
-          
+
           <div className="relative max-w-7xl mx-auto px-4 pt-20 pb-24 md:pt-28 md:pb-32">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -465,40 +465,53 @@ export default function Home() {
               transition={{ duration: 0.8, delay: 0.3 }}
               className="mt-16 relative max-w-5xl mx-auto"
             >
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-gray-900/10 border border-gray-200 bg-white">
-                <div className="aspect-video relative">
+              {/* Background Glow */}
+              <div className="absolute -inset-10 bg-gradient-to-tr from-indigo-500/10 to-purple-500/10 blur-[100px] opacity-70 -z-10" />
+
+              <div className="relative rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-200 bg-white">
+                {/* Browser-like Window Header */}
+                <div className="h-10 bg-gray-50/80 border-b border-gray-100 flex items-center px-4 gap-1.5 backdrop-blur-md relative z-10 font-sans">
+                  <div className="w-3 h-3 rounded-full bg-red-400/80 shadow-sm shadow-red-500/20" />
+                  <div className="w-3 h-3 rounded-full bg-amber-400/80 shadow-sm shadow-amber-500/20" />
+                  <div className="w-3 h-3 rounded-full bg-emerald-400/80 shadow-sm shadow-emerald-500/20" />
+                  <div className="mx-auto flex items-center gap-2 bg-white/50 rounded-md px-3 py-1 border border-gray-100/50">
+                    <div className="w-3 h-3 rounded-full border border-indigo-200 flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                    </div>
+                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-tighter">studiosync.app</span>
+                  </div>
+                </div>
+
+                <div className="aspect-[16/9] relative">
                   <Image
                     src="/dashboard_preview.png"
                     alt="StudioSync Dashboard Preview"
                     fill
-                    className="object-cover"
+                    className="object-cover object-left-top scale-[1.02]"
                     priority
+                    sizes="(max-width: 1280px) 100vw, 1280px"
                   />
                 </div>
               </div>
 
-              {/* Floating cards */}
-              <div className="absolute -left-4 top-1/4 md:-left-8 bg-white rounded-xl p-3.5 shadow-lg border border-gray-100 hidden md:block animate-float-card">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-emerald-500 flex items-center justify-center">
-                    <Check className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-gray-900">Lesson Confirmed</div>
-                    <div className="text-xs text-gray-400">Sarah&apos;s piano lesson</div>
-                  </div>
+              {/* Modern Toasts */}
+              <div className="absolute -left-6 top-1/4 md:-left-16 glass-card rounded-2xl p-4 shadow-2xl border border-white/60 hidden md:flex items-center gap-4 animate-float-card group z-20">
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 group-hover:scale-110 transition-transform duration-300">
+                  <Check className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="text-[13px] font-extrabold text-gray-900 leading-tight">Lesson Confirmed</div>
+                  <div className="text-[11px] text-gray-500 font-semibold mt-0.5">Sarah&apos;s piano lesson</div>
                 </div>
               </div>
 
-              <div className="absolute -right-4 top-1/3 md:-right-8 bg-white rounded-xl p-3.5 shadow-lg border border-gray-100 hidden md:block animate-float-card-delayed">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-indigo-500 flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-gray-900">Payment Received</div>
-                    <div className="text-xs text-gray-400">$250.00</div>
-                  </div>
+              <div className="absolute -right-6 top-1/2 md:-right-16 glass-card rounded-2xl p-4 shadow-2xl border border-white/60 hidden md:flex items-center gap-4 animate-float-card-delayed group z-20">
+                <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 group-hover:scale-110 transition-transform duration-300">
+                  <DollarSign className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="text-[13px] font-extrabold text-gray-900 leading-tight">Payment Received</div>
+                  <div className="text-[11px] text-indigo-600 font-bold mt-0.5">+$250.00</div>
                 </div>
               </div>
             </motion.div>

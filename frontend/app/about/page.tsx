@@ -253,8 +253,7 @@ export default function AboutPage() {
                                             instructors the freedom to customize and self-host their own solution.
                                         </p>
                                         <p>
-                                            The code is available on GitHub, and contributions are always welcome. Because the best software
-                                            is built by the people who actually use it every single day.
+                                            The code is available on GitHub and proudly licensed under the GPL-3.0 license.
                                         </p>
                                     </div>
                                     <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -270,6 +269,9 @@ export default function AboutPage() {
                                         </a>
                                         <p className="text-sm text-gray-500 font-medium">
                                             Self-hosting guides available inside
+                                        </p>
+                                        <p className="text-sm text-white-500 font-medium">
+                                            <a href="https://github.com/aviatorcards/StudioSync/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">License</a>
                                         </p>
                                     </div>
                                 </div>
@@ -290,10 +292,10 @@ export default function AboutPage() {
                                 <div className="px-10 py-16 md:p-20 text-center relative overflow-hidden">
                                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent" />
                                     <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white tracking-tight relative z-10">
-                                        Join the movement.
+                                        Manage your music studio with ease!
                                     </h2>
                                     <p className="text-xl mb-10 text-indigo-100 max-w-2xl mx-auto font-medium relative z-10">
-                                        Experience the all-in-one platform built specifically for the modern music educator.
+                                        Experience the all-in-one platform built specifically for music educators.
                                     </p>
 
                                     <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">

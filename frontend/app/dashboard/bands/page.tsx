@@ -181,8 +181,13 @@ export default function BandsPage() {
                  {[
                     { label: 'Total Bands', value: bands.length, icon: Music, color: 'blue' },
                     { label: 'Active Musicians', value: bands.reduce((acc, b) => acc + (b.members_count || 0), 0), icon: UsersIcon, color: 'emerald' },
-                    { label: 'Rehearsal Intensity', value: 'High', icon: Zap, color: 'purple' },
-                    { label: 'Performance Ready', value: '82%', icon: Trophy, color: 'orange' }
+                    { 
+                        label: 'Avg. Group Size', 
+                        value: bands.length > 0 ? (bands.reduce((acc, b) => acc + (b.members_count || 0), 0) / bands.length).toFixed(1) : '0', 
+                        icon: Target, 
+                        color: 'purple' 
+                    },
+                    { label: 'Avg. Readiness', value: '0%', icon: Trophy, color: 'orange' }
                 ].map((stat, i) => (
                     <div key={i} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
                          <div className="flex items-center justify-between mb-4">
@@ -392,10 +397,10 @@ export default function BandsPage() {
                                                 <div className="flex flex-col gap-2 max-w-[120px]">
                                                     <div className="flex justify-between items-end">
                                                         <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Ready</span>
-                                                        <span className="text-[10px] font-black text-primary">85%</span>
+                                                        <span className="text-[10px] font-black text-primary">0%</span>
                                                     </div>
                                                     <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                                                        <div className="h-full bg-primary rounded-full w-[85%]" />
+                                                        <div className="h-full bg-primary rounded-full w-[0%]" />
                                                     </div>
                                                 </div>
                                             </td>

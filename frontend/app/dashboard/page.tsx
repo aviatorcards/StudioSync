@@ -581,8 +581,8 @@ export default function DashboardPage() {
         </SortableContext>
       </DndContext>
 
-      {/* Analytics Section - Admin & Teacher Only */}
-      {(currentUser?.role === "admin" || currentUser?.role === "teacher") && (
+      {/* Analytics Section - Admin Only */}
+      {currentUser?.role === "admin" && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-black text-gray-900 tracking-tight">Analytics Overview</h2>

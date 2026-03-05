@@ -113,69 +113,77 @@ export function useMessages() {
     useEffect(() => {
         if (!activeThread?.id) return;
 
-        // Construct WebSocket URL safely
-        let baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
-        
-        if (!baseUrl.startsWith('http')) {
-            // It's a relative path or empty, use window location
-            if (typeof window !== 'undefined') {
-                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                const host = window.location.hostname;
-                // If we are on port 3000 (Next.js dev), use port 8000 (Django dev)
-                const port = window.location.port === '3000' ? '8000' : window.location.port;
-                baseUrl = `${protocol}//${host}${port ? `:${port}` : ''}${baseUrl}`;
-            } else {
-                baseUrl = 'ws://localhost:8000';
+        let socket: WebSocket | null = null;
+        let reconnectTimeout: any = null;
+
+        const connect = () => {
+            // Construct WebSocket URL safely
+            let baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+            
+            if (!baseUrl.startsWith('http')) {
+                // It's a relative path or empty, use window location
+                if (typeof window !== 'undefined') {
+                    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                    const host = window.location.hostname;
+                    // If we are on port 3000 (Next.js dev), use port 8000 (Django dev)
+                    const port = window.location.port === '3000' ? '8000' : window.location.port;
+                    baseUrl = `${protocol}//${host}${port ? `:${port}` : ''}${baseUrl}`;
+                } else {
+                    baseUrl = 'ws://localhost:8000';
+                }
             }
-        }
 
-        const finalBase = baseUrl
-            .replace('/api', '')
-            .replace(/^http/, 'ws');
+            const finalBase = baseUrl
+                .replace(/\/api\/?$/, '') 
+                .replace(/^http/, 'ws')
+                .replace(/\/$/, '');
 
-        const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-        const wsUrl = `${finalBase}/ws/chat/${activeThread.id}/${token ? `?token=${token}` : ''}`;
-        const socket = new WebSocket(wsUrl);
+            const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+            const wsUrl = `${finalBase}/ws/chat/${activeThread.id}/${token ? `?token=${token}` : ''}`;
+            socket = new WebSocket(wsUrl);
 
-        socket.onopen = () => {
-            // WebSocket connection established
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'message') {
+                    const newMessage = data.data;
+                    setMessages((prev: Message[]) => {
+                        // Avoid duplicates
+                        if (prev.some((m: Message) => m.id === newMessage.id)) {
+                            return prev;
+                        }
+                        return [...prev, newMessage];
+                    });
+
+                    // Also update thread list preview if needed
+                    setThreads((prev: MessageThread[]) => {
+                        const updated = prev.map((t: MessageThread) =>
+                            t.id === activeThread.id
+                                ? { ...t, last_message: newMessage, updated_at: newMessage.created_at }
+                                : t
+                        );
+                        updated.sort((a: MessageThread, b: MessageThread) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+                        return updated;
+                    });
+                }
+            };
+
+            socket.onerror = (error) => {
+                console.error('WebSocket Error', { url: wsUrl, error });
+            };
+
+            socket.onclose = (e) => {
+                if (!e.wasClean) {
+                    console.log('Chat WebSocket closed unexpectedly. Reconnecting...');
+                    reconnectTimeout = setTimeout(connect, 3000);
+                }
+            };
         };
 
-        socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (data.type === 'message') {
-                const newMessage = data.data;
-                setMessages((prev: Message[]) => {
-                    // Avoid duplicates
-                    if (prev.some((m: Message) => m.id === newMessage.id)) {
-                        return prev;
-                    }
-                    return [...prev, newMessage];
-                });
-
-                // Also update thread list preview if needed
-                setThreads((prev: MessageThread[]) => {
-                    const updated = prev.map((t: MessageThread) =>
-                        t.id === activeThread.id
-                            ? { ...t, last_message: newMessage, updated_at: newMessage.created_at }
-                            : t
-                    );
-                    updated.sort((a: MessageThread, b: MessageThread) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
-                    return updated;
-                });
-            }
-        };
-
-        socket.onclose = () => {
-            // WebSocket connection closed
-        };
-
-        socket.onerror = (error) => {
-            console.error('WebSocket Error:', error);
-        };
+        connect();
 
         return () => {
-            socket.close();
+            if (socket) socket.close();
+            if (reconnectTimeout) clearTimeout(reconnectTimeout);
         };
     }, [activeThread?.id]);
 

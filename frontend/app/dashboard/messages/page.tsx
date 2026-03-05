@@ -5,6 +5,7 @@ import { Search, Edit, Send, User as UserIcon, MoreHorizontal, X } from 'lucide-
 import { useMessages, MessageThread, Message } from '@/hooks/useMessages'
 import { useUser } from '@/contexts/UserContext'
 import { useUsers } from '@/hooks/useDashboardData'
+import { useNotifications } from '@/hooks/useNotifications'
 import { toast } from 'react-hot-toast'
 
 // Helper to format date
@@ -30,9 +31,18 @@ export default function MessagesPage() {
         messagesLoading,
         fetchMessages,
         sendMessage,
-        replyToThread
+        replyToThread,
+        refreshThreads
     } = useMessages();
     const { users: allUsers } = useUsers(); // For User Select
+    const { notifications } = useNotifications();
+
+    // Refresh threads when a new message notification arrives
+    useEffect(() => {
+        if (notifications.length > 0 && notifications[0].notification_type === 'new_message') {
+            refreshThreads();
+        }
+    }, [notifications, refreshThreads]);
 
     const [replyText, setReplyText] = useState('')
     const [isComposeOpen, setIsComposeOpen] = useState(false)

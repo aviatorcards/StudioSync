@@ -54,6 +54,17 @@ def notify_new_message(sender, instance, created, **kwargs):
             recipients = thread.participants.exclude(id=message_sender.id)
 
             for recipient in recipients:
+                # Create in-app notification
+                from apps.notifications.models import Notification
+                Notification.objects.create(
+                    user=recipient,
+                    notification_type="new_message",
+                    title=f"New Message from {message_sender.get_full_name()}",
+                    message=instance.body[:100],
+                    link=f"/dashboard/messages?thread={thread.id}",
+                    related_message_id=None # Integer field, but message id is UUID. We'll use link.
+                )
+
                 # Skip if recipient has disabled notifications (if such preference exists)
                 # For now, just send to everyone
 

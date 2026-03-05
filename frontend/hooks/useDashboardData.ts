@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
 import { toast } from "react-hot-toast";
+import { useUser } from "../contexts/UserContext";
 
 interface DashboardStats {
   overview: {
@@ -67,11 +68,21 @@ export interface DashboardAnalytics {
 }
 
 export function useDashboardAnalytics() {
+    const { currentUser } = useUser();
     const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        // Only admins can access analytics. 
+        // We check for currentUser presence first to avoid race conditions during login.
+        if (!currentUser) return;
+        
+        if (currentUser.role !== "admin") {
+            setLoading(false);
+            return;
+        }
+
         const fetchAnalytics = async () => {
             try {
                 const response = await api.get("/core/analytics/");
@@ -86,7 +97,7 @@ export function useDashboardAnalytics() {
         };
 
         fetchAnalytics();
-    }, []);
+    }, [currentUser]);
 
     return { analytics, loading, error };
 }

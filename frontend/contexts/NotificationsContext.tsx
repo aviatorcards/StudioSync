@@ -42,18 +42,30 @@ const NotificationsContext = createContext<NotificationsContextType>({
     notifications: [],
     unreadCount: 0,
     loading: true,
-    refetch: () => {},
-    markRead: async () => {},
-    markAllRead: async () => {},
-    clearAll: async () => {},
+    refetch: () => { },
+    markRead: async () => { },
+    markAllRead: async () => { },
+    clearAll: async () => { },
 })
 
 function buildWsBase(): string {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || ''
-    let base = apiUrl.startsWith('http') ? apiUrl : `${typeof window !== 'undefined' ? (window.location.protocol === 'https:' ? 'https' : 'http') : 'http'}://localhost:8000${apiUrl}`
+    let base = apiUrl.startsWith('http') ? apiUrl : ''
+
+    if (!base && typeof window !== 'undefined') {
+        const protocol = window.location.protocol === 'https:' ? 'https' : 'http'
+        const host = window.location.hostname
+        const port = window.location.port
+        base = `${protocol}://${host}${port ? `:${port}` : ''}${apiUrl || '/api'}`
+    } else if (!base) {
+        // Fallback for SSR or if window is undefined
+        base = `http://localhost:8000${apiUrl || '/api'}`
+    }
+
     // Strip /api suffix and trailing slash, then swap http -> ws
     return base.replace(/\/api\/?$/, '').replace(/\/$/, '').replace(/^http/, 'ws')
 }
+
 
 export function NotificationsProvider({ children, pollInterval = 30000 }: { children: ReactNode; pollInterval?: number }) {
     const { currentUser } = useUser()

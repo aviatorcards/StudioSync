@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/contexts/UserContext'
-import { useUsers, useTeachers } from '@/hooks/useDashboardData'
+import { useUsers, useTeachers, useStudentStats } from '@/hooks/useDashboardData'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
 import {
@@ -17,6 +17,7 @@ import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/
 export default function UsersPage() {
     const { currentUser } = useUser()
     const { teachers } = useTeachers()
+    const { stats: studentStats } = useStudentStats()
     const [bands, setBands] = useState<any[]>([])
     const router = useRouter()
 
@@ -122,7 +123,7 @@ export default function UsersPage() {
                 if (formData.role === 'student' || updatedUser.role === 'student') {
                     const originalBandIds = selectedUser.student_profile?.bands?.map((b: any) => b.id) || []
                     const currentBandIds = formData.band_ids || []
-                    
+
                     const toAdd = currentBandIds.filter(id => !originalBandIds.includes(id))
                     const toRemove = originalBandIds.filter((id: string) => !currentBandIds.includes(id))
 
@@ -239,8 +240,8 @@ export default function UsersPage() {
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
                     { label: 'Total Accounts', value: meta?.count || 0, icon: UsersIcon, color: 'blue' },
-                    { label: 'Active Students', value: users.filter((u: any) => u.role === 'student' && u.is_active).length, icon: UserCog, color: 'green' },
-                    { label: 'Faculty', value: users.filter((u: any) => u.role === 'teacher').length, icon: Music, color: 'purple' },
+                    { label: 'Active Students', value: studentStats?.active_students || 0, icon: UserCog, color: 'green' },
+                    { label: 'Faculty', value: teachers.length, icon: Music, color: 'purple' },
                     { label: 'System Health', value: '100%', icon: Shield, color: 'teal' }
                 ].map((stat, i) => (
                     <div key={i} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
@@ -258,7 +259,7 @@ export default function UsersPage() {
 
             {/* Filters */}
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-3xl border border-gray-100 shadow-xl">
-                 <div className="relative w-full md:w-96">
+                <div className="relative w-full md:w-96">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                         type="text"
@@ -279,11 +280,10 @@ export default function UsersPage() {
                         <button
                             key={value}
                             onClick={() => setFilterRole(value)}
-                            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-                                filterRole === value
+                            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${filterRole === value
                                     ? 'bg-white text-primary shadow-sm'
                                     : 'text-gray-400 hover:text-gray-600'
-                            }`}
+                                }`}
                         >
                             {label}
                         </button>
@@ -354,9 +354,8 @@ export default function UsersPage() {
                                         )}
                                     </td>
                                     <td className="px-6 py-6 text-center">
-                                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                                            user.is_active ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'
-                                         }`}>
+                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${user.is_active ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'
+                                            }`}>
                                             <div className={`w-1.5 h-1.5 rounded-full ${user.is_active ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-red-500'}`} />
                                             {user.is_active ? 'Authorized' : 'Suspended'}
                                         </span>
@@ -395,7 +394,7 @@ export default function UsersPage() {
                         Exhibiting <span className="text-gray-900">{users.length}</span> of <span className="text-gray-900">{meta?.count || 0}</span> studio members
                     </div>
                     <div className="flex items-center gap-3">
-                         <Button
+                        <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => setPage(p => Math.max(1, p - 1))}
@@ -429,197 +428,179 @@ export default function UsersPage() {
                 <DialogHeader title={selectedUser ? 'Edit System Member' : 'Onboard New Member'} />
                 <DialogContent>
                     <form id="user-onboarding-form" onSubmit={handleSubmit} className="space-y-8">
-                            {/* Basic Info */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Legal First Name</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formData.first_name}
-                                        onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                                        className="w-full px-5 py-3.5 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-gray-700 outline-none transition-all"
-                                        placeholder="Jane"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Legal Last Name</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formData.last_name}
-                                        onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                                        className="w-full px-5 py-3.5 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-gray-700 outline-none transition-all"
-                                        placeholder="Smith"
-                                    />
-                                </div>
-                            </div>
-
+                        {/* Basic Info */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Official Email Address</label>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Legal First Name</label>
                                 <input
-                                    type="email"
+                                    type="text"
                                     required
-                                    disabled={!!selectedUser}
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    className="w-full px-5 py-3.5 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-gray-700 outline-none transition-all disabled:opacity-50"
-                                    placeholder="jane.smith@example.com"
+                                    value={formData.first_name}
+                                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                                    className="w-full px-5 py-3.5 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-gray-700 outline-none transition-all"
+                                    placeholder="Jane"
                                 />
                             </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Legal Last Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={formData.last_name}
+                                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                                    className="w-full px-5 py-3.5 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-gray-700 outline-none transition-all"
+                                    placeholder="Smith"
+                                />
+                            </div>
+                        </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">System Role</label>
-                                    <select
-                                        value={formData.role}
-                                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                        className="w-full px-5 py-3.5 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-gray-700 outline-none transition-all appearance-none"
-                                    >
-                                        <option value="student">Student</option>
-                                        <option value="teacher">Instructor</option>
-                                        <option value="parent">Parent</option>
-                                        <option value="admin">Administrator</option>
-                                    </select>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Account Status</label>
-                                    <div 
-                                        onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
-                                        className={`flex items-center justify-between px-5 py-3.5 rounded-2xl border-2 transition-all cursor-pointer ${
-                                            formData.is_active ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Official Email Address</label>
+                            <input
+                                type="email"
+                                required
+                                disabled={!!selectedUser}
+                                value={formData.email}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                className="w-full px-5 py-3.5 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-gray-700 outline-none transition-all disabled:opacity-50"
+                                placeholder="jane.smith@example.com"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">System Role</label>
+                                <select
+                                    value={formData.role}
+                                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                                    className="w-full px-5 py-3.5 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                >
+                                    <option value="student">Student</option>
+                                    <option value="teacher">Instructor</option>
+                                    <option value="parent">Parent</option>
+                                    <option value="admin">Administrator</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Account Status</label>
+                                <div
+                                    onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
+                                    className={`flex items-center justify-between px-5 py-3.5 rounded-2xl border-2 transition-all cursor-pointer ${formData.is_active ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
                                         }`}
-                                    >
-                                        <span className={`text-sm font-black uppercase tracking-widest ${formData.is_active ? 'text-green-600' : 'text-red-600'}`}>
-                                            {formData.is_active ? 'Authorized' : 'Suspended'}
-                                        </span>
-                                        <div className={`w-10 h-6 rounded-full p-1 transition-colors ${formData.is_active ? 'bg-green-500' : 'bg-red-400'}`}>
-                                            <div className={`w-4 h-4 bg-white rounded-full transition-transform ${formData.is_active ? 'translate-x-4' : 'translate-x-0'}`} />
-                                        </div>
+                                >
+                                    <span className={`text-sm font-black uppercase tracking-widest ${formData.is_active ? 'text-green-600' : 'text-red-600'}`}>
+                                        {formData.is_active ? 'Authorized' : 'Suspended'}
+                                    </span>
+                                    <div className={`w-10 h-6 rounded-full p-1 transition-colors ${formData.is_active ? 'bg-green-500' : 'bg-red-400'}`}>
+                                        <div className={`w-4 h-4 bg-white rounded-full transition-transform ${formData.is_active ? 'translate-x-4' : 'translate-x-0'}`} />
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            {/* Student Fields */}
-                            {formData.role === 'student' && (
-                                <div className="p-8 bg-green-50/50 rounded-3xl border border-green-100 space-y-6 animate-in slide-in-from-top-2">
-                                    <h3 className="text-xs font-black text-green-700 uppercase tracking-[0.2em] flex items-center gap-2">
-                                        <UserCog className="w-4 h-4" />
-                                        Student Configuration
-                                    </h3>
+                        {/* Student Fields */}
+                        {formData.role === 'student' && (
+                            <div className="p-8 bg-green-50/50 rounded-3xl border border-green-100 space-y-6 animate-in slide-in-from-top-2">
+                                <h3 className="text-xs font-black text-green-700 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <UserCog className="w-4 h-4" />
+                                    Student Configuration
+                                </h3>
 
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Primary Instrument</label>
-                                        <select
-                                            value={formData.instrument}
-                                            onChange={(e) => setFormData({ ...formData, instrument: e.target.value })}
-                                            className="w-full px-5 py-3.5 bg-white border-transparent focus:border-green-400 border-2 rounded-2xl font-bold text-gray-700 outline-none transition-all appearance-none"
-                                        >
-                                            <option value="">Select instrument...</option>
-                                            {allInstruments.map(inst => (
-                                                <option key={inst} value={inst}>{inst}</option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Primary Instrument</label>
+                                    <select
+                                        value={formData.instrument}
+                                        onChange={(e) => setFormData({ ...formData, instrument: e.target.value })}
+                                        className="w-full px-5 py-3.5 bg-white border-transparent focus:border-green-400 border-2 rounded-2xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                    >
+                                        <option value="">Select instrument...</option>
+                                        {allInstruments.map(inst => (
+                                            <option key={inst} value={inst}>{inst}</option>
+                                        ))}
+                                    </select>
+                                </div>
 
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Band Affiliations</label>
-                                        <div className="w-full bg-white border-gray-100 focus-within:border-green-400 border-2 rounded-2xl overflow-hidden min-h-[120px] max-h-[200px] overflow-y-auto custom-scrollbar transition-all">
-                                            {bands.length > 0 ? (
-                                                bands.map(b => {
-                                                    const isSelected = formData.band_ids.includes(b.id)
-                                                    return (
-                                                        <div
-                                                            key={b.id}
-                                                            onClick={() => {
-                                                                const newIds = isSelected 
-                                                                    ? formData.band_ids.filter(id => id !== b.id)
-                                                                    : [...formData.band_ids, b.id]
-                                                                setFormData({ ...formData, band_ids: newIds })
-                                                            }}
-                                                            className={`px-5 py-3 text-sm font-bold cursor-pointer transition-all border-b border-gray-50 last:border-0 flex items-center justify-between group ${
-                                                                isSelected ? 'bg-primary/5 text-primary' : 'text-gray-600 hover:bg-gray-50'
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Band Affiliations</label>
+                                    <div className="w-full bg-white border-gray-100 focus-within:border-green-400 border-2 rounded-2xl overflow-hidden min-h-[120px] max-h-[200px] overflow-y-auto custom-scrollbar transition-all">
+                                        {bands.length > 0 ? (
+                                            bands.map(b => {
+                                                const isSelected = formData.band_ids.includes(b.id)
+                                                return (
+                                                    <div
+                                                        key={b.id}
+                                                        onClick={() => {
+                                                            const newIds = isSelected
+                                                                ? formData.band_ids.filter(id => id !== b.id)
+                                                                : [...formData.band_ids, b.id]
+                                                            setFormData({ ...formData, band_ids: newIds })
+                                                        }}
+                                                        className={`px-5 py-3 text-sm font-bold cursor-pointer transition-all border-b border-gray-50 last:border-0 flex items-center justify-between group ${isSelected ? 'bg-primary/5 text-primary' : 'text-gray-600 hover:bg-gray-50'
                                                             }`}
-                                                        >
-                                                            <span>{b.name}</span>
-                                                            <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${
-                                                                isSelected 
-                                                                    ? 'bg-primary border-primary scale-110' 
-                                                                    : 'border-gray-200 group-hover:border-primary/30'
+                                                    >
+                                                        <span>{b.name}</span>
+                                                        <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${isSelected
+                                                                ? 'bg-primary border-primary scale-110'
+                                                                : 'border-gray-200 group-hover:border-primary/30'
                                                             }`}>
-                                                                {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
-                                                            </div>
+                                                            {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
                                                         </div>
-                                                    )
-                                                })
-                                            ) : (
-                                                <div className="px-5 py-8 text-center text-gray-400 text-xs font-medium italic">
-                                                    No bands available in the studio system.
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Legal Guardian / Parent</label>
-                                        <select
-                                            value={formData.family_id}
-                                            onChange={(e) => setFormData({ ...formData, family_id: e.target.value })}
-                                            className="w-full px-5 py-3.5 bg-white border-transparent focus:border-green-400 border-2 rounded-2xl font-bold text-gray-700 outline-none transition-all appearance-none"
-                                        >
-                                            <option value="">No linked guardian</option>
-                                            {parentOptions.map((p: any) => <option key={p.id} value={p.id}>{p.full_name || p.email}</option>)}
-                                        </select>
+                                                    </div>
+                                                )
+                                            })
+                                        ) : (
+                                            <div className="px-5 py-8 text-center text-gray-400 text-xs font-medium italic">
+                                                No bands available in the studio system.
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                            )}
 
-                            {/* Teacher Fields */}
-                            {formData.role === 'teacher' && (
-                                <div className="p-8 bg-blue-50/50 rounded-3xl border border-blue-100 space-y-6 animate-in slide-in-from-top-2">
-                                     <h3 className="text-xs font-black text-blue-700 uppercase tracking-[0.2em] flex items-center gap-2">
-                                        <Sparkles className="w-4 h-4" />
-                                        Instructor Credentials
-                                    </h3>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Legal Guardian / Parent</label>
+                                    <select
+                                        value={formData.family_id}
+                                        onChange={(e) => setFormData({ ...formData, family_id: e.target.value })}
+                                        className="w-full px-5 py-3.5 bg-white border-transparent focus:border-green-400 border-2 rounded-2xl font-bold text-gray-700 outline-none transition-all appearance-none"
+                                    >
+                                        <option value="">No linked guardian</option>
+                                        {parentOptions.map((p: any) => <option key={p.id} value={p.id}>{p.full_name || p.email}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                        )}
 
-                                    <div className="flex flex-wrap gap-2">
-                                        {formData.specialties.map(spec => (
-                                            <span key={spec} className="px-4 py-2 bg-white border border-blue-100 shadow-sm text-blue-600 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-blue-50 transition-colors">
-                                                {spec}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setFormData({ ...formData, specialties: formData.specialties.filter(s => s !== spec) })}
-                                                    className="hover:text-red-500 transition-colors"
-                                                >
-                                                    <X className="w-3.5 h-3.5" />
-                                                </button>
-                                            </span>
-                                        ))}
-                                    </div>
+                        {/* Teacher Fields */}
+                        {formData.role === 'teacher' && (
+                            <div className="p-8 bg-blue-50/50 rounded-3xl border border-blue-100 space-y-6 animate-in slide-in-from-top-2">
+                                <h3 className="text-xs font-black text-blue-700 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4" />
+                                    Instructor Credentials
+                                </h3>
 
-                                    <div className="flex gap-3">
-                                        <input
-                                            type="text"
-                                            value={newSpecialty}
-                                            onChange={(e) => setNewSpecialty(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter') {
-                                                    e.preventDefault()
-                                                    const trimmed = newSpecialty.trim()
-                                                    if (!trimmed) return
-                                                    const formatted = trimmed.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())
-                                                    if (!formData.specialties.includes(formatted)) {
-                                                        setFormData({ ...formData, specialties: [...formData.specialties, formatted] })
-                                                        setNewSpecialty('')
-                                                    }
-                                                }
-                                            }}
-                                            placeholder="Add expertise (e.g. Neo-Soul Rhythm)"
-                                            className="flex-1 px-5 py-3.5 bg-white border-transparent focus:border-blue-400 border-2 rounded-2xl font-bold text-sm text-gray-700 outline-none transition-all shadow-sm"
-                                        />
-                                        <Button
-                                            type="button"
-                                            onClick={() => {
+                                <div className="flex flex-wrap gap-2">
+                                    {formData.specialties.map(spec => (
+                                        <span key={spec} className="px-4 py-2 bg-white border border-blue-100 shadow-sm text-blue-600 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-blue-50 transition-colors">
+                                            {spec}
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, specialties: formData.specialties.filter(s => s !== spec) })}
+                                                className="hover:text-red-500 transition-colors"
+                                            >
+                                                <X className="w-3.5 h-3.5" />
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <input
+                                        type="text"
+                                        value={newSpecialty}
+                                        onChange={(e) => setNewSpecialty(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault()
                                                 const trimmed = newSpecialty.trim()
                                                 if (!trimmed) return
                                                 const formatted = trimmed.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())
@@ -627,13 +608,28 @@ export default function UsersPage() {
                                                     setFormData({ ...formData, specialties: [...formData.specialties, formatted] })
                                                     setNewSpecialty('')
                                                 }
-                                            }}
-                                        >
-                                            Add
-                                        </Button>
-                                    </div>
+                                            }
+                                        }}
+                                        placeholder="Add expertise (e.g. Neo-Soul Rhythm)"
+                                        className="flex-1 px-5 py-3.5 bg-white border-transparent focus:border-blue-400 border-2 rounded-2xl font-bold text-sm text-gray-700 outline-none transition-all shadow-sm"
+                                    />
+                                    <Button
+                                        type="button"
+                                        onClick={() => {
+                                            const trimmed = newSpecialty.trim()
+                                            if (!trimmed) return
+                                            const formatted = trimmed.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())
+                                            if (!formData.specialties.includes(formatted)) {
+                                                setFormData({ ...formData, specialties: [...formData.specialties, formatted] })
+                                                setNewSpecialty('')
+                                            }
+                                        }}
+                                    >
+                                        Add
+                                    </Button>
                                 </div>
-                            )}
+                            </div>
+                        )}
 
                     </form>
                 </DialogContent>

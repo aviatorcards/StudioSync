@@ -75,8 +75,9 @@ export default function SignupPage() {
                 router.push('/login?registered=true')
             } else {
                 const data = await response.json()
-                setError(data.detail || data.email?.[0] || 'Registration failed')
+                setError(data.error || data.detail || data.email?.[0] || 'Registration failed')
             }
+
         } catch (err) {
             setError('Connection error. Please try again.')
         } finally {

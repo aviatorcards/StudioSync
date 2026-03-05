@@ -13,7 +13,7 @@ export default function TermsPage() {
                 {/* Header */}
                 <section className="relative overflow-hidden bg-white border-b border-gray-100 py-20 md:py-28">
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/30" />
-                    
+
                     <div className="max-w-4xl mx-auto px-4 relative z-10 text-center">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
@@ -42,7 +42,7 @@ export default function TermsPage() {
                 {/* Content */}
                 <section className="py-16 px-4">
                     <div className="max-w-4xl mx-auto">
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
@@ -129,12 +129,12 @@ export default function TermsPage() {
                                         For any questions regarding these terms, please contact our legal team:
                                     </p>
                                     <div className="flex flex-col sm:flex-row gap-4">
-                                        <a 
-                                            href="mailto:support@studiosync.app"
+                                        <a
+                                            href="mailto:tristan@fddl.dev"
                                             className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-all"
                                         >
                                             <FileText className="w-4 h-4" />
-                                            support@studiosync.app
+                                            tristan@fddl.dev
                                             <ArrowRight className="w-4 h-4 ml-2" />
                                         </a>
                                     </div>

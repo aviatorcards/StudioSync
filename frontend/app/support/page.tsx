@@ -14,7 +14,7 @@ export default function SupportPage() {
                 {/* Hero Section */}
                 <section className="bg-white border-b border-gray-100 px-4 py-20 md:py-28 relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/30" />
-                    
+
                     <div className="max-w-4xl mx-auto text-center relative z-10">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
@@ -34,7 +34,7 @@ export default function SupportPage() {
                             </h1>
 
                             <p className="text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
-                                Our mission is to make your studio management effortless. Whether you have a question, 
+                                Our mission is to make your studio management effortless. Whether you have a question,
                                 need technical help, or want to suggest a feature, we&apos;re here for you.
                             </p>
                         </motion.div>
@@ -59,16 +59,16 @@ export default function SupportPage() {
                                 <p className="text-gray-500 mb-6 text-sm leading-relaxed">
                                     The best way to get technical help or account assistance. We typicaly respond within 24 hours.
                                 </p>
-                                <a 
-                                    href="mailto:support@studiosync.app" 
+                                <a
+                                    href="mailto:tristan@fddl.dev"
                                     className="inline-flex items-center gap-2 text-indigo-600 font-semibold hover:gap-3 transition-all"
                                 >
-                                    support@studiosync.app
+                                    tristan@fddl.dev
                                     <ArrowRight className="w-4 h-4" />
                                 </a>
                                 <div className="mt-8 pt-6 border-t border-gray-50 flex items-center gap-2 text-xs text-gray-400">
                                     <Clock className="w-3.5 h-3.5" />
-                                    Response time: ~24 hours
+                                    Response time: ~24-48 hours
                                 </div>
                             </motion.div>
 
@@ -86,8 +86,8 @@ export default function SupportPage() {
                                 <p className="text-gray-500 mb-6 text-sm leading-relaxed">
                                     Detailed guides on everything from setting up your studio to advanced billing and custom domains.
                                 </p>
-                                <Link 
-                                    href="/docs" 
+                                <Link
+                                    href="/docs"
                                     className="inline-flex items-center gap-2 text-purple-600 font-semibold hover:gap-3 transition-all"
                                 >
                                     Browse the Guides

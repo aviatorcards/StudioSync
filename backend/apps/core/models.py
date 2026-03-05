@@ -140,6 +140,13 @@ class Studio(models.Model):
         validators=[validate_image],
         help_text="Studio cover image (max 5MB, JPG/PNG/GIF/WebP)",
     )
+    logo = models.ImageField(
+        upload_to="studio_logos/",
+        blank=True,
+        null=True,
+        validators=[validate_image],
+        help_text="Studio logo (max 5MB, JPG/PNG/GIF/WebP)",
+    )
     layout_data = models.JSONField(default=dict, blank=True)
 
     # Flags

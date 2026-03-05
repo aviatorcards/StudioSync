@@ -17,6 +17,7 @@ export default function StudiosPage() {
     const { studios, loading: studiosLoading, refetch } = useStudios()
     const router = useRouter()
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const logoInputRef = useRef<HTMLInputElement>(null)
 
     // Determine primary studio
     const activeStudio = studios && studios.length > 0 ? studios[0] : null
@@ -56,6 +57,25 @@ export default function StudiosPage() {
         } catch (error: any) {
             console.error('Upload failed:', error)
             toast.error('Failed to upload cover image', { id: toastId })
+        }
+    }
+
+    const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file || !activeStudio) return
+
+        const uploadData = new FormData()
+        uploadData.append('logo', file)
+
+        const toastId = toast.loading('Uploading logo...')
+
+        try {
+            await api.patch('/core/studios/current/', uploadData)
+            toast.success('Studio logo updated!', { id: toastId })
+            refetch()
+        } catch (error: any) {
+            console.error('Logo upload failed:', error)
+            toast.error('Failed to upload logo', { id: toastId })
         }
     }
 
@@ -114,8 +134,8 @@ export default function StudiosPage() {
         return (
             <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-in fade-in slide-in-from-bottom-6 duration-1000">
                 <div className="bg-white rounded-[3rem] border border-gray-100 shadow-2xl p-24 text-center relative overflow-hidden group">
-                     <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl group-hover:scale-110 transition-transform duration-1000" />
-                     <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-50 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl group-hover:scale-110 transition-transform duration-1000" />
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl group-hover:scale-110 transition-transform duration-1000" />
+                    <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-50 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl group-hover:scale-110 transition-transform duration-1000" />
 
                     <div className="flex flex-col items-center gap-8 relative z-10">
                         <div className="w-28 h-28 bg-white rounded-[2.5rem] flex items-center justify-center border-2 border-dashed border-gray-200 shadow-sm">
@@ -266,7 +286,7 @@ export default function StudiosPage() {
                             </div>
 
                             {/* System Settings */}
-                             <div className="space-y-6 pt-6 border-t border-gray-50">
+                            <div className="space-y-6 pt-6 border-t border-gray-50">
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500">
                                         <Clock className="w-4 h-4" />
@@ -274,7 +294,7 @@ export default function StudiosPage() {
                                     <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">System Parameters</h3>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                     <div className="space-y-2">
+                                    <div className="space-y-2">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
                                             <DollarSign className="w-3 h-3 text-emerald-500" />
                                             Active Currency
@@ -302,7 +322,7 @@ export default function StudiosPage() {
                         </form>
                     </DialogContent>
                     <DialogFooter>
-                         <Button
+                        <Button
                             variant="ghost"
                             onClick={() => setIsDialogOpen(false)}
                             className="flex-1"
@@ -337,17 +357,24 @@ export default function StudiosPage() {
         <div className="max-w-[1600px] mx-auto px-6 py-8 animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8">
             {/* Hero Section */}
             <div className="relative w-full h-64 md:h-80 rounded-[2.5rem] overflow-hidden group shadow-2xl">
-                {/* File Input */}
-                <input 
-                    type="file" 
+                {/* File Inputs */}
+                <input
+                    type="file"
                     ref={fileInputRef}
                     className="hidden"
                     accept="image/*"
                     onChange={handleCoverUpload}
                 />
-                
+                <input
+                    type="file"
+                    ref={logoInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                />
+
                 {/* Upload Button */}
-                <button 
+                <button
                     onClick={() => fileInputRef.current?.click()}
                     className="absolute top-6 right-6 z-20 bg-black/30 hover:bg-black/50 text-white p-3 rounded-full backdrop-blur-md transition-all"
                     title="Change Cover Image"
@@ -356,32 +383,41 @@ export default function StudiosPage() {
                 </button>
 
                 {/* Background Image / Gradient */}
-                <div 
+                <div
                     className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
-                    style={{ 
-                        backgroundImage: activeStudio.cover_image 
-                            ? `url(${activeStudio.cover_image})` 
-                            : activeStudio.settings?.cover_image 
-                                ? `url(${activeStudio.settings.cover_image})` 
-                                : 'none',
-                        background: (activeStudio.cover_image || activeStudio.settings?.cover_image) 
-                            ? undefined 
+                    style={{
+                        backgroundImage: (activeStudio.cover_image || activeStudio.settings?.cover_image)
+                            ? `url(${activeStudio.cover_image || activeStudio.settings?.cover_image})`
+                            : 'none',
+                        backgroundColor: (activeStudio.cover_image || activeStudio.settings?.cover_image)
+                            ? undefined
+                            : '#6366f1',
+                        background: (activeStudio.cover_image || activeStudio.settings?.cover_image)
+                            ? undefined
                             : 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)'
                     }}
                 />
                 <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors duration-500" />
-                
+
                 <div className="absolute bottom-0 left-0 p-8 md:p-12 w-full flex flex-col md:flex-row items-end justify-between gap-6">
                     <div className="flex items-end gap-6 flex-1">
-                        {/* Logo */}
-                        <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-3xl shadow-xl flex items-center justify-center overflow-hidden border-4 border-white transform translate-y-4 md:translate-y-0 group-hover:-translate-y-2 transition-transform duration-500">
-                            {activeStudio.settings?.logo_url ? (
-                                <img src={activeStudio.settings.logo_url} alt="Logo" className="w-full h-full object-cover" />
+                        {/* Logo — click to upload */}
+                        <div
+                            className="relative w-24 h-24 md:w-32 md:h-32 bg-white rounded-3xl shadow-xl flex items-center justify-center overflow-hidden border-4 border-white transform translate-y-4 md:translate-y-0 group-hover:-translate-y-2 transition-transform duration-500 cursor-pointer"
+                            onClick={() => logoInputRef.current?.click()}
+                            title="Click to upload studio logo"
+                        >
+                            {(activeStudio.logo || activeStudio.settings?.logo_url) ? (
+                                <img src={activeStudio.logo || activeStudio.settings.logo_url} alt="Logo" className="w-full h-full object-cover" />
                             ) : (
                                 <Building2 className="w-10 h-10 md:w-12 md:h-12 text-gray-300" />
                             )}
+                            {/* Hover overlay */}
+                            <div className="absolute inset-0 bg-black/0 hover:bg-black/40 transition-colors flex items-center justify-center">
+                                <Camera className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
                         </div>
-                        
+
                         <div className="mb-2 text-white shadow-sm flex-1">
                             <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-2 drop-shadow-md">{activeStudio.name}</h1>
                             <div className="flex flex-col gap-1">
@@ -397,7 +433,7 @@ export default function StudiosPage() {
                             </div>
                         </div>
                     </div>
-                    
+
                     <Button
                         onClick={() => router.push('/dashboard/settings')}
                         className="bg-white/20 hover:bg-white/30 text-white border border-white/40 backdrop-blur-md gap-2 px-6 py-6 rounded-2xl transition-all font-bold mb-2 shadow-lg whitespace-nowrap"
@@ -411,7 +447,7 @@ export default function StudiosPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Info Card */}
                 <div className="lg:col-span-2 space-y-8">
-                     {/* Operational Details */}
+                    {/* Operational Details */}
                     <div className="bg-white rounded-[2rem] border border-gray-100 p-8 shadow-sm hover:shadow-md transition-shadow duration-300">
                         <div className="flex items-center gap-4 border-b border-gray-50 pb-6 mb-8">
                             <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
@@ -438,7 +474,7 @@ export default function StudiosPage() {
                                             </span>
                                         </p>
                                         {(activeStudio.address_line1 || activeStudio.city) && (
-                                            <button 
+                                            <button
                                                 onClick={() => {
                                                     const addr = `${activeStudio.address_line1} ${activeStudio.city} ${activeStudio.state} ${activeStudio.postal_code}`
                                                     window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`, '_blank')
@@ -463,8 +499,8 @@ export default function StudiosPage() {
                                     </div>
                                 </div>
                             </div>
-                            
-                             <div className="space-y-4">
+
+                            <div className="space-y-4">
                                 <div className="space-y-2">
                                     <span className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                                         <Phone className="w-3 h-3" /> Contact Methods
@@ -480,7 +516,7 @@ export default function StudiosPage() {
                                                 <span className="font-medium">{activeStudio.phone}</span>
                                             </div>
                                         )}
-                                         {activeStudio.website && (
+                                        {activeStudio.website && (
                                             <div className="flex items-center gap-3 text-indigo-600 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100/50 hover:bg-indigo-50 transition-colors cursor-pointer" onClick={() => window.open(activeStudio.website, '_blank')}>
                                                 <Globe className="w-4 h-4" />
                                                 <span className="font-bold">{activeStudio.website.replace(/^https?:\/\//, '')}</span>
@@ -510,19 +546,19 @@ export default function StudiosPage() {
                     <div className="bg-gray-900 text-white rounded-[2rem] p-8 shadow-2xl relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl opacity-30 group-hover:opacity-50 transition-opacity duration-700" />
                         <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl opacity-20 group-hover:opacity-40 transition-opacity duration-700" />
-                        
+
                         <h3 className="text-xl font-black mb-2 relative z-10">Studio Command</h3>
                         <p className="text-gray-400 text-sm mb-8 relative z-10">Manage your daily operations</p>
-                        
+
                         <div className="space-y-3 relative z-10">
-                            <Button 
+                            <Button
                                 className="w-full justify-start text-gray-900 bg-white hover:bg-gray-100 font-bold h-auto py-4 px-6 rounded-xl"
                                 onClick={() => router.push('/dashboard/schedule')}
                             >
                                 <Calendar className="w-5 h-5 mr-3 text-indigo-600" />
                                 Master Schedule
                             </Button>
-                             <Button 
+                            <Button
                                 variant="ghost"
                                 className="w-full justify-start text-white hover:bg-white/10 font-bold h-auto py-4 px-6 rounded-xl border border-white/10"
                                 onClick={() => router.push('/dashboard/students')}
@@ -536,14 +572,14 @@ export default function StudiosPage() {
                     {/* Branding Preview Mini-Card */}
                     <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-[2rem] p-8 text-white relative overflow-hidden">
                         <div className="relative z-10">
-                             <div className="flex items-center gap-3 mb-4">
+                            <div className="flex items-center gap-3 mb-4">
                                 <Palette className="w-5 h-5 text-white/80" />
                                 <h4 className="font-bold text-lg">Identity & Theme</h4>
                             </div>
                             <p className="text-white/80 text-sm mb-6 leading-relaxed">
                                 Customize your studio's digital presence. Your brand color communicates your vibe.
                             </p>
-                            <Button 
+                            <Button
                                 onClick={() => router.push('/dashboard/settings?tab=appearance')}
                                 className="w-full bg-white text-indigo-600 hover:bg-gray-50 font-bold border-none shadow-lg py-6 rounded-xl"
                             >

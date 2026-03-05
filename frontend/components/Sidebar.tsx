@@ -118,7 +118,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 { name: 'Instructors', href: '/dashboard/teachers', icon: UserCheck, roles: ['admin'] },
                 { name: 'Schedule', href: '/dashboard/schedule', icon: Calendar, roles: ['admin', 'teacher', 'student'] },
                 { name: 'Lessons', href: '/dashboard/lessons', icon: BookOpen, roles: ['admin', 'teacher', 'student'] },
-                { name: 'Billing', href: '/dashboard/billing', icon: CreditCard, roles: ['admin', 'student'], featureFlag: 'billing_enabled' },
+                { name: 'Billing', href: '/dashboard/billing', icon: CreditCard, roles: ['admin', 'teacher', 'student'], featureFlag: 'billing_enabled' },
             ],
         },
         {

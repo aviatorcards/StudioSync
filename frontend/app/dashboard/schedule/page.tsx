@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@/contexts/UserContext";
 import {
   useLessons,
@@ -41,9 +41,37 @@ import {
   Info,
   RefreshCw,
   Loader2,
+  Globe,
+  Trash2,
+  ToggleLeft,
+  ToggleRight,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/ui/dialog";
+
+interface ExternalFeed {
+  id: string;
+  name: string;
+  url: string;
+  color: string;
+  is_enabled: boolean;
+  last_synced_at: string | null;
+  last_error: string;
+  event_count: number;
+}
+
+interface ExternalEvent {
+  id: string;
+  feed: string;
+  feed_name: string;
+  feed_color: string;
+  title: string;
+  description: string;
+  location: string;
+  start_dt: string;
+  end_dt: string;
+}
 
 interface LessonBooking {
   student: string;
@@ -105,6 +133,133 @@ export default function SchedulePage() {
   const [bookingDefaults, setBookingDefaults] = useState({
     time: `${businessStart.toString().padStart(2, "0")}:00`,
   });
+
+  // ── External Calendars state ──────────────────────────────────────────────
+  const [externalFeeds, setExternalFeeds] = useState<ExternalFeed[]>([]);
+  const [externalEvents, setExternalEvents] = useState<ExternalEvent[]>([]);
+  const [feedsLoading, setFeedsLoading] = useState(false);
+  const [showExternalPanel, setShowExternalPanel] = useState(false);
+  const [newFeedName, setNewFeedName] = useState("");
+  const [newFeedUrl, setNewFeedUrl] = useState("");
+  const [newFeedColor, setNewFeedColor] = useState("#6366f1");
+  const [addingFeed, setAddingFeed] = useState(false);
+  const [refreshingFeedId, setRefreshingFeedId] = useState<string | null>(null);
+
+  const fetchExternalFeeds = useCallback(async () => {
+    try {
+      setFeedsLoading(true);
+      const resp = await api.get("/lessons/external-feeds/");
+      const data = resp.data?.results ?? resp.data;
+      setExternalFeeds(Array.isArray(data) ? data : []);
+    } catch (e) {
+      // silently ignore if unauthenticated
+    } finally {
+      setFeedsLoading(false);
+    }
+  }, []);
+
+  const fetchExternalEvents = useCallback(async () => {
+    try {
+      const resp = await api.get("/lessons/external-events/", {
+        params: {
+          start: new Date(queryStartDate).toISOString(),
+          end: new Date(queryEndDate).toISOString(),
+        },
+      });
+      const data = resp.data?.results ?? resp.data;
+      setExternalEvents(Array.isArray(data) ? data : []);
+    } catch (e) {
+      // silently ignore
+    }
+  }, [queryStartDate, queryEndDate]);
+
+  useEffect(() => {
+    fetchExternalFeeds();
+  }, [fetchExternalFeeds]);
+
+  useEffect(() => {
+    fetchExternalEvents();
+  }, [fetchExternalEvents]);
+
+  const handleAddFeed = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFeedUrl.trim()) { toast.error("Please enter a feed URL"); return; }
+    if (!newFeedName.trim()) { toast.error("Please enter a name"); return; }
+    setAddingFeed(true);
+    try {
+      await api.post("/lessons/external-feeds/", {
+        name: newFeedName,
+        url: newFeedUrl,
+        color: newFeedColor,
+      });
+      toast.success("Calendar added and synced!");
+      setNewFeedName("");
+      setNewFeedUrl("");
+      setNewFeedColor("#6366f1");
+      await fetchExternalFeeds();
+      await fetchExternalEvents();
+    } catch (err: any) {
+      const detail = err?.response?.data?.url?.[0] || err?.response?.data?.detail || "Failed to add calendar";
+      toast.error(typeof detail === "string" ? detail : "Failed to add calendar");
+    } finally {
+      setAddingFeed(false);
+    }
+  };
+
+  const handleRefreshFeed = async (feedId: string) => {
+    setRefreshingFeedId(feedId);
+    try {
+      const resp = await api.post(`/lessons/external-feeds/${feedId}/refresh/`);
+      toast.success(`Synced ${resp.data.events_synced} events`);
+      await fetchExternalFeeds();
+      await fetchExternalEvents();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Refresh failed");
+    } finally {
+      setRefreshingFeedId(null);
+    }
+  };
+
+  const handleToggleFeed = async (feed: ExternalFeed) => {
+    try {
+      await api.patch(`/lessons/external-feeds/${feed.id}/`, { is_enabled: !feed.is_enabled });
+      await fetchExternalFeeds();
+      await fetchExternalEvents();
+    } catch { toast.error("Could not update calendar"); }
+  };
+
+  const handleDeleteFeed = async (feedId: string) => {
+    try {
+      await api.delete(`/lessons/external-feeds/${feedId}/`);
+      toast.success("Calendar removed");
+      await fetchExternalFeeds();
+      await fetchExternalEvents();
+    } catch { toast.error("Could not remove calendar"); }
+  };
+
+  // Get external events for a given day + hour slot
+  const getExternalEventsForSlot = (dayIdx: number, hour: number) => {
+    let targetDate = weekDays[dayIdx];
+    if (isOvernight && hour <= businessEnd) targetDate = addDays(targetDate, 1);
+    return externalEvents.filter((evt) => {
+      const start = parseISO(evt.start_dt);
+      return isSameDay(start, targetDate) && getHours(start) === hour;
+    });
+  };
+
+  const getExternalEventsForDay = (targetDate: Date) =>
+    externalEvents.filter((evt) => isSameDay(parseISO(evt.start_dt), targetDate));
+
+  // Check if a lesson conflicts with any enabled external event
+  const hasExternalConflict = (lesson: any) => {
+    const lStart = parseISO(lesson.scheduled_start).getTime();
+    const lEnd = parseISO(lesson.scheduled_end).getTime();
+    return externalEvents.some((evt) => {
+      const eStart = parseISO(evt.start_dt).getTime();
+      const eEnd = parseISO(evt.end_dt).getTime();
+      return eStart < lEnd && eEnd > lStart;
+    });
+  };
 
   const [newBooking, setNewBooking] = useState<LessonBooking>({
     student: "",
@@ -635,6 +790,9 @@ export default function SchedulePage() {
                                           : "Event")}
                                     </div>
                                     <div className="flex items-center gap-0.5 sm:gap-1">
+                                      {hasExternalConflict(lesson) && (
+                                        <span title="Overlaps with an external calendar event" className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                                      )}
                                       {lesson.duration_minutes !== 60 && (
                                         <span
                                           className={`text-[8px] sm:text-[9px] font-black uppercase px-0.5 sm:px-1 rounded ${colorMode !== "status" ? "" : "bg-white/50 text-gray-500"}`}
@@ -666,6 +824,22 @@ export default function SchedulePage() {
                                   >
                                     {lesson.student_instrument}
                                   </p>
+                                </div>
+                              ))}
+                              {/* External events overlay in week view */}
+                              {getExternalEventsForSlot(dayIdx, hour).map((evt) => (
+                                <div
+                                  key={evt.id}
+                                  title={`${evt.feed_name}: ${evt.title}${evt.location ? ` @ ${evt.location}` : ""}`}
+                                  className="p-1 rounded-lg border border-dashed shadow-sm text-[10px] truncate"
+                                  style={{
+                                    borderColor: evt.feed_color,
+                                    color: evt.feed_color,
+                                    backgroundColor: evt.feed_color + "18",
+                                  }}
+                                >
+                                  <Globe className="inline w-2.5 h-2.5 mr-0.5 shrink-0" />
+                                  {evt.title || evt.feed_name}
                                 </div>
                               ))}
                             </div>
@@ -727,7 +901,7 @@ export default function SchedulePage() {
                             }}
                             style={getLessonColorStyles(lesson)}
                             className={`
-                              px-1.5 py-1 rounded w-full truncate border-l-2 shadow-sm hover:shadow-md cursor-pointer text-left
+                              px-1.5 py-1 rounded w-full truncate border-l-2 shadow-sm hover:shadow-md cursor-pointer text-left relative
                               ${colorMode === "status" ? (
                                 lesson.status === "scheduled" ? "bg-primary/10 border-primary text-primary-dark" :
                                   lesson.status === "completed" ? "bg-gray-100 border-gray-400 text-gray-700" :
@@ -735,6 +909,9 @@ export default function SchedulePage() {
                               ) : ""}
                             `}
                           >
+                            {hasExternalConflict(lesson) && (
+                              <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-amber-400" title="Conflicts with external calendar event" />
+                            )}
                             <span
                               className={`text-[9px] sm:text-[10px] font-bold ${colorMode !== "status" ? "" : ""}`}
                               style={colorMode !== "status" ? { color: "var(--dynamic-text-dark)" } : {}}
@@ -749,6 +926,22 @@ export default function SchedulePage() {
                             </span>
                           </div>
                         ))}
+                        {/* External events in month view */}
+                        {getExternalEventsForDay(day).map((evt) => (
+                          <div
+                            key={evt.id}
+                            title={`${evt.feed_name}: ${evt.title}`}
+                            className="px-1.5 py-1 rounded w-full truncate border border-dashed text-[9px] sm:text-[10px]"
+                            style={{
+                              borderColor: evt.feed_color,
+                              color: evt.feed_color,
+                              backgroundColor: evt.feed_color + "18",
+                            }}
+                          >
+                            <Globe className="inline w-2 h-2 mr-0.5" />
+                            {evt.title || evt.feed_name}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   );
@@ -757,6 +950,142 @@ export default function SchedulePage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* ── External Calendars Panel ─────────────────────────────────────── */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden no-print">
+        <button
+          onClick={() => setShowExternalPanel(!showExternalPanel)}
+          className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors text-left"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+              <Globe className="w-4 h-4 text-indigo-500" />
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900 text-sm">External Calendars</h3>
+              <p className="text-xs text-gray-400">
+                {externalFeeds.length === 0
+                  ? "Import iCal feeds from Google, Apple, Outlook & more"
+                  : `${externalFeeds.filter(f => f.is_enabled).length} of ${externalFeeds.length} active`}
+              </p>
+            </div>
+          </div>
+          <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${showExternalPanel ? "rotate-90" : ""}`} />
+        </button>
+
+        {showExternalPanel && (
+          <div className="border-t border-gray-100 p-6 space-y-6">
+
+            {/* Feed List */}
+            {feedsLoading ? (
+              <div className="flex items-center gap-2 text-sm text-gray-400">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading calendars...
+              </div>
+            ) : externalFeeds.length > 0 ? (
+              <div className="space-y-2">
+                {externalFeeds.map((feed) => (
+                  <div
+                    key={feed.id}
+                    className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors bg-gray-50/50"
+                  >
+                    {/* Color swatch */}
+                    <div
+                      className="w-3 h-3 rounded-full shrink-0 border-2"
+                      style={{ backgroundColor: feed.color, borderColor: feed.color }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-semibold truncate ${!feed.is_enabled ? "text-gray-400" : "text-gray-800"}`}>
+                        {feed.name}
+                      </p>
+                      <p className="text-[10px] text-gray-400 truncate">
+                        {feed.last_synced_at
+                          ? `${feed.event_count} events · synced ${format(parseISO(feed.last_synced_at), "MMM d, h:mm a")}`
+                          : "Not yet synced"}
+                        {feed.last_error && (
+                          <span className="ml-1 text-red-400">· Error: {feed.last_error.slice(0, 40)}</span>
+                        )}
+                      </p>
+                    </div>
+                    {/* Actions */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => handleRefreshFeed(feed.id)}
+                        disabled={refreshingFeedId === feed.id}
+                        title="Sync now"
+                        className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${refreshingFeedId === feed.id ? "animate-spin" : ""}`} />
+                      </button>
+                      <button
+                        onClick={() => handleToggleFeed(feed)}
+                        title={feed.is_enabled ? "Hide events" : "Show events"}
+                        className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors"
+                      >
+                        {feed.is_enabled
+                          ? <ToggleRight className="w-4 h-4 text-indigo-500" />
+                          : <ToggleLeft className="w-4 h-4 text-gray-400" />}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteFeed(feed.id)}
+                        title="Remove calendar"
+                        className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400 italic">
+                No external calendars yet. Add one below.
+              </p>
+            )}
+
+            {/* Add feed form */}
+            <form onSubmit={handleAddFeed} className="space-y-3">
+              <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Add Calendar</p>
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto_auto] gap-2">
+                <input
+                  type="text"
+                  placeholder="Name (e.g. My Google Calendar)"
+                  value={newFeedName}
+                  onChange={(e) => setNewFeedName(e.target.value)}
+                  className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 outline-none focus:border-indigo-300 focus:bg-white transition-colors"
+                />
+                <input
+                  type="text"
+                  placeholder="iCal URL (https:// or webcal://)"
+                  value={newFeedUrl}
+                  onChange={(e) => setNewFeedUrl(e.target.value)}
+                  className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 font-mono outline-none focus:border-indigo-300 focus:bg-white transition-colors"
+                />
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-gray-400 shrink-0">Color</label>
+                  <input
+                    type="color"
+                    value={newFeedColor}
+                    onChange={(e) => setNewFeedColor(e.target.value)}
+                    className="w-9 h-9 rounded-lg border border-gray-200 cursor-pointer p-0.5 bg-white"
+                  />
+                </div>
+                <Button type="submit" disabled={addingFeed} className="gap-2 whitespace-nowrap">
+                  {addingFeed ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                  Add
+                </Button>
+              </div>
+              <div className="bg-blue-50 border border-blue-100 rounded-xl px-3 py-2 flex gap-2 items-start">
+                <Info className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
+                <p className="text-xs text-blue-700">
+                  Works with <strong>Google Calendar</strong>, <strong>Apple iCal</strong>, <strong>Outlook</strong>, and any
+                  service that offers a public <code>.ics</code> feed URL. Events appear as overlays on your schedule.
+                </p>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
 
       {/* Booking Modal */}

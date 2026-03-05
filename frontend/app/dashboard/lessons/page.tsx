@@ -198,11 +198,11 @@ export default function LessonsPage() {
             {/* Header */}
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4">
                 <div className="space-y-2">
-                    <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">Lessons & Plans</h1>
+                    <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Lessons & Plans</h1>
                     <p className="text-gray-500 font-medium max-w-lg">Orchestrate your pedagogical workflow and track student evolution.</p>
                 </div>
                 {currentUser && ['admin', 'teacher'].includes(currentUser.role) && (
-                    <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="grid grid-cols-2 sm:flex sm:flex-row gap-3">
                         <Button
                             onClick={() => {
                                 setEditingLessonId(null)
@@ -217,55 +217,54 @@ export default function LessonsPage() {
                                 })
                                 setShowLessonModal(true)
                             }}
-                            className="gap-2 shadow-lg shadow-primary/20 transition-all hover:scale-105"
+                            className="gap-2 shadow-lg shadow-primary/20 transition-all hover:scale-105 h-12 sm:h-auto"
                         >
                             <Calendar className="w-4 h-4" />
-                            New Lesson
+                            <span className="text-xs sm:text-sm">New Lesson</span>
                         </Button>
                         <Button
                             variant="secondary"
                             onClick={() => setShowPlanModal(true)}
-                            className="gap-2 transition-all hover:scale-105 text-primary border-primary/20 bg-primary/5 hover:bg-primary/10"
+                            className="gap-2 transition-all hover:scale-105 text-primary border-primary/20 bg-primary/5 hover:bg-primary/10 h-12 sm:h-auto"
                         >
                             <Plus className="w-4 h-4" />
-                            New Template
+                            <span className="text-xs sm:text-sm">New Template</span>
                         </Button>
                     </div>
                 )}
             </header>
 
             {/* Controls */}
-            <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-xl space-y-4">
+            <div className="bg-white p-2 sm:p-4 rounded-3xl border border-gray-100 shadow-xl space-y-4">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <div className="flex flex-wrap gap-3 items-center">
-                        <div className="flex bg-gray-50 rounded-2xl p-1 border border-gray-100">
+                    <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                        <div className="flex bg-gray-50 rounded-2xl p-1 border border-gray-100 w-full sm:w-auto overflow-hidden">
                             <Button
                                 variant={viewMode === 'all' ? 'secondary' : 'ghost'}
                                 size="sm"
-                                onClick={() => setViewMode('all')}
-                                className={`px-4 rounded-xl text-[10px] font-black uppercase tracking-widest ${viewMode === 'all' ? 'bg-white shadow-sm' : 'text-gray-400'}`}
+                                onClick={() => { setViewMode('all'); setCurrentPage(1); }}
+                                className={`flex-1 sm:px-4 rounded-xl text-[10px] font-black uppercase tracking-widest ${viewMode === 'all' ? 'bg-white shadow-sm' : 'text-gray-400'}`}
                             >
-                                All Lessons
+                                All
                             </Button>
                             <Button
                                 variant={viewMode === 'my_lessons' ? 'secondary' : 'ghost'}
                                 size="sm"
-                                onClick={() => setViewMode('my_lessons')}
-                                className={`px-4 rounded-xl text-[10px] font-black uppercase tracking-widest ${viewMode === 'my_lessons' ? 'bg-white shadow-sm' : 'text-gray-400'}`}
+                                onClick={() => { setViewMode('my_lessons'); setCurrentPage(1); }}
+                                className={`flex-1 sm:px-4 rounded-xl text-[10px] font-black uppercase tracking-widest ${viewMode === 'my_lessons' ? 'bg-white shadow-sm' : 'text-gray-400'}`}
                             >
-                                My Students
+                                My Lessons
                             </Button>
                         </div>
-                        <div className="flex p-1 bg-gray-50 rounded-2xl border border-gray-100 overflow-x-auto no-scrollbar">
+                        <div className="flex p-1 bg-gray-50 rounded-2xl border border-gray-100 overflow-x-auto no-scrollbar w-full sm:w-auto">
                             {['all', 'scheduled', 'completed', 'cancelled'].map(status => (
                                 <button
                                     key={status}
-                                    onClick={() => setFilterStatus(status)}
-                                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-                                        filterStatus === status
+                                    onClick={() => { setFilterStatus(status); setCurrentPage(1); }}
+                                    className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${filterStatus === status
                                             ? 'bg-white text-primary shadow-sm'
                                             : 'text-gray-400 hover:text-gray-600'
-                                    }`}
+                                        }`}
                                 >
                                     {status}
                                 </button>
@@ -278,25 +277,26 @@ export default function LessonsPage() {
                             <Search className="w-4 h-4 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
                             <input
                                 type="text"
-                                placeholder="Search students, teachers..."
+                                placeholder="Search..."
                                 className="pl-12 pr-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-sm text-gray-700 outline-none transition-all w-full"
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                             />
                         </div>
                         <input
                             type="date"
-                            className="px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-sm text-gray-700 outline-none transition-all min-w-[150px]"
+                            className="px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-sm text-gray-700 outline-none transition-all"
                             value={dateRange.start}
-                            onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                            onChange={(e) => { setDateRange(prev => ({ ...prev, start: e.target.value })); setCurrentPage(1); }}
                         />
                     </div>
                 </div>
             </div>
 
-            {/* Table */}
+            {/* Table / Card View Area */}
             <div className="bg-white rounded-[2rem] border border-gray-100 shadow-2xl overflow-hidden">
-                <div className="overflow-x-auto custom-scrollbar">
+                {/* Desktop View Table */}
+                <div className="hidden md:block overflow-x-auto custom-scrollbar">
                     <table className="w-full border-separate border-spacing-0">
                         <thead className="bg-gray-50/50">
                             <tr>
@@ -318,7 +318,6 @@ export default function LessonsPage() {
                                 <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Student / Group</th>
                                 <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Instructor</th>
                                 <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Type</th>
-
                                 <th className="px-6 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
                                 <th className="px-6 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
                             </tr>
@@ -352,7 +351,7 @@ export default function LessonsPage() {
                                             <td className="px-6 py-6">
                                                 <div className="flex items-center gap-4">
                                                     <div className="h-10 w-10 shrink-0 rounded-2xl bg-primary/5 flex items-center justify-center text-primary text-xs font-black border border-primary/10">
-                                                        {lesson.student_name?.split(' ').map(n => n[0]).join('')}
+                                                        {lesson.student_name?.split(' ').map(n => n[0]).join('') || '?'}
                                                     </div>
                                                     <div>
                                                         <div className="text-sm font-black text-gray-900 tracking-tight uppercase tracking-tighter">{lesson.student_name}</div>
@@ -396,40 +395,109 @@ export default function LessonsPage() {
                                         </tr>
                                     )
                                 })
-                            ) : (
-                                <tr>
-                                    <td colSpan={7} className="px-6 py-20 text-center">
-                                        <div className="flex flex-col items-center justify-center gap-4">
-                                            <div className="w-20 h-20 bg-gray-50 rounded-[2.5rem] flex items-center justify-center border-2 border-dashed border-gray-100">
-                                                <BookOpen className="w-10 h-10 text-gray-200" />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">No matching lessons found</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            )}
+                            ) : null}
                         </tbody>
                     </table>
                 </div>
 
+                {/* Mobile Card-Based View */}
+                <div className="md:hidden divide-y divide-gray-50">
+                    {currentItems.length > 0 ? (
+                        currentItems.map((lesson) => {
+                            const start = parseISO(lesson.scheduled_start)
+                            const end = parseISO(lesson.scheduled_end)
+                            const duration = (end.getTime() - start.getTime()) / (1000 * 60)
+
+                            return (
+                                <div key={lesson.id} className="p-4 space-y-4 hover:bg-gray-50/30 transition-all">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-10 w-10 shrink-0 rounded-2xl bg-primary/5 flex items-center justify-center text-primary text-xs font-black border border-primary/10">
+                                                {lesson.student_name?.split(' ').map(n => n[0]).join('') || '?'}
+                                            </div>
+                                            <div>
+                                                <div className="text-sm font-black text-gray-900 tracking-tight uppercase">{lesson.student_name}</div>
+                                                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{lesson.student_instrument}</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col items-end gap-1">
+                                            {getStatusBadge(lesson.status)}
+                                            {getTypeBadge(lesson.lesson_type)}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between text-xs font-bold text-gray-600 bg-gray-50 rounded-xl p-3">
+                                        <div className="flex items-center gap-2">
+                                            <Calendar className="w-3.5 h-3.5 text-primary" />
+                                            {format(start, 'MMM d, h:mm a')}
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Clock className="w-3.5 h-3.5 text-gray-400" />
+                                            {duration}m
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between pt-1">
+                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest truncate max-w-[150px]">
+                                            Instructor: <span className="text-gray-600">{lesson.teacher_name}</span>
+                                        </span>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => {
+                                                setEditingLessonId(lesson.id)
+                                                setLessonData({
+                                                    student: lesson.student_profile_id || lesson.student || '',
+                                                    lesson_type: lesson.lesson_type,
+                                                    status: lesson.status,
+                                                    scheduled_start: new Date(new Date(start).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
+                                                    duration_minutes: duration,
+                                                    location: lesson.location || '',
+                                                    is_online: lesson.is_online || false,
+                                                })
+                                                setShowLessonModal(true)
+                                            }}
+                                            className="text-primary font-black uppercase text-[10px] tracking-widest h-8 px-2"
+                                        >
+                                            <Edit className="w-3 h-3 mr-1" />
+                                            Edit
+                                        </Button>
+                                    </div>
+                                </div>
+                            )
+                        })
+                    ) : null}
+                </div>
+
+                {currentItems.length === 0 && (
+                    <div className="px-6 py-20 text-center">
+                        <div className="flex flex-col items-center justify-center gap-4">
+                            <div className="w-20 h-20 bg-gray-50 rounded-[2.5rem] flex items-center justify-center border-2 border-dashed border-gray-100">
+                                <BookOpen className="w-10 h-10 text-gray-200" />
+                            </div>
+                            <div>
+                                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">No matching lessons found</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Pagination */}
-                <div className="p-6 bg-gray-50/30 flex flex-col sm:flex-row items-center justify-between gap-6">
-                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                <div className="p-4 sm:p-6 bg-gray-50/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest order-2 sm:order-1">
                         Showing <span className="text-gray-900">{startIndex + 1}</span> to <span className="text-gray-900">{Math.min(startIndex + itemsPerPage, filteredLessons.length)}</span> of <span className="text-gray-900">{filteredLessons.length}</span>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 order-1 sm:order-2">
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => handlePageChange(currentPage - 1)}
                             disabled={currentPage === 1}
-                            className="rounded-xl"
+                            className="rounded-xl h-10 w-10 sm:h-12 sm:w-12 bg-white border border-gray-100 shadow-sm disabled:opacity-30"
                         >
-                            <ChevronLeft className="w-5 h-5" />
+                            <ChevronLeft className="w-5 h-5 text-gray-600" />
                         </Button>
-                        <div className="px-6 py-2 bg-white border border-gray-100 rounded-2xl text-xs font-black text-gray-700 shadow-sm">
+                        <div className="h-10 sm:h-12 px-6 flex items-center justify-center bg-white border border-gray-100 rounded-2xl text-[10px] font-black text-gray-700 shadow-sm uppercase tracking-widest">
                             {currentPage} / {totalPages || 1}
                         </div>
                         <Button
@@ -437,9 +505,9 @@ export default function LessonsPage() {
                             size="icon"
                             onClick={() => handlePageChange(currentPage + 1)}
                             disabled={currentPage === totalPages || totalPages === 0}
-                            className="rounded-xl"
+                            className="rounded-xl h-10 w-10 sm:h-12 sm:w-12 bg-white border border-gray-100 shadow-sm disabled:opacity-30"
                         >
-                            <ChevronRight className="w-5 h-5" />
+                            <ChevronRight className="w-5 h-5 text-gray-600" />
                         </Button>
                     </div>
                 </div>
@@ -679,13 +747,11 @@ export default function LessonsPage() {
                             <button
                                 type="button"
                                 onClick={() => setFormData({ ...formData, is_public: !formData.is_public })}
-                                className={`relative w-12 h-6 rounded-full transition-colors ${
-                                    formData.is_public ? 'bg-primary' : 'bg-gray-300'
-                                }`}
+                                className={`relative w-12 h-6 rounded-full transition-colors ${formData.is_public ? 'bg-primary' : 'bg-gray-300'
+                                    }`}
                             >
-                                <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                                    formData.is_public ? 'translate-x-6' : 'translate-x-0'
-                                }`} />
+                                <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${formData.is_public ? 'translate-x-6' : 'translate-x-0'
+                                    }`} />
                             </button>
                         </div>
                     </div>
@@ -800,7 +866,7 @@ export default function LessonsPage() {
                                     ))}
                                 </select>
                             </div>
-                            
+
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">Status</label>
                                 <select
@@ -813,7 +879,7 @@ export default function LessonsPage() {
                                     ))}
                                 </select>
                             </div>
-                            
+
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">Location</label>
                                 <input

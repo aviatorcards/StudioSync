@@ -34,14 +34,14 @@ function PricingCard({ plan, index, onSelect }: any) {
             className={`relative ${plan.featured ? 'md:scale-105' : ''}`}
         >
             {/* Featured Badge */}
-            {plan.featured && (
+            {/* {plan.featured && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
                     <div className="bg-gray-900 text-white px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5">
                         <Sparkles className="w-3 h-3" />
                         Most Popular
                     </div>
                 </div>
-            )}
+            )} */}
 
             <div className={`bg-white rounded-2xl border ${plan.featured ? 'border-gray-900 shadow-lg' : 'border-gray-100 hover:shadow-md'} transition-all overflow-hidden`}>
                 <div className="p-7">
@@ -335,7 +335,7 @@ export default function PricingPage() {
 
     const handlePlanSelect = (planId: string) => {
         if (planId === 'enterprise') {
-            window.location.href = 'mailto:sales@studiosync.app?subject=Enterprise Plan Inquiry'
+            window.location.href = 'mailto:tristan@fddl.dev?subject=Enterprise Plan Inquiry'
         } else {
             router.push(`/signup?plan=${planId}`)
         }
@@ -599,7 +599,7 @@ export default function PricingPage() {
                                     </Link>
 
                                     <a
-                                        href="mailto:sales@studiosync.app"
+                                        href="mailto:tristan@fddl.dev"
                                         className="inline-flex items-center gap-2 px-7 py-3.5 bg-white/10 border border-white/20 text-white rounded-xl font-semibold hover:bg-white/15 transition-colors"
                                     >
                                         Contact Sales

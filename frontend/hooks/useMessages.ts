@@ -33,22 +33,22 @@ export function useMessages() {
     const [loading, setLoading] = useState(true);
     const [messagesLoading, setMessagesLoading] = useState(false);
 
-    const fetchThreads = useCallback(async () => {
+    const fetchThreads = useCallback(async (background = false) => {
         try {
-            setLoading(true);
+            if (!background) setLoading(true);
             const res = await api.get('/messaging/threads/');
             setThreads(res.data.results || res.data); // Handle pagination or list
         } catch (error) {
             console.error(error);
-            toast.error('Failed to load messages');
+            if (!background) toast.error('Failed to load messages');
         } finally {
-            setLoading(false);
+            if (!background) setLoading(false);
         }
     }, []);
 
-    const fetchMessages = useCallback(async (threadId: string) => {
+    const fetchMessages = useCallback(async (threadId: string, background = false) => {
         try {
-            setMessagesLoading(true);
+            if (!background) setMessagesLoading(true);
             const res = await api.get(`/messaging/threads/${threadId}/messages/`);
             setMessages(res.data);
 
@@ -58,9 +58,9 @@ export function useMessages() {
             ));
         } catch (error) {
             console.error(error);
-            toast.error('Failed to load conversation');
+            // Ignore toast errors on background polling
         } finally {
-            setMessagesLoading(false);
+            if (!background) setMessagesLoading(false);
         }
     }, []);
 
@@ -107,7 +107,17 @@ export function useMessages() {
 
     useEffect(() => {
         fetchThreads();
-    }, [fetchThreads]);
+
+        // Polling fallback for threads
+        const intervalId = setInterval(() => {
+            fetchThreads(true);
+            if (activeThread?.id) {
+                fetchMessages(activeThread.id, true);
+            }
+        }, 15000); // 15 seconds polling fallback
+
+        return () => clearInterval(intervalId);
+    }, [fetchThreads, activeThread?.id, fetchMessages]);
 
     // WebSocket Integration
     useEffect(() => {
@@ -119,22 +129,24 @@ export function useMessages() {
         const connect = () => {
             // Construct WebSocket URL safely
             let baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
-            
+
             if (!baseUrl.startsWith('http')) {
                 // It's a relative path or empty, use window location
                 if (typeof window !== 'undefined') {
                     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
                     const host = window.location.hostname;
-                    // If we are on port 3000 (Next.js dev), use port 8000 (Django dev)
-                    const port = window.location.port === '3000' ? '8000' : window.location.port;
-                    baseUrl = `${protocol}//${host}${port ? `:${port}` : ''}${baseUrl}`;
+                    const port = window.location.port;
+                    // For local dev with separate ports, we might need a fallback, 
+                    // but for tunnels we should respect the current port (or lack thereof)
+                    baseUrl = `${protocol}//${host}${port ? `:${port}` : ''}${baseUrl || '/api'}`;
                 } else {
-                    baseUrl = 'ws://localhost:8000';
+                    baseUrl = 'ws://localhost:8000/api';
                 }
             }
 
+
             const finalBase = baseUrl
-                .replace(/\/api\/?$/, '') 
+                .replace(/\/api\/?$/, '')
                 .replace(/^http/, 'ws')
                 .replace(/\/$/, '');
 

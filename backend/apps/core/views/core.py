@@ -480,6 +480,7 @@ class StudioViewSet(viewsets.ModelViewSet):
 
     serializer_class = StudioSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         # Users can only see studios they own or are associated with

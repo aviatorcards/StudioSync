@@ -109,12 +109,12 @@ function localId() {
 
 function ResourceIcon({ type, size = 'w-5 h-5' }: { type: ResourceType; size?: string }) {
     switch (type) {
-        case 'audio':  return <Music className={`${size} text-blue-500`} />
-        case 'video':  return <Video className={`${size} text-red-500`} />
-        case 'image':  return <ImageIcon className={`${size} text-purple-500`} />
-        case 'link':   return <LinkIcon className={`${size} text-green-500`} />
-        case 'pdf':    return <FileText className={`${size} text-orange-500`} />
-        default:       return <File className={`${size} text-gray-500`} />
+        case 'audio': return <Music className={`${size} text-blue-500`} />
+        case 'video': return <Video className={`${size} text-red-500`} />
+        case 'image': return <ImageIcon className={`${size} text-purple-500`} />
+        case 'link': return <LinkIcon className={`${size} text-green-500`} />
+        case 'pdf': return <FileText className={`${size} text-orange-500`} />
+        default: return <File className={`${size} text-gray-500`} />
     }
 }
 
@@ -359,8 +359,8 @@ export default function ResourcesPage() {
 
     const filteredResources = (resources as Resource[]).filter(r => {
         const matchSearch = r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            r.description.toLowerCase().includes(searchQuery.toLowerCase())
-        const matchType   = filterType === 'all' || r.resource_type === filterType
+            r.description.toLowerCase().includes(searchQuery.toLowerCase())
+        const matchType = filterType === 'all' || r.resource_type === filterType
         const matchFolder = activeFolderId === 'root'
             ? r.folder === null
             : r.folder === activeFolderId
@@ -368,8 +368,8 @@ export default function ResourcesPage() {
     })
 
     const typeFilters: { value: ResourceType | 'all'; label: string }[] = [
-        { value: 'all',   label: 'All' },
-        { value: 'pdf',   label: 'PDF' },
+        { value: 'all', label: 'All' },
+        { value: 'pdf', label: 'PDF' },
         { value: 'audio', label: 'Audio' },
         { value: 'video', label: 'Video' },
         { value: 'image', label: 'Image' },
@@ -410,19 +410,19 @@ export default function ResourcesPage() {
             )}
 
             {/* ── Header ── */}
-            <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4">
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4 text-center md:text-left">
                 <div className="space-y-2">
-                    <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+                    <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight flex flex-col md:flex-row items-center gap-2 md:gap-3">
                         Resources Library
-                        <div className="bg-primary/10 px-3 py-1 rounded-full text-xs font-black text-primary uppercase tracking-widest">
+                        <div className="bg-primary/10 px-3 py-1 rounded-full text-[10px] font-black text-primary uppercase tracking-widest">
                             {resources.length} Files
                         </div>
                     </h1>
-                    <p className="text-gray-500 font-medium max-w-lg">Your studio's cloud file storage — drag & drop or pick multiple files at once.</p>
+                    <p className="text-gray-500 font-medium max-w-lg mx-auto md:mx-0 text-sm md:text-base">Your studio's cloud file storage — drag & drop or pick multiple files at once.</p>
                 </div>
                 <Button
                     onClick={() => setShowUploadPanel(true)}
-                    className="gap-2 hover:scale-105 shadow-xl shadow-primary/20 transition-all py-6 px-10 font-black uppercase tracking-widest text-[10px]"
+                    className="gap-2 hover:scale-105 shadow-xl shadow-primary/20 transition-all py-6 px-10 font-black uppercase tracking-widest text-[10px] w-full md:w-auto"
                 >
                     <CloudUpload className="w-4 h-4" />
                     Upload Files
@@ -430,120 +430,122 @@ export default function ResourcesPage() {
             </header>
 
             {/* ── Stats ── */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
                 {[
-                    { label: 'Total Files',   value: resources.length, icon: Grid,    color: 'blue' },
-                    { label: 'Folders',       value: rootFolders.length, icon: Folder, color: 'amber' },
-                    { label: 'Links',         value: (resources as Resource[]).filter(r => r.resource_type === 'link').length, icon: LinkIcon, color: 'purple' },
-                    { label: 'Collections',   value: new Set((resources as Resource[]).map(r => r.category).filter(Boolean)).size, icon: Target, color: 'orange' },
+                    { label: 'Total Files', value: resources.length, icon: Grid, color: 'blue' },
+                    { label: 'Folders', value: folders.length, icon: Folder, color: 'amber' },
+                    { label: 'Links', value: (resources as Resource[]).filter(r => r.resource_type === 'link').length, icon: LinkIcon, color: 'purple' },
+                    { label: 'Categories', value: new Set((resources as Resource[]).map(r => r.category).filter(Boolean)).size, icon: Target, color: 'orange' },
                 ].map((stat, i) => (
-                    <div key={i} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className={`w-10 h-10 bg-${stat.color}-50 rounded-xl flex items-center justify-center text-${stat.color}-600 group-hover:scale-110 transition-transform`}>
-                                <stat.icon className="w-5 h-5" />
-                            </div>
+                    <div key={i} className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group text-center sm:text-left">
+                        <div className={`w-8 h-8 sm:w-10 sm:h-10 mx-auto sm:mx-0 bg-gray-50 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform`}>
+                            <stat.icon className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-600`} />
                         </div>
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{stat.label}</p>
-                        <h3 className="text-2xl font-black text-gray-900">{stat.value}</h3>
+                        <p className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5 sm:mb-1">{stat.label}</p>
+                        <h3 className="text-xl sm:text-2xl font-black text-gray-900 tabular-nums">{stat.value}</h3>
                     </div>
                 ))}
             </div>
 
             {/* ── Main layout: sidebar + grid ── */}
-            <div className="flex gap-6">
+            <div className="flex flex-col md:flex-row gap-8">
 
-                {/* ─── Folder sidebar ─── */}
-                <aside className="w-64 shrink-0 bg-white rounded-[2rem] border border-gray-100 shadow-sm p-5 space-y-4 self-start sticky top-6">
-                    <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Folders</p>
-                        <button
-                            onClick={() => { setShowNewFolderInput(v => !v); setTimeout(() => newFolderInputRef.current?.focus(), 50) }}
-                            className="w-7 h-7 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 flex items-center justify-center transition-colors"
-                            title="New folder"
-                        >
-                            <FolderPlus className="w-3.5 h-3.5" />
-                        </button>
-                    </div>
-
-                    {showNewFolderInput && (
-                        <div className="flex gap-2">
-                            <input
-                                ref={newFolderInputRef}
-                                value={newFolderName}
-                                onChange={e => setNewFolderName(e.target.value)}
-                                onKeyDown={e => { if (e.key === 'Enter') createFolder(); if (e.key === 'Escape') setShowNewFolderInput(false) }}
-                                placeholder="Folder name…"
-                                className="flex-1 px-3 py-2 rounded-xl bg-gray-50 border-2 border-transparent focus:border-primary text-xs font-bold outline-none"
-                            />
+                {/* ─── Folder Navigation (Sidebar on desktop, Row on mobile) ─── */}
+                <aside className="w-full md:w-64 shrink-0 space-y-4 md:sticky md:top-6 self-start">
+                    <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-5 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Library Folders</p>
                             <button
-                                onClick={createFolder}
-                                disabled={creatingFolder || !newFolderName.trim()}
-                                className="px-3 py-2 rounded-xl bg-primary text-white text-xs font-black disabled:opacity-40"
+                                onClick={() => { setShowNewFolderInput(v => !v); setTimeout(() => newFolderInputRef.current?.focus(), 50) }}
+                                className="w-7 h-7 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 flex items-center justify-center transition-colors px-0 py-0"
+                                title="New folder"
                             >
-                                {creatingFolder ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                                <FolderPlus className="w-3.5 h-3.5" />
                             </button>
                         </div>
-                    )}
 
-                    {/* Root */}
-                    <button
-                        onClick={() => navigateToFolder(null)}
-                        className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
-                            activeFolderId === 'root' ? 'bg-primary/10 text-primary' : 'text-gray-500 hover:bg-gray-50'
-                        }`}
-                    >
-                        <Home className="w-3.5 h-3.5 shrink-0" />
-                        Root
-                        <span className="ml-auto text-[10px] font-bold opacity-50">
-                            {(resources as Resource[]).filter(r => r.folder === null).length}
-                        </span>
-                    </button>
+                        {showNewFolderInput && (
+                            <div className="flex gap-2 animate-in slide-in-from-top-2">
+                                <input
+                                    ref={newFolderInputRef}
+                                    value={newFolderName}
+                                    onChange={e => setNewFolderName(e.target.value)}
+                                    onKeyDown={e => { if (e.key === 'Enter') createFolder(); if (e.key === 'Escape') setShowNewFolderInput(false) }}
+                                    placeholder="Folder name…"
+                                    className="flex-1 min-w-0 px-3 py-2 rounded-xl bg-gray-50 border-2 border-transparent focus:border-primary text-xs font-bold outline-none"
+                                />
+                                <button
+                                    onClick={createFolder}
+                                    disabled={creatingFolder || !newFolderName.trim()}
+                                    className="px-3 py-2 rounded-xl bg-primary text-white text-xs font-black disabled:opacity-40"
+                                >
+                                    {creatingFolder ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                                </button>
+                            </div>
+                        )}
 
-                    {/* Folder list */}
-                    {foldersLoading ? (
-                        <div className="flex justify-center py-4">
-                            <Loader2 className="w-4 h-4 text-gray-300 animate-spin" />
-                        </div>
-                    ) : (
-                        <div className="space-y-1">
-                            {/* Breadcrumb back navigation */}
-                            {breadcrumb.length > 0 && (
-                                <div className="flex items-center gap-1 text-[10px] font-black text-gray-400 uppercase tracking-wider px-1 pb-2 overflow-x-auto">
-                                    <button onClick={() => navigateToFolder(null)} className="hover:text-primary shrink-0">Root</button>
-                                    {breadcrumb.map((f, i) => (
-                                        <span key={f.id} className="flex items-center gap-1 shrink-0">
-                                            <ChevronRight className="w-2.5 h-2.5" />
-                                            <button onClick={() => navigateToFolder(f)} className={i === breadcrumb.length - 1 ? 'text-primary' : 'hover:text-primary'}>
-                                                {f.name}
+                        <div className="flex flex-col gap-1">
+                            {/* Root */}
+                            <button
+                                onClick={() => navigateToFolder(null)}
+                                className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${activeFolderId === 'root' ? 'bg-primary/10 text-primary' : 'text-gray-500 hover:bg-gray-50'
+                                    }`}
+                            >
+                                <Home className="w-3.5 h-3.5 shrink-0" />
+                                Root Library
+                                <span className="ml-auto text-[10px] font-bold opacity-50">
+                                    {(resources as Resource[]).filter(r => r.folder === null).length}
+                                </span>
+                            </button>
+
+                            {/* Folder list */}
+                            {foldersLoading ? (
+                                <div className="flex justify-center py-4">
+                                    <Loader2 className="w-4 h-4 text-gray-300 animate-spin" />
+                                </div>
+                            ) : (
+                                <div className="space-y-1">
+                                    {/* Breadcrumb back navigation */}
+                                    {breadcrumb.length > 0 && (
+                                        <div className="flex items-center gap-1 text-[10px] font-black text-gray-400 uppercase tracking-wider px-1 pb-2 overflow-x-auto no-scrollbar pt-2 border-t border-gray-50 mt-2">
+                                            <button onClick={() => navigateToFolder(null)} className="hover:text-primary shrink-0 transition-colors">ROOT</button>
+                                            {breadcrumb.map((f, i) => (
+                                                <span key={f.id} className="flex items-center gap-1 shrink-0">
+                                                    <ChevronRight className="w-2.5 h-2.5 opacity-30" />
+                                                    <button onClick={() => navigateToFolder(f)} className={`transition-colors ${i === breadcrumb.length - 1 ? 'text-primary' : 'hover:text-primary'}`}>
+                                                        {f.name.toUpperCase()}
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {visibleFolders.length === 0 && (
+                                        <p className="text-[10px] text-gray-300 font-bold uppercase tracking-widest text-center py-4">Empty Directory</p>
+                                    )}
+
+                                    <div className="max-h-[300px] md:max-h-none overflow-y-auto no-scrollbar space-y-1">
+                                        {visibleFolders.map(folder => (
+                                            <button
+                                                key={folder.id}
+                                                onClick={() => navigateToFolder(folder)}
+                                                className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold transition-all group ${activeFolderId === folder.id ? 'bg-primary/10 text-primary' : 'text-gray-600 hover:bg-gray-50'
+                                                    }`}
+                                            >
+                                                {activeFolderId === folder.id
+                                                    ? <FolderOpen className="w-3.5 h-3.5 shrink-0 text-primary" />
+                                                    : <Folder className="w-3.5 h-3.5 shrink-0 text-amber-400 opacity-70 group-hover:opacity-100" />
+                                                }
+                                                <span className="truncate">{folder.name}</span>
+                                                <span className="ml-auto text-[10px] opacity-40 shrink-0 tabular-nums">{folder.resources_count}</span>
+                                                {folder.children_count > 0 && <ChevronRight className="w-3 h-3 opacity-30 shrink-0 ml-1" />}
                                             </button>
-                                        </span>
-                                    ))}
+                                        ))}
+                                    </div>
                                 </div>
                             )}
-
-                            {visibleFolders.length === 0 && (
-                                <p className="text-[10px] text-gray-300 font-bold uppercase tracking-widest text-center py-4">No folders yet</p>
-                            )}
-
-                            {visibleFolders.map(folder => (
-                                <button
-                                    key={folder.id}
-                                    onClick={() => navigateToFolder(folder)}
-                                    className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold transition-all group ${
-                                        activeFolderId === folder.id ? 'bg-primary/10 text-primary' : 'text-gray-600 hover:bg-gray-50'
-                                    }`}
-                                >
-                                    {activeFolderId === folder.id
-                                        ? <FolderOpen className="w-3.5 h-3.5 shrink-0 text-primary" />
-                                        : <Folder className="w-3.5 h-3.5 shrink-0 text-amber-400" />
-                                    }
-                                    <span className="truncate">{folder.name}</span>
-                                    <span className="ml-auto text-[10px] opacity-40 shrink-0">{folder.resources_count}</span>
-                                    {folder.children_count > 0 && <ChevronRight className="w-3 h-3 opacity-30 shrink-0" />}
-                                </button>
-                            ))}
                         </div>
-                    )}
+                    </div>
                 </aside>
 
                 {/* ─── Content area ─── */}
@@ -566,9 +568,8 @@ export default function ResourcesPage() {
                                 <button
                                     key={t.value}
                                     onClick={() => setFilterType(t.value)}
-                                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-                                        filterType === t.value ? 'bg-white text-primary shadow-sm' : 'text-gray-400 hover:text-gray-600'
-                                    }`}
+                                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${filterType === t.value ? 'bg-white text-primary shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                                        }`}
                                 >
                                     {t.label}
                                 </button>
@@ -578,20 +579,20 @@ export default function ResourcesPage() {
 
                     {/* Resource grid */}
                     {filteredResources.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                             {filteredResources.map((resource: Resource) => (
                                 <div
                                     key={resource.id}
-                                    className="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all group relative overflow-hidden flex flex-col"
+                                    className="bg-white rounded-[2rem] sm:rounded-[2.5rem] border border-gray-100 p-6 sm:p-8 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all group relative overflow-hidden flex flex-col"
                                 >
                                     <div className="absolute top-0 right-0 w-24 h-24 bg-gray-50 rounded-full translate-x-1/2 -translate-y-1/2 group-hover:bg-primary/5 transition-colors" />
 
-                                    <div className="flex items-start justify-between mb-8 relative z-10">
-                                        <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center border-2 border-white shadow-sm group-hover:scale-110 transition-transform">
-                                            <ResourceIcon type={resource.resource_type} size="w-6 h-6" />
+                                    <div className="flex items-start justify-between mb-6 sm:mb-8 relative z-10">
+                                        <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gray-50 rounded-2xl flex items-center justify-center border-2 border-white shadow-sm group-hover:scale-110 transition-transform">
+                                            <ResourceIcon type={resource.resource_type} size="w-5 h-5 sm:w-6 sm:h-6" />
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">{resource.resource_type}</span>
+                                            <span className="text-[9px] sm:text-[10px] font-black text-gray-300 uppercase tracking-widest">{resource.resource_type}</span>
                                             {/* Kebab menu */}
                                             <div className="relative">
                                                 <button
@@ -604,13 +605,13 @@ export default function ResourcesPage() {
                                                     <div className="absolute right-0 top-7 z-20 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 w-44 animate-in zoom-in-95 fade-in">
                                                         <button
                                                             onClick={() => { setMovingResource(resource); setOpenMenuId(null) }}
-                                                            className="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors text-left"
+                                                            className="w-full flex items-center gap-2 px-4 py-2.5 text-[11px] sm:text-xs font-bold text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors text-left"
                                                         >
                                                             <MoveRight className="w-3.5 h-3.5" /> Move to folder
                                                         </button>
                                                         <button
                                                             onClick={() => { handleDelete(resource.id); setOpenMenuId(null) }}
-                                                            className="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50 transition-colors text-left"
+                                                            className="w-full flex items-center gap-2 px-4 py-2.5 text-[11px] sm:text-xs font-bold text-red-500 hover:bg-red-50 transition-colors text-left"
                                                         >
                                                             <Trash className="w-3.5 h-3.5" /> Delete
                                                         </button>
@@ -621,24 +622,24 @@ export default function ResourcesPage() {
                                     </div>
 
                                     <div className="flex-1 space-y-2 relative z-10">
-                                        <h3 className="text-base font-black text-gray-900 uppercase tracking-tighter leading-tight line-clamp-2">{resource.title}</h3>
-                                        <p className="text-xs font-medium text-gray-500 line-clamp-2 leading-relaxed">{resource.description || 'No description.'}</p>
+                                        <h3 className="text-sm sm:text-base font-black text-gray-900 uppercase tracking-tighter leading-tight line-clamp-2">{resource.title}</h3>
+                                        <p className="text-[11px] sm:text-xs font-medium text-gray-500 line-clamp-2 leading-relaxed">{resource.description || 'No description.'}</p>
                                         {resource.folder_name && (
-                                            <div className="flex items-center gap-1.5 text-[10px] font-black text-amber-600 uppercase tracking-wider">
+                                            <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-black text-amber-600 uppercase tracking-wider">
                                                 <Folder className="w-3 h-3" /> {resource.folder_name}
                                             </div>
                                         )}
                                     </div>
 
-                                    <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                        <span>{resource.uploaded_by_name?.split(' ')[0]}</span>
+                                    <div className="mt-4 sm:mt-6 pt-4 border-t border-gray-50 flex items-center justify-between text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                        <span className="truncate max-w-[80px]">{resource.uploaded_by_name?.split(' ')[0]}</span>
                                         <span>{new Date(resource.created_at).toLocaleDateString()}</span>
                                     </div>
 
                                     <div className="mt-4 flex gap-2 relative z-10">
                                         <Button
                                             onClick={() => handleDownload(resource)}
-                                            className="flex-1 px-4 rounded-[1.25rem] text-[10px] font-black uppercase tracking-widest gap-2 py-5 shadow-lg shadow-primary/10"
+                                            className="flex-1 px-3 sm:px-4 rounded-xl sm:rounded-[1.25rem] text-[9px] sm:text-[10px] font-black uppercase tracking-widest gap-2 py-4 sm:py-5 shadow-lg shadow-primary/10"
                                         >
                                             {resource.resource_type === 'link' ? <ExternalLink className="w-3.5 h-3.5" /> : <Download className="w-3.5 h-3.5" />}
                                             {resource.resource_type === 'link' ? 'Open' : 'Download'}
@@ -648,7 +649,7 @@ export default function ResourcesPage() {
                                             size="icon"
                                             onClick={() => handleDelete(resource.id)}
                                             disabled={deleting === resource.id}
-                                            className="p-4 rounded-[1.25rem] text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all py-5 h-auto"
+                                            className="p-4 rounded-xl sm:rounded-[1.25rem] text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all py-4 sm:py-5 h-auto"
                                         >
                                             {deleting === resource.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash className="w-4 h-4" />}
                                         </Button>
@@ -657,20 +658,20 @@ export default function ResourcesPage() {
                             ))}
                         </div>
                     ) : (
-                        <div className="bg-white rounded-[3rem] border border-gray-100 shadow-xl p-24 text-center">
+                        <div className="bg-white rounded-[2rem] sm:rounded-[3rem] border border-gray-100 shadow-xl p-12 sm:p-24 text-center">
                             <div className="flex flex-col items-center gap-6">
-                                <div className="w-24 h-24 bg-gray-50 rounded-[2rem] flex items-center justify-center border-2 border-dashed border-gray-200">
-                                    <BookOpen className="w-12 h-12 text-gray-200" />
+                                <div className="w-16 h-16 sm:w-24 sm:h-24 bg-gray-50 rounded-[1.5rem] sm:rounded-[2rem] flex items-center justify-center border-2 border-dashed border-gray-200">
+                                    <BookOpen className="w-8 h-8 sm:w-12 sm:h-12 text-gray-200" />
                                 </div>
-                                <div className="space-y-2">
-                                    <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">Empty</h3>
-                                    <p className="text-sm font-medium text-gray-500 max-w-sm mx-auto leading-relaxed">
+                                <div className="space-y-1 sm:space-y-2">
+                                    <h3 className="text-xl sm:text-2xl font-black text-gray-900 uppercase tracking-tighter">Library is Empty</h3>
+                                    <p className="text-[11px] sm:text-sm font-medium text-gray-500 max-w-sm mx-auto leading-relaxed">
                                         {activeFolderId !== 'root'
-                                            ? 'This folder is empty. Upload files or move existing resources here.'
-                                            : 'No resources yet. Drop files anywhere on the page to start uploading.'}
+                                            ? 'No resources in this folder yet.'
+                                            : 'No resources found in your library.'}
                                     </p>
                                 </div>
-                                <Button onClick={() => setShowUploadPanel(true)} className="px-10 py-6 rounded-2xl shadow-lg shadow-primary/10">
+                                <Button onClick={() => setShowUploadPanel(true)} className="px-6 sm:px-10 py-5 sm:py-6 rounded-2xl shadow-lg shadow-primary/10 w-full sm:w-auto">
                                     <CloudUpload className="w-4 h-4 mr-2" /> Upload Files
                                 </Button>
                             </div>
@@ -717,9 +718,8 @@ export default function ResourcesPage() {
                             onDragLeave={handlePanelDragLeave}
                             onDrop={handlePanelDrop}
                             onClick={() => fileInputRef.current?.click()}
-                            className={`mx-6 mt-6 border-2 border-dashed rounded-3xl p-10 text-center cursor-pointer transition-all flex-shrink-0 ${
-                                panelDragging ? 'border-primary bg-primary/[0.03]' : 'border-gray-200 hover:border-primary/50 hover:bg-gray-50/50'
-                            }`}
+                            className={`mx-4 sm:mx-6 mt-6 border-2 border-dashed rounded-3xl p-6 sm:p-10 text-center cursor-pointer transition-all flex-shrink-0 ${panelDragging ? 'border-primary bg-primary/[0.03]' : 'border-gray-200 hover:border-primary/50 hover:bg-gray-50/50'
+                                }`}
                         >
                             <input
                                 ref={fileInputRef}
@@ -728,7 +728,7 @@ export default function ResourcesPage() {
                                 className="hidden"
                                 onChange={e => e.target.files && addFilesToQueue(e.target.files)}
                             />
-                            <CloudUpload className={`w-10 h-10 mx-auto mb-3 transition-colors ${panelDragging ? 'text-primary' : 'text-gray-300'}`} />
+                            <CloudUpload className={`w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-3 transition-colors ${panelDragging ? 'text-primary' : 'text-gray-300'}`} />
                             <p className="text-xs font-black text-gray-700 uppercase tracking-widest">Drop files here</p>
                             <p className="text-[10px] font-bold text-gray-400 mt-1">or click to browse — select multiple</p>
                         </div>
@@ -740,9 +740,8 @@ export default function ResourcesPage() {
                             )}
 
                             {queue.map(item => (
-                                <div key={item.id} className={`bg-gray-50 rounded-2xl p-4 flex gap-3 items-start transition-all ${
-                                    item.status === 'done' ? 'bg-green-50' : item.status === 'error' ? 'bg-red-50' : ''
-                                }`}>
+                                <div key={item.id} className={`bg-gray-50 rounded-2xl p-4 flex gap-3 items-start transition-all ${item.status === 'done' ? 'bg-green-50' : item.status === 'error' ? 'bg-red-50' : ''
+                                    }`}>
                                     <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm shrink-0">
                                         <ResourceIcon type={item.detectedType} size="w-4 h-4" />
                                     </div>
@@ -781,9 +780,9 @@ export default function ResourcesPage() {
                         </div>
 
                         {/* Footer actions */}
-                        <div className="px-6 py-6 border-t border-gray-100 flex gap-3">
+                        <div className="px-6 py-6 border-t border-gray-100 flex flex-col sm:flex-row gap-3">
                             {queue.some(q => q.status === 'done') && (
-                                <Button variant="ghost" onClick={clearCompleted} className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                <Button variant="ghost" onClick={clearCompleted} className="text-[10px] font-black uppercase tracking-widest text-gray-400 py-6 sm:py-2">
                                     Clear done
                                 </Button>
                             )}
@@ -795,7 +794,7 @@ export default function ResourcesPage() {
                                 {uploadingAll ? (
                                     <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</>
                                 ) : (
-                                    <><Sparkles className="w-4 h-4" /> Upload All ({queue.filter(q => q.status === 'idle').length} files)</>
+                                    <><Sparkles className="w-4 h-4" /> Upload All ({queue.filter(q => q.status === 'idle').length})</>
                                 )}
                             </Button>
                         </div>
@@ -808,8 +807,8 @@ export default function ResourcesPage() {
             ══════════════════════════════════════════════════ */}
             {movingResource && (
                 <>
-                    <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-8 space-y-6 animate-in zoom-in-95">
+                    <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+                        <div className="bg-white rounded-t-[2rem] sm:rounded-[2.5rem] shadow-2xl w-full max-w-md p-6 sm:p-10 space-y-6 animate-in slide-in-from-bottom sm:zoom-in-95">
                             <div>
                                 <h2 className="text-lg font-black text-gray-900 uppercase tracking-tighter">Move Resource</h2>
                                 <p className="text-xs text-gray-500 mt-1 font-medium">Choose a destination for <span className="font-black text-gray-800">"{movingResource.title}"</span></p>

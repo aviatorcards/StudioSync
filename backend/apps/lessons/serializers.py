@@ -273,3 +273,73 @@ class RecurringPatternSerializer(serializers.ModelSerializer):
             if data["end_date"] < data["start_date"]:
                 raise serializers.ValidationError({"end_date": "End date must be after start date"})
         return data
+
+
+class ExternalCalendarFeedSerializer(serializers.ModelSerializer):
+    """Serializer for external iCal feed subscriptions"""
+
+    # Use CharField so we can normalise webcal:// before URL validation
+    url = serializers.CharField(max_length=2000)
+    event_count = serializers.SerializerMethodField()
+
+    def get_event_count(self, obj):
+        return obj.events.count()
+
+    class Meta:
+        from apps.lessons.models import ExternalCalendarFeed
+
+        model = ExternalCalendarFeed
+        fields = [
+            "id",
+            "name",
+            "url",
+            "color",
+            "is_enabled",
+            "last_synced_at",
+            "last_error",
+            "event_count",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["last_synced_at", "last_error", "created_at", "updated_at"]
+
+    def validate_url(self, value):
+        """Normalise webcal:// → https:// then validate as a URL."""
+        from django.core.validators import URLValidator
+        from django.core.exceptions import ValidationError as DjangoValidationError
+
+        if value.startswith("webcal://"):
+            value = "https://" + value[len("webcal://"):]
+
+        validator = URLValidator(schemes=["http", "https"])
+        try:
+            validator(value)
+        except DjangoValidationError:
+            raise serializers.ValidationError("Enter a valid iCal feed URL (http or https).")
+
+        return value
+
+
+class ExternalCalendarEventSerializer(serializers.ModelSerializer):
+    """Read-only serializer for cached external calendar events"""
+
+    feed_name = serializers.CharField(source="feed.name", read_only=True)
+    feed_color = serializers.CharField(source="feed.color", read_only=True)
+
+    class Meta:
+        from apps.lessons.models import ExternalCalendarEvent
+
+        model = ExternalCalendarEvent
+        fields = [
+            "id",
+            "feed",
+            "feed_name",
+            "feed_color",
+            "uid",
+            "title",
+            "description",
+            "location",
+            "start_dt",
+            "end_dt",
+        ]
+        read_only_fields = fields

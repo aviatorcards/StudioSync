@@ -83,7 +83,8 @@
 ### 🔐 Security & Access Control
 
 - **Authentication** – email login, password recovery, session handling
-- **Role‑Based Permissions** – Admin, Teacher, Student, Parent with granular controls and tailored dashboards
+- **Role‑Based Permissions** – Admin (full), Teacher (read-only billing), Student, Parent with granular controls and tailored dashboards
+- **Enhanced Instructor Permissions** – Instructors (Teachers) now have read-only access to studio billing and invoices for transparency, while management remains restricted to Admin users.
 
 ### 🐳 Deployment & Infrastructure
 

@@ -14,7 +14,7 @@ export default function PrivacyPage() {
                 {/* Header */}
                 <section className="relative overflow-hidden bg-white border-b border-gray-100 py-20 md:py-28">
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/30" />
-                    
+
                     <div className="max-w-4xl mx-auto px-4 relative z-10 text-center">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
@@ -55,7 +55,7 @@ export default function PrivacyPage() {
                 {/* Content */}
                 <section className="py-16 px-4">
                     <div className="max-w-4xl mx-auto">
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
@@ -142,8 +142,8 @@ export default function PrivacyPage() {
                                             { icon: Lock, title: 'Erasure', desc: 'Delete your account.' },
                                             { icon: Check, title: 'Rectification', desc: 'Correct inaccurate data.' }
                                         ].map((item, i) => (
-                                            <Link 
-                                                key={i} 
+                                            <Link
+                                                key={i}
                                                 href="/dashboard/settings"
                                                 className="group flex items-start gap-4 p-5 bg-gray-50 rounded-2xl border border-transparent hover:border-indigo-200 transition-all hover:bg-white hover:shadow-md"
                                             >
@@ -166,8 +166,8 @@ export default function PrivacyPage() {
                                         <div className="relative">
                                             <h3 className="text-xl font-bold mb-4">Have questions about your data?</h3>
                                             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                                                <a 
-                                                    href="mailto:privacy@studiosync.app"
+                                                <a
+                                                    href="mailto:tristan@fddl.dev"
                                                     className="px-6 py-3 bg-white text-gray-900 rounded-xl font-bold text-sm hover:bg-gray-100 transition-colors flex items-center gap-2"
                                                 >
                                                     Contact Privacy Team

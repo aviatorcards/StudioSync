@@ -176,24 +176,24 @@ const features = [
 
 const testimonials = [
   {
-    name: 'Sarah Chen',
-    role: 'Piano Studio Owner',
-    studio: 'Harmony Keys Academy',
-    content: 'StudioSync transformed how I manage my 45 students. What used to take hours now takes minutes.',
+    name: 'Laura Whitfield',
+    role: 'Voice & Piano Instructor',
+    studio: 'Whitfield Music Studio',
+    content: 'I was tracking everything in Google Sheets before this. Invoicing 30+ families used to eat my entire Sunday — now it just happens automatically. Genuinely wish I had this five years ago.',
     rating: 5
   },
   {
-    name: 'Marcus Rodriguez',
-    role: 'Guitar Instructor',
-    studio: 'String Theory Studio',
-    content: 'The automated billing alone pays for itself. My students love the lesson reminders too.',
-    rating: 5
+    name: 'David Okonkwo',
+    role: 'Guitar & Bass Instructor',
+    studio: 'Backbeat Lessons',
+    content: 'Solid app overall. The scheduling and lesson notes are great — being able to pull up what we covered last week during a lesson is super handy. I\'d love to see a mobile app eventually, but the browser works fine on my tablet for now.',
+    rating: 4
   },
   {
-    name: 'Emily Thompson',
-    role: 'Multi-Instrument Studio',
-    studio: 'Crescendo Music School',
-    content: 'Managing 5 teachers and 120+ students has never been easier. Game changer.',
+    name: 'Rachel Mori',
+    role: 'Studio Owner',
+    studio: 'North Shore Music Academy',
+    content: 'We have three instructors and about 80 students. Before StudioSync we were juggling Venmo, a shared Google Calendar, and a lot of text messages. Having it all in one place has cut down on so many miscommunications.',
     rating: 5
   }
 ]

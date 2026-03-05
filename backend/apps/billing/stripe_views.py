@@ -30,12 +30,8 @@ class CreateCheckoutSessionView(views.APIView):
         invoice = get_object_or_404(Invoice, id=invoice_id)
 
         # Determine success/cancel URLs
-        # In production, use settings.FRONTEND_URL
-        domain_url = (
-            settings.CORS_ALLOWED_ORIGINS[0]
-            if settings.CORS_ALLOWED_ORIGINS
-            else "http://localhost:3000"
-        )
+        domain_url = getattr(settings, "FRONTEND_BASE_URL", "http://localhost:3000")
+
 
         try:
             checkout_session = stripe.checkout.Session.create(
@@ -86,11 +82,8 @@ class CreateSubscriptionCheckoutSessionView(views.APIView):
         if not student:
             return Response({"error": "Could not identify student profile."}, status=400)
 
-        domain_url = (
-            settings.CORS_ALLOWED_ORIGINS[0]
-            if settings.CORS_ALLOWED_ORIGINS
-            else "http://localhost:3000"
-        )
+        domain_url = getattr(settings, "FRONTEND_BASE_URL", "http://localhost:3000")
+
         
         try:
             subscription = Subscription.objects.create(

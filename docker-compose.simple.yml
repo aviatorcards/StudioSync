@@ -10,7 +10,7 @@ services:
     command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./backend:/app
-      - sqlite_data:/app/data  # Persist SQLite database
+      - sqlite_data:/app/data # Persist SQLite database
     ports:
       - "8000:8000"
     environment:
@@ -18,7 +18,7 @@ services:
       SECRET_KEY: dev-secret-key-change-in-production
       SQLITE_DB_PATH: /app/data/db.sqlite3
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/admin/"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/admin/" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -47,7 +47,9 @@ services:
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000/api
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-/api}
+      INTERNAL_API_URL: http://backend:8000/api
+
     depends_on:
       backend:
         condition: service_healthy
@@ -63,4 +65,4 @@ services:
           path: ./frontend/package.json
 
 volumes:
-  sqlite_data:  # Persists the SQLite database between restarts
+  sqlite_data: # Persists the SQLite database between restarts

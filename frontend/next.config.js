@@ -59,8 +59,10 @@ const nextConfig = {
             // Media proxy - serve uploaded files from backend
             {
                 source: '/media/:path*',
-                destination: 'http://backend:8000/media/:path*',
+                destination: (process.env.INTERNAL_API_URL?.replace('/api', '') || 'http://localhost:8000') + '/media/:path*',
             },
+            // Note: WebSocket (ws://) proxying is handled at the infrastructure level (Docker/Nginx).
+            // Next.js rewrites() does not support ws:// destinations.
             // Serve MkDocs index for the root /docs path
             {
                 source: '/docs',

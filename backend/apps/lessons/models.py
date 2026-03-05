@@ -301,3 +301,88 @@ class LessonPlan(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class ExternalCalendarFeed(models.Model):
+    """
+    A user's subscription to an external iCal feed URL.
+    Events are fetched and cached in ExternalCalendarEvent.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        "core.User",
+        on_delete=models.CASCADE,
+        related_name="external_calendar_feeds",
+    )
+
+    # Display settings
+    name = models.CharField(max_length=200, help_text="Display name for this calendar")
+    color = models.CharField(
+        max_length=7,
+        default="#6366f1",
+        help_text="Hex color code for the calendar overlay (e.g. #6366f1)",
+    )
+    is_enabled = models.BooleanField(
+        default=True, help_text="When disabled, events are hidden from the schedule"
+    )
+
+    # The iCal feed URL (webcal:// will be stored as https://)
+    url = models.URLField(max_length=2000, help_text="iCal (.ics) feed URL")
+
+    # Sync metadata
+    last_synced_at = models.DateTimeField(null=True, blank=True)
+    last_error = models.TextField(
+        blank=True, help_text="Last fetch error message, if any"
+    )
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "external_calendar_feeds"
+        ordering = ["name"]
+
+    def __str__(self):
+        return f"{self.user.email} — {self.name}"
+
+
+class ExternalCalendarEvent(models.Model):
+    """
+    A single event fetched and cached from an ExternalCalendarFeed.
+    Deduplicated by (feed, uid) — the iCal UID field.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    feed = models.ForeignKey(
+        ExternalCalendarFeed,
+        on_delete=models.CASCADE,
+        related_name="events",
+    )
+
+    # iCal UID — used for deduplication on re-sync
+    uid = models.CharField(max_length=500)
+
+    # Event fields
+    title = models.CharField(max_length=500, blank=True)
+    description = models.TextField(blank=True)
+    location = models.CharField(max_length=500, blank=True)
+    start_dt = models.DateTimeField()
+    end_dt = models.DateTimeField()
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "external_calendar_events"
+        ordering = ["start_dt"]
+        unique_together = [("feed", "uid")]
+        indexes = [
+            models.Index(fields=["feed", "start_dt"]),
+            models.Index(fields=["start_dt", "end_dt"]),
+        ]
+
+    def __str__(self):
+        return f"{self.title} ({self.start_dt:%Y-%m-%d %H:%M})"

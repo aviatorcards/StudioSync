@@ -61,7 +61,7 @@ function PricingCard({ plan, index, onSelect }: any) {
                         ) : plan.price === 'Free' ? (
                             <div className="text-3xl font-bold text-gray-900">Free</div>
                         ) : (
-                             <div className="flex flex-col">
+                            <div className="flex flex-col">
                                 <div className="flex items-baseline">
                                     <span className="text-4xl font-bold text-gray-900">${plan.price}</span>
                                     <span className="text-gray-400 ml-1.5 text-sm">/month</span>
@@ -124,6 +124,7 @@ function FeatureComparison() {
         { name: 'Calendar & Scheduling', starter: true, pro: true, enterprise: true },
         { name: 'Email Notifications', starter: true, pro: true, enterprise: true },
         { name: 'SMS Notifications', starter: false, pro: true, enterprise: true },
+        { name: 'Fluid Stripe Payments', starter: false, pro: true, enterprise: true },
         { name: 'Billing & Invoicing', starter: false, pro: true, enterprise: true },
         { name: 'Lesson Notes & Progress', starter: false, pro: true, enterprise: true },
         { name: 'Resource Library', starter: false, pro: true, enterprise: true },
@@ -276,6 +277,7 @@ export default function PricingPage() {
             features: [
                 { text: 'Unlimited students', included: true },
                 { text: 'Advanced scheduling', included: true },
+                { text: 'Fluid Stripe integration', included: true },
                 { text: 'Billing & invoicing', included: true },
                 { text: 'SMS notifications', included: true },
                 { text: 'Custom branding', included: true },
@@ -294,6 +296,7 @@ export default function PricingPage() {
             featured: false,
             features: [
                 { text: 'Everything in Professional', included: true },
+                { text: 'Fluid Stripe integration', included: true },
                 { text: 'Multiple locations', included: true },
                 { text: 'White-label branding', included: true },
                 { text: 'API access', included: true },
@@ -315,6 +318,10 @@ export default function PricingPage() {
         {
             question: 'What payment methods do you accept?',
             answer: 'For our cloud-hosted plans, we accept all major credit cards (Visa, MasterCard, American Express) and ACH bank transfers.'
+        },
+        {
+            question: 'Does it integrate with Stripe?',
+            answer: 'Yes! Our Stripe integration is fully functional and fluid. You can accept payments from students directly, handle recurring subscriptions, and manage pending invoices automatically.'
         },
         {
             question: 'Is my data secure?',

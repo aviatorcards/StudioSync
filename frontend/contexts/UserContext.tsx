@@ -20,9 +20,9 @@ export interface User {
     phone?: string
     bio?: string
     instrument?: string
-    studio?: { id: string; name: string; [key: string]: any }
-    student_profile?: { id: string; [key: string]: any }
-    teacher_profile?: { id: string; studio?: { id: string }; [key: string]: any }
+    studio?: { id: string; name: string;[key: string]: any }
+    student_profile?: { id: string;[key: string]: any }
+    teacher_profile?: { id: string; studio?: { id: string };[key: string]: any }
 }
 
 interface UserContextType {
@@ -59,18 +59,43 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }
 
         try {
-            const res = await fetch(`${API_URL}/auth/me/`, {
+            let res = await fetch(`${API_URL}/auth/me/`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 },
                 credentials: 'include'
             })
 
+            // If token expired, try refreshing before giving up
+            if (res.status === 401) {
+                const refreshToken = localStorage.getItem('refreshToken')
+                if (refreshToken) {
+                    try {
+                        const refreshRes = await fetch(`${API_URL}/auth/token/refresh/`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ refresh: refreshToken })
+                        })
+                        if (refreshRes.ok) {
+                            const { access } = await refreshRes.json()
+                            localStorage.setItem('accessToken', access)
+                            // Retry with new token
+                            res = await fetch(`${API_URL}/auth/me/`, {
+                                headers: { 'Authorization': `Bearer ${access}` },
+                                credentials: 'include'
+                            })
+                        }
+                    } catch (refreshErr) {
+                        console.error('Token refresh failed:', refreshErr)
+                    }
+                }
+            }
+
             if (res.ok) {
                 const userData = await res.json()
                 setCurrentUser(userData)
             } else {
-                // Token invalid or expired
+                // Token invalid and refresh failed
                 logout()
             }
         } catch (error) {

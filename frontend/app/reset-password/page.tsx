@@ -38,12 +38,12 @@ function ResetPasswordForm() {
             setError('Passwords do not match')
             return
         }
-        
+
         setError('')
         setIsLoading(true)
 
         try {
-            const res = await fetch('http://localhost:8000/api/auth/password/reset/confirm/', {
+            const res = await fetch('/api/auth/password/reset/confirm/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ uid, token, password })
@@ -204,7 +204,7 @@ export default function ResetPasswordPage() {
                     <div className="flex justify-center mb-8">
                         <Logo className="h-10 w-auto" />
                     </div>
-                    
+
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -219,7 +219,7 @@ export default function ResetPasswordPage() {
                     </motion.div>
                 </div>
 
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.4, delay: 0.1 }}
@@ -234,7 +234,7 @@ export default function ResetPasswordPage() {
                         <ResetPasswordForm />
                     </Suspense>
                 </motion.div>
-                
+
                 <p className="mt-8 text-center text-xs text-gray-400">
                     Remember your password?{' '}
                     <Link href="/login" className="text-indigo-600 font-bold hover:underline">Sign in</Link>

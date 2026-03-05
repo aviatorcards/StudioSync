@@ -22,6 +22,12 @@ import {
   parseISO,
   isSameDay,
   getHours,
+  startOfMonth,
+  endOfMonth,
+  endOfWeek,
+  eachDayOfInterval,
+  isSameMonth,
+  addMonths,
 } from "date-fns";
 import {
   Printer,
@@ -39,7 +45,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/ui/dialog";
 
-// --- Types ---
 interface LessonBooking {
   student: string;
   teacher: string;
@@ -51,28 +56,40 @@ interface LessonBooking {
   lesson_type: string;
   is_online: boolean;
   online_meeting_url: string;
+  status: string;
+  cancellation_reason: string;
 }
 
 export default function SchedulePage() {
   const { currentUser } = useUser();
-  const [currentWeek, setCurrentWeek] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState<"week" | "month">("week");
+  const [colorMode, setColorMode] = useState<"status" | "student" | "instrument">("status");
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showSubscribeModal, setShowSubscribeModal] = useState(false);
   const [use24Hour, setUse24Hour] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
 
-  // ESC key handling is now managed by Dialog component
+  const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+  const monthStart = startOfMonth(currentDate);
+  const monthEnd = endOfMonth(monthStart);
 
-  // Data Fetching
-  const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 });
+  const queryStartDate = viewMode === "week"
+    ? format(weekStart, "yyyy-MM-dd")
+    : format(startOfWeek(monthStart, { weekStartsOn: 1 }), "yyyy-MM-dd");
+
+  const queryEndDate = viewMode === "week"
+    ? format(addDays(weekStart, 7), "yyyy-MM-dd")
+    : format(addDays(endOfWeek(monthEnd, { weekStartsOn: 1 }), 1), "yyyy-MM-dd");
+
   const {
     lessons,
     loading: lessonsLoading,
     refetch: refetchLessons,
   } = useLessons({
-    start_date: format(weekStart, "yyyy-MM-dd"),
-    end_date: format(addDays(weekStart, 7), "yyyy-MM-dd"),
+    start_date: queryStartDate,
+    end_date: queryEndDate,
   });
   const { students } = useStudents();
   const { teachers } = useTeachers();
@@ -80,15 +97,11 @@ export default function SchedulePage() {
   const { rooms } = useRooms();
   const { studios } = useStudios();
 
-  // Studio Settings for Business Hours
   const currentStudio = studios?.[0];
   const businessStart = currentStudio?.settings?.business_start_hour ?? 8;
   const businessEnd = currentStudio?.settings?.business_end_hour ?? 21;
 
-  // Determine if overnight schedule (e.g. 4 PM to 2 AM)
   const isOvernight = businessEnd < businessStart;
-
-  // Set fallback defaults for booking state
   const [bookingDefaults, setBookingDefaults] = useState({
     time: `${businessStart.toString().padStart(2, "0")}:00`,
   });
@@ -104,6 +117,8 @@ export default function SchedulePage() {
     lesson_type: "private",
     is_online: false,
     online_meeting_url: "",
+    status: "scheduled",
+    cancellation_reason: "",
   });
 
   const [bookingMode, setBookingMode] = useState<"individual" | "band" | "event">("individual");
@@ -122,6 +137,8 @@ export default function SchedulePage() {
       lesson_type: "private",
       is_online: false,
       online_meeting_url: "",
+      status: "scheduled",
+      cancellation_reason: "",
     });
     setEditingLessonId(null);
   };
@@ -139,6 +156,8 @@ export default function SchedulePage() {
       lesson_type: lesson.lesson_type,
       is_online: lesson.is_online,
       online_meeting_url: lesson.online_meeting_url || "",
+      status: lesson.status || "scheduled",
+      cancellation_reason: lesson.cancellation_reason || "",
     });
     setEditingLessonId(lesson.id);
 
@@ -170,16 +189,49 @@ export default function SchedulePage() {
       const date = new Date();
       date.setHours(hour, 0, 0, 0);
 
-      // Generate 4 slots per hour: 00, 15, 30, 45
       for (let i = 0; i < 4; i++) {
-        // If it's the last hour, check if we should include all minutes?
-        // Usually yes, unless it's strictly "End at 5:00" vs "End at 5:59"
-        // Let's include full hour slots for the displayed range.
         options.push(format(addMinutes(date, i * 15), "HH:mm"));
       }
     });
     return options;
   })();
+
+  // Color Helpers
+  const getColorForString = (str: string) => {
+    if (!str) return { bg: '#f3f4f6', border: '#9ca3af', text: '#374151', textDark: '#111827', textLight: '#4b5563' };
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash % 360);
+    return {
+      bg: `hsl(${hue}, 85%, 95%)`,
+      border: `hsl(${hue}, 80%, 45%)`,
+      text: `hsl(${hue}, 85%, 25%)`,
+      textDark: `hsl(${hue}, 85%, 20%)`,
+      textLight: `hsl(${hue}, 80%, 35%)`,
+    };
+  };
+
+  const getLessonColorStyles = (lesson: any) => {
+    if (colorMode === "status") return {};
+
+    let textToHash = "";
+    if (colorMode === "student") {
+      textToHash = lesson.student_name || lesson.band_name || "Unknown";
+    } else if (colorMode === "instrument") {
+      textToHash = lesson.student_instrument || "Unknown";
+    }
+
+    const { bg, border, text, textDark, textLight } = getColorForString(textToHash);
+    return {
+      backgroundColor: bg,
+      borderColor: border,
+      '--dynamic-text-dark': textDark,
+      '--dynamic-text': text,
+      '--dynamic-text-light': textLight,
+    } as React.CSSProperties;
+  };
 
   // Helpers
   const formatTime = (timeStr: string) => {
@@ -196,8 +248,30 @@ export default function SchedulePage() {
     return use24Hour ? format(date, "HH:mm") : format(date, "h a");
   };
 
-  const previousWeek = () => setCurrentWeek(addDays(currentWeek, -7));
-  const nextWeek = () => setCurrentWeek(addDays(currentWeek, 7));
+  const previousPeriod = () => {
+    if (viewMode === "week") {
+      setCurrentDate(addDays(currentDate, -7));
+    } else {
+      setCurrentDate(addMonths(currentDate, -1));
+    }
+  };
+  const nextPeriod = () => {
+    if (viewMode === "week") {
+      setCurrentDate(addDays(currentDate, 7));
+    } else {
+      setCurrentDate(addMonths(currentDate, 1));
+    }
+  };
+
+  const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const shortTimeZone = new Date().toLocaleTimeString('en-us', { timeZoneName: 'short' }).split(' ')[2] || localTimeZone;
+
+  const getLessonsForDay = (targetDate: Date) => {
+    return lessons.filter((lesson: any) => {
+      const lessonUserDate = parseISO(lesson.scheduled_start);
+      return isSameDay(lessonUserDate, targetDate);
+    });
+  };
 
   const handlePrint = () => {
     window.print();
@@ -234,9 +308,13 @@ export default function SchedulePage() {
         scheduled_start: startDateTime.toISOString(),
         scheduled_end: endDateTime.toISOString(),
         lesson_type: newBooking.lesson_type,
-        status: "scheduled",
+        status: newBooking.status,
         studio: currentUser?.studio?.id || studios?.[0]?.id,
       };
+
+      if (newBooking.status === "cancelled") {
+        payload.cancellation_reason = newBooking.cancellation_reason;
+      }
 
       if (currentUser?.role === "student") {
         if (newBooking.teacher) payload.teacher = newBooking.teacher;
@@ -360,9 +438,12 @@ export default function SchedulePage() {
             variant="outline"
             onClick={() => setUse24Hour(!use24Hour)}
             className="gap-2 w-full"
+            title={`Timezone: ${localTimeZone}`}
           >
             <Clock className="w-4 h-4" />
-            <span className="hidden sm:inline">{use24Hour ? "24h" : "12h"}</span>
+            <span className="hidden sm:inline">
+              {use24Hour ? "24h" : "12h"} <span className="text-[9px] text-gray-400 font-bold ml-1">{shortTimeZone}</span>
+            </span>
           </Button>
           <Button
             variant="outline"
@@ -395,20 +476,64 @@ export default function SchedulePage() {
         </div>
       </header>
 
-      {/* Week Navigation */}
-      <div className="flex justify-between items-center bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-sm no-print">
-        <Button variant="ghost" size="icon" onClick={previousWeek} className="text-gray-600">
+      {/* View & Color Toggles */}
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-2 no-print">
+        <div className="flex bg-gray-100 p-1 rounded-xl w-fit">
+          <button
+            onClick={() => setViewMode("week")}
+            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === "week" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+          >
+            Week
+          </button>
+          <button
+            onClick={() => setViewMode("month")}
+            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === "month" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+          >
+            Month
+          </button>
+        </div>
+
+        <div className="flex justify-center items-center gap-2">
+          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest hidden sm:inline">Color By:</span>
+          <div className="flex bg-gray-100 p-1 rounded-xl w-fit">
+            <button
+              onClick={() => setColorMode("status")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${colorMode === "status" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              Status
+            </button>
+            <button
+              onClick={() => setColorMode("student")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${colorMode === "student" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              Student
+            </button>
+            <button
+              onClick={() => setColorMode("instrument")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${colorMode === "instrument" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              Instrument
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Period Navigation */}
+      <div className="flex justify-between items-center bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-sm no-print mb-6">
+        <Button variant="ghost" size="icon" onClick={previousPeriod} className="text-gray-600">
           <ChevronLeft className="w-6 h-6" />
         </Button>
         <div className="text-center">
           <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
-            {format(weekStart, "MMMM yyyy")}
+            {viewMode === "week" ? format(weekStart, "MMMM yyyy") : format(monthStart, "MMMM yyyy")}
           </h2>
-          <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mt-1">
-            {format(weekStart, "MMM d")} — {format(addDays(weekStart, 6), "MMM d")}
-          </p>
+          {viewMode === "week" && (
+            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mt-1">
+              {format(weekStart, "MMM d")} — {format(addDays(weekStart, 6), "MMM d")}
+            </p>
+          )}
         </div>
-        <Button variant="ghost" size="icon" onClick={nextWeek} className="text-gray-600">
+        <Button variant="ghost" size="icon" onClick={nextPeriod} className="text-gray-600">
           <ChevronRight className="w-6 h-6" />
         </Button>
       </div>
@@ -416,118 +541,221 @@ export default function SchedulePage() {
       {/* Print Header */}
       <div className="hidden print:block text-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">
-          Schedule: {format(weekStart, "MMMM d")} - {format(addDays(weekStart, 6), "MMMM d, yyyy")}
+          {viewMode === "week"
+            ? `Schedule: ${format(weekStart, "MMMM d")} - ${format(addDays(weekStart, 6), "MMMM d, yyyy")}`
+            : `Schedule: ${format(monthStart, "MMMM yyyy")}`}
         </h2>
       </div>
 
       {/* Schedule Grid */}
       <div className="bg-white rounded-[2rem] border border-gray-100 shadow-xl overflow-hidden print-full-width flex flex-col h-[70vh]">
         <div className="overflow-auto custom-scrollbar flex-1 relative">
-          <table className="w-full min-w-full md:min-w-[1000px] border-separate border-spacing-0">
-            <thead className="bg-gray-50/80 backdrop-blur-sm sticky top-0 z-20">
-              <tr>
-                <th className="px-2 py-3 sm:px-6 sm:py-4 text-center text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest w-24 sticky left-0 z-30 bg-gray-50 border-r border-b border-gray-100">
-                  Time
-                </th>
-                {weekDays.map((day, idx) => (
-                  <th
-                    key={idx}
-                    className={`px-2 py-3 sm:px-4 sm:py-4 text-center min-w-[100px] sm:min-w-[140px] border-b border-gray-100 ${idx < 6 ? "border-r" : ""}`}
-                  >
-                    <div
-                      className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-1 ${isSameDay(day, new Date()) ? "text-primary" : "text-gray-400"}`}
-                    >
-                      {format(day, "EEE")}
-                    </div>
-                    <div
-                      className={`text-xl sm:text-2xl font-black ${isSameDay(day, new Date()) ? "text-primary" : "text-gray-900"}`}
-                    >
-                      {format(day, "d")}
-                    </div>
+          {viewMode === "week" ? (
+            <table className="w-full min-w-full md:min-w-[1000px] border-separate border-spacing-0">
+              <thead className="bg-gray-50/80 backdrop-blur-sm sticky top-0 z-20">
+                <tr>
+                  <th className="px-2 py-3 sm:px-6 sm:py-4 text-center text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest w-24 sticky left-0 z-30 bg-gray-50 border-r border-b border-gray-100">
+                    Time
                   </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {timeSlots.map((hour) => (
-                <tr key={hour} className="group">
-                  <td className="px-2 py-3 sm:px-4 sm:py-4 text-xs font-bold text-gray-400 border-r border-gray-100 bg-gray-50/30 sticky left-0 z-10 text-center">
-                    {formatGridHour(hour)}
-                  </td>
-                  {weekDays.map((day, dayIdx) => {
-                    const slotLessons = getLessonsForSlot(dayIdx, hour);
-                    return (
-                      <td
-                        key={dayIdx}
-                        onDoubleClick={() => {
-                          if (slotLessons.length === 0) {
-                            const dateStr = format(weekDays[dayIdx], "yyyy-MM-dd");
-                            const hourStr = `${hour.toString().padStart(2, "0")}:00`;
-                            setNewBooking({
-                              ...newBooking,
-                              date: dateStr,
-                              time: hourStr,
-                            });
-                            setEditingLessonId(null);
-                            setBookingMode("individual");
-                            setShowBookingModal(true);
-                          }
-                        }}
-                        className={`p-0.5 sm:p-1 border-gray-50 h-24 align-top transition-colors hover:bg-gray-50/50 ${dayIdx < 6 ? "border-r" : ""}`}
+                  {weekDays.map((day, idx) => (
+                    <th
+                      key={idx}
+                      className={`px-2 py-3 sm:px-4 sm:py-4 text-center min-w-[100px] sm:min-w-[140px] border-b border-gray-100 ${idx < 6 ? "border-r" : ""}`}
+                    >
+                      <div
+                        className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-1 ${isSameDay(day, new Date()) ? "text-primary" : "text-gray-400"}`}
                       >
-                        {slotLessons.length > 0 ? (
-                          <div className="space-y-0.5 sm:space-y-1 h-full overflow-y-auto custom-scrollbar">
-                            {slotLessons.map((lesson: any) => (
-                              <div
-                                key={lesson.id}
-                                onDoubleClick={(e) => {
-                                  e.stopPropagation();
-                                  handleOpenEditModal(lesson);
-                                }}
-                                className={`
-                                                                                                                                    p-1 rounded-lg border-l-[3px] shadow-sm hover:shadow-md transition-all cursor-pointer group/card
-                                                                                                                                    ${lesson.status === "scheduled" ? "bg-primary/10 border-primary hover:bg-primary/20" : ""}
-                                                                                                                                    ${lesson.status === "completed" ? "bg-gray-100 border-gray-400" : ""}
-                                                                                                                                    ${lesson.status === "cancelled" ? "bg-red-50 border-red-400" : ""}
-                                                                                                                                `}
-                              >
-                                <div className="flex justify-between items-start gap-0.5 sm:gap-1">
-                                  <div className="font-bold text-gray-900 text-[10px] sm:text-xs truncate leading-tight">
-                                    {lesson.lesson_type === "group" && lesson.band_name
-                                      ? lesson.band_name
-                                      : lesson.student_name}
-                                  </div>
-                                  <div className="flex items-center gap-0.5 sm:gap-1">
-                                    {lesson.duration_minutes !== 60 && (
-                                      <span className="text-[8px] sm:text-[9px] font-black uppercase bg-white/50 px-0.5 sm:px-1 rounded text-gray-500">
-                                        {lesson.duration_minutes}m
-                                      </span>
-                                    )}
-                                    {lesson.room_name ? (
-                                      <span className="text-[8px] sm:text-[9px] font-black uppercase bg-blue-50 px-0.5 sm:px-1 rounded text-blue-500 truncate max-w-[35px] sm:max-w-[50px]">
-                                        {lesson.room_name}
-                                      </span>
-                                    ) : lesson.is_online ? (
-                                      <span className="text-[8px] sm:text-[9px] font-black uppercase bg-purple-50 px-0.5 sm:px-1 rounded text-purple-500 truncate max-w-[35px] sm:max-w-[50px]">
-                                        Online
-                                      </span>
-                                    ) : null}
-                                  </div>
-                                </div>
-                                <p className="text-[9px] sm:text-[10px] font-medium text-gray-500 mt-0.5 truncate group-hover/card:text-gray-700">
-                                  {lesson.student_instrument}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        ) : null}
-                      </td>
-                    );
-                  })}
+                        {format(day, "EEE")}
+                      </div>
+                      <div
+                        className={`text-xl sm:text-2xl font-black ${isSameDay(day, new Date()) ? "text-primary" : "text-gray-900"}`}
+                      >
+                        {format(day, "d")}
+                      </div>
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {timeSlots.map((hour) => (
+                  <tr key={hour} className="group">
+                    <td className="px-2 py-3 sm:px-4 sm:py-4 text-xs font-bold text-gray-400 border-r border-gray-100 bg-gray-50/30 sticky left-0 z-10 text-center">
+                      {formatGridHour(hour)}
+                    </td>
+                    {weekDays.map((day, dayIdx) => {
+                      const slotLessons = getLessonsForSlot(dayIdx, hour);
+                      return (
+                        <td
+                          key={dayIdx}
+                          onDoubleClick={() => {
+                            if (slotLessons.length === 0) {
+                              const dateStr = format(weekDays[dayIdx], "yyyy-MM-dd");
+                              const hourStr = `${hour.toString().padStart(2, "0")}:00`;
+                              setNewBooking({
+                                ...newBooking,
+                                date: dateStr,
+                                time: hourStr,
+                              });
+                              setEditingLessonId(null);
+                              setBookingMode("individual");
+                              setShowBookingModal(true);
+                            }
+                          }}
+                          className={`p-0.5 sm:p-1 border-gray-50 h-24 align-top transition-colors hover:bg-gray-50/50 ${dayIdx < 6 ? "border-r" : ""}`}
+                        >
+                          {slotLessons.length > 0 ? (
+                            <div className="space-y-0.5 sm:space-y-1 h-full overflow-y-auto custom-scrollbar">
+                              {slotLessons.map((lesson: any) => (
+                                <div
+                                  key={lesson.id}
+                                  onDoubleClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenEditModal(lesson);
+                                  }}
+                                  style={getLessonColorStyles(lesson)}
+                                  className={`
+                                    p-1 rounded-lg border-l-[3px] shadow-sm hover:shadow-md transition-all cursor-pointer group/card
+                                    ${colorMode === "status" ? (
+                                      lesson.status === "scheduled" ? "bg-primary/10 border-primary cursor-pointer hover:bg-primary/20" :
+                                        lesson.status === "completed" ? "bg-gray-100 border-gray-400" :
+                                          lesson.status === "cancelled" ? "bg-red-50 border-red-400" : ""
+                                    ) : ""}
+                                  `}
+                                >
+                                  <div className="flex justify-between items-start gap-0.5 sm:gap-1">
+                                    <div
+                                      className={`font-bold text-[10px] sm:text-xs truncate leading-tight ${colorMode !== "status" ? "" : "text-gray-900"}`}
+                                      style={colorMode !== "status" ? { color: "var(--dynamic-text-dark)" } : {}}
+                                    >
+                                      {lesson.band_name ||
+                                        lesson.student_name ||
+                                        (lesson.lesson_type
+                                          ? lesson.lesson_type.charAt(0).toUpperCase() +
+                                          lesson.lesson_type.slice(1)
+                                          : "Event")}
+                                    </div>
+                                    <div className="flex items-center gap-0.5 sm:gap-1">
+                                      {lesson.duration_minutes !== 60 && (
+                                        <span
+                                          className={`text-[8px] sm:text-[9px] font-black uppercase px-0.5 sm:px-1 rounded ${colorMode !== "status" ? "" : "bg-white/50 text-gray-500"}`}
+                                          style={colorMode !== "status" ? { backgroundColor: "rgba(255,255,255,0.7)", color: "var(--dynamic-text)" } : {}}
+                                        >
+                                          {lesson.duration_minutes}m
+                                        </span>
+                                      )}
+                                      {lesson.room_name ? (
+                                        <span
+                                          className={`text-[8px] sm:text-[9px] font-black uppercase px-0.5 sm:px-1 rounded truncate max-w-[35px] sm:max-w-[50px] ${colorMode !== "status" ? "" : "bg-blue-50 text-blue-500"}`}
+                                          style={colorMode !== "status" ? { backgroundColor: "rgba(255,255,255,0.7)", color: "var(--dynamic-text)" } : {}}
+                                        >
+                                          {lesson.room_name}
+                                        </span>
+                                      ) : lesson.is_online ? (
+                                        <span
+                                          className={`text-[8px] sm:text-[9px] font-black uppercase px-0.5 sm:px-1 rounded truncate max-w-[35px] sm:max-w-[50px] ${colorMode !== "status" ? "" : "bg-purple-50 text-purple-500"}`}
+                                          style={colorMode !== "status" ? { backgroundColor: "rgba(255,255,255,0.7)", color: "var(--dynamic-text)" } : {}}
+                                        >
+                                          Online
+                                        </span>
+                                      ) : null}
+                                    </div>
+                                  </div>
+                                  <p
+                                    className={`text-[9px] sm:text-[10px] font-medium mt-0.5 truncate ${colorMode !== "status" ? "" : "text-gray-500 group-hover/card:text-gray-700"}`}
+                                    style={colorMode !== "status" ? { color: "var(--dynamic-text-light)" } : {}}
+                                  >
+                                    {lesson.student_instrument}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          ) : null}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="flex flex-col h-full min-w-[700px]">
+              <div className="grid grid-cols-7 bg-gray-50/80 backdrop-blur-sm sticky top-0 z-20 border-b border-gray-100 shrink-0">
+                {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((dayName) => (
+                  <div key={dayName} className="py-3 px-2 text-center text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest border-r border-gray-100 last:border-0">
+                    {dayName}
+                  </div>
+                ))}
+              </div>
+              <div className="flex-1 grid grid-cols-7 auto-rows-fr">
+                {eachDayOfInterval({
+                  start: startOfWeek(monthStart, { weekStartsOn: 1 }),
+                  end: endOfWeek(monthEnd, { weekStartsOn: 1 })
+                }).map((day, idx) => {
+                  const isCurrentMonth = isSameMonth(day, monthStart);
+                  const isToday = isSameDay(day, new Date());
+                  const dayLessons = getLessonsForDay(day);
+
+                  return (
+                    <div
+                      key={day.toISOString()}
+                      onDoubleClick={() => {
+                        const dateStr = format(day, "yyyy-MM-dd");
+                        const hourStr = bookingDefaults.time;
+                        setNewBooking({
+                          ...newBooking,
+                          date: dateStr,
+                          time: hourStr,
+                        });
+                        setEditingLessonId(null);
+                        setBookingMode("individual");
+                        setShowBookingModal(true);
+                      }}
+                      className={`min-h-[100px] border-b border-r border-gray-100 p-1 sm:p-2 hover:bg-gray-50/50 transition-colors ${!isCurrentMonth ? "bg-gray-50/40" : ""} flex flex-col`}
+                    >
+                      <div className="flex justify-end mb-1">
+                        <span className={`text-xs sm:text-sm font-bold w-6 h-6 flex items-center justify-center rounded-full ${isToday ? "bg-primary text-white" : isCurrentMonth ? "text-gray-900" : "text-gray-400"}`}>
+                          {format(day, "d")}
+                        </span>
+                      </div>
+                      <div className="flex-1 overflow-y-auto space-y-1 custom-scrollbar">
+                        {dayLessons.map((lesson: any) => (
+                          <div
+                            key={lesson.id}
+                            onDoubleClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenEditModal(lesson);
+                            }}
+                            style={getLessonColorStyles(lesson)}
+                            className={`
+                              px-1.5 py-1 rounded w-full truncate border-l-2 shadow-sm hover:shadow-md cursor-pointer text-left
+                              ${colorMode === "status" ? (
+                                lesson.status === "scheduled" ? "bg-primary/10 border-primary text-primary-dark" :
+                                  lesson.status === "completed" ? "bg-gray-100 border-gray-400 text-gray-700" :
+                                    lesson.status === "cancelled" ? "bg-red-50 border-red-400 text-red-700" : ""
+                              ) : ""}
+                            `}
+                          >
+                            <span
+                              className={`text-[9px] sm:text-[10px] font-bold ${colorMode !== "status" ? "" : ""}`}
+                              style={colorMode !== "status" ? { color: "var(--dynamic-text-dark)" } : {}}
+                            >
+                              {format(parseISO(lesson.scheduled_start), "h:mm a")}
+                            </span>
+                            <span
+                              className={`text-[9px] sm:text-[10px] font-medium ml-1 ${colorMode !== "status" ? "" : ""}`}
+                              style={colorMode !== "status" ? { color: "var(--dynamic-text)" } : {}}
+                            >
+                              {lesson.band_name || lesson.student_name || (lesson.lesson_type ? lesson.lesson_type.charAt(0).toUpperCase() + lesson.lesson_type.slice(1) : "Event")}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -564,9 +792,9 @@ export default function SchedulePage() {
                   style={
                     bookingMode === mode
                       ? {
-                          backgroundColor: "var(--color-primary-dark)",
-                          color: "white",
-                        }
+                        backgroundColor: "var(--color-primary-dark)",
+                        color: "white",
+                      }
                       : undefined
                   }
                 >
@@ -814,6 +1042,47 @@ export default function SchedulePage() {
                 </select>
               </div>
             </div>
+
+            {editingLessonId && (
+              <div className="pt-4 border-t border-gray-100 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                      Status
+                    </label>
+                    <select
+                      value={newBooking.status}
+                      onChange={(e) => setNewBooking({ ...newBooking, status: e.target.value })}
+                      className={`w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white border-2 rounded-xl font-bold outline-none transition-all appearance-none ${newBooking.status === 'cancelled' ? 'text-red-600 focus:border-red-400' : 'text-gray-700 focus:border-primary'
+                        }`}
+                    >
+                      <option value="scheduled">Scheduled</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                      <option value="no_show">No Show</option>
+                    </select>
+                  </div>
+
+                  {newBooking.status === "cancelled" && (
+                    <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <label className="text-xs font-black text-red-400 uppercase tracking-widest">
+                        Cancellation Reason
+                      </label>
+                      <textarea
+                        placeholder="Why was this lesson cancelled?"
+                        value={newBooking.cancellation_reason}
+                        onChange={(e) =>
+                          setNewBooking({ ...newBooking, cancellation_reason: e.target.value })
+                        }
+                        className="w-full px-4 py-3 bg-red-50/50 border-transparent focus:bg-white border-2 focus:border-red-400 rounded-xl font-medium text-gray-700 outline-none transition-all resize-none h-24"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
           </form>
         </DialogContent>
         <DialogFooter>
@@ -854,14 +1123,14 @@ export default function SchedulePage() {
               <div className="flex gap-2">
                 <input
                   readOnly
-                  value="http://localhost:8000/api/calendar/my/lessons.ics"
+                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/api/calendar/my/lessons.ics`}
                   className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-mono text-gray-600 outline-none"
                 />
                 <Button
                   variant="outline"
                   onClick={() => {
                     navigator.clipboard.writeText(
-                      "http://localhost:8000/api/calendar/my/lessons.ics"
+                      `${window.location.origin}/api/calendar/my/lessons.ics`
                     );
                     toast.success("Copied!");
                   }}

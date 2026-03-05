@@ -18,7 +18,7 @@ export default function ForgotPasswordPage() {
         setIsLoading(true)
 
         try {
-            const res = await fetch('http://localhost:8000/api/auth/password/reset/', {
+            const res = await fetch('/api/auth/password/reset/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })
@@ -47,7 +47,7 @@ export default function ForgotPasswordPage() {
                     <div className="flex justify-center mb-8">
                         <Logo className="h-10 w-auto" />
                     </div>
-                    
+
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -62,7 +62,7 @@ export default function ForgotPasswordPage() {
                     </motion.div>
                 </div>
 
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.4, delay: 0.1 }}
@@ -145,7 +145,7 @@ export default function ForgotPasswordPage() {
                         </form>
                     )}
                 </motion.div>
-                
+
                 <p className="mt-8 text-center text-xs text-gray-400">
                     Don&apos;t have an account?{' '}
                     <Link href="/signup" className="text-indigo-600 font-bold hover:underline">Sign up</Link>

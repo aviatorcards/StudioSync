@@ -2,6 +2,7 @@ import logging
 
 from django.conf import settings
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
@@ -20,6 +21,12 @@ class CreateCheckoutSessionView(views.APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, invoice_id):
+        if not settings.STRIPE_SECRET_KEY:
+            return Response(
+                {"error": "Stripe is not configured. Please add STRIPE_SECRET_KEY to your environment."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
         invoice = get_object_or_404(Invoice, id=invoice_id)
 
         # Determine success/cancel URLs
@@ -126,9 +133,11 @@ class CreateSubscriptionCheckoutSessionView(views.APIView):
 
 
 class VerifyCheckoutSessionView(views.APIView):
-    # Important: Allow the frontend to verify standard payment synchronously 
-    # as a fallback if webhooks (stripe CLI) are not perfectly configured
-    permission_classes = [permissions.IsAuthenticated]
+    # Allow unauthenticated access: this endpoint is called right after
+    # returning from Stripe checkout, when the JWT access token may have
+    # expired during the external redirect. The endpoint only uses the
+    # Stripe session ID to verify payment status — no user-specific data.
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         session_id = request.data.get("session_id")

@@ -25,7 +25,7 @@ export default function LoginPage() {
         } catch (err: any) {
             console.error('Login error:', err)
             if (err.message === 'Failed to fetch' || err.message.includes('NetworkError')) {
-                setError('Cannot connect to server. Please make sure the backend is running on http://localhost:8000')
+                setError('Cannot connect to server. Please try again later.')
             } else {
                 setError(err.message || 'Failed to sign in. Please check your credentials.')
             }

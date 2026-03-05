@@ -22,6 +22,10 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         if user.role == "admin":
             return Invoice.objects.filter(studio__owner=user)
 
+        # Teachers: See all invoices for their studio
+        if user.role == "teacher" and hasattr(user, "teacher_profile"):
+            return Invoice.objects.filter(studio=user.teacher_profile.studio)
+
         # Students: See their own invoices (direct or via band)
         if hasattr(user, "student_profile"):
             student = user.student_profile

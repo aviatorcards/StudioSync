@@ -484,6 +484,7 @@ class StudentSerializer(serializers.ModelSerializer):
             "last_name",
             "phone",
             "instrument",
+            "instruments",
             "primary_teacher",
             "enrollment_date",
             "birth_date",

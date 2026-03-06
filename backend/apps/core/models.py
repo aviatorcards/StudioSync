@@ -371,6 +371,7 @@ class Student(models.Model):
 
     # Musical information
     instrument = models.CharField(max_length=100, blank=True)
+    instruments = models.JSONField(default=list, blank=True)
 
     goals_description = models.TextField(
         blank=True

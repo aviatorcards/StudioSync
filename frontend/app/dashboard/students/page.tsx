@@ -32,6 +32,7 @@ interface StudentData {
     name: string
     email: string
     instrument: string | null
+    instruments: string[]
     teacher_name: string | null
     primary_teacher?: TeacherProfile | string | null
     next_lesson: string | null
@@ -91,7 +92,7 @@ export default function StudentsPage() {
         last_name: '',
         email: '',
         instrument: '',
-
+        instruments: [] as string[],
         primary_teacher: '',
         is_active: true
     })
@@ -119,7 +120,7 @@ export default function StudentsPage() {
             last_name: lastNameParts.join(' ') || '',
             email: student.email || '',
             instrument: student.instrument || '',
-
+            instruments: student.instruments || (student.instrument ? [student.instrument] : []),
             primary_teacher: typeof student.primary_teacher === 'object' ? student.primary_teacher?.id : student.primary_teacher || student.teacher_id || '',
             is_active: student.is_active ?? true
         })
@@ -132,7 +133,7 @@ export default function StudentsPage() {
         setIsSubmitting(true)
         try {
             await api.patch(`/students/${selectedStudent.id}/`, formData)
-            toast.success('Member updated successfully')
+            toast.success('Changes saved')
             setIsEditModalOpen(false)
             if (refresh) refresh()
             refreshInstruments() // update instrument list in case a new one was added
@@ -162,7 +163,7 @@ export default function StudentsPage() {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-in fade-in duration-500">
                 <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Accessing Roster...</p>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Loading Roster...</p>
             </div>
         )
     }
@@ -175,10 +176,10 @@ export default function StudentsPage() {
                     <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight flex items-center gap-3">
                         Student Roster
                         <div className="bg-primary/10 px-3 py-1 rounded-full text-xs font-black text-primary uppercase tracking-widest">
-                            {meta?.count || 0} Members
+                            {meta?.count || 0} Students
                         </div>
                     </h1>
-                    <p className="text-gray-500 font-medium max-w-lg">Nurture development, oversee curriculum progression, and verify enrollment status.</p>
+                    <p className="text-gray-500 font-medium max-w-lg">Nurture development, oversee learning goals, and verify enrollment status.</p>
                 </div>
                 <Button
                     onClick={() => router.push('/dashboard/students/add')}
@@ -193,7 +194,7 @@ export default function StudentsPage() {
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
                     { label: 'Total Roster', value: statsLoading ? '-' : (studentStats?.total_students || 0), icon: GraduationCap, color: 'blue' },
-                    { label: 'Active Members', value: statsLoading ? '-' : (studentStats?.active_students || 0), icon: Target, color: 'purple' },
+                    { label: 'Active Students', value: statsLoading ? '-' : (studentStats?.active_students || 0), icon: Target, color: 'purple' },
                     { label: 'Engagement Rate', value: statsLoading ? '-' : (studentStats?.total_students ? Math.round((studentStats.active_students / studentStats.total_students) * 100) + '%' : '0%'), icon: Star, color: 'emerald' },
                     { label: 'Unassigned', value: statsLoading ? '-' : (studentStats?.unassigned_students || 0), icon: UserCog, color: 'orange' }
                 ].map((stat, i) => (
@@ -247,7 +248,7 @@ export default function StudentsPage() {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                         type="text"
-                        placeholder="Search student identity or curriculum focus..."
+                        placeholder="Search student or focus areas..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-sm text-gray-700 outline-none transition-all shadow-sm"
@@ -261,11 +262,11 @@ export default function StudentsPage() {
                     <table className="w-full border-separate border-spacing-0">
                         <thead className="bg-gray-50/50">
                             <tr>
-                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Member Identity</th>
+                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">The Scholar</th>
                                 <th className="px-8 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
-                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Artistic Focus</th>
-                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Lead Instructor</th>
-                                <th className="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Next Milestone</th>
+                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Areas of Focus</th>
+                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Mentor</th>
+                                <th className="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Up Next</th>
                                 <th className="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
                             </tr>
                         </thead>
@@ -289,13 +290,13 @@ export default function StudentsPage() {
                                         {renderStatusBadge(student.is_active)}
                                     </td>
                                     <td className="px-8 py-6">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                                                <Music className="w-4 h-4" />
-                                            </div>
-                                            <span className="text-[10px] font-black text-gray-700 uppercase tracking-widest">
-                                                {student.instrument || 'Foundation'}
-                                            </span>
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            {(student.instruments?.length > 0 ? student.instruments : [student.instrument || 'Foundation']).map((inst: string) => (
+                                                <div key={inst} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-600 border border-blue-100/50">
+                                                    <Music className="w-3 h-3" />
+                                                    <span className="text-[9px] font-black uppercase tracking-wider">{inst}</span>
+                                                </div>
+                                            ))}
                                         </div>
                                     </td>
                                     <td className="px-8 py-6">
@@ -346,7 +347,7 @@ export default function StudentsPage() {
                                             <div className="w-20 h-20 bg-gray-50 rounded-[2.5rem] flex items-center justify-center border-2 border-dashed border-gray-100">
                                                 <BookOpen className="w-10 h-10 text-gray-200" />
                                             </div>
-                                            <p className="text-[10px] font-black marker:text-gray-400 uppercase tracking-[0.2em]">Roster is currently empty</p>
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Roster is currently empty</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -387,17 +388,13 @@ export default function StudentsPage() {
             </div>
 
             {/* Edit Modal */}
-            <Dialog
-                open={isEditModalOpen}
-                onOpenChange={setIsEditModalOpen}
-                size="lg"
-            >
-                <DialogHeader title="Academic Profile Adjustment" />
-                <DialogContent>
+            <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+                <DialogContent size="lg">
+                    <DialogHeader title="Update Student Profile" />
                     <form id="edit-student-form" onSubmit={handleSubmit} className="space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Forename</label>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">First Name</label>
                                 <input
                                     required
                                     value={formData.first_name}
@@ -406,7 +403,7 @@ export default function StudentsPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Surname</label>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Last Name</label>
                                 <input
                                     required
                                     value={formData.last_name}
@@ -415,7 +412,7 @@ export default function StudentsPage() {
                                 />
                             </div>
                             <div className="space-y-2 md:col-span-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Digital Contact (Email)</label>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Email Address</label>
                                 <input
                                     type="email"
                                     required
@@ -429,25 +426,60 @@ export default function StudentsPage() {
                         <div className="p-8 bg-primary/5 rounded-3xl border border-primary/10 space-y-6">
                             <h3 className="text-xs font-black text-primary uppercase tracking-[0.2em] flex items-center gap-2">
                                 <Trophy className="w-4 h-4" />
-                                Curricular Configuration
+                                Curriculum
                             </h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Focus Instrument</label>
-                                    <input
-                                        list="instrument-options"
-                                        value={formData.instrument}
-                                        onChange={e => setFormData({ ...formData, instrument: e.target.value })}
-                                        placeholder="Select or type instrument..."
-                                        className="w-full px-5 py-3.5 bg-white border-transparent focus:border-primary border-2 rounded-2xl font-bold text-gray-700 outline-none transition-all"
-                                    />
-                                    <datalist id="instrument-options">
-                                        {allInstruments.map(i => <option key={i} value={i} />)}
-                                    </datalist>
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Areas of Focus</label>
+                                    <div className="flex flex-wrap gap-2 mb-2">
+                                        {formData.instruments.map(inst => (
+                                            <div key={inst} className="flex items-center gap-2 px-3 py-1.5 bg-white border border-primary/20 rounded-xl text-[10px] font-black text-primary uppercase tracking-widest transition-all hover:bg-red-50 hover:border-red-200 hover:text-red-500 cursor-pointer group" onClick={() => {
+                                                setFormData({ ...formData, instruments: formData.instruments.filter(i => i !== inst) })
+                                            }}>
+                                                {inst}
+                                                <Plus className="w-3 h-3 rotate-45" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="relative">
+                                        <input
+                                            list="instrument-options"
+                                            value={formData.instrument}
+                                            onChange={e => {
+                                                const val = e.target.value;
+                                                if (allInstruments.includes(val) && !formData.instruments.includes(val)) {
+                                                    setFormData({
+                                                        ...formData,
+                                                        instruments: [...formData.instruments, val],
+                                                        instrument: ''
+                                                    })
+                                                } else {
+                                                    setFormData({ ...formData, instrument: val })
+                                                }
+                                            }}
+                                            onKeyDown={e => {
+                                                if (e.key === 'Enter' && formData.instrument) {
+                                                    e.preventDefault();
+                                                    if (!formData.instruments.includes(formData.instrument)) {
+                                                        setFormData({
+                                                            ...formData,
+                                                            instruments: [...formData.instruments, formData.instrument],
+                                                            instrument: ''
+                                                        })
+                                                    }
+                                                }
+                                            }}
+                                            placeholder="Type and press Enter to add..."
+                                            className="w-full px-5 py-3.5 bg-white border-transparent focus:border-primary border-2 rounded-2xl font-bold text-gray-700 outline-none transition-all"
+                                        />
+                                        <datalist id="instrument-options">
+                                            {allInstruments.map(i => <option key={i} value={i} />)}
+                                        </datalist>
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Lead Instructor</label>
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Teacher</label>
                                     <select
                                         value={formData.primary_teacher}
                                         onChange={e => setFormData({ ...formData, primary_teacher: e.target.value })}
@@ -461,14 +493,14 @@ export default function StudentsPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Enrollment Status</label>
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Enrollment</label>
                                     <div
                                         onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
                                         className={`flex items-center justify-between px-5 py-3.5 rounded-2xl border-2 transition-all cursor-pointer h-[54px] ${formData.is_active ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-200'
                                             }`}
                                     >
                                         <span className={`text-[10px] font-black uppercase tracking-widest ${formData.is_active ? 'text-emerald-600' : 'text-gray-400'}`}>
-                                            {formData.is_active ? 'Active Roster' : 'Inactive'}
+                                            {formData.is_active ? 'Active' : 'Inactive'}
                                         </span>
                                         <div className={`w-10 h-6 rounded-full p-1 transition-colors ${formData.is_active ? 'bg-emerald-500' : 'bg-gray-400'}`}>
                                             <div className={`w-4 h-4 bg-white rounded-full transition-transform ${formData.is_active ? 'translate-x-4' : 'translate-x-0'}`} />
@@ -478,31 +510,31 @@ export default function StudentsPage() {
                             </div>
                         </div>
                     </form>
+                    <DialogFooter>
+                        <Button
+                            variant="ghost"
+                            onClick={() => setIsEditModalOpen(false)}
+                            className="flex-1"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            form="edit-student-form"
+                            disabled={isSubmitting}
+                            className="flex-[2] gap-2 active:scale-95 transition-transform"
+                        >
+                            {isSubmitting ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Saving Changes...
+                                </>
+                            ) : (
+                                'Save Changes'
+                            )}
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
-                <DialogFooter>
-                    <Button
-                        variant="ghost"
-                        onClick={() => setIsEditModalOpen(false)}
-                        className="flex-1"
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        type="submit"
-                        form="edit-student-form"
-                        disabled={isSubmitting}
-                        className="flex-[2] gap-2 active:scale-95 transition-transform"
-                    >
-                        {isSubmitting ? (
-                            <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Synchronizing...
-                            </>
-                        ) : (
-                            'Execute Profile Update'
-                        )}
-                    </Button>
-                </DialogFooter>
             </Dialog>
         </div>
     )

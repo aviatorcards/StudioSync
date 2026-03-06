@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, User, Mail, Phone, Music, Users, Info } from 'lucide-react'
+import { ArrowLeft, User, Mail, Phone, Music, Users, Info, Plus } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import api from '@/services/api'
 import { formatPhoneNumber } from '@/lib/utils'
@@ -27,6 +27,7 @@ export default function AddStudentPage() {
         email: '',
         phone: '',
         instrument: '',
+        instruments: [] as string[],
         birth_date: '',
         emergency_contact_name: '',
         emergency_contact_phone: '',
@@ -42,11 +43,11 @@ export default function AddStudentPage() {
         setLoading(true)
         try {
             await api.post('/students/', formData)
-            toast.success('Student created successfully!')
+            toast.success('Ready to go! Student profile created.')
             router.push('/dashboard/students')
         } catch (error: any) {
             console.error('Failed to create student:', error)
-            const errorMsg = error.response?.data?.email?.[0] || 'Failed to create student'
+            const errorMsg = error.response?.data?.email?.[0] || "We couldn't set up the profile. Please check the details and try again."
             toast.error(errorMsg)
         } finally {
             setLoading(false)
@@ -75,8 +76,8 @@ export default function AddStudentPage() {
                         <ArrowLeft className="w-4 h-4" />
                         Back to Students
                     </button>
-                    <h1 className="text-3xl font-bold text-gray-900">Add New Student</h1>
-                    <p className="text-gray-500 mt-1">Create a new student profile with login credentials</p>
+                    <h1 className="text-3xl font-bold text-gray-900">Welcome a New Student</h1>
+                    <p className="text-gray-500 mt-1">Start a new chapter with a fresh student profile</p>
                 </div>
 
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
@@ -86,7 +87,7 @@ export default function AddStudentPage() {
                         <section>
                             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                 <User className="w-5 h-5 text-[var(--color-primary)]" />
-                                Personal Information
+                                The Basics
                             </h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
@@ -108,7 +109,7 @@ export default function AddStudentPage() {
                         <section>
                             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                 <Mail className="w-5 h-5 text-[var(--color-primary)]" />
-                                Student Contact &amp; Login
+                                Contact Details
                             </h2>
                             <div className="space-y-4">
                                 <div>
@@ -145,11 +146,36 @@ export default function AddStudentPage() {
                         <section>
                             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                 <Music className="w-5 h-5 text-[var(--color-primary)]" />
-                                Musical Details
+                                Learning Focus
                             </h2>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Instrument</label>
-                                <input type="text" name="instrument" value={formData.instrument} onChange={handleChange} className={inputClass} placeholder="Piano, Guitar, Violin... (Optional)" />
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Focus Areas</label>
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                    {formData.instruments.map(inst => (
+                                        <div key={inst} className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg text-xs font-bold text-blue-600 cursor-pointer hover:bg-red-50 hover:text-red-500 hover:border-red-200" onClick={() => {
+                                            setFormData({ ...formData, instruments: formData.instruments.filter(i => i !== inst) })
+                                        }}>
+                                            {inst}
+                                            <Plus className="w-3 h-3 rotate-45" />
+                                        </div>
+                                    ))}
+                                </div>
+                                <input
+                                    type="text"
+                                    name="instrument"
+                                    value={formData.instrument}
+                                    onChange={handleChange}
+                                    onKeyDown={e => {
+                                        if (e.key === 'Enter' && formData.instrument) {
+                                            e.preventDefault()
+                                            if (!formData.instruments.includes(formData.instrument)) {
+                                                setFormData({ ...formData, instruments: [...formData.instruments, formData.instrument], instrument: '' })
+                                            }
+                                        }
+                                    }}
+                                    className={inputClass}
+                                    placeholder="Type an instrument and press Enter..."
+                                />
                             </div>
                         </section>
 
@@ -222,7 +248,7 @@ export default function AddStudentPage() {
                                 disabled={loading}
                                 className="flex-1 px-6 py-2.5 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-hover)] font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {loading ? 'Creating...' : 'Create Student'}
+                                {loading ? 'Creating...' : 'Welcome to the Studio'}
                             </button>
                         </div>
                     </form>

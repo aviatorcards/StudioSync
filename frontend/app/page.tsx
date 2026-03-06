@@ -468,7 +468,7 @@ export default function Home() {
               {/* Background Glow */}
               <div className="absolute -inset-10 bg-gradient-to-tr from-indigo-500/10 to-purple-500/10 blur-[100px] opacity-70 -z-10" />
 
-              <div className="relative rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-200 bg-white">
+              <div className="relative rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-900/40">
                 {/* Browser-like Window Header */}
                 <div className="h-10 bg-gray-50/80 border-b border-gray-100 flex items-center px-4 gap-1.5 backdrop-blur-md relative z-10 font-sans">
                   <div className="w-3 h-3 rounded-full bg-red-400/80 shadow-sm shadow-red-500/20" />
@@ -495,7 +495,7 @@ export default function Home() {
               </div>
 
               {/* Modern Toasts */}
-              <div className="absolute -left-6 top-1/4 md:-left-16 glass-card rounded-2xl p-4 shadow-2xl border border-white/60 dark:border-white/10 hidden md:flex items-center gap-4 animate-float-card group z-20">
+              <div className="absolute -left-6 top-1/4 md:-left-16 glass-card rounded-2xl p-4 shadow-2xl hidden md:flex items-center gap-4 animate-float-card group z-20">
                 <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-500/20 group-hover:scale-110 transition-transform duration-300">
                   <Check className="w-6 h-6" />
                 </div>
@@ -505,7 +505,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="absolute -right-6 top-1/2 md:-right-16 glass-card rounded-2xl p-4 shadow-2xl border border-white/60 dark:border-white/10 hidden md:flex items-center gap-4 animate-float-card-delayed group z-20">
+              <div className="absolute -right-6 top-1/2 md:-right-16 glass-card rounded-2xl p-4 shadow-2xl hidden md:flex items-center gap-4 animate-float-card-delayed group z-20">
                 <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-100 dark:border-indigo-500/20 group-hover:scale-110 transition-transform duration-300">
                   <DollarSign className="w-6 h-6" />
                 </div>

@@ -279,6 +279,10 @@ TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "")
 TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER", "")
 
+# Stream Chat
+STREAM_API_KEY = os.getenv("STREAM_API_KEY", "2xhmt23x5szz")
+STREAM_API_SECRET = os.getenv("STREAM_API_SECRET", "rkhcsdtrhjnnx3xge7b9mxb3wtwhxk2jwma8h6njkauctnyhevp5j9ww3tq8f2gd")
+
 # MinIO/S3/R2 settings
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID") or os.getenv("MINIO_ACCESS_KEY", "minio_admin")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY") or os.getenv(

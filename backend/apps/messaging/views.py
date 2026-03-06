@@ -10,6 +10,27 @@ from .models import Message, MessageThread
 from .serializers import MessageSerializer, MessageThreadSerializer
 
 
+from django.conf import settings
+from stream_chat import StreamChat
+from rest_framework.views import APIView
+
+class StreamTokenView(APIView):
+    """
+    Generate a Stream Chat token for the authenticated user.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if not settings.STREAM_API_KEY or not settings.STREAM_API_SECRET:
+            return Response({"error": "Stream Chat API keys are not configured."}, status=500)
+
+        try:
+            client = StreamChat(api_key=settings.STREAM_API_KEY, api_secret=settings.STREAM_API_SECRET)
+            token = client.create_token(str(request.user.id))
+            return Response({"token": token, "apiKey": settings.STREAM_API_KEY})
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
 class MessageThreadViewSet(viewsets.ModelViewSet):
     """
     API for managing conversation threads

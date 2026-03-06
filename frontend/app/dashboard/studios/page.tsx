@@ -19,7 +19,7 @@ export default function StudiosPage() {
     const fileInputRef = useRef<HTMLInputElement>(null)
     const logoInputRef = useRef<HTMLInputElement>(null)
 
-    // Determine primary studio
+    const [lastUpdated, setLastUpdated] = useState(Date.now())
     const activeStudio = studios && studios.length > 0 ? studios[0] : null
 
     // --- Creation Modal State ---
@@ -53,6 +53,7 @@ export default function StudiosPage() {
         try {
             await api.patch('/core/studios/current/', uploadData)
             toast.success('Cover image updated!', { id: toastId })
+            setLastUpdated(Date.now())
             refetch()
         } catch (error: any) {
             console.error('Upload failed:', error)
@@ -72,6 +73,7 @@ export default function StudiosPage() {
         try {
             await api.patch('/core/studios/current/', uploadData)
             toast.success('Studio logo updated!', { id: toastId })
+            setLastUpdated(Date.now())
             refetch()
         } catch (error: any) {
             console.error('Logo upload failed:', error)
@@ -387,14 +389,11 @@ export default function StudiosPage() {
                     className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
                     style={{
                         backgroundImage: (activeStudio.cover_image || activeStudio.settings?.cover_image)
-                            ? `url(${activeStudio.cover_image || activeStudio.settings?.cover_image})`
-                            : 'none',
+                            ? `url(${activeStudio.cover_image || activeStudio.settings.cover_image}${(activeStudio.cover_image || activeStudio.settings.cover_image).includes('?') ? '&' : '?'}t=${lastUpdated})`
+                            : 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
                         backgroundColor: (activeStudio.cover_image || activeStudio.settings?.cover_image)
                             ? undefined
-                            : '#6366f1',
-                        background: (activeStudio.cover_image || activeStudio.settings?.cover_image)
-                            ? undefined
-                            : 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)'
+                            : '#6366f1'
                     }}
                 />
                 <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors duration-500" />
@@ -408,7 +407,11 @@ export default function StudiosPage() {
                             title="Click to upload studio logo"
                         >
                             {(activeStudio.logo || activeStudio.settings?.logo_url) ? (
-                                <img src={activeStudio.logo || activeStudio.settings.logo_url} alt="Logo" className="w-full h-full object-cover" />
+                                <img
+                                    src={`${activeStudio.logo || activeStudio.settings.logo_url}${(activeStudio.logo || activeStudio.settings.logo_url).includes('?') ? '&' : '?'}t=${lastUpdated}`}
+                                    alt="Logo"
+                                    className="w-full h-full object-cover"
+                                />
                             ) : (
                                 <Building2 className="w-10 h-10 md:w-12 md:h-12 text-gray-300" />
                             )}

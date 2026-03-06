@@ -66,3 +66,4 @@ black==24.10.0
 isort==5.13.2
 ruff==0.14.11
 pre-commit==4.0.1
+stream-chat

@@ -78,8 +78,8 @@ class FamilySerializer(serializers.ModelSerializer):
 
 
 class SimpleStudioSerializer(serializers.ModelSerializer):
-    cover_image = serializers.SerializerMethodField()
-    logo = serializers.SerializerMethodField()
+    cover_image = serializers.ImageField(required=False, allow_null=True)
+    logo = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Studio
@@ -102,17 +102,20 @@ class SimpleStudioSerializer(serializers.ModelSerializer):
             "logo",
         ]
 
-    def get_cover_image(self, obj):
-        """Return relative URL for cover image to work with frontend proxy"""
-        if obj.cover_image:
-            return obj.cover_image.url
-        return None
+    def to_representation(self, instance):
+        """Ensure cover_image and logo return relative URLs for frontend proxy"""
+        ret = super().to_representation(instance)
+        # Prefer direct model fields
+        if instance.cover_image:
+            ret["cover_image"] = instance.cover_image.url
+        elif instance.settings.get("cover_image"):
+            ret["cover_image"] = instance.settings["cover_image"]
 
-    def get_logo(self, obj):
-        """Return relative URL for studio logo to work with frontend proxy"""
-        if obj.logo:
-            return obj.logo.url
-        return None
+        if instance.logo:
+            ret["logo"] = instance.logo.url
+        elif instance.settings.get("logo_url"):
+            ret["logo"] = instance.settings["logo_url"]
+        return ret
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -330,15 +333,14 @@ class UserSerializer(serializers.ModelSerializer):
 class StudioSerializer(serializers.ModelSerializer):
     """Serializer for studio settings"""
 
-    cover_image = serializers.SerializerMethodField()
-    logo = serializers.SerializerMethodField()
+    cover_image = serializers.ImageField(required=False, allow_null=True)
+    logo = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Studio
         fields = [
             "id",
             "name",
-            "subdomain",
             "email",
             "phone",
             "website",
@@ -355,81 +357,46 @@ class StudioSerializer(serializers.ModelSerializer):
             "logo",
         ]
         read_only_fields = ["id", "owner", "subdomain"]
-        extra_kwargs = {
-            "email": {"required": False, "allow_blank": True},
-            "phone": {"required": False, "allow_blank": True},
-            "website": {"required": False, "allow_blank": True},
-            "address_line1": {"required": False, "allow_blank": True},
-            "address_line2": {"required": False, "allow_blank": True},
-            "city": {"required": False, "allow_blank": True},
-            "state": {"required": False, "allow_blank": True},
-            "postal_code": {"required": False, "allow_blank": True},
-            "timezone": {"required": False, "allow_blank": True},
-            "currency": {"required": False, "allow_blank": True},
-        }
-
-    def get_cover_image(self, obj):
-        """Return relative URL for cover image to work with frontend proxy"""
-        if obj.cover_image:
-            return obj.cover_image.url
-        return None
-
-    def get_logo(self, obj):
-        """Return relative URL for studio logo to work with frontend proxy"""
-        if obj.logo:
-            return obj.logo.url
-        return None
-
-    def to_internal_value(self, data):
-        """Handle cover_image and logo file uploads in PATCH requests alongside JSON data"""
-        if hasattr(data, "dict"):
-            mutable_data = data.dict()
-        else:
-            mutable_data = dict(data) if isinstance(data, dict) else data
-
-        cover_image_file = None
-        if isinstance(mutable_data, dict) and "cover_image" in mutable_data:
-            cover_val = mutable_data.get("cover_image")
-            if isinstance(cover_val, list) and len(cover_val) > 0:
-                cover_val = cover_val[0]
-            if hasattr(cover_val, "read"):
-                cover_image_file = cover_val
-
-        logo_file = None
-        if isinstance(mutable_data, dict) and "logo" in mutable_data:
-            logo_val = mutable_data.get("logo")
-            if isinstance(logo_val, list) and len(logo_val) > 0:
-                logo_val = logo_val[0]
-            if hasattr(logo_val, "read"):
-                logo_file = logo_val
-
-        # These are SerializerMethodFields (read-only), so exclude from validation
-        mutable_data.pop("cover_image", None)
-        mutable_data.pop("logo", None)
-
-        internal_value = super().to_internal_value(mutable_data)
-
-        if cover_image_file:
-            internal_value["cover_image"] = cover_image_file
-        if logo_file:
-            internal_value["logo"] = logo_file
-
-        return internal_value
 
     def update(self, instance, validated_data):
-        cover_image = validated_data.pop("cover_image", None)
-        logo = validated_data.pop("logo", None)
+        # Extract fields to see if they changed
+        cover_image = validated_data.get('cover_image')
+        logo = validated_data.get('logo')
+
         instance = super().update(instance, validated_data)
-        update_fields = []
-        if cover_image is not None:
-            instance.cover_image = cover_image
-            update_fields.append("cover_image")
-        if logo is not None:
-            instance.logo = logo
-            update_fields.append("logo")
-        if update_fields:
-            instance.save(update_fields=update_fields)
+
+        # Sync back to settings for legacy support
+        if 'cover_image' in validated_data:
+            if instance.cover_image:
+                instance.settings['cover_image'] = instance.cover_image.url
+            else:
+                instance.settings.pop('cover_image', None)
+        
+        if 'logo' in validated_data:
+            if instance.logo:
+                instance.settings['logo_url'] = instance.logo.url
+            else:
+                instance.settings.pop('logo_url', None)
+        
+        if 'cover_image' in validated_data or 'logo' in validated_data:
+            instance.save()
+            
         return instance
+
+    def to_representation(self, instance):
+        """Ensure cover_image and logo return relative URLs for frontend proxy"""
+        ret = super().to_representation(instance)
+        # Prefer direct model fields
+        if instance.cover_image:
+            ret["cover_image"] = instance.cover_image.url
+        elif instance.settings.get("cover_image"):
+            ret["cover_image"] = instance.settings["cover_image"]
+
+        if instance.logo:
+            ret["logo"] = instance.logo.url
+        elif instance.settings.get("logo_url"):
+            ret["logo"] = instance.settings["logo_url"]
+        return ret
 
 
 class PublicTeacherSerializer(serializers.ModelSerializer):

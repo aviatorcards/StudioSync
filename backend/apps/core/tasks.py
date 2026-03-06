@@ -104,34 +104,38 @@ def check_upcoming_lessons():
 
         if not student_reminder_exists:
             try:
-                # Create in-app notification
-                Notification.create_notification(
-                    user=lesson.student.user,
-                    notification_type="lesson_reminder",
-                    title="Upcoming Lesson Reminder",
-                    message=f'Your {lesson.student_instrument} lesson is tomorrow at {lesson.scheduled_start.strftime("%I:%M %p")}',
-                    link=f"/dashboard/lessons/{lesson.id}",
-                )
+                user = lesson.student.user
+                
+                # Create in-app notification (respecting prefs)
+                if user.wants_notification("lesson_reminder", "push"):
+                    Notification.create_notification(
+                        user=user,
+                        notification_type="lesson_reminder",
+                        title="Upcoming Lesson Reminder",
+                        message=f'Your {lesson.student.instrument} lesson is tomorrow at {lesson.scheduled_start.strftime("%I:%M %p")}',
+                        link=f"/dashboard/lessons/{lesson.id}",
+                    )
 
-                # Send Email
-                context = {
-                    "instructor_name": lesson.teacher.user.get_full_name(),
-                    "lesson_start_time": lesson.scheduled_start.strftime("%A, %B %d at %I:%M %p"),
-                    "location": lesson.location,
-                    "student_name": lesson.student.user.get_full_name(),
-                    "instrument": lesson.student_instrument,
-                    "duration_minutes": lesson.duration_minutes,
-                    "lesson_url": f"{settings.FRONTEND_BASE_URL}/dashboard/lessons/{lesson.id}",
-                }
+                # Send Email (respecting prefs)
+                if user.wants_notification("lesson_reminder", "email"):
+                    context = {
+                        "instructor_name": lesson.teacher.user.get_full_name(),
+                        "lesson_start_time": lesson.scheduled_start.strftime("%A, %B %d at %I:%M %p"),
+                        "location": lesson.location,
+                        "student_name": lesson.student.user.get_full_name(),
+                        "instrument": lesson.student.instrument,
+                        "duration_minutes": lesson.duration_minutes,
+                        "lesson_url": f"{settings.FRONTEND_BASE_URL}/dashboard/lessons/{lesson.id}",
+                    }
 
-                async_task(
-                    send_email_async,
-                    "Lesson Reminder 🎵",
-                    lesson.student.user.email,
-                    "emails/lesson_reminder.html",
-                    context,
-                )
-                reminders_sent += 1
+                    async_task(
+                        send_email_async,
+                        "Lesson Reminder 🎵",
+                        user.email,
+                        "emails/lesson_reminder.html",
+                        context,
+                    )
+                    reminders_sent += 1
             except Exception as e:
                 logger.error(f"Failed to send reminder for lesson {lesson.id}: {e}")
 

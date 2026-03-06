@@ -55,37 +55,37 @@ def notify_new_message(sender, instance, created, **kwargs):
 
             for recipient in recipients:
                 # Create in-app notification
-                from apps.notifications.models import Notification
-                Notification.objects.create(
-                    user=recipient,
-                    notification_type="new_message",
-                    title=f"New Message from {message_sender.get_full_name()}",
-                    message=instance.body[:100],
-                    link=f"/dashboard/messages?thread={thread.id}",
-                    related_message_id=None # Integer field, but message id is UUID. We'll use link.
-                )
+                if recipient.wants_notification("new_message", "push"):
+                    from apps.notifications.models import Notification
+                    Notification.objects.create(
+                        user=recipient,
+                        notification_type="new_message",
+                        title=f"New Message from {message_sender.get_full_name()}",
+                        message=instance.body[:100],
+                        link=f"/dashboard/messages?thread={thread.id}",
+                        related_message_id=None # Integer field, but message id is UUID. We'll use link.
+                    )
 
-                # Skip if recipient has disabled notifications (if such preference exists)
-                # For now, just send to everyone
+                # Send Email Notifications
+                if recipient.wants_notification("new_message", "email"):
+                    subject = f"New Message from {message_sender.get_full_name()}"
 
-                subject = f"New Message from {message_sender.get_full_name()}"
+                    context = {
+                        "first_name": recipient.first_name,
+                        "sender": message_sender,
+                        "message_preview": instance.body,
+                        "message_url": f"{settings.FRONTEND_BASE_URL}/dashboard/messages/{thread.id}",
+                    }
 
-                context = {
-                    "first_name": recipient.first_name,
-                    "sender": message_sender,
-                    "message_preview": instance.body,
-                    "message_url": f"{settings.FRONTEND_BASE_URL}/dashboard/messages/{thread.id}",
-                }
+                    from django_q.tasks import async_task
 
-                from django_q.tasks import async_task
-
-                async_task(
-                    send_email_async,
-                    subject,
-                    recipient.email,
-                    "emails/new_message_notification.html",
-                    context,
-                )
+                    async_task(
+                        send_email_async,
+                        subject,
+                        recipient.email,
+                        "emails/new_message_notification.html",
+                        context,
+                    )
 
             logger.info(f"Triggered notification emails for Message {instance.id}")
 

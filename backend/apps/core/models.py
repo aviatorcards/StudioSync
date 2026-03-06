@@ -100,6 +100,37 @@ class User(AbstractBaseUser, PermissionsMixin):
         return (self.email,)
     natural_key.fget = lambda self: (self.email,)
 
+    def wants_notification(self, notification_type_internal, channel="push"):
+        """
+        Check if user wants a specific notification type via a specific channel.
+        channel: 'push', 'email', 'sms'
+        """
+        # Map internal types to UI preference keys
+        TYPE_MAPPING = {
+            "lesson_scheduled": "lesson_reminders",
+            "lesson_reminder": "lesson_reminders",
+            "lesson_cancelled": "lesson_reminders",
+            "new_message": "new_messages",
+            "payment_received": "payment_alerts",
+            "payment_due": "payment_alerts",
+            "new_student": "student_updates",
+            "student_goal_reached": "student_updates",
+        }
+        
+        pref_key = TYPE_MAPPING.get(notification_type_internal, notification_type_internal)
+        notif_prefs = self.preferences.get("notifications", {})
+        
+        # Check channel master switch
+        if channel == "push" and not notif_prefs.get("push_enabled", True):
+            return False
+        if channel == "email" and not notif_prefs.get("email_enabled", True):
+            return False
+        if channel == "sms" and not notif_prefs.get("sms_enabled", False):
+            return False
+            
+        # Check specific type switch (default to True if not explicitly set)
+        return notif_prefs.get(pref_key, True)
+
 
 class Studio(models.Model):
     """

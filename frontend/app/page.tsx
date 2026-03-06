@@ -495,8 +495,8 @@ export default function Home() {
               </div>
 
               {/* Modern Toasts */}
-              <div className="absolute -left-6 top-1/4 md:-left-16 glass-card rounded-2xl p-4 shadow-2xl border border-white/60 hidden md:flex items-center gap-4 animate-float-card group z-20">
-                <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 group-hover:scale-110 transition-transform duration-300">
+              <div className="absolute -left-6 top-1/4 md:-left-16 glass-card rounded-2xl p-4 shadow-2xl border border-white/60 dark:border-white/10 hidden md:flex items-center gap-4 animate-float-card group z-20">
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-500/20 group-hover:scale-110 transition-transform duration-300">
                   <Check className="w-6 h-6" />
                 </div>
                 <div>
@@ -505,8 +505,8 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="absolute -right-6 top-1/2 md:-right-16 glass-card rounded-2xl p-4 shadow-2xl border border-white/60 hidden md:flex items-center gap-4 animate-float-card-delayed group z-20">
-                <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 group-hover:scale-110 transition-transform duration-300">
+              <div className="absolute -right-6 top-1/2 md:-right-16 glass-card rounded-2xl p-4 shadow-2xl border border-white/60 dark:border-white/10 hidden md:flex items-center gap-4 animate-float-card-delayed group z-20">
+                <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-100 dark:border-indigo-500/20 group-hover:scale-110 transition-transform duration-300">
                   <DollarSign className="w-6 h-6" />
                 </div>
                 <div>

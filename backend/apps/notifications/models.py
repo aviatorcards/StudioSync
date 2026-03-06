@@ -82,62 +82,71 @@ class Notification(models.Model):
         """Create notification for newly scheduled lesson"""
         # Notify student
         if lesson.student and lesson.student.user:
-            cls.create_notification(
-                user=lesson.student.user,
-                notification_type="lesson_scheduled",
-                title="New Lesson Scheduled",
-                message=f'Your {lesson.student_instrument} lesson is scheduled for {lesson.scheduled_start.strftime("%B %d at %I:%M %p")}',
-                link=f"/dashboard/lessons/{lesson.id}",
-                related_lesson_id=lesson.id,
-            )
+            user = lesson.student.user
+            if user.wants_notification("lesson_scheduled", "push"):
+                cls.create_notification(
+                    user=user,
+                    notification_type="lesson_scheduled",
+                    title="New Lesson Scheduled",
+                    message=f'Your {lesson.student.instrument} lesson is scheduled for {lesson.scheduled_start.strftime("%B %d at %I:%M %p")}',
+                    link=f"/dashboard/lessons/{lesson.id}",
+                    related_lesson_id=lesson.id,
+                )
 
         # Notify teacher
         if lesson.teacher and lesson.teacher.user:
-            cls.create_notification(
-                user=lesson.teacher.user,
-                notification_type="lesson_scheduled",
-                title="New Lesson Scheduled",
-                message=f'Lesson with {lesson.student.user.get_full_name()} scheduled for {lesson.scheduled_start.strftime("%B %d at %I:%M %p")}',
-                link=f"/dashboard/lessons/{lesson.id}",
-                related_lesson_id=lesson.id,
-            )
+            user = lesson.teacher.user
+            if user.wants_notification("lesson_scheduled", "push"):
+                cls.create_notification(
+                    user=user,
+                    notification_type="lesson_scheduled",
+                    title="New Lesson Scheduled",
+                    message=f'Lesson with {lesson.student.user.get_full_name()} scheduled for {lesson.scheduled_start.strftime("%B %d at %I:%M %p")}',
+                    link=f"/dashboard/lessons/{lesson.id}",
+                    related_lesson_id=lesson.id,
+                )
 
     @classmethod
     def notify_new_student(cls, teacher_user, student):
         """Notify teacher of new student assignment"""
-        cls.create_notification(
-            user=teacher_user,
-            notification_type="new_student",
-            title="New Student Assigned",
-            message=f"{student.user.get_full_name()} has been added to your students",
-            link=f"/dashboard/students/{student.id}",
-            related_student_id=student.id,
-        )
+        if teacher_user.wants_notification("new_student", "push"):
+            cls.create_notification(
+                user=teacher_user,
+                notification_type="new_student",
+                title="New Student Assigned",
+                message=f"{student.user.get_full_name()} has been added to your students",
+                link=f"/dashboard/students/{student.id}",
+                related_student_id=student.id,
+            )
 
     @classmethod
     def notify_upcoming_lesson(cls, lesson, hours_before=24):
         """Send reminder notification for upcoming lesson"""
         # Notify student
         if lesson.student and lesson.student.user:
-            cls.create_notification(
-                user=lesson.student.user,
-                notification_type="lesson_reminder",
-                title="Upcoming Lesson Reminder",
-                message=f'Your {lesson.student_instrument} lesson is tomorrow at {lesson.scheduled_start.strftime("%I:%M %p")}',
-                link=f"/dashboard/lessons/{lesson.id}",
-                related_lesson_id=lesson.id,
-            )
+            user = lesson.student.user
+            if user.wants_notification("lesson_reminder", "push"):
+                cls.create_notification(
+                    user=user,
+                    notification_type="lesson_reminder",
+                    title="Upcoming Lesson Reminder",
+                    message=f'Your {lesson.student.instrument} lesson is tomorrow at {lesson.scheduled_start.strftime("%I:%M %p")}',
+                    link=f"/dashboard/lessons/{lesson.id}",
+                    related_lesson_id=lesson.id,
+                )
 
         # Notify teacher
         if lesson.teacher and lesson.teacher.user:
-            cls.create_notification(
-                user=lesson.teacher.user,
-                notification_type="lesson_reminder",
-                title="Upcoming Lesson Reminder",
-                message=f'Lesson with {lesson.student.user.get_full_name()} tomorrow at {lesson.scheduled_start.strftime("%I:%M %p")}',
-                link=f"/dashboard/lessons/{lesson.id}",
-                related_lesson_id=lesson.id,
-            )
+            user = lesson.teacher.user
+            if user.wants_notification("lesson_reminder", "push"):
+                cls.create_notification(
+                    user=user,
+                    notification_type="lesson_reminder",
+                    title="Upcoming Lesson Reminder",
+                    message=f'Lesson with {lesson.student.user.get_full_name()} tomorrow at {lesson.scheduled_start.strftime("%I:%M %p")}',
+                    link=f"/dashboard/lessons/{lesson.id}",
+                    related_lesson_id=lesson.id,
+                )
 
     @classmethod
     def notify_document_pending(cls, user, document_name):

@@ -195,7 +195,7 @@ export default function SettingsPage() {
     const tabs = [
         { id: 'profile', label: 'Profile', icon: User },
         { id: 'security', label: 'Security', icon: ShieldAlert },
-        { id: 'studio', label: 'Studio', icon: Building2 },
+        { id: 'studio', label: 'Studio', icon: Building2, roles: ['admin'] },
         { id: 'communication', label: 'Communication', icon: Mail },
         { id: 'appearance', label: 'Appearance', icon: Palette },
         { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -421,15 +421,15 @@ export default function SettingsPage() {
                 }
 
                 const response = await api.patch('/core/studios/current/', updatePayload)
-                
+
                 // Update local user context if needed (though usually we'd refresh the whole user)
                 // For now, assume the toast suggests success
                 toast.success('Studio settings saved successfully')
-                
+
                 // Refresh user to get updated studio embedded data
                 const userRes = await api.get('/core/users/me/')
                 const userData = userRes.data
-                
+
                 // If the user's personal timezone doesn't match the studio's,
                 // and they are the admin, update the user timezone too for consistency
                 if (userData.role === 'admin' && userData.timezone !== settings.timezone) {
@@ -487,8 +487,8 @@ export default function SettingsPage() {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 ${activeTab === tab.id
-                                        ? 'bg-primary text-white shadow-md'
-                                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                                    ? 'bg-primary text-white shadow-md'
+                                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                                     }`}
                             >
                                 <Icon className="w-4 h-4" />
@@ -512,8 +512,8 @@ export default function SettingsPage() {
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id)}
                                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all active:scale-95 ${activeTab === tab.id
-                                                ? 'bg-primary text-white shadow-md'
-                                                : 'text-gray-700 hover:bg-gray-50'
+                                            ? 'bg-primary text-white shadow-md'
+                                            : 'text-gray-700 hover:bg-gray-50'
                                             }`}
                                     >
                                         <Icon className="w-5 h-5" />
@@ -672,8 +672,8 @@ export default function SettingsPage() {
                                         type="submit"
                                         disabled={loading || !hasChanges()}
                                         className={`flex items-center justify-center gap-2 px-6 py-2 rounded-lg font-medium transition-colors ${!hasChanges()
-                                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                                : 'bg-primary text-white hover:bg-primary-hover'
+                                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                            : 'bg-primary text-white hover:bg-primary-hover'
                                             } disabled:opacity-50`}
                                     >
                                         {loading ? (
@@ -712,7 +712,7 @@ export default function SettingsPage() {
                                 const current_password = (form.elements.namedItem('current_password') as HTMLInputElement).value
                                 const new_password = (form.elements.namedItem('new_password') as HTMLInputElement).value
                                 const confirm_password = (form.elements.namedItem('confirm_password') as HTMLInputElement).value
-                                
+
                                 if (new_password !== confirm_password) {
                                     toast.error('New passwords do not match')
                                     return
@@ -1143,8 +1143,8 @@ export default function SettingsPage() {
                                                 key={theme}
                                                 onClick={() => setAppearanceSettings({ ...appearanceSettings, theme })}
                                                 className={`p-4 border-2 rounded-lg capitalize transition-all text-sm font-medium ${appearanceSettings.theme === theme
-                                                        ? 'border-primary bg-orange-50 text-primary'
-                                                        : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                                                    ? 'border-primary bg-orange-50 text-primary'
+                                                    : 'border-gray-200 hover:border-gray-300 text-gray-700'
                                                     }`}
                                             >
                                                 {theme}
@@ -1186,8 +1186,8 @@ export default function SettingsPage() {
                                                 type="button"
                                                 onClick={() => setAppearanceSettings({ ...appearanceSettings, color_scheme: scheme.value })}
                                                 className={`p-3 border-2 rounded-lg transition-all hover:scale-105 ${appearanceSettings.color_scheme === scheme.value
-                                                        ? 'border-gray-900 shadow-md'
-                                                        : 'border-gray-200 hover:border-gray-400'
+                                                    ? 'border-gray-900 shadow-md'
+                                                    : 'border-gray-200 hover:border-gray-400'
                                                     }`}
                                             >
                                                 <div className="w-12 h-12 rounded-full mx-auto mb-2 shadow-inner border-2 border-white" style={{ backgroundColor: scheme.color }}></div>
@@ -1630,7 +1630,7 @@ export default function SettingsPage() {
                                                     CRITICAL: This will overwrite ALL existing data in the current database. This action cannot be undone.
                                                 </p>
                                             </div>
-                                            
+
                                             <label className={`inline-flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-xl font-bold hover:bg-orange-700 transition-all cursor-pointer shadow-md shadow-orange-200 ${isImporting ? 'opacity-50 pointer-events-none' : ''}`}>
                                                 {isImporting ? (
                                                     <>

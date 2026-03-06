@@ -108,6 +108,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             title: 'OVERVIEW',
             items: [
                 { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'teacher', 'student'] },
+                { name: 'Studio', href: '/dashboard/studios', icon: Building2, roles: ['admin', 'teacher', 'student'] },
             ],
         },
         {
@@ -136,7 +137,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             title: 'ADMIN',
             roles: ['admin'],
             items: [
-                { name: 'Studios', href: '/dashboard/studios', icon: Building2, roles: ['admin'] },
                 { name: 'Studio Builder', href: '/dashboard/studio-builder', icon: Pencil, roles: ['admin'] },
                 { name: 'Users', href: '/dashboard/users', icon: UserCog, roles: ['admin'] },
             ],

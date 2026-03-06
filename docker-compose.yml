@@ -1,7 +1,6 @@
-# Full development stack: PostgreSQL + Redis + Celery worker/beat + Django + Next.js
+# Full development stack: PostgreSQL + Redis + Django-Q worker + Django + Next.js
 # Usage: docker compose up  (or: docker compose watch)
-# See docker-compose.minimal.yml for Postgres-only (no Redis/Celery)
-# See docker-compose.simple.yml for SQLite only (no Postgres/Redis/Celery)
+# See docker-compose.simple.yml for SQLite only (no Postgres/Redis/background worker)
 
 services:
   # PostgreSQL Database
@@ -14,18 +13,17 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U studio_user -d studiosync"]
+      test: [ "CMD-SHELL", "pg_isready -U studio_user -d studiosync" ]
       interval: 10s
       timeout: 5s
       retries: 5
-
 
   # Django Backend
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-      target: development  # Use development stage for local dev with runserver
+      target: development # Use development stage for local dev with runserver
     command: daphne -b 0.0.0.0 -p 8000 config.asgi:application
     volumes:
       - ./backend:/app

@@ -222,19 +222,16 @@ If you get a response, backend is running. The frontend might take a minute to c
 
 ---
 
-## Minimal Demo Setup
+## Simple Demo Setup
 
-For the lightest possible demo, you can run just the essentials:
+For the lightest possible demo without external services like PostgreSQL or Redis, you can run just the essentials using SQLite:
 
 ```bash
-# Use the minimal docker compose
-docker compose -f docker-compose.minimal.yml up -d
+# Use the simple docker compose
+docker compose -f docker-compose.simple.yml up -d
 ```
 
 This runs only:
 
-- PostgreSQL
-- Django Backend (with Django Q)
+- Django Backend (with SQLite)
 - Next.js Frontend
-
-(No external Redis or Celery needed as functionality is consolidated into Postgres)

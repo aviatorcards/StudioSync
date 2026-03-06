@@ -52,6 +52,7 @@ cookies.txt
 .coverage
 htmlcov/
 .pytest_cache/
+_archive/
 
 # Type checking
 .mypy_cache/

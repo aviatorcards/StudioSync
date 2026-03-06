@@ -1,12 +1,6 @@
-# ⚠️⚠️⚠️ Warning ⚠️⚠️⚠️
+# StudioSync (Beta)
 
-## ‼️‼️‼️
-
-## This project is currently in development and is not ready for production use. I am not responsible for any damage or loss of data that may occur as a result of using this project.
-
-## ‼️‼️‼️
-
-### StudioSync
+> **Note:** StudioSync is currently in active Beta. While it is feature-complete for most studio management tasks, please back up your data regularly as we approach a stable 1.0 release.
 
 <div align="center">
   <img src="./frontend/public/logo.png" alt="StudioSync Logo" width="120" height="120" />
@@ -88,7 +82,7 @@
 
 ### 🐳 Deployment & Infrastructure
 
-- **One‑Command Docker** – full stack (PostgreSQL, Redis, Celery, Django, Next.js) via Docker Compose
+- **One‑Command Docker** – full stack (PostgreSQL, Redis, Django Q, Django, Next.js) via Docker Compose
 
 ## 🚀 Quick Start
 

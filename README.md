@@ -19,10 +19,8 @@
 
 ### 🎓 Student & Family Management
 
-- **Comprehensive Student Profiles** – instrument, skill level, enrollment status, progress
-- **Family Account Linking** – shared billing & communication
-- **Band/Ensemble Organization** – groups, photos, members, genre
-- **Emergency Contacts** – medical info, emergency details
+- **Comprehensive Student Profiles** – instrument, enrollment status, progress
+- **Band/Group Organization** – groups, photos, members, genre
 - **Enrollment History** – lesson counts, journey tracking
 
 ### 📅 Intelligent Scheduling & Lessons
@@ -34,20 +32,19 @@
 ### 💰 Billing & Financial Management
 
 - **Automated Invoicing** – from lessons, band‑level billing, tax, status tracking
-- **Multiple Payment Methods** – cash, check, card, ACH, Venmo, PayPal, Zelle, etc.
+- **Multiple Payment Methods** – cash, check, card with Stripe integration, Venmo, PayPal, Zelle, etc.
 - **Financial Intelligence** – late‑fee automation, overdue alerts, saved payment methods, professional branding
 
 ### 📦 Inventory & Resource Management
 
 - **Physical Inventory** – instruments, equipment, condition, location, low‑stock alerts
-- **Student Checkout** – approval workflow, due dates, damage reporting, availability updates
 - **Digital Library** – PDFs, audio, video, external links, tagging, size/MIME tracking
 - **Practice Room Reservations** – capacity, equipment, hourly rates, conflict detection, payment tracking
 
 ### 💬 Communication & Notifications
 
 - **In‑App Messaging** – threaded, multi‑participant, attachments, read/unread, topics
-- **Multi‑Channel Notifications** – email, SMS, push, lesson reminders, invoice alerts, resource notifications, system announcements
+- **Multi‑Channel Notifications** – email, SMS, push, lesson reminders, invoice alerts, resource notifications, system announcements (SMS has not been tested yet)
 
 ### 🎯 Goals & Progress Tracking
 
@@ -56,23 +53,17 @@
 ### 📊 Analytics & Reporting
 
 - **Real‑Time Dashboard** – customizable widgets, quick stats, upcoming lessons, activity feed, studio health metrics
-- **Exportable Reports** – student progress, financials, attendance, CSV/Excel via ExcelJS
+- **Exportable Reports** – student progress, financials, attendance, others - all able to export to Excel, CSV, or JSON
 
 ### 🏢 Studio Management
 
-- **Multi‑Tenancy** – multiple studios, subdomains, branding, timezone, currency, business hours
-- **Studio Layout Editor** – 2D canvas (React‑Konva), drag‑drop rooms, item library, rotation, resizing, printing
+- **Studio Layout Editor** – 2D canvas (React‑Konva), drag‑drop rooms, item library, rotation, resizing, printing - (IN DEVELOPMENT)
 - **Teacher Management** – profiles, specialties, hourly rates, availability, booking buffers, qualifications
-
-### 📋 Project & Task Management
-
-- **Kanban Board** – drag‑drop tasks, status columns, assignments, priorities, color‑coding
 
 ### 🎨 Design System & Customization
 
 - **Dynamic Theming** – 8+ color schemes, real‑time switching, dark mode (coming soon)
 - **Appearance Customization** – font sizes, compact mode, CSS variables, glassmorphism, modern dialogs
-- **Responsive Design** – mobile‑first, tablet optimization, desktop power features, touch‑friendly UI
 
 ### 🔐 Security & Access Control
 
@@ -82,7 +73,7 @@
 
 ### 🐳 Deployment & Infrastructure
 
-- **One‑Command Docker** – full stack (PostgreSQL, Redis, Django Q, Django, Next.js) via Docker Compose
+- **One‑Command Docker** – full stack (PostgreSQL, Django Q, Django, Next.js) via Docker Compose
 
 ## 🚀 Quick Start
 
@@ -132,7 +123,6 @@
 - **State/Data:** React Query, Context API
 - **Icons:** Lucide React
 - **Animations:** Framer Motion
-- **Drag‑and‑Drop:** dnd-kit (Dashboard), React‑Konva (Studio Editor)
 - **Charts:** Recharts
 - **Reports:** ExcelJS (Excel export)
 
@@ -160,22 +150,6 @@ studiosync/
 ├── scripts/            # Deployment & maintenance scripts
 └── docker-compose.yml  # Container orchestration
 ```
-
-## 🎨 Design System
-
-StudioSync features a custom‑built design system focused on performance and clarity:
-
-- **Dynamic Theming** – real‑time accent color switching (Teal, Blue, Indigo, Purple, Pink, Red, Orange, Green)
-- **Glassmorphism** – subtle blur and elevated surfaces for a modern feel
-- **Mobile‑First** – primary design for mobile without sacrificing desktop power
-
-## 🤝 Contributing
-
-We welcome contributions of all kinds!
-
-1. Check the [Roadmap](ROADMAP.md) for upcoming tasks.
-2. Fork the repo and create your feature branch: `git checkout -b feature/awesome-feature`.
-3. Submit a Pull Request.
 
 ## 📄 License
 

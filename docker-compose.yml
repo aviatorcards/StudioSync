@@ -1,6 +1,6 @@
-# Full development stack: PostgreSQL + Redis + Django-Q worker + Django + Next.js
-# Usage: docker compose up  (or: docker compose watch)
-# See docker-compose.simple.yml for SQLite only (no Postgres/Redis/background worker)
+# Base stack: PostgreSQL + Django-Q worker + Django + Next.js
+# This file defines the core services and their connections.
+# Use docker-compose.override.yml (dev) or docker-compose.prod.yml (prod) for specific roles.
 
 services:
   # PostgreSQL Database
@@ -23,54 +23,35 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-      target: development # Use development stage for local dev with runserver
-    command: daphne -b 0.0.0.0 -p 8000 config.asgi:application
-    volumes:
-      - ./backend:/app
+    # Base command (can be overridden)
+    command: gunicorn config.asgi:application --bind 0.0.0.0:8000 --workers 4 --worker-class uvicorn.workers.UvicornWorker
     ports:
       - "8000:8000"
     environment:
-      DEBUG: "True" # <-- Enabled for dev debugging & preventing SSL redirects
+      DEBUG: "False"
       DATABASE_URL: postgresql://studio_user:studio_password@db:5432/studiosync
-
-      # Cloudflare R2 / S3 Configuration
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://10.0.0.250:3000}
+      # AWS / Stripe Config
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
       AWS_STORAGE_BUCKET_NAME: ${AWS_STORAGE_BUCKET_NAME:-}
       AWS_S3_ENDPOINT_URL: ${AWS_S3_ENDPOINT_URL:-}
       AWS_S3_USE_SSL: ${AWS_S3_USE_SSL:-}
-      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://10.0.0.250:3000}
-
-      # Stripe Payment Processing
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
     depends_on:
       db:
         condition: service_healthy
-    develop:
-      watch:
-        - action: sync
-          path: ./backend
-          target: /app
-          ignore:
-            - venv/
-            - __pycache__/
-            - .venv/
-        - action: rebuild
-          path: ./backend/requirements.txt
 
-  # Background Task Worker (Postgres-backed)
+  # Background Task Worker
   q_cluster:
     build:
       context: ./backend
       dockerfile: Dockerfile
-      target: development
     command: python manage.py qcluster
-    volumes:
-      - ./backend:/app
     environment:
       DATABASE_URL: postgresql://studio_user:studio_password@db:5432/studiosync
       SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
@@ -85,11 +66,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    command: npm run dev
-    volumes:
-      - ./frontend:/app
-      - frontend_node_modules:/app/node_modules
-      - frontend_next:/app/.next
     ports:
       - "3000:3000"
     environment:
@@ -97,16 +73,6 @@ services:
       INTERNAL_API_URL: http://backend:8000/api
     depends_on:
       - backend
-    develop:
-      watch:
-        - action: sync
-          path: ./frontend
-          target: /app
-          ignore:
-            - node_modules/
-            - .next/
-        - action: rebuild
-          path: ./frontend/package.json
 
 volumes:
   postgres_data:

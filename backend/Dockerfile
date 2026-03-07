@@ -34,7 +34,7 @@ CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 FROM base AS production
 
 # Create non-root user
-RUN useradd -m -u 1000 appuser && \
+RUN adduser -D -u 1000 appuser && \
     mkdir -p /app/media /app/staticfiles && \
     chown -R appuser:appuser /app
 

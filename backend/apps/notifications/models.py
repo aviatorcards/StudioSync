@@ -171,3 +171,16 @@ class Notification(models.Model):
                 message=f"{requester_user.get_full_name()} ({requester_user.email}) has requested to be an instructor.",
                 link="/dashboard/users",
             )
+
+    @classmethod
+    def notify_admin_new_student_registration(cls, student_user):
+        """Notify all admins that a new student has registered and needs approval"""
+        admin_users = User.objects.filter(role="admin")
+        for admin in admin_users:
+            cls.create_notification(
+                user=admin,
+                notification_type="new_student",
+                title="New Student Registration",
+                message=f"New student {student_user.get_full_name()} ({student_user.email}) has registered and is pending approval.",
+                link="/dashboard/users",
+            )

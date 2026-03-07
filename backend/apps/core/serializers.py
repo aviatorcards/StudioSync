@@ -147,6 +147,7 @@ class UserSerializer(serializers.ModelSerializer):
             "teacher_profile",
             "studio",
             "is_active",
+            "is_approved",
             "bio",
             "instrument",
         ]
@@ -226,12 +227,26 @@ class UserSerializer(serializers.ModelSerializer):
         return internal_value
 
     def update(self, instance, validated_data):  # noqa: C901
+        # Track approval status for notification
+        was_approved = instance.is_approved
+
         # Extract profile-specific fields
         bio = validated_data.pop("_bio", None)
         instrument = validated_data.pop("_instrument", None)
 
         # Perform standard update on User model
         instance = super().update(instance, validated_data)
+
+        # Notify user on approval
+        if not was_approved and instance.is_approved:
+            try:
+                from .email_utils import send_account_approved_email
+                send_account_approved_email(instance.email, instance.first_name)
+            except Exception as e:
+                # Don't fail the update if email fails
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Failed to send approval email: {e}")
 
         # Update related profiles if they exist, or save to preferences if admin
         preferences_changed = False
@@ -472,6 +487,9 @@ class StudentSerializer(serializers.ModelSerializer):
     )
 
     primary_teacher = PublicTeacherSerializer(read_only=True)
+    primary_teacher_id = serializers.PrimaryKeyRelatedField(
+        queryset=Teacher.objects.all(), source="primary_teacher", write_only=True, required=False, allow_null=True
+    )
 
     class Meta:
         model = Student
@@ -486,6 +504,7 @@ class StudentSerializer(serializers.ModelSerializer):
             "instrument",
             "instruments",
             "primary_teacher",
+            "primary_teacher_id",
             "enrollment_date",
             "birth_date",
             "total_lessons",

@@ -1,8 +1,18 @@
 from django.contrib.auth import get_user_model
-
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        if not self.user.is_approved:
+            raise serializers.ValidationError(
+                "Your account is pending approval by an administrator. Please wait for an email confirmation before you can log in."
+            )
+        return data
 
 
 class UserSerializer(serializers.ModelSerializer):

@@ -237,6 +237,7 @@ class UserViewSet(viewsets.ModelViewSet):
             first_name=first_name,
             last_name=last_name,
             is_active=True,
+            is_approved=True,  # Users created by admins are approved by default
         )
 
         try:

@@ -70,25 +70,30 @@ class RegisterView(APIView):
             last_name=last_name,
             role=actual_role,
             is_active=True,
+            is_approved=False,
         )
 
-        # Send welcome email using utility function
-        from apps.core.email_utils import send_welcome_email
+        # Notify student and admins
+        from apps.core.email_utils import (
+            send_admin_approval_notification,
+            send_registration_pending_email,
+        )
+        from apps.notifications.models import Notification
 
-        send_welcome_email(email, first_name)
+        send_registration_pending_email(email, first_name)
+        send_admin_approval_notification(user)
+        Notification.notify_admin_new_student_registration(user)
 
         if needs_approval:
             try:
-                from apps.notifications.models import Notification
-
                 Notification.notify_admin_instructor_request(user)
-            except ImportError:
+            except Exception:
                 pass
 
         serializer = UserSerializer(user)
         return Response(
             {
-                "message": "Account created successfully. You can now log in.",
+                "message": "Account created successfully. Your account is pending approval. You will receive an email once an instructor or admin has approved your access.",
                 "user": serializer.data,
             },
             status=status.HTTP_201_CREATED,

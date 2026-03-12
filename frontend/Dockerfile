@@ -15,6 +15,8 @@ FROM base AS builder
 COPY . .
 # Disable telemetry during build
 ENV NEXT_TELEMETRY_DISABLED=1
+ARG INTERNAL_API_URL=http://backend:8000/api
+ENV INTERNAL_API_URL=$INTERNAL_API_URL
 RUN npm run build
 
 # Production stage
@@ -23,6 +25,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV INTERNAL_API_URL=http://backend:8000/api
 
 # Create a non-root user
 RUN addgroup --system --gid 1001 nodejs && \

@@ -6,6 +6,7 @@ services:
   backend:
     build:
       target: production
+    env_file: .env.prod
     environment:
       DEBUG: "False"
 
@@ -13,6 +14,7 @@ services:
   q_cluster:
     build:
       target: production
+    env_file: .env.prod
 
   # Next.js Frontend
   frontend:

@@ -102,6 +102,7 @@ def complete_setup_wizard(request):
             role="admin",
             is_staff=True,
             is_active=True,
+            is_approved=True,
             timezone=data.get("timezone", "UTC"),
         )
 

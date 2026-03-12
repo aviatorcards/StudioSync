@@ -23,15 +23,16 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    # Base command (can be overridden)
-    command: gunicorn config.asgi:application --bind 0.0.0.0:8000 --workers 4 --worker-class uvicorn.workers.UvicornWorker
     ports:
       - "8000:8000"
+    volumes:
+      - media_data:/app/media
+      - static_data:/app/staticfiles
     environment:
       DEBUG: "False"
       DATABASE_URL: postgresql://studio_user:studio_password@db:5432/studiosync
       SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://10.0.0.250:3000}
       # AWS / Stripe Config
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
@@ -52,6 +53,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     command: python manage.py qcluster
+    volumes:
+      - media_data:/app/media
+      - static_data:/app/staticfiles
     environment:
       DATABASE_URL: postgresql://studio_user:studio_password@db:5432/studiosync
       SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
@@ -78,3 +82,5 @@ volumes:
   postgres_data:
   frontend_node_modules:
   frontend_next:
+  media_data:
+  static_data:

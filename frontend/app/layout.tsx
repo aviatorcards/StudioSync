@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     title: 'StudioSync - Music Studio Management',
     description: 'Sync your studio, students, and schedule — all in one place',
     icons: {
-        icon: process.env.NODE_ENV === 'development' ? '/logo-dev.svg' : '/favicon.ico',
+        icon: process.env.NODE_ENV === 'development' ? '/logo-dev.svg' : '/logo.png',
         apple: '/logo.png'
     }
 }

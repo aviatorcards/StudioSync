@@ -79,3 +79,4 @@ cypress/screenshots/
 cypress/reports/
 cypress/results/
 cypress/.cache/
+frontend/public/logo-new.png

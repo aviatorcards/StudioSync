@@ -1,0 +1,25 @@
+# Production stack: Optimized images with standalone builds
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  # Django Backend
+  backend:
+    build:
+      target: production
+    env_file: .env.prod
+    environment:
+      DEBUG: "False"
+
+  # Background Task Worker
+  q_cluster:
+    build:
+      target: production
+    env_file: .env.prod
+
+  # Next.js Frontend
+  frontend:
+    build:
+      target: production
+    command: node server.js
+    environment:
+      NODE_ENV: production

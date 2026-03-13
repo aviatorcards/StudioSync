@@ -31,6 +31,7 @@ yarn-error.log*
 
 # Environment
 .env
+.env.prod
 .env.local
 .env.development.local
 .env.test.local
@@ -78,3 +79,4 @@ cypress/screenshots/
 cypress/reports/
 cypress/results/
 cypress/.cache/
+frontend/public/logo-new.png

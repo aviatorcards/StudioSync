@@ -76,7 +76,7 @@ export default function SetupPage() {
                     <div className="flex items-center space-x-2">
                         <div className="relative h-10 w-10">
                             <Image
-                                src="/logo-dev.svg"
+                                src="/logo.png"
                                 alt="StudioSync Logo"
                                 fill
                                 className="object-contain"

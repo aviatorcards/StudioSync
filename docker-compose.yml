@@ -17,6 +17,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   # Django Backend
   backend:
@@ -33,7 +34,7 @@ services:
       DATABASE_URL: postgresql://studio_user:studio_password@db:5432/studiosync
       SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://10.0.0.250:3000}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://10.0.0.162:3000}
       # AWS / Stripe Config
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
@@ -46,6 +47,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    restart: unless-stopped
 
   # Background Task Worker
   q_cluster:
@@ -64,6 +66,7 @@ services:
         condition: service_healthy
       backend:
         condition: service_started
+    restart: unless-stopped
 
   # Next.js Frontend
   frontend:
@@ -77,6 +80,7 @@ services:
       INTERNAL_API_URL: http://backend:8000/api
     depends_on:
       - backend
+    restart: unless-stopped
 
 volumes:
   postgres_data:

@@ -9,12 +9,14 @@ services:
     env_file: .env.prod
     environment:
       DEBUG: "False"
+    restart: unless-stopped
 
   # Background Task Worker
   q_cluster:
     build:
       target: production
     env_file: .env.prod
+    restart: unless-stopped
 
   # Next.js Frontend
   frontend:
@@ -23,3 +25,4 @@ services:
     command: node server.js
     environment:
       NODE_ENV: production
+    restart: unless-stopped

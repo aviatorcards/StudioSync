@@ -22,7 +22,19 @@ services:
   frontend:
     build:
       target: production
+      args:
+        NEXT_PUBLIC_USERTOUR_TOKEN: ${NEXT_PUBLIC_USERTOUR_TOKEN:-}
+        NEXT_PUBLIC_USERTOUR_HOST: ${NEXT_PUBLIC_USERTOUR_HOST:-}
     command: node server.js
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_USERTOUR_TOKEN: ${NEXT_PUBLIC_USERTOUR_TOKEN:-}
+      NEXT_PUBLIC_USERTOUR_HOST: ${NEXT_PUBLIC_USERTOUR_HOST:-}
+    restart: unless-stopped
+
+  # UserTour Server (Production Target)
+  usertour:
+    env_file: .env.prod
     environment:
       NODE_ENV: production
     restart: unless-stopped

@@ -32,7 +32,8 @@
         "recharts": "^3.6.0",
         "stream-chat": "^9.35.1",
         "stream-chat-react": "^13.14.1",
-        "tailwind-merge": "^3.4.0"
+        "tailwind-merge": "^3.4.0",
+        "usertour.js": "^0.0.16"
     },
     "devDependencies": {
         "@types/node": "^20.19.27",

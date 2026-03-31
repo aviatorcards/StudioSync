@@ -12,11 +12,43 @@ services:
       POSTGRES_PASSWORD: studio_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U studio_user -d studiosync" ]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # UserTour Server
+  usertour:
+    image: usertour/usertour:latest
+    ports:
+      - "8011:80"
+    environment:
+      DATABASE_URL: postgresql://studio_user:studio_password@db:5432/usertour?sslmode=disable
+      DATABASE_DIRECT_URL: postgresql://studio_user:studio_password@db:5432/usertour?sslmode=disable
+      Redis_HOST: redis
+      Redis_PORT: 6379
+      APP_HOMEPAGE_URL: ${USERTOUR_APP_URL:-http://localhost:8011}
+      JWT_SECRET: ${USERTOUR_JWT_SECRET:-dev-secret-key-change-this}
+      EMAIL_AUTH_ENABLED: "true"
+      # Additional config can be added here
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 
   # Django Backend
@@ -77,6 +109,8 @@ services:
       - "3000:3000"
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-/api}
+      NEXT_PUBLIC_USERTOUR_TOKEN: ${NEXT_PUBLIC_USERTOUR_TOKEN:-}
+      NEXT_PUBLIC_USERTOUR_HOST: ${NEXT_PUBLIC_USERTOUR_HOST:-}
       INTERNAL_API_URL: http://backend:8000/api
     depends_on:
       - backend

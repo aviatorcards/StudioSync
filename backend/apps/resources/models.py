@@ -118,6 +118,9 @@ class Resource(models.Model):
         max_length=20, blank=True, help_text="Musical key (C, G, Am, etc.)"
     )
     tempo = models.CharField(max_length=50, blank=True, help_text="Tempo marking or BPM")
+    bpm = models.PositiveIntegerField(null=True, blank=True, help_text="Beats per minute (numeric)")
+    capo = models.PositiveSmallIntegerField(null=True, blank=True, help_text="Capo fret (0 = no capo)")
+    chord_content = models.TextField(blank=True, help_text="ChordPro-format chord chart text")
 
     # Physical item tracking
     is_physical_item = models.BooleanField(default=False)
@@ -203,7 +206,15 @@ class ResourceCheckout(models.Model):
 class Setlist(models.Model):
     """
     A collection or "setlist" of resources, like a songbook for a recital.
+    Can optionally belong to a band for collaborative approval workflows.
     """
+
+    STATUS_CHOICES = [
+        ("draft", "Draft"),
+        ("proposed", "Proposed"),
+        ("confirmed", "Confirmed"),
+        ("archived", "Archived"),
+    ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     studio = models.ForeignKey(Studio, on_delete=models.CASCADE, related_name="setlists")
@@ -211,8 +222,25 @@ class Setlist(models.Model):
         User, on_delete=models.SET_NULL, null=True, related_name="created_setlists"
     )
 
+    # Band association (optional – when set, enables collaborative features)
+    band = models.ForeignKey(
+        "core.Band",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="setlists",
+        help_text="If set, this setlist belongs to a specific band",
+    )
+
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
+
+    # Gig context
+    event_date = models.DateTimeField(
+        null=True, blank=True, help_text="Date/time of the gig or performance"
+    )
+    venue = models.CharField(max_length=300, blank=True, help_text="Venue or location name")
 
     resources = models.ManyToManyField(Resource, through="SetlistResource", related_name="setlists")
 
@@ -222,7 +250,6 @@ class Setlist(models.Model):
     class Meta:
         db_table = "resource_setlists"
         ordering = ["-created_at"]
-        unique_together = ("studio", "name")
 
     def __str__(self):
         return self.name
@@ -230,18 +257,68 @@ class Setlist(models.Model):
 
 class SetlistResource(models.Model):
     """
-    Through model to link Resources to a Setlist, preserving order.
+    An item in a setlist. Can be a song (with optional linked resource/chart)
+    or a break marker (intermission, tuning, talking, etc.).
     """
+
+    ITEM_TYPE_CHOICES = [
+        ("song", "Song"),
+        ("break", "Break"),
+    ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     setlist = models.ForeignKey(Setlist, on_delete=models.CASCADE)
-    resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
+
+    # Song info — standalone, no file needed
+    title = models.CharField(max_length=300, blank=True, help_text="Song title or break label")
+    artist = models.CharField(max_length=300, blank=True, help_text="Artist / composer name")
+    item_type = models.CharField(max_length=20, choices=ITEM_TYPE_CHOICES, default="song")
+    duration_minutes = models.PositiveIntegerField(
+        null=True, blank=True, help_text="Estimated duration in minutes"
+    )
+
+    # Optional link to a resource (sheet music, charts, etc.)
+    resource = models.ForeignKey(
+        Resource, on_delete=models.SET_NULL, null=True, blank=True,
+        help_text="Optional linked resource (sheet music, chord chart, etc.)"
+    )
+
     order = models.PositiveIntegerField()
+    notes = models.CharField(
+        max_length=500, blank=True, help_text="Per-song notes (e.g. key, tempo, capo)"
+    )
 
     class Meta:
         db_table = "resource_setlist_resources"
         ordering = ["order"]
-        unique_together = ("setlist", "resource")
 
     def __str__(self):
-        return f"{self.setlist.name} - {self.resource.title} (Order: {self.order})"
+        label = self.title or (self.resource.title if self.resource else "Untitled")
+        return f"{self.setlist.name} - {label} (#{self.order + 1})"
+
+
+class SetlistComment(models.Model):
+    """
+    Comments and approval confirmations on a setlist from band members.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    setlist = models.ForeignKey(Setlist, on_delete=models.CASCADE, related_name="comments")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="setlist_comments")
+
+    text = models.TextField(help_text="Comment text")
+    is_approval = models.BooleanField(
+        default=False,
+        help_text="If True, this comment doubles as an approval confirmation",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "resource_setlist_comments"
+        ordering = ["created_at"]
+
+    def __str__(self):
+        action = "approved" if self.is_approval else "commented on"
+        return f"{self.user.get_full_name()} {action} {self.setlist.name}"

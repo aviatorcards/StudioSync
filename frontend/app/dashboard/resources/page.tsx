@@ -93,6 +93,23 @@ function detectType(file: File): ResourceType {
     return 'other'
 }
 
+// Derive the display category from the actual file URL extension so that files
+// uploaded via the Songbook (resource_type = 'tablature', 'sheet_music', etc.)
+// still appear under the correct tab in the Resources filter.
+function getResourceCategory(r: Resource): ResourceType {
+    if (r.resource_type === 'link' || (!r.file_url && r.external_url)) return 'link'
+    const url = (r.file_url ?? '').toLowerCase().split('?')[0]
+    if (url.endsWith('.pdf')) return 'pdf'
+    if (/\.(mp3|wav|ogg|flac|aac|m4a|aiff)$/.test(url)) return 'audio'
+    if (/\.(mp4|mov|avi|mkv|webm|m4v)$/.test(url)) return 'video'
+    if (/\.(png|jpe?g|gif|webp|svg|heic)$/.test(url)) return 'image'
+    // Fall back to resource_type only when it's a recognised category value
+    if (['pdf', 'audio', 'video', 'image', 'other'].includes(r.resource_type)) {
+        return r.resource_type as ResourceType
+    }
+    return 'other'
+}
+
 function formatBytes(bytes: number) {
     if (bytes < 1024) return `${bytes} B`
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
@@ -266,6 +283,7 @@ export default function ResourcesPage() {
 
     const handlePanelDrop = (e: React.DragEvent) => {
         e.preventDefault()
+        e.stopPropagation()
         setPanelDragging(false)
         addFilesToQueue(e.dataTransfer.files)
     }
@@ -360,7 +378,7 @@ export default function ResourcesPage() {
     const filteredResources = (resources as Resource[]).filter(r => {
         const matchSearch = r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             r.description.toLowerCase().includes(searchQuery.toLowerCase())
-        const matchType = filterType === 'all' || r.resource_type === filterType
+        const matchType = filterType === 'all' || getResourceCategory(r) === filterType
         const matchFolder = activeFolderId === 'root'
             ? r.folder === null
             : r.folder === activeFolderId

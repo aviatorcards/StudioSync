@@ -6,13 +6,15 @@ import {
     Music, Users as UsersIcon, Loader2, ArrowLeft,
     Mail, Upload, Download, ExternalLink, Trash,
     FileText, Video, Image as ImageIcon, Link as LinkIcon,
-    File, Search, Plus, X, Sparkles, BookOpen, ChevronLeft
+    File, Search, Plus, X, Sparkles, BookOpen, ChevronLeft,
+    ListMusic, Library
 } from 'lucide-react'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from '@/components/ui/dialog'
 import { proxyFileUrl } from '@/lib/utils'
+import BandSetlists from '@/components/BandSetlists'
 
 type ResourceType = 'pdf' | 'audio' | 'video' | 'image' | 'link' | 'other'
 
@@ -61,6 +63,7 @@ export default function BandDetailPage() {
     const [filterType, setFilterType] = useState<ResourceType | 'all'>('all')
     const [deleting, setDeleting] = useState<string | null>(null)
     const [isDragging, setIsDragging] = useState(false)
+    const [activeTab, setActiveTab] = useState<'resources' | 'setlists'>('resources')
 
     const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -372,7 +375,39 @@ export default function BandDetailPage() {
                 </div>
             )}
 
+            {/* Tab Switcher */}
+            <div className="flex p-1.5 bg-white rounded-[2rem] border border-gray-100 shadow-sm">
+                <button
+                    onClick={() => setActiveTab('resources')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all ${
+                        activeTab === 'resources'
+                            ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                            : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                    }`}
+                >
+                    <Library className="w-4 h-4" />
+                    Resources
+                </button>
+                <button
+                    onClick={() => setActiveTab('setlists')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all ${
+                        activeTab === 'setlists'
+                            ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                            : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                    }`}
+                >
+                    <ListMusic className="w-4 h-4" />
+                    Setlists
+                </button>
+            </div>
+
+            {/* Setlists Tab */}
+            {activeTab === 'setlists' && (
+                <BandSetlists bandId={bandId} bandName={band.name} />
+            )}
+
             {/* Resources Section */}
+            {activeTab === 'resources' && (
             <div className="space-y-6">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div className="space-y-2">
@@ -503,6 +538,7 @@ export default function BandDetailPage() {
                     </div>
                 )}
             </div>
+            )}
 
             {/* Upload Modal */}
             <Dialog

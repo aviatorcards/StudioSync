@@ -394,9 +394,20 @@ export default function SettingsPage() {
         try {
             if (settingsType === 'Studio') {
                 // Fetch current studio to get latest settings for merging
-                const currentStudioRes = await api.get('/core/studios/current/')
-                const currentStudio = currentStudioRes.data
-                const currentSettings = currentStudio.settings || {}
+                let currentSettings = {}
+                let method: 'post' | 'patch' = 'patch'
+                
+                try {
+                    const currentStudioRes = await api.get('/core/studios/current/')
+                    currentSettings = currentStudioRes.data.settings || {}
+                    method = 'patch'
+                } catch (err: any) {
+                    if (err.response?.status === 404) {
+                        method = 'post'
+                    } else {
+                        throw err
+                    }
+                }
 
                 // Prepare update payload
                 const updatePayload = {
@@ -420,7 +431,11 @@ export default function SettingsPage() {
                     }
                 }
 
-                const response = await api.patch('/core/studios/current/', updatePayload)
+                if (method === 'post') {
+                    await api.post('/core/studios/current/', updatePayload)
+                } else {
+                    await api.patch('/core/studios/current/', updatePayload)
+                }
 
                 // Update local user context if needed (though usually we'd refresh the whole user)
                 // For now, assume the toast suggests success

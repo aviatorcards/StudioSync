@@ -12,7 +12,12 @@ services:
       POSTGRES_PASSWORD: studio_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
+<<<<<<< HEAD
       - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+=======
+    ports:
+      - "5432:5432"
+>>>>>>> ac5fde9 (additions)
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U studio_user -d studiosync" ]
       interval: 10s
@@ -56,13 +61,14 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      network: host
     ports:
       - "8000:8000"
     volumes:
       - media_data:/app/media
       - static_data:/app/staticfiles
     environment:
-      DEBUG: "False"
+      DEBUG: "True"
       DATABASE_URL: postgresql://studio_user:studio_password@db:5432/studiosync
       SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
@@ -86,6 +92,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      network: host
     command: python manage.py qcluster
     volumes:
       - media_data:/app/media
@@ -105,6 +112,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      network: host
     ports:
       - "3000:3000"
     environment:

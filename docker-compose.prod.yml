@@ -6,6 +6,7 @@ services:
   backend:
     build:
       target: production
+      network: host
     env_file: .env.prod
     environment:
       DEBUG: "False"
@@ -15,6 +16,7 @@ services:
   q_cluster:
     build:
       target: production
+      network: host
     env_file: .env.prod
     restart: unless-stopped
 
@@ -22,9 +24,13 @@ services:
   frontend:
     build:
       target: production
+<<<<<<< HEAD
       args:
         NEXT_PUBLIC_USERTOUR_TOKEN: ${NEXT_PUBLIC_USERTOUR_TOKEN:-}
         NEXT_PUBLIC_USERTOUR_HOST: ${NEXT_PUBLIC_USERTOUR_HOST:-}
+=======
+      network: host
+>>>>>>> ac5fde9 (additions)
     command: node server.js
     environment:
       NODE_ENV: production
@@ -38,3 +44,69 @@ services:
     environment:
       NODE_ENV: production
     restart: unless-stopped
+
+  # Usertour - Dashboard and SDK Backend
+  usertour_app:
+    build:
+      context: ./usertour
+      dockerfile: Dockerfile
+      network: host
+    env_file:
+      - .env.prod
+    environment:
+      - PORT=8011
+      - NEST_SERVER_PORT=3011
+      - DATABASE_URL=postgresql://postgres:postgres@usertour_db:5432/usertour?schema=usertour&sslmode=disable
+      - DATABASE_DIRECT_URL=postgresql://postgres:postgres@usertour_db:5432/usertour?schema=usertour&sslmode=disable
+      - Redis_HOST=usertour_redis
+      - Redis_PORT=6379
+      - JWT_SECRET=${USERTOUR_JWT_SECRET:-usertour-default-secret}
+      - APP_HOMEPAGE_URL=${USERTOUR_APP_HOMEPAGE_URL:-http://10.0.0.162:8011}
+      - API_URL=${USERTOUR_API_URL:-http://10.0.0.162:8011}
+      - USERTOUR_COOKIE_SECURE=false
+      - EMAIL_AUTH_ENABLED=true
+      - LOG_LEVEL=debug
+    depends_on:
+      usertour_db:
+        condition: service_healthy
+      usertour_redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Usertour Database
+  usertour_db:
+    image: postgres:15-alpine
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=usertour
+    volumes:
+      - usertour_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # Usertour Redis
+  usertour_redis:
+    image: redis:alpine
+    ports:
+      - "6380:6379"
+    volumes:
+      - usertour_redis_data:/data
+    healthcheck:
+      test: [ 'CMD', 'redis-cli', 'ping' ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  usertour_postgres_data:
+  usertour_redis_data:

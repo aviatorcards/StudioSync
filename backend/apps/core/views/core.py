@@ -501,28 +501,39 @@ class StudioViewSet(viewsets.ModelViewSet):
         else:
             return Studio.objects.none()
 
-    @action(detail=False, methods=["get", "put", "patch"])
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+    @action(detail=False, methods=["get", "put", "patch", "post"])
     def current(self, request):
-        """Get or update the current context studio"""
+        """Get, update or create the current context studio"""
         # For MVP, assuming 1 studio per admin
         studio = Studio.objects.filter(owner=request.user).first()
 
-        if not studio:
-            return Response(
-                {"detail": "No studio found for this user"}, status=status.HTTP_404_NOT_FOUND
-            )
-
         if request.method == "GET":
+            if not studio:
+                return Response(
+                    {"detail": "No studio found for this user"}, status=status.HTTP_404_NOT_FOUND
+                )
             serializer = self.get_serializer(studio)
             return Response(serializer.data)
 
-        # Check permissions for update
+        # Check permissions for update/create
         if request.user.role != "admin":
             return Response(
-                {"detail": "Only admins can update studio settings"},
+                {"detail": "Only admins can manage studio settings"},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
+        if not studio:
+            # Handle creation via POST/PUT/PATCH if it doesn't exist
+            serializer = self.get_serializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save(owner=request.user)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # Update existing studio
         serializer = self.get_serializer(studio, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()

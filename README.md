@@ -160,3 +160,17 @@ Distributed under the GPL‑3.0 License. See `LICENSE` for more information.
 <div align="center">
   Made with ❤️ by the StudioSync Team
 </div>
+ntation
+├── scripts/            # Deployment & maintenance scripts
+└── docker-compose.yml  # Container orchestration
+```
+
+## 📄 License
+
+Distributed under the GPL‑3.0 License. See `LICENSE` for more information.
+
+---
+
+<div align="center">
+  Made with ❤️ by the StudioSync Team
+</div>

@@ -373,10 +373,38 @@ class StudioSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "owner", "subdomain"]
 
+    def to_internal_value(self, data):
+        # Support flat settings fields (from some frontend forms)
+        if hasattr(data, "dict"):
+            data = data.dict()
+        else:
+            data = data.copy() if hasattr(data, "copy") else dict(data)
+
+        settings_data = data.get("settings", {})
+        if isinstance(settings_data, str):
+            import json
+            try:
+                settings_data = json.loads(settings_data)
+            except:
+                settings_data = {}
+
+        # If these are in the root, move them to settings
+        for key in ["default_lesson_duration", "cancellation_notice_period", "business_start_hour", "business_end_hour", "studio_description"]:
+            if key in data and key not in settings_data:
+                settings_data[key] = data.pop(key)
+        
+        if settings_data:
+            data["settings"] = settings_data
+
+        return super().to_internal_value(data)
+
     def update(self, instance, validated_data):
-        # Extract fields to see if they changed
-        cover_image = validated_data.get('cover_image')
-        logo = validated_data.get('logo')
+        # Merge settings instead of overwriting
+        settings_data = validated_data.pop("settings", None)
+        if settings_data:
+            if not instance.settings:
+                instance.settings = {}
+            instance.settings.update(settings_data)
 
         instance = super().update(instance, validated_data)
 
@@ -393,7 +421,7 @@ class StudioSerializer(serializers.ModelSerializer):
             else:
                 instance.settings.pop('logo_url', None)
         
-        if 'cover_image' in validated_data or 'logo' in validated_data:
+        if settings_data or 'cover_image' in validated_data or 'logo' in validated_data:
             instance.save()
             
         return instance

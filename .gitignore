@@ -49,6 +49,7 @@ CLAUDE.md
 
 # Docker
 .dockerignore
+docker-compose.prod.yml
 
 # Testing
 .coverage

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Resource, ResourceCheckout, ResourceFolder, Setlist, SetlistResource
+from .models import Resource, ResourceCheckout, ResourceFolder, Setlist, SetlistComment, SetlistResource
 
 
 class ResourceFolderSerializer(serializers.ModelSerializer):
@@ -59,6 +59,9 @@ class ResourceSerializer(serializers.ModelSerializer):
             "composer",
             "key_signature",
             "tempo",
+            "bpm",
+            "capo",
+            "chord_content",
         ]
         read_only_fields = ["uploaded_by", "file_size"]
 
@@ -129,20 +132,54 @@ class ResourceCheckoutSerializer(serializers.ModelSerializer):
 
 
 class SetlistResourceSerializer(serializers.ModelSerializer):
-    """Serializer for items within a setlist"""
+    """Serializer for items within a setlist (songs or breaks)"""
 
-    resource = ResourceSerializer(read_only=True)
+    resource = ResourceSerializer(read_only=True, allow_null=True)
+    resource_id = serializers.PrimaryKeyRelatedField(
+        queryset=Resource.objects.all(), source="resource", required=False, allow_null=True,
+        write_only=True,
+    )
 
     class Meta:
         model = SetlistResource
-        fields = ["id", "order", "resource"]
+        fields = [
+            "id", "order", "title", "artist", "item_type",
+            "duration_minutes", "notes", "resource", "resource_id",
+        ]
+
+
+class SetlistCommentSerializer(serializers.ModelSerializer):
+    """Serializer for setlist comments and approvals"""
+
+    user_name = serializers.ReadOnlyField(source="user.get_full_name")
+    user_initials = serializers.ReadOnlyField(source="user.initials")
+
+    class Meta:
+        model = SetlistComment
+        fields = [
+            "id",
+            "setlist",
+            "user",
+            "user_name",
+            "user_initials",
+            "text",
+            "is_approval",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["user", "setlist", "created_at", "updated_at"]
 
 
 class SetlistSerializer(serializers.ModelSerializer):
-    """Serializer for a setlist of resources"""
+    """Serializer for a setlist of resources with collaborative features"""
 
     resources = SetlistResourceSerializer(source="setlistresource_set", many=True, read_only=True)
+    comments = SetlistCommentSerializer(many=True, read_only=True)
     created_by_name = serializers.ReadOnlyField(source="created_by.get_full_name")
+    band_name = serializers.ReadOnlyField(source="band.name")
+    approval_count = serializers.SerializerMethodField()
+    total_members = serializers.SerializerMethodField()
+    approved_by = serializers.SerializerMethodField()
 
     class Meta:
         model = Setlist
@@ -150,11 +187,42 @@ class SetlistSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "description",
+            "status",
+            "event_date",
+            "venue",
+            "band",
+            "band_name",
             "studio",
             "created_by",
             "created_by_name",
             "created_at",
             "updated_at",
             "resources",
+            "comments",
+            "approval_count",
+            "total_members",
+            "approved_by",
         ]
         read_only_fields = ["studio", "created_by"]
+
+    def get_approval_count(self, obj):
+        return obj.comments.filter(is_approval=True).values("user").distinct().count()
+
+    def get_total_members(self, obj):
+        if obj.band:
+            return obj.band.members.count()
+        return 0
+
+    def get_approved_by(self, obj):
+        approvals = obj.comments.filter(is_approval=True).select_related("user")
+        seen = set()
+        result = []
+        for comment in approvals:
+            if comment.user_id not in seen:
+                seen.add(comment.user_id)
+                result.append({
+                    "user_id": str(comment.user_id),
+                    "user_name": comment.user.get_full_name(),
+                    "user_initials": comment.user.initials,
+                })
+        return result

@@ -126,6 +126,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             title: 'TOOLS',
             items: [
                 { name: 'Resources', href: '/dashboard/resources', icon: Library, roles: ['admin', 'teacher', 'student'], featureFlag: 'resources_enabled' },
+                { name: 'Songbook', href: '/dashboard/songbook', icon: Music, roles: ['admin', 'teacher', 'student'] },
                 { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare, roles: ['admin', 'teacher', 'student'], featureFlag: 'messaging_enabled' },
                 { name: 'Notifications', href: '/dashboard/notifications', icon: Bell, badge: unreadCount > 0 ? unreadCount : undefined, roles: ['admin', 'teacher', 'student'] },
                 { name: 'Goals', href: '/dashboard/goals', icon: Target, roles: ['admin', 'teacher', 'student'], featureFlag: 'goals_enabled' },

@@ -11,8 +11,8 @@ from rest_framework.response import Response
 
 from apps.core.models import Student, Teacher
 
-from .models import Resource, ResourceFolder, Setlist, SetlistResource
-from .serializers import ResourceFolderSerializer, ResourceSerializer, SetlistSerializer
+from .models import Resource, ResourceFolder, Setlist, SetlistComment, SetlistResource
+from .serializers import ResourceFolderSerializer, ResourceSerializer, SetlistCommentSerializer, SetlistSerializer
 
 from django.db.models import Q
 
@@ -284,6 +284,7 @@ class ResourceViewSet(viewsets.ModelViewSet):
 class SetlistViewSet(viewsets.ModelViewSet):
     """
     ViewSet for creating and managing songbook setlists.
+    Supports band-scoped setlists with comments and approval workflows.
     """
 
     serializer_class = SetlistSerializer
@@ -308,7 +309,16 @@ class SetlistViewSet(viewsets.ModelViewSet):
         if not studio:
             return Setlist.objects.none()
 
-        return Setlist.objects.filter(studio=studio).prefetch_related("resources")
+        qs = Setlist.objects.filter(studio=studio).prefetch_related(
+            "resources", "comments", "comments__user"
+        ).select_related("band", "created_by")
+
+        # Filter by band if query param is provided
+        band_param = self.request.query_params.get("band")
+        if band_param:
+            qs = qs.filter(band_id=band_param)
+
+        return qs
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -317,9 +327,56 @@ class SetlistViewSet(viewsets.ModelViewSet):
             raise drf_serializers.ValidationError("Could not determine user's studio.")
         serializer.save(created_by=user, studio=studio)
 
+    @action(detail=True, methods=["post"], url_path="add-item")
+    def add_item(self, request, pk=None):
+        """Add a song or break to a setlist. No file upload required."""
+        setlist = self.get_object()
+
+        title = request.data.get("title", "").strip()
+        artist = request.data.get("artist", "").strip()
+        item_type = request.data.get("item_type", "song")
+        notes = request.data.get("notes", "")
+        duration_minutes = request.data.get("duration_minutes")
+        resource_id = request.data.get("resource_id")
+
+        if item_type == "song" and not title:
+            return Response(
+                {"error": "Song title is required."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if item_type == "break" and not title:
+            title = "Break"
+
+        order = setlist.setlistresource_set.count()
+
+        item_data = {
+            "setlist": setlist,
+            "title": title,
+            "artist": artist,
+            "item_type": item_type,
+            "notes": notes,
+            "order": order,
+        }
+
+        if duration_minutes:
+            try:
+                item_data["duration_minutes"] = int(duration_minutes)
+            except (ValueError, TypeError):
+                pass
+
+        if resource_id:
+            try:
+                resource = Resource.objects.get(id=resource_id, studio=setlist.studio)
+                item_data["resource"] = resource
+            except Resource.DoesNotExist:
+                pass
+
+        SetlistResource.objects.create(**item_data)
+        return Response(SetlistSerializer(setlist).data, status=status.HTTP_201_CREATED)
+
     @action(detail=True, methods=["post"], url_path="add-resource")
     def add_resource(self, request, pk=None):
-        """Add a resource to a setlist."""
+        """Add a resource (chart/file) to a setlist as a song entry."""
         setlist = self.get_object()
         resource_id = request.data.get("resource_id")
 
@@ -335,30 +392,35 @@ class SetlistViewSet(viewsets.ModelViewSet):
                 {"error": "Resource not found in this studio."}, status=status.HTTP_404_NOT_FOUND
             )
 
-        order = setlist.resources.count()
-        SetlistResource.objects.create(setlist=setlist, resource=resource, order=order)
+        order = setlist.setlistresource_set.count()
+        notes = request.data.get("notes", "")
+        SetlistResource.objects.create(
+            setlist=setlist, resource=resource, order=order, notes=notes,
+            title=resource.title, artist=resource.composer or "",
+        )
 
-        return Response(SetlistSerializer(setlist).data)
+        return Response(SetlistSerializer(setlist).data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=["post"], url_path="remove-resource")
-    def remove_resource(self, request, pk=None):
-        """Remove a resource from a setlist."""
+    @action(detail=True, methods=["post"], url_path="remove-item")
+    def remove_item(self, request, pk=None):
+        """Remove an item from a setlist by its item ID."""
         setlist = self.get_object()
-        resource_id = request.data.get("resource_id")
+        item_id = request.data.get("item_id")
 
-        if not resource_id:
+        if not item_id:
             return Response(
-                {"error": "Resource ID is required."}, status=status.HTTP_400_BAD_REQUEST
+                {"error": "Item ID is required."}, status=status.HTTP_400_BAD_REQUEST
             )
 
         try:
-            item = SetlistResource.objects.get(setlist=setlist, resource_id=resource_id)
+            item = SetlistResource.objects.get(id=item_id, setlist=setlist)
             item.delete()
         except SetlistResource.DoesNotExist:
             return Response(
-                {"error": "Resource not found in this setlist."}, status=status.HTTP_404_NOT_FOUND
+                {"error": "Item not found in this setlist."}, status=status.HTTP_404_NOT_FOUND
             )
 
+        # Re-number remaining items
         for i, item in enumerate(setlist.setlistresource_set.all()):
             item.order = i
             item.save()
@@ -367,21 +429,110 @@ class SetlistViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="reorder")
     def reorder(self, request, pk=None):
-        """Re-order the resources in a setlist."""
+        """Re-order items in a setlist by item IDs."""
         setlist = self.get_object()
-        resource_ids = request.data.get("resource_ids", [])
+        item_ids = request.data.get("item_ids", [])
 
-        if not isinstance(resource_ids, list):
+        if not isinstance(item_ids, list):
             return Response(
-                {"error": "`resource_ids` must be a list."}, status=status.HTTP_400_BAD_REQUEST
+                {"error": "`item_ids` must be a list."}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        for i, resource_id in enumerate(resource_ids):
+        for i, item_id in enumerate(item_ids):
             try:
-                item = SetlistResource.objects.get(setlist=setlist, resource_id=resource_id)
+                item = SetlistResource.objects.get(id=item_id, setlist=setlist)
                 item.order = i
                 item.save()
             except SetlistResource.DoesNotExist:
                 pass
+
+        return Response(SetlistSerializer(setlist).data)
+
+    @action(detail=True, methods=["post"], url_path="comment")
+    def add_comment(self, request, pk=None):
+        """Add a comment to a setlist."""
+        setlist = self.get_object()
+        text = request.data.get("text", "").strip()
+        is_approval = request.data.get("is_approval", False)
+
+        if not text:
+            return Response(
+                {"error": "Comment text is required."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        comment = SetlistComment.objects.create(
+            setlist=setlist,
+            user=request.user,
+            text=text,
+            is_approval=is_approval,
+        )
+
+        # If approval and setlist is in proposed status, check if all members approved
+        if is_approval and setlist.status == "proposed" and setlist.band:
+            total_members = setlist.band.members.count()
+            approval_count = setlist.comments.filter(
+                is_approval=True
+            ).values("user").distinct().count()
+            if total_members > 0 and approval_count >= total_members:
+                setlist.status = "confirmed"
+                setlist.save()
+
+        return Response(SetlistSerializer(setlist).data)
+
+    @action(detail=True, methods=["post"], url_path="approve")
+    def approve(self, request, pk=None):
+        """Quick-approve a setlist (creates an approval comment)."""
+        setlist = self.get_object()
+
+        # Check if user already approved
+        already_approved = SetlistComment.objects.filter(
+            setlist=setlist, user=request.user, is_approval=True
+        ).exists()
+
+        if already_approved:
+            return Response(
+                {"error": "You have already approved this setlist."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        text = request.data.get("text", "Looks good. Let's ship! \U0001f3b8")
+        SetlistComment.objects.create(
+            setlist=setlist,
+            user=request.user,
+            text=text,
+            is_approval=True,
+        )
+
+        # Auto-confirm if all band members have approved
+        if setlist.band and setlist.status == "proposed":
+            total_members = setlist.band.members.count()
+            approval_count = setlist.comments.filter(
+                is_approval=True
+            ).values("user").distinct().count()
+            if total_members > 0 and approval_count >= total_members:
+                setlist.status = "confirmed"
+                setlist.save()
+
+        return Response(SetlistSerializer(setlist).data)
+
+    @action(detail=True, methods=["post"], url_path="revoke-approval")
+    def revoke_approval(self, request, pk=None):
+        """Revoke a previous approval."""
+        setlist = self.get_object()
+
+        deleted, _ = SetlistComment.objects.filter(
+            setlist=setlist, user=request.user, is_approval=True
+        ).delete()
+
+        if not deleted:
+            return Response(
+                {"error": "No approval found to revoke."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # If setlist was confirmed and someone revokes, revert to proposed
+        if setlist.status == "confirmed":
+            setlist.status = "proposed"
+            setlist.save()
 
         return Response(SetlistSerializer(setlist).data)

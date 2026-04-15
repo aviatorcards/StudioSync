@@ -45,6 +45,7 @@ yarn-error.log*
 *~
 **/.DS_Store
 cookies.txt
+CLAUDE.md
 
 # Docker
 .dockerignore

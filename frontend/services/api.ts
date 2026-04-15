@@ -60,8 +60,20 @@ api.interceptors.response.use(
 
 export default api
 
-export const getSetlists = () => api.get('/resources/setlists')
-export const createSetlist = (data: { name: string; description: string }) => api.post('/resources/setlists', data)
-export const addResourceToSetlist = (setlistId: string, resourceId: string) => api.post(`/resources/setlists/${setlistId}/add-resource`, { resource_id: resourceId })
-export const removeResourceFromSetlist = (setlistId: string, resourceId: string) => api.post(`/resources/setlists/${setlistId}/remove-resource`, { resource_id: resourceId })
-export const reorderSetlist = (setlistId: string, resourceIds: string[]) => api.post(`/resources/setlists/${setlistId}/reorder`, { resource_ids: resourceIds })
+// Setlist API
+export const getSetlists = (bandId?: string) => api.get('/resources/setlists', { params: bandId ? { band: bandId } : {} })
+export const getSetlist = (setlistId: string) => api.get(`/resources/setlists/${setlistId}`)
+export const createSetlist = (data: { name: string; description?: string; band?: string; status?: string; event_date?: string; venue?: string }) => api.post('/resources/setlists', data)
+export const updateSetlist = (setlistId: string, data: { name?: string; description?: string; status?: string; event_date?: string; venue?: string }) => api.patch(`/resources/setlists/${setlistId}`, data)
+export const deleteSetlist = (setlistId: string) => api.delete(`/resources/setlists/${setlistId}`)
+
+// Setlist Items (songs & breaks)
+export const addSetlistItem = (setlistId: string, data: { title: string; artist?: string; notes?: string; item_type?: string; duration_minutes?: number; resource_id?: string }) => api.post(`/resources/setlists/${setlistId}/add-item`, data)
+export const addResourceToSetlist = (setlistId: string, resourceId: string, notes?: string) => api.post(`/resources/setlists/${setlistId}/add-resource`, { resource_id: resourceId, notes })
+export const removeSetlistItem = (setlistId: string, itemId: string) => api.post(`/resources/setlists/${setlistId}/remove-item`, { item_id: itemId })
+export const reorderSetlist = (setlistId: string, itemIds: string[]) => api.post(`/resources/setlists/${setlistId}/reorder`, { item_ids: itemIds })
+
+// Setlist Comments & Approvals
+export const addSetlistComment = (setlistId: string, text: string, isApproval?: boolean) => api.post(`/resources/setlists/${setlistId}/comment`, { text, is_approval: isApproval || false })
+export const approveSetlist = (setlistId: string, text?: string) => api.post(`/resources/setlists/${setlistId}/approve`, { text })
+export const revokeSetlistApproval = (setlistId: string) => api.post(`/resources/setlists/${setlistId}/revoke-approval`)

@@ -12,12 +12,9 @@ services:
       POSTGRES_PASSWORD: studio_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
-<<<<<<< HEAD
       - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
-=======
     ports:
       - "5432:5432"
->>>>>>> ac5fde9 (additions)
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U studio_user -d studiosync" ]
       interval: 10s

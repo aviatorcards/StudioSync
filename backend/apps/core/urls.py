@@ -14,6 +14,7 @@ from apps.core.views import (
     backup,
     gdpr,
     setup,
+    update,
 )
 from config.routers import OptionalSlashRouter
 
@@ -47,6 +48,10 @@ urlpatterns = (
         # System Migration/Backup
         path("system/export/", backup.export_system, name="system-export"),
         path("system/import/", backup.import_system, name="system-import"),
+        # Software Updates
+        path("system/update/status/", update.update_status, name="update-status"),
+        path("system/update/perform/", update.perform_update, name="update-perform"),
+        path("system/update/version/", update.current_version, name="update-version"),
     ]
     + urlpatterns_manual
     + [

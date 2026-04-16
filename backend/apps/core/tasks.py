@@ -1,6 +1,9 @@
 import logging
+import os
+from pathlib import Path
 
 from django.conf import settings
+from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives, get_connection
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
@@ -10,6 +13,163 @@ from django_q.tasks import async_task
 from .email_utils import get_email_settings
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Version helpers
+# ---------------------------------------------------------------------------
+
+# URL where the canonical version manifest is published.
+# Override via the UPDATE_MANIFEST_URL env var if self-hosting the manifest.
+UPDATE_MANIFEST_URL = os.getenv(
+    "UPDATE_MANIFEST_URL",
+    "https://raw.githubusercontent.com/your-org/studiosync/main/version-manifest.json",
+)
+
+CACHE_KEY_UPDATE_INFO = "studiosync_update_info"
+CACHE_TTL_SECONDS = 60 * 60  # re-check at most once per hour
+
+
+def _get_local_version() -> str:
+    """Return the version string from the VERSION file at the repo root."""
+    # Works whether running inside Docker (where BASE_DIR is /app) or bare-metal
+    candidates = [
+        Path(settings.BASE_DIR).parent / "VERSION",  # repo root when backend/ is BASE_DIR
+        Path(settings.BASE_DIR) / "VERSION",          # fallback: VERSION next to manage.py
+    ]
+    for path in candidates:
+        if path.exists():
+            return path.read_text().strip()
+    return "unknown"
+
+
+def _parse_version(version_str: str):
+    """Return a tuple of ints for semver comparison, e.g. '1.2.3' → (1, 2, 3)."""
+    try:
+        return tuple(int(x) for x in version_str.lstrip("v").split(".")[:3])
+    except Exception:
+        return (0, 0, 0)
+
+
+def check_for_updates() -> dict:
+    """
+    Periodic task: fetch the remote version manifest, compare with the local
+    VERSION file, and cache the result.
+
+    Returns a dict with keys:
+        current_version  – what is running right now
+        latest_version   – what the manifest says is current
+        update_available – bool
+        release_notes    – str or None
+        download_url     – str or None
+        manifest_url     – the URL that was checked
+    """
+    import urllib.request
+    import json as _json
+
+    local_version = _get_local_version()
+    result = {
+        "current_version": local_version,
+        "latest_version": local_version,
+        "update_available": False,
+        "release_notes": None,
+        "download_url": None,
+        "manifest_url": UPDATE_MANIFEST_URL,
+        "error": None,
+    }
+
+    try:
+        req = urllib.request.Request(
+            UPDATE_MANIFEST_URL,
+            headers={"User-Agent": f"StudioSync/{local_version}"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            manifest = _json.loads(resp.read().decode())
+
+        latest = manifest.get("version", local_version)
+        result["latest_version"] = latest
+        result["release_notes"] = manifest.get("release_notes")
+        result["download_url"] = manifest.get("download_url")
+
+        if _parse_version(latest) > _parse_version(local_version):
+            result["update_available"] = True
+            logger.info(f"StudioSync update available: {local_version} → {latest}")
+        else:
+            logger.debug(f"StudioSync is up to date ({local_version})")
+
+    except Exception as exc:
+        result["error"] = str(exc)
+        logger.warning(f"Could not fetch update manifest: {exc}")
+
+    cache.set(CACHE_KEY_UPDATE_INFO, result, CACHE_TTL_SECONDS)
+    return result
+
+
+def trigger_update() -> dict:
+    """
+    Attempt an in-place update.
+
+    Docker  → runs `docker compose pull && docker compose up -d`
+    Bare-metal → runs `git pull && pip install -r requirements.txt`
+
+    Returns {"success": bool, "output": str, "strategy": str}
+    """
+    import subprocess
+
+    def _run(*cmd, cwd=None):
+        proc = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            cwd=cwd,
+            timeout=300,
+        )
+        return proc.returncode, proc.stdout + proc.stderr
+
+    # Detect environment ---------------------------------------------------
+    # Running inside a Docker container if /.dockerenv exists
+    in_docker = Path("/.dockerenv").exists()
+
+    strategy = "docker" if in_docker else "bare-metal"
+    output_lines = []
+    success = False
+
+    try:
+        repo_root = str(Path(settings.BASE_DIR).parent)
+
+        if in_docker:
+            # Pull latest images and restart; compose file is at repo root
+            rc, out = _run("docker", "compose", "pull", cwd=repo_root)
+            output_lines.append(out)
+            if rc == 0:
+                rc, out = _run("docker", "compose", "up", "-d", cwd=repo_root)
+                output_lines.append(out)
+                success = rc == 0
+        else:
+            # Bare-metal: git pull then reinstall deps
+            rc, out = _run("git", "pull", cwd=repo_root)
+            output_lines.append(out)
+            if rc == 0:
+                req_file = str(Path(settings.BASE_DIR) / "requirements.txt")
+                rc, out = _run("pip", "install", "-r", req_file)
+                output_lines.append(out)
+                success = rc == 0
+
+        if success:
+            # Bust the cached update info so the banner re-evaluates
+            cache.delete(CACHE_KEY_UPDATE_INFO)
+            logger.info(f"StudioSync update triggered successfully (strategy={strategy})")
+        else:
+            logger.error(f"StudioSync update failed (strategy={strategy})")
+
+    except Exception as exc:
+        output_lines.append(str(exc))
+        logger.error(f"StudioSync update exception: {exc}")
+
+    return {
+        "success": success,
+        "strategy": strategy,
+        "output": "\n".join(output_lines),
+    }
 
 
 def send_email_async(subject, to_email, template_name, context, from_email=None, from_name=None):

@@ -9,6 +9,7 @@ import { AppearanceProvider } from '@/contexts/AppearanceContext'
 import { CommandPalette } from '@/components/CommandPalette'
 import ColorSchemeProvider from '@/components/ColorSchemeProvider'
 import { NotificationsProvider } from '@/contexts/NotificationsContext'
+import UpdateBanner from '@/components/UpdateBanner'
 
 export default function DashboardLayout({
     children,
@@ -39,6 +40,9 @@ export default function DashboardLayout({
                             <div className="flex-1 flex flex-col ml-0 md:ml-64 overflow-x-hidden w-full">
                                 {/* Header */}
                                 <DashboardHeader onMenuClick={handleOpenSidebar} />
+
+                                {/* Update banner (admin-only, shown when a new version is available) */}
+                                <UpdateBanner />
 
                                 {/* Page Content */}
                                 <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 w-full">

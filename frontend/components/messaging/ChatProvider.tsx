@@ -5,6 +5,7 @@ import { StreamChat } from "stream-chat";
 import { Chat, useCreateChatClient } from "stream-chat-react";
 import "stream-chat-react/dist/css/v2/index.css";
 import { useUser } from "@/contexts/UserContext";
+import { useAppearance } from "@/contexts/AppearanceContext";
 import api from "@/services/api";
 
 type ChatProviderProps = {
@@ -19,6 +20,7 @@ type ChatClientProviderProps = {
 };
 
 const ChatClientProvider: React.FC<ChatClientProviderProps> = ({ children, user, token, apiKey }) => {
+    const { theme } = useAppearance();
     const client = useCreateChatClient({
         apiKey: apiKey,
         tokenOrProvider: token,
@@ -37,8 +39,11 @@ const ChatClientProvider: React.FC<ChatClientProviderProps> = ({ children, user,
         );
     }
 
+    const isDark = theme === 'dark' || (theme === 'auto' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const streamTheme = isDark ? 'str-chat__theme-dark' : 'str-chat__theme-light';
+
     return (
-        <Chat client={client}>
+        <Chat client={client} theme={streamTheme}>
             {children}
         </Chat>
     );

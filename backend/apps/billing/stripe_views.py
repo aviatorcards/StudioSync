@@ -30,7 +30,8 @@ class CreateCheckoutSessionView(views.APIView):
         invoice = get_object_or_404(Invoice, id=invoice_id)
 
         # Determine success/cancel URLs
-        domain_url = getattr(settings, "FRONTEND_BASE_URL", "http://localhost:3000")
+        from apps.core.email_utils import get_frontend_url
+        domain_url = get_frontend_url(request)
 
 
         try:
@@ -82,7 +83,8 @@ class CreateSubscriptionCheckoutSessionView(views.APIView):
         if not student:
             return Response({"error": "Could not identify student profile."}, status=400)
 
-        domain_url = getattr(settings, "FRONTEND_BASE_URL", "http://localhost:3000")
+        from apps.core.email_utils import get_frontend_url
+        domain_url = get_frontend_url(request)
 
         
         try:

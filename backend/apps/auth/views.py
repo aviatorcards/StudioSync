@@ -81,7 +81,7 @@ class RegisterView(APIView):
         from apps.notifications.models import Notification
 
         send_registration_pending_email(email, first_name)
-        send_admin_approval_notification(user)
+        send_admin_approval_notification(user, request=request)
         Notification.notify_admin_new_student_registration(user)
 
         if needs_approval:
@@ -110,9 +110,12 @@ class PasswordResetRequestView(APIView):
 
         user = User.objects.filter(email=email).first()
         if user:
+            from apps.core.email_utils import get_frontend_url
+
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
-            reset_link = f"{settings.FRONTEND_BASE_URL}/reset-password?uid={uid}&token={token}"
+            base_url = get_frontend_url(request)
+            reset_link = f"{base_url}/reset-password?uid={uid}&token={token}"
 
             send_mail(
                 "Password Reset Request",

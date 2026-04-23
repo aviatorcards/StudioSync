@@ -56,17 +56,49 @@ def get_email_settings():
         }
 
 
-def send_welcome_email(user_email, first_name, temp_password=None):
+def get_frontend_url(request=None):
+    """
+    Get the frontend base URL.
+    Priority:
+    1. settings.FRONTEND_BASE_URL (if it's not the localhost default)
+    2. request.headers['Origin'] (if available)
+    3. settings.FRONTEND_BASE_URL (fallback)
+    """
+    base_url = getattr(settings, "FRONTEND_BASE_URL", "http://localhost:3000")
+
+    # If it's explicitly set to something else than the default localhost, trust it
+    if base_url and "localhost" not in base_url and "127.0.0.1" not in base_url:
+        return base_url.rstrip("/")
+
+    if request:
+        # Origin is the best source for the frontend URL
+        origin = request.headers.get("Origin")
+        if origin:
+            return origin.rstrip("/")
+
+        # Fallback to Referer
+        referer = request.headers.get("Referer")
+        if referer:
+            from urllib.parse import urlparse
+
+            parsed = urlparse(referer)
+            return f"{parsed.scheme}://{parsed.netloc}"
+
+    return base_url.rstrip("/")
+
+
+def send_welcome_email(user_email, first_name, temp_password=None, request=None):
     """
     Trigger the async welcome email task.
     """
     from apps.core.tasks import send_email_async
 
+    base_url = get_frontend_url(request)
     subject = "Welcome to StudioSync! 🎵"
     context = {
         "first_name": first_name,
         "user_email": user_email,
-        "dashboard_url": f"{settings.FRONTEND_BASE_URL}/login",
+        "dashboard_url": f"{base_url}/login",
         "temp_password": temp_password,
     }
     # Call the background task
@@ -92,24 +124,25 @@ def send_registration_pending_email(user_email, first_name):
     async_task(send_email_async, subject, user_email, "emails/registration_pending.html", context)
 
 
-def send_admin_approval_notification(student_user):
+def send_admin_approval_notification(student_user, request=None):
     """
     Notify admins/instructors that a new student needs approval.
     """
     from apps.core.tasks import send_email_async
 
     subject = "New Student Pending Approval 🚀"
-    # Notify admins and instructors? 
+    # Notify admins and instructors?
     # Usually instructors are only notified if they are assigned.
     # For now, let's notify all admins and optionally teachers if relevant.
     admin_emails = User.objects.filter(role="admin").values_list("email", flat=True)
     if not admin_emails:
         return
 
+    base_url = get_frontend_url(request)
     context = {
         "student_name": student_user.get_full_name(),
         "student_email": student_user.email,
-        "dashboard_url": f"{settings.FRONTEND_BASE_URL}/dashboard/users",
+        "dashboard_url": f"{base_url}/dashboard/users",
     }
     from django_q.tasks import async_task
 
@@ -117,16 +150,17 @@ def send_admin_approval_notification(student_user):
         async_task(send_email_async, subject, email, "emails/admin_approval_request.html", context)
 
 
-def send_account_approved_email(user_email, first_name):
+def send_account_approved_email(user_email, first_name, request=None):
     """
     Notify the student that their account has been approved.
     """
     from apps.core.tasks import send_email_async
 
+    base_url = get_frontend_url(request)
     subject = "Account Approved! Welcome to StudioSync 🎵"
     context = {
         "first_name": first_name,
-        "login_url": f"{settings.FRONTEND_BASE_URL}/login",
+        "login_url": f"{base_url}/login",
     }
     from django_q.tasks import async_task
 

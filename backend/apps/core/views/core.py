@@ -243,7 +243,7 @@ class UserViewSet(viewsets.ModelViewSet):
         try:
             from apps.core.email_utils import send_welcome_email
 
-            send_welcome_email(user.email, user.first_name, temp_password)
+            send_welcome_email(user.email, user.first_name, temp_password, request=request)
         except Exception as e:
             # Don't fail registration if email fails
             print(f"Failed to trigger welcome email: {e}")

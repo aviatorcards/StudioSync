@@ -241,7 +241,8 @@ class UserSerializer(serializers.ModelSerializer):
         if not was_approved and instance.is_approved:
             try:
                 from .email_utils import send_account_approved_email
-                send_account_approved_email(instance.email, instance.first_name)
+                request = self.context.get("request")
+                send_account_approved_email(instance.email, instance.first_name, request=request)
             except Exception as e:
                 # Don't fail the update if email fails
                 import logging

@@ -1,6 +1,7 @@
 from django.db.models import Q
 
 from rest_framework import permissions, status, viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from .models import Invoice, SubscriptionPlan, Subscription
@@ -58,7 +59,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             if studio:
                 serializer.save(studio=studio)
             else:
-                raise serializer.ValidationError("No studio found to associate with this invoice.")
+                raise ValidationError("No studio found to associate with this invoice.")
 
     def update(self, request, *args, **kwargs):
         if request.user.role != "admin":

@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useRef, useEffect, KeyboardEvent } from 'react'
-import { User, Building2, Bell, Palette, Mail, Camera, Wand2, Check, Server, Eye, EyeOff, Save, Loader2, Music, X, Plus, Download, Upload, ShieldAlert, Database, Globe, DollarSign } from 'lucide-react'
+import { User, Building2, Bell, Palette, Mail, Camera, Wand2, Check, Server, Eye, EyeOff, Save, Loader2, Music, X, Plus, Download, Upload, ShieldAlert, Database, Globe, DollarSign, MapPin } from 'lucide-react'
 import { useUser } from '@/contexts/UserContext'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
 import ImageCropper from '@/components/ImageCropper'
 import { formatPhoneNumber } from '@/lib/utils'
 import { TIMEZONES, CURRENCIES } from '@/types/setup'
+import { detectLocation } from '@/lib/geolocate'
 
 export default function SettingsPage() {
     const { currentUser, setCurrentUser } = useUser()
@@ -20,6 +21,24 @@ export default function SettingsPage() {
     const [showSmtpPassword, setShowSmtpPassword] = useState(false)
     const [showSmsApiKey, setShowSmsApiKey] = useState(false)
     const [cropImage, setCropImage] = useState<string | null>(null)
+    const [geoDetecting, setGeoDetecting] = useState(false)
+
+    const handleDetectTimezone = async () => {
+        setGeoDetecting(true)
+        try {
+            const geo = await detectLocation()
+            const updates: Partial<typeof studioSettings> = { timezone: geo.timezone }
+            if (geo.city && !studioSettings.city) updates.city = geo.city
+            if (geo.country && !studioSettings.country) updates.country = geo.country
+            setStudioSettings(prev => ({ ...prev, ...updates }))
+            const label = geo.city && geo.country_name ? `${geo.city}, ${geo.country_name}` : geo.timezone
+            toast.success(`Location detected: ${label}`)
+        } catch {
+            toast.error('Could not detect location. Check your connection and try again.')
+        } finally {
+            setGeoDetecting(false)
+        }
+    }
 
     const updateCurrentUserSafe = (userData: any) => {
         if (userData?.avatar && currentUser?.avatar) {
@@ -900,15 +919,32 @@ export default function SettingsPage() {
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
-                                            <Globe className="w-3.5 h-3.5" /> Timezone
-                                        </label>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                                                <Globe className="w-3.5 h-3.5" /> Timezone
+                                            </label>
+                                            <button
+                                                type="button"
+                                                onClick={handleDetectTimezone}
+                                                disabled={geoDetecting}
+                                                className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 disabled:opacity-50 transition-colors"
+                                            >
+                                                {geoDetecting
+                                                    ? <><Loader2 className="w-3 h-3 animate-spin" /> Detecting…</>
+                                                    : <><MapPin className="w-3 h-3" /> Detect</>
+                                                }
+                                            </button>
+                                        </div>
                                         <select
                                             id="studio-timezone"
                                             value={studioSettings.timezone}
                                             onChange={e => setStudioSettings({ ...studioSettings, timezone: e.target.value })}
                                             className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                                         >
+                                            {/* Inject detected timezone if it's not in the preset list */}
+                                            {!TIMEZONES.some(t => t.value === studioSettings.timezone) && (
+                                                <option value={studioSettings.timezone}>{studioSettings.timezone}</option>
+                                            )}
                                             {TIMEZONES.map(tz => (
                                                 <option key={tz.value} value={tz.value}>{tz.label}</option>
                                             ))}

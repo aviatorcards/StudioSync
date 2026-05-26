@@ -39,7 +39,7 @@ class InventoryItemSerializer(serializers.ModelSerializer):
 class CheckoutLogSerializer(serializers.ModelSerializer):
     """Serializer for checkout logs"""
 
-    student_name = serializers.CharField(source="student.get_full_name", read_only=True)
+    student_name = serializers.CharField(source="student.user.get_full_name", read_only=True)
     item_name = serializers.CharField(source="item.name", read_only=True)
     approved_by_name = serializers.CharField(
         source="approved_by.get_full_name", read_only=True, allow_null=True
@@ -80,7 +80,7 @@ class RoomReservationSerializer(serializers.ModelSerializer):
     """Serializer for room reservations"""
 
     room_name = serializers.CharField(source="room.name", read_only=True)
-    student_name = serializers.CharField(source="student.get_full_name", read_only=True)
+    student_name = serializers.CharField(source="student.user.get_full_name", read_only=True)
     duration_hours = serializers.SerializerMethodField()
 
     class Meta:

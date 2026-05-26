@@ -6,7 +6,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
 from apps.core.models import Studio, User
-from apps.resources.models import Resource, Setlist, SetlistResource
+from apps.resources.models import Resource
 
 def seed_more_resources():
     print("🌱 Seeding even more resources...")
@@ -66,19 +66,7 @@ def seed_more_resources():
                 resource.file.save(filename, ContentFile(content))
             print(f"✅ Created resource: {resource.title}")
 
-    # Create a "Spring Recital" Setlist
-    setlist, created = Setlist.objects.get_or_create(
-        studio=studio,
-        name="Spring Recital 2026",
-        defaults={"description": "Setlist for the upcoming spring recital.", "created_by": admin}
-    )
-    
-    if created:
-        # Add some resources to it
-        resources = Resource.objects.filter(is_public=True)[:3]
-        for i, res in enumerate(resources):
-            SetlistResource.objects.create(setlist=setlist, resource=res, order=i)
-        print(f"✅ Created setlist: {setlist.name} with {resources.count()} items")
+
 
     print("🎉 Extra resource seeding complete!")
 

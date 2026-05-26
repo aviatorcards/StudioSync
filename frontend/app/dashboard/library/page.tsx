@@ -1,13 +1,10 @@
 'use client'
 
 import { usePublicResources } from '@/hooks/usePublicResources'
-import api from '@/services/api'
-import { toast } from 'react-hot-toast'
 import {
     FileText,
     Music,
     Loader2,
-    Plus,
     FileMusic,
     Guitar,
     Piano,
@@ -16,12 +13,10 @@ import {
     Music2,
     BookOpen,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 
 type MusicResourceType = 'sheet_music' | 'chord_chart' | 'tablature' | 'lyrics'
-type SkillLevel = 'beginner' | 'intermediate' | 'advanced' | 'professional'
 
-interface SongbookResource {
+interface PublicResource {
     id: string
     title: string
     description: string
@@ -69,16 +64,6 @@ export default function LibraryPage() {
         return inst || INSTRUMENTS[INSTRUMENTS.length - 1]
     }
 
-    const handleAddToSongbook = async (resource: SongbookResource) => {
-        try {
-            await api.post(`/resources/public/${resource.id}/add_to_songbook/`)
-            toast.success('Chart added to your songbook!')
-        } catch (error) {
-            console.error('Failed to add chart to songbook', error)
-            toast.error('Failed to add chart to songbook')
-        }
-    }
-
     const filteredResources = musicResources
 
     if (loading) {
@@ -102,14 +87,14 @@ export default function LibraryPage() {
                             {musicResources.length} Charts
                         </div>
                     </h1>
-                    <p className="text-gray-500 font-medium max-w-lg">Browse and discover public charts to add to your songbook.</p>
+                    <p className="text-gray-500 font-medium max-w-lg">Browse and discover public charts shared by studios.</p>
                 </div>
             </header>
 
             {/* Grid */}
             {filteredResources.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {filteredResources.map((resource: SongbookResource) => {
+                    {filteredResources.map((resource: PublicResource) => {
                         const instInfo = getInstrumentIcon(resource.instrument)
                         const Icon = instInfo.icon
                         
@@ -159,16 +144,6 @@ export default function LibraryPage() {
                                     <span>{new Date(resource.created_at).toLocaleDateString()}</span>
                                 </div>
 
-                                {/* Actions */}
-                                <div className="mt-4 flex gap-2">
-                                    <Button
-                                        onClick={() => handleAddToSongbook(resource)}
-                                        className="flex-1 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest gap-2 py-5 shadow-lg shadow-primary/10"
-                                    >
-                                        <Plus className="w-3.5 h-3.5" />
-                                        Add to Songbook
-                                    </Button>
-                                </div>
                             </div>
                         )
                     })}

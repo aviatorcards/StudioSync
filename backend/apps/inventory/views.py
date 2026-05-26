@@ -82,7 +82,7 @@ class CheckoutLogViewSet(viewsets.ModelViewSet):
 
         # Students can only see their own checkouts
         if self.request.user.role == "student":
-            queryset = queryset.filter(student=self.request.user)
+            queryset = queryset.filter(student__user=self.request.user)
 
         # Filter by status
         status = self.request.query_params.get("status")
@@ -113,7 +113,7 @@ class CheckoutLogViewSet(viewsets.ModelViewSet):
             serializer.validated_data["due_date"] = due_date
 
         # Save the checkout
-        serializer.save(student=self.request.user, status="pending")
+        serializer.save(student=self.request.user.student_profile, status="pending")
 
         # Decrease available quantity
         item.available_quantity -= quantity
@@ -190,7 +190,7 @@ class PracticeRoomViewSet(viewsets.ModelViewSet):
             {
                 "start": res.start_time.isoformat(),
                 "end": res.end_time.isoformat(),
-                "student": res.student.get_full_name(),
+                "student": res.student.user.get_full_name(),
             }
             for res in reservations
         ]
@@ -211,7 +211,7 @@ class RoomReservationViewSet(viewsets.ModelViewSet):
 
         # Students can only see their own reservations
         if self.request.user.role == "student":
-            queryset = queryset.filter(student=self.request.user)
+            queryset = queryset.filter(student__user=self.request.user)
 
         # Filter by date range
         start_date = self.request.query_params.get("start_date")
@@ -231,7 +231,7 @@ class RoomReservationViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Create a new reservation"""
-        serializer.save(student=self.request.user)
+        serializer.save(student=self.request.user.student_profile)
 
     @action(detail=True, methods=["post"])
     def cancel(self, request, pk=None):
@@ -239,7 +239,7 @@ class RoomReservationViewSet(viewsets.ModelViewSet):
         reservation = self.get_object()
 
         # Students can only cancel their own reservations
-        if request.user.role == "student" and reservation.student != request.user:
+        if request.user.role == "student" and reservation.student.user != request.user:
             return Response(
                 {"detail": "You can only cancel your own reservations"},
                 status=status.HTTP_403_FORBIDDEN,

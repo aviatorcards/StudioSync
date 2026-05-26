@@ -29,6 +29,10 @@ class InventoryItem(models.Model):
         ("retired", "Retired"),
     ]
 
+    studio = models.ForeignKey(
+        "core.Studio", on_delete=models.CASCADE, related_name="inventory_items", null=True
+    )
+
     name = models.CharField(max_length=200)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     quantity = models.IntegerField(default=1)
@@ -78,7 +82,7 @@ class CheckoutLog(models.Model):
 
     item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name="checkouts")
     student = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="item_checkouts"
+        "core.Student", on_delete=models.CASCADE, related_name="item_checkouts"
     )
     quantity = models.IntegerField(default=1)
 
@@ -105,7 +109,7 @@ class CheckoutLog(models.Model):
         ordering = ["-checkout_date"]
 
     def __str__(self):
-        return f"{self.student.get_full_name()} - {self.item.name} ({self.status})"
+        return f"{self.student.user.get_full_name()} - {self.item.name} ({self.status})"
 
     @property
     def is_overdue(self):
@@ -119,6 +123,10 @@ class CheckoutLog(models.Model):
 
 class PracticeRoom(models.Model):
     """Practice rooms available for reservation"""
+
+    studio = models.ForeignKey(
+        "core.Studio", on_delete=models.CASCADE, related_name="practice_rooms", null=True
+    )
 
     name = models.CharField(max_length=100)
     capacity = models.IntegerField(default=1, help_text="Maximum number of people")
@@ -150,7 +158,7 @@ class RoomReservation(models.Model):
 
     room = models.ForeignKey(PracticeRoom, on_delete=models.CASCADE, related_name="reservations")
     student = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="room_reservations"
+        "core.Student", on_delete=models.CASCADE, related_name="room_reservations"
     )
 
     # Time
@@ -173,7 +181,7 @@ class RoomReservation(models.Model):
         ordering = ["start_time"]
 
     def __str__(self):
-        return f"{self.room.name} - {self.student.get_full_name()} on {self.start_time.strftime('%Y-%m-%d %H:%M')}"
+        return f"{self.room.name} - {self.student.user.get_full_name()} on {self.start_time.strftime('%Y-%m-%d %H:%M')}"
 
     def save(self, *args, **kwargs):
         """Calculate total cost based on duration and room rate"""

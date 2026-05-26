@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
-from .models import Message, MessageThread, Notification
+from .models import Message, MessageThread
 
 User = get_user_model()
 
@@ -70,18 +70,3 @@ class MessageThreadSerializer(serializers.ModelSerializer):
         return obj.messages.exclude(read_by=user).count()
 
 
-class NotificationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Notification
-        fields = [
-            "id",
-            "notification_type",
-            "title",
-            "message",
-            "related_object",
-            "action_url",
-            "status",
-            "created_at",
-            "read_at",
-        ]
-        read_only_fields = ["created_at", "read_at", "related_object"]

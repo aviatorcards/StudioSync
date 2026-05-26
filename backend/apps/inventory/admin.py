@@ -32,7 +32,7 @@ class CheckoutLogAdmin(admin.ModelAdmin):
         "is_overdue",
     ]
     list_filter = ["status", "checkout_date", "due_date"]
-    search_fields = ["item__name", "student__first_name", "student__last_name"]
+    search_fields = ["item__name", "student__user__first_name", "student__user__last_name"]
     readonly_fields = ["checkout_date", "is_overdue"]
 
     def get_readonly_fields(self, request, obj=None):
@@ -53,5 +53,5 @@ class PracticeRoomAdmin(admin.ModelAdmin):
 class RoomReservationAdmin(admin.ModelAdmin):
     list_display = ["room", "student", "start_time", "end_time", "status", "total_cost", "is_paid"]
     list_filter = ["status", "is_paid", "start_time"]
-    search_fields = ["room__name", "student__first_name", "student__last_name"]
+    search_fields = ["room__name", "student__user__first_name", "student__user__last_name"]
     readonly_fields = ["total_cost", "created_at", "updated_at"]

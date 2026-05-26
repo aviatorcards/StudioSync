@@ -4,12 +4,13 @@ from django.db.models import Count, Sum
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
 
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.billing.models import Invoice
-from apps.core.models import Student, Teacher
+from apps.core.models import Student, Studio, Teacher
 from apps.lessons.models import Lesson
 
 
@@ -30,46 +31,57 @@ class DashboardStatsView(APIView):
 
         # ADMIN VIEW
         if user.role == "admin":
-            # 1. Total Students — all active students for admins
-            total_students = Student.objects.filter(is_active=True).count()
-            # Growth should be compared to start of month
-            students_before_month = Student.objects.filter(
-                is_active=True, created_at__lt=start_of_month
-            ).count()
-            student_growth = total_students - students_before_month
+            studio = Studio.objects.filter(owner=user).first() or Studio.objects.first()
 
-            # 2. Scheduled Lessons (This Week)
-            week_start = today - timedelta(days=today.weekday())
-            week_end = week_start + timedelta(days=7)
-            lessons_this_week = Lesson.objects.filter(
-                scheduled_start__range=[week_start, week_end], status="scheduled"
-            ).count()
+            if not studio:
+                total_students = 0
+                student_growth = 0
+                lessons_this_week = 0
+                revenue_month = 0.0
+                active_teachers = 0
+                unpaid_invoices = 0.0
+                avg_attendance = "100%"
+            else:
+                # 1. Total Students — all active students for admins in their studio
+                total_students = Student.objects.filter(studio=studio, is_active=True).count()
+                # Growth should be compared to start of month
+                students_before_month = Student.objects.filter(
+                    studio=studio, is_active=True, created_at__lt=start_of_month
+                ).count()
+                student_growth = total_students - students_before_month
 
-            # 3. Revenue (Month) - Sum of total_amount from paid invoices issued this month
-            revenue_month = (
-                Invoice.objects.filter(
-                    status="paid", issue_date__gte=start_of_month.date()
-                ).aggregate(total=Sum("total_amount"))["total"]
-                or 0
-            )
+                # 2. Scheduled Lessons (This Week)
+                week_start = today - timedelta(days=today.weekday())
+                week_end = week_start + timedelta(days=7)
+                lessons_this_week = Lesson.objects.filter(
+                    studio=studio, scheduled_start__range=[week_start, week_end], status="scheduled"
+                ).count()
 
-            # 4. Active Teachers
-            active_teachers = Teacher.objects.filter(is_active=True).count()
+                # 3. Revenue (Month) - Sum of total_amount from paid invoices issued this month in their studio
+                revenue_month = (
+                    Invoice.objects.filter(
+                        studio=studio, status="paid", issue_date__gte=start_of_month.date()
+                    ).aggregate(total=Sum("total_amount"))["total"]
+                    or 0
+                )
 
-            # 5. Unpaid Invoices
-            unpaid_qs = Invoice.objects.filter(
-                status__in=["sent", "overdue", "partial"]
-            )
-            unpaid_val = sum(inv.balance_due for inv in unpaid_qs)
-            unpaid_invoices = float(unpaid_val)
+                # 4. Active Teachers
+                active_teachers = Teacher.objects.filter(studio=studio, is_active=True).count()
 
-            # 6. Average Attendance
-            completed_c = Lesson.objects.filter(status="completed").count()
-            cancelled_c = Lesson.objects.filter(status="cancelled").count()
-            noshow_c = Lesson.objects.filter(status="no_show").count()
-            total_past = completed_c + cancelled_c + noshow_c
-            rate_val = int(completed_c / total_past * 100) if total_past > 0 else 100
-            avg_attendance = f"{rate_val}%"
+                # 5. Unpaid Invoices
+                unpaid_qs = Invoice.objects.filter(
+                    studio=studio, status__in=["sent", "overdue", "partial"]
+                )
+                unpaid_val = sum(inv.balance_due for inv in unpaid_qs)
+                unpaid_invoices = float(unpaid_val)
+
+                # 6. Average Attendance
+                completed_c = Lesson.objects.filter(studio=studio, status="completed").count()
+                cancelled_c = Lesson.objects.filter(studio=studio, status="cancelled").count()
+                noshow_c = Lesson.objects.filter(studio=studio, status="no_show").count()
+                total_past = completed_c + cancelled_c + noshow_c
+                rate_val = int(completed_c / total_past * 100) if total_past > 0 else 100
+                avg_attendance = f"{rate_val}%"
 
             # 7. New Enquiries (Placeholder until Enquiry module exists)
             new_enquiries = 0
@@ -213,7 +225,12 @@ class DashboardStatsView(APIView):
         )
 
         # Filter visibility
-        if user.role == "teacher" and hasattr(user, "teacher_profile"):
+        if user.role == "admin":
+            from apps.core.models import Studio
+            studio = Studio.objects.filter(owner=user).first() or Studio.objects.first()
+            if studio:
+                qs = qs.filter(studio=studio)
+        elif user.role == "teacher" and hasattr(user, "teacher_profile"):
             qs = qs.filter(teacher=user.teacher_profile)
         elif user.role == "student" and hasattr(user, "student_profile"):
             qs = qs.filter(student=user.student_profile)
@@ -272,7 +289,18 @@ class DashboardAnalyticsView(APIView):
 
         # Only admins can see full studio analytics
         if user.role != "admin":
-            return Response({"error": "Unauthorized"}, status=403)
+            return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+        studio = Studio.objects.filter(owner=user).first() or Studio.objects.first()
+
+        if not studio:
+            return Response(
+                {
+                    "revenue_trend": [],
+                    "student_growth": [],
+                    "attendance": [],
+                }
+            )
 
         today = timezone.now()
         six_months_ago = today - timedelta(days=180)
@@ -284,6 +312,7 @@ class DashboardAnalyticsView(APIView):
         # We'll use TruncMonth to aggregate by month
         revenue_qs = (
             Invoice.objects.filter(
+                studio=studio,
                 status="paid", created_at__gte=six_months_ago
             )
             .annotate(month=TruncMonth("created_at"))
@@ -315,6 +344,7 @@ class DashboardAnalyticsView(APIView):
 
         enrollment_qs = (
             Student.objects.filter(
+                studio=studio,
                 created_at__gte=six_months_ago,
                 is_active=True,  # We might want historical here, but active is okay for now
             )
@@ -340,6 +370,7 @@ class DashboardAnalyticsView(APIView):
 
         attendance_qs = (
             Lesson.objects.filter(
+                studio=studio,
                 scheduled_start__gte=start_of_month,
                 scheduled_start__lte=today,  # Up to now
             )

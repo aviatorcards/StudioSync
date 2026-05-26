@@ -4,7 +4,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("resources", "0009_setlist_item_standalone"),
+        ("resources", "0007_bulk_upload_folders"),
     ]
 
     operations = [

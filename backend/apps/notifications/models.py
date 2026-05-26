@@ -41,12 +41,13 @@ class Notification(models.Model):
     read_at = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     # Optional: Link to related objects
-    related_lesson_id = models.IntegerField(null=True, blank=True)
-    related_student_id = models.IntegerField(null=True, blank=True)
-    related_message_id = models.IntegerField(null=True, blank=True)
-    related_document_id = models.IntegerField(null=True, blank=True)
+    related_lesson_id = models.UUIDField(null=True, blank=True)
+    related_student_id = models.UUIDField(null=True, blank=True)
+    related_message_id = models.UUIDField(null=True, blank=True)
+    related_document_id = models.UUIDField(null=True, blank=True)
 
     class Meta:
         ordering = ["-created_at"]

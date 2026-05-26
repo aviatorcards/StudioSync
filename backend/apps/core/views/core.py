@@ -76,10 +76,6 @@ class UserViewSet(viewsets.ModelViewSet):
                     | models.Q(id=self.request.user.id)
                 ).distinct()
 
-        # Allow listing all users for specific actions (legacy logic, kept for safety)
-        elif self.action in ["list", "assign_to_band", "link_family"]:
-            queryset = User.objects.all()
-
         else:
             queryset = User.objects.filter(id=self.request.user.id)
 

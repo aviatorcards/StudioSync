@@ -1,6 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { SetupWizardData, TIMEZONES, CURRENCIES, StudioInfo, AdminAccount } from '@/types/setup'
 import { HelpTooltip } from '@/components/ui/help-tooltip'
+import { detectLocation, GeoLocation } from '@/lib/geolocate'
+import { Loader2, MapPin, X } from 'lucide-react'
 
 interface StepProps {
     data: SetupWizardData
@@ -9,23 +11,26 @@ interface StepProps {
     onNext: () => void
 }
 
+type GeoStatus = 'idle' | 'loading' | 'detected' | 'error'
+
 export const StudioAdminStep = ({ data, updateStudioInfo, updateAdminAccount, onNext }: StepProps) => {
     const { studio_info, admin_account } = data
+    const [geoStatus, setGeoStatus] = useState<GeoStatus>('idle')
+    const [geoLocation, setGeoLocation] = useState<GeoLocation | null>(null)
 
-    // Auto-detect timezone and currency on mount
+    // Auto-detect timezone and currency from browser APIs (no network, no permission needed)
     useEffect(() => {
         try {
             const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
             if (studio_info.timezone === 'UTC' && userTimezone) {
-                const isValidTimezone = TIMEZONES.some(t => t.value === userTimezone)
-                if (isValidTimezone) updateStudioInfo({ timezone: userTimezone })
+                const isValid = TIMEZONES.some(t => t.value === userTimezone)
+                if (isValid) updateStudioInfo({ timezone: userTimezone })
             }
 
             if (studio_info.currency === 'USD') {
                 const locale = navigator.language
                 let detectedCurrency = 'USD'
-                if (locale.includes('US')) detectedCurrency = 'USD'
-                else if (locale.includes('GB')) detectedCurrency = 'GBP'
+                if (locale.includes('GB')) detectedCurrency = 'GBP'
                 else if (locale.match(/EU|FR|DE|IT|ES|NL|BE|AT|FI|IE|PT|GR|SK|EE|LV|LT|CY|MT/)) detectedCurrency = 'EUR'
                 else if (locale.includes('CA')) detectedCurrency = 'CAD'
                 else if (locale.includes('AU')) detectedCurrency = 'AUD'
@@ -38,6 +43,30 @@ export const StudioAdminStep = ({ data, updateStudioInfo, updateAdminAccount, on
             console.warn('Failed to auto-detect locale settings', e)
         }
     }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+    const handleDetectLocation = async () => {
+        setGeoStatus('loading')
+        try {
+            const geo = await detectLocation()
+            setGeoLocation(geo)
+            // Apply timezone — add as a selectable option even if it's not in the preset list
+            if (geo.timezone) updateStudioInfo({ timezone: geo.timezone })
+            setGeoStatus('detected')
+        } catch {
+            setGeoStatus('error')
+        }
+    }
+
+    const handleDismissGeo = () => {
+        setGeoStatus('idle')
+        setGeoLocation(null)
+    }
+
+    // If the current timezone isn't in the preset list (e.g. detected by IP),
+    // inject it as an option so the <select> renders correctly.
+    const timezoneOptions = TIMEZONES.some(t => t.value === studio_info.timezone)
+        ? TIMEZONES
+        : [{ value: studio_info.timezone, label: studio_info.timezone }, ...TIMEZONES]
 
     const isValid =
         studio_info.studio_name &&
@@ -108,7 +137,7 @@ export const StudioAdminStep = ({ data, updateStudioInfo, updateAdminAccount, on
                             Timezone *
                             <HelpTooltip content="Affects all calendar events and notifications." />
                         </label>
-                        <div className="mt-2">
+                        <div className="mt-2 space-y-2">
                             <select
                                 id="timezone"
                                 required
@@ -116,10 +145,50 @@ export const StudioAdminStep = ({ data, updateStudioInfo, updateAdminAccount, on
                                 onChange={(e) => updateStudioInfo({ timezone: e.target.value })}
                                 className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                             >
-                                {TIMEZONES.map((tz) => (
+                                {timezoneOptions.map((tz) => (
                                     <option key={tz.value} value={tz.value}>{tz.label}</option>
                                 ))}
                             </select>
+
+                            {/* Location detection */}
+                            {geoStatus === 'idle' && (
+                                <button
+                                    type="button"
+                                    onClick={handleDetectLocation}
+                                    className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 transition-colors"
+                                >
+                                    <MapPin className="w-3 h-3" />
+                                    Detect my location
+                                </button>
+                            )}
+
+                            {geoStatus === 'loading' && (
+                                <span className="flex items-center gap-1.5 text-xs text-gray-500">
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                    Detecting…
+                                </span>
+                            )}
+
+                            {geoStatus === 'detected' && geoLocation && (
+                                <span className="inline-flex items-center gap-1.5 text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full">
+                                    <MapPin className="w-3 h-3" />
+                                    {geoLocation.city && geoLocation.country
+                                        ? `${geoLocation.city}, ${geoLocation.country}`
+                                        : geoLocation.timezone}
+                                    <button type="button" onClick={handleDismissGeo} className="ml-0.5 hover:text-green-900">
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                </span>
+                            )}
+
+                            {geoStatus === 'error' && (
+                                <span className="flex items-center gap-1.5 text-xs text-red-500">
+                                    Could not detect location.{' '}
+                                    <button type="button" onClick={() => setGeoStatus('idle')} className="underline">
+                                        Try again
+                                    </button>
+                                </span>
+                            )}
                         </div>
                     </div>
 

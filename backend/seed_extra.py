@@ -44,7 +44,7 @@ from apps.lessons.models import (  # noqa: E402
     RecurringPattern,
     StudentGoal,
 )
-from apps.resources.models import Resource, Setlist, SetlistResource  # noqa: E402
+from apps.resources.models import Resource  # noqa: E402
 
 fake = Faker()
 
@@ -391,13 +391,13 @@ def seed_extra():
                 }
             )
 
-    # 9. Create Resources & Setlists
-    print("📚 Creating Resources & Setlists...")
+    # 9. Create Resources
+    print("📚 Creating Resources...")
     instruments = ["Piano", "Guitar", "Violin", "Drums", "Vocal"]
     resource_types = ["pdf", "audio", "sheet_music", "chord_chart"]
 
     for i in range(10):
-        resource, created = Resource.objects.get_or_create(
+        Resource.objects.get_or_create(
             studio=studio,
             title=f"{instruments[i%5]} Practice {i+1}",
             defaults={
@@ -408,15 +408,6 @@ def seed_extra():
                 "is_public": True,
             }
         )
-
-        if i < 3:
-            # Create a setlist for the first few resources
-            setlist, _ = Setlist.objects.get_or_create(
-                studio=studio,
-                name=f"Recital Prep - {instruments[i]}",
-                defaults={"created_by": admin, "description": "Songs for the upcoming recital"},
-            )
-            SetlistResource.objects.get_or_create(setlist=setlist, resource=resource, defaults={"order": i})
 
     # 10. Create Lesson Plans & Detailed Lesson Data
     seed_lesson_details(studio, teachers, students)

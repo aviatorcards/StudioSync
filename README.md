@@ -57,8 +57,9 @@
 
 ### 🏢 Studio Management
 
-- **Studio Layout Editor** – 2D canvas (React‑Konva), drag‑drop rooms, item library, rotation, resizing, printing - (IN DEVELOPMENT)
+- **Studio Layout Editor** – 2D canvas (React‑Konva), drag‑drop rooms, item library, rotation, resizing, printing (IN DEVELOPMENT)
 - **Teacher Management** – profiles, specialties, hourly rates, availability, booking buffers, qualifications
+- **Location & Timezone Detection** – IP geolocation auto-fills your timezone, city, and country during setup and in studio settings
 
 ### 🎨 Design System & Customization
 
@@ -74,6 +75,9 @@
 ### 🐳 Deployment & Infrastructure
 
 - **One‑Command Docker** – full stack (PostgreSQL, Django Q, Django, Next.js) via Docker Compose
+- **Production Setup Script** – guided first-run wizard for configuring secrets, Stripe, Twilio, Stream Chat, and file storage
+
+---
 
 ## 🚀 Quick Start
 
@@ -83,36 +87,77 @@
 - Node.js >= 20.9.0 (frontend development)
 - Python 3.11+ (backend development)
 
-### Installation (Docker Compose)
+### Option 1 — Production Setup (recommended)
 
-1. **Clone the repository**
+Runs a guided wizard that generates a secure `.env`, connects your integrations (Stripe, Twilio, Stream Chat), and creates your admin account.
 
-   ```bash
-   git clone https://github.com/aviatorcards/StudioSync.git
-   cd StudioSync
-   ```
+```bash
+git clone https://github.com/aviatorcards/StudioSync.git
+cd StudioSync
+./scripts/init-production.sh
+```
 
-2. **Launch Services**
+The script will prompt you for:
+- Stripe keys (billing & invoices)
+- Twilio credentials (SMS notifications)
+- Stream Chat keys (real-time messaging)
+- File storage preference (local Docker volume or S3/R2)
+- Your admin email and password
 
-   ```bash
-   docker compose up -d
-   ```
+All integrations are optional — you can skip any and add them later by editing `.env` and running `docker compose restart`.
 
-3. **Initialize Database**
+### Option 2 — Demo Setup
 
-   ```bash
-   docker compose exec backend python manage.py migrate
-   ```
+Spins up a pre-seeded environment with sample students, lessons, and resources. Useful for evaluating the app before committing to a full setup.
 
-4. **Run Setup Wizard**
+```bash
+./scripts/init-demo.sh
+```
 
-   Open your browser and navigate to the interactive setup wizard to configure your studio and admin account:
-   - **Setup Wizard:** http://localhost:3000/setup
+Demo login: `admin@demo.com` / `demo123`
 
-5. **Access the Application**
-   - **Frontend Dashboard:** http://localhost:3000
-   - **API Docs:** http://localhost:8000/api/docs
-   - **Django Admin:** http://localhost:8000/admin
+### Option 3 — Manual Setup
+
+```bash
+git clone https://github.com/aviatorcards/StudioSync.git
+cd StudioSync
+
+# Copy and edit the environment file
+cp .env.example .env
+
+docker compose up -d
+docker compose exec backend python manage.py migrate
+docker compose exec backend python manage.py createcachetable
+```
+
+Then open the setup wizard at **http://localhost:3000/setup** to configure your studio and admin account.
+
+### Access Points
+
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:3000 |
+| API Docs | http://localhost:8000/api/docs |
+| Django Admin | http://localhost:8000/admin |
+
+---
+
+## ⚙️ Configuration
+
+StudioSync is configured via a `.env` file in the repo root. The production setup script generates this for you; for manual setups, copy `.env.example` as a starting point.
+
+### Key integrations
+
+| Integration | Env vars | What it enables |
+|---|---|---|
+| **Stripe** | `STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Invoices, payment processing |
+| **Twilio** | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` | SMS notifications |
+| **Stream Chat** | `STREAM_API_KEY`, `STREAM_API_SECRET` | Real-time messaging |
+| **S3 / R2** | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_STORAGE_BUCKET_NAME` | Cloud file storage |
+
+All integrations are disabled when their env vars are blank. Email is configured at runtime via **Admin → Core → Email Configurations** (no env vars required).
+
+---
 
 ## 🛠️ Tech Stack
 
@@ -133,6 +178,8 @@
 - **Real‑time:** Django Channels (InMemoryChannelLayer)
 - **Task Queue:** Django Q
 
+---
+
 ## 📂 Project Structure
 
 ```text
@@ -148,22 +195,12 @@ studiosync/
 │   └── services/      # API communication layer
 ├── docs/               # Technical documentation
 ├── scripts/            # Deployment & maintenance scripts
+│   ├── init-production.sh  # Guided production setup
+│   └── init-demo.sh        # Pre-seeded demo environment
 └── docker-compose.yml  # Container orchestration
 ```
-
-## 📄 License
-
-Distributed under the GPL‑3.0 License. See `LICENSE` for more information.
 
 ---
-
-<div align="center">
-  Made with ❤️ by the StudioSync Team
-</div>
-ntation
-├── scripts/            # Deployment & maintenance scripts
-└── docker-compose.yml  # Container orchestration
-```
 
 ## 📄 License
 

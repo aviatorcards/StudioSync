@@ -4,7 +4,7 @@ from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from apps.core.models import User  # Need Studio for Thread creation
+from apps.core.models import Studio, User
 
 from .models import Message, MessageThread
 from .serializers import MessageSerializer, MessageThreadSerializer
@@ -44,8 +44,18 @@ class MessageThreadViewSet(viewsets.ModelViewSet):
     ordering = ["-updated_at"]
 
     def get_queryset(self):
-        # Users see threads they are participants in
-        return MessageThread.objects.filter(participants=self.request.user)
+        user = self.request.user
+        if hasattr(user, "teacher_profile"):
+            studio = user.teacher_profile.studio
+        elif hasattr(user, "student_profile"):
+            studio = user.student_profile.studio
+        else:
+            studio = Studio.objects.filter(owner=user).first()
+
+        qs = MessageThread.objects.filter(participants=user)
+        if studio:
+            qs = qs.filter(studio=studio)
+        return qs
 
     def create(self, request, *args, **kwargs):
         """

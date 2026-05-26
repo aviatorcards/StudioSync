@@ -34,15 +34,13 @@ def export_my_data(request):
     user_data = {
         "exported_at": timezone.now().isoformat(),
         "user_info": {
-            "id": user.id,
+            "id": str(user.id),
             "email": user.email,
             "first_name": user.first_name,
             "last_name": user.last_name,
             "phone": user.phone,
             "role": user.role,
             "timezone": user.timezone,
-            "bio": user.bio,
-            "instrument": user.instrument,
             "created_at": user.created_at.isoformat() if user.created_at else None,
             "preferences": user.preferences,
         },
@@ -55,7 +53,7 @@ def export_my_data(request):
     if hasattr(user, "student_profile"):
         student = user.student_profile
         user_data["student_info"] = {
-            "primary_instrument": student.primary_instrument,
+            "instrument": student.instrument,
             "enrollment_date": (
                 student.enrollment_date.isoformat() if student.enrollment_date else None
             ),
@@ -63,37 +61,47 @@ def export_my_data(request):
         }
 
         # Add lessons
-        lessons = Lesson.objects.filter(student=student).select_related("teacher__user")
-        user_data["lessons"] = [
-            {
+        lessons = Lesson.objects.filter(student=student).select_related("teacher__user", "note")
+        lesson_list = []
+        for lesson in lessons:
+            note = getattr(lesson, "note", None)
+            lesson_list.append({
                 "date": lesson.scheduled_start.isoformat(),
                 "duration_minutes": lesson.duration_minutes,
                 "status": lesson.status,
                 "teacher": lesson.teacher.user.get_full_name(),
-                "notes": lesson.notes,
-                "homework": lesson.homework,
-            }
-            for lesson in lessons
-        ]
+                "notes": note.content if note else "",
+                "homework": note.homework if note else "",
+            })
+        user_data["lessons"] = lesson_list
 
     # Add teacher-specific data
     if hasattr(user, "teacher_profile"):
         teacher = user.teacher_profile
         user_data["teacher_info"] = {
-            "specialization": teacher.specialization,
+            "specialties": ", ".join(teacher.specialties) if teacher.specialties else "",
             "bio": teacher.bio,
             "hourly_rate": str(teacher.hourly_rate) if teacher.hourly_rate else None,
         }
 
-    # Add payment history
+    # Add payment history (payments are linked through invoices, not directly to users)
     if Payment:
-        payments = Payment.objects.filter(user=user)
+        if hasattr(user, "student_profile"):
+            payments = Payment.objects.filter(
+                invoice__student=user.student_profile
+            ).select_related("invoice")
+        elif hasattr(user, "teacher_profile"):
+            payments = Payment.objects.filter(
+                invoice__teacher=user.teacher_profile
+            ).select_related("invoice")
+        else:
+            payments = Payment.objects.none()
         user_data["payments"] = [
             {
                 "date": payment.created_at.isoformat(),
                 "amount": str(payment.amount),
                 "status": payment.status,
-                "description": payment.description,
+                "invoice": payment.invoice.invoice_number,
             }
             for payment in payments
         ]
@@ -180,8 +188,14 @@ def privacy_dashboard(request):
         },
         "data_counts": {
             "lessons": 0,
-            "payments": Payment.objects.filter(user=user).count() if Payment else 0,
-            "messages": 0,  # Would count messages if messaging app exists
+            "payments": (
+                Payment.objects.filter(invoice__student=user.student_profile).count()
+                if Payment and hasattr(user, "student_profile")
+                else Payment.objects.filter(invoice__teacher=user.teacher_profile).count()
+                if Payment and hasattr(user, "teacher_profile")
+                else 0
+            ),
+            "messages": 0,
         },
         "privacy_settings": user.preferences.get("privacy", {}) if user.preferences else {},
         "consents": user.preferences.get("consents", {}) if user.preferences else {},

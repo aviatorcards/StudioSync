@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("resources", "0005_setlist_setlistresource_setlist_resources_and_more"),
+        ("resources", "0004_songbook_fields"),
     ]
 
     operations = [

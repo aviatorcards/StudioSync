@@ -5,7 +5,7 @@ Django Admin configuration for Resources models
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import Resource, ResourceCheckout, Setlist, SetlistResource
+from .models import Resource, ResourceCheckout
 
 
 @admin.register(Resource)
@@ -133,14 +133,3 @@ class ResourceCheckoutAdmin(admin.ModelAdmin):
     status_badge.short_description = "Status"
 
 
-class SetlistResourceInline(admin.TabularInline):
-    model = SetlistResource
-    extra = 1
-    autocomplete_fields = ["resource"]
-
-
-@admin.register(Setlist)
-class SetlistAdmin(admin.ModelAdmin):
-    list_display = ["name", "studio", "created_by", "created_at"]
-    search_fields = ["name", "description", "studio__name"]
-    inlines = [SetlistResourceInline]

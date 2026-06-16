@@ -104,8 +104,7 @@ if [[ "$SKIP_ENV" != "true" ]]; then
 
     step "🔐 Generating secrets..."
     SECRET_KEY=$(generate_key)
-    USERTOUR_JWT_SECRET=$(generate_key)
-    success "SECRET_KEY and USERTOUR_JWT_SECRET generated"
+    success "SECRET_KEY generated"
 
     # ---- Core ----
     step "🌐 Site configuration"
@@ -251,13 +250,6 @@ ${STORAGE_BLOCK}
 # StudioSync reads SMTP settings from the database at runtime.
 # =============================================================================
 DEFAULT_FROM_EMAIL=noreply@studiosync.local
-
-# =============================================================================
-# UserTour — self-hosted onboarding
-# =============================================================================
-USERTOUR_APP_URL=http://localhost:8011
-USERTOUR_JWT_SECRET=${USERTOUR_JWT_SECRET}
-NEXT_PUBLIC_USERTOUR_HOST=http://localhost:8011
 
 # =============================================================================
 # Frontend

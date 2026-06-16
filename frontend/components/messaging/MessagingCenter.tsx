@@ -24,17 +24,17 @@ export const MessagingCenter = () => {
     const { client } = useChatContext();
     const [isComposeOpen, setIsComposeOpen] = useState(false);
 
-    if (!currentUser) return null;
-
     const isDark = theme === 'dark' || (theme === 'auto' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
     const filters = useMemo(() => ({
         type: 'messaging',
-        members: { $in: [currentUser.id] }
-    }), [currentUser.id]);
+        members: { $in: currentUser ? [currentUser.id] : [] }
+    }), [currentUser]);
 
     const sort = useMemo(() => ({ last_message_at: -1 } as const), []);
     const options = useMemo(() => ({ state: true, watch: true, presence: true } as const), []);
+
+    if (!currentUser) return null;
 
     const handleCreateChannel = async (recipientId: string, body: string) => {
         if (!client) return;

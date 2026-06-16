@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import usertour from 'usertour.js'
 
 export type UserRole = 'admin' | 'teacher' | 'student' | 'parent'
 
@@ -111,18 +110,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         checkAuth()
     }, [checkAuth])
 
-    // Update usertour identification when user changes
-    useEffect(() => {
-        if (currentUser) {
-            usertour.identify(currentUser.id, {
-                email: currentUser.email,
-                name: currentUser.full_name,
-                role: currentUser.role,
-                studio: currentUser.studio?.name
-            })
-        }
-    }, [currentUser])
-
     const login = async (email: string, pass: string) => {
         if (typeof window === 'undefined') return
 
@@ -158,7 +145,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('accessToken')
         localStorage.removeItem('refreshToken')
         setCurrentUser(null)
-        usertour.logout()
         router.push('/login')
     }
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, User, Mail, Phone, Music, Users, Info, Trash2 } from 'lucide-react'
+import { ArrowLeft, User, Mail, Phone, Music, Users, Info, Trash2, Plus } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import api from '@/services/api'
 import { formatPhoneNumber } from '@/lib/utils'

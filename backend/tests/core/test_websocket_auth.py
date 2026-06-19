@@ -8,8 +8,8 @@ import pytest
 from channels.routing import URLRouter
 from channels.testing import WebsocketCommunicator
 
-from apps.messaging.consumers import NotificationConsumer
-from apps.messaging.middleware import TokenAuthMiddleware
+from apps.notifications.consumers import NotificationConsumer
+from apps.core.middleware import TokenAuthMiddleware
 
 
 @pytest.mark.websocket

@@ -1034,4 +1034,4 @@ const ws = new WebSocket(
 ## Related Documentation
 
 - [Database Schema](database.md) - Data models
-- [Authentication](../GDPR_COMPLIANCE.md) - Security and privacy
+- [Authentication](GDPR_COMPLIANCE.md) - Security and privacy

@@ -29,6 +29,12 @@
 - **Rich Lesson Docs** – notes, practice assignments, ratings, repertoire, file attachments, visibility controls
 - **Reusable Lesson Plans** – templates, skill‑level targeting, duration, tags, sharing
 
+### 🎸 Gig Marketplace
+
+- **Monthly Availability** – bands can set their schedules dynamically
+- **Gig Claims** – release and pick up gigs across the studio network
+- **Automated Payouts** – built-in pay scales integrated with billing
+
 ### 💰 Billing & Financial Management
 
 - **Automated Invoicing** – from lessons, band‑level billing, tax, status tracking

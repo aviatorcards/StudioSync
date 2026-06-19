@@ -22,6 +22,7 @@ urlpatterns = [
     path("api/messaging/", include("apps.messaging.urls")),
     path("api/inventory/", include("apps.inventory.urls")),
     path("api/notifications/", include("apps.notifications.urls")),
+    path("api/gigs/", include("apps.gigs.urls")),
     # path('admin/', admin.site.urls),
 ]
 

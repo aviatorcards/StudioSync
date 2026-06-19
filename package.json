@@ -20,8 +20,6 @@
   },
   "homepage": "https://github.com/aviatorcards/StudioSync#readme",
   "devDependencies": {
-    "@playwright/test": "^1.58.1",
-    "@types/node": "^25.2.1",
-    "cypress": "^15.10.0"
+    "@types/node": "^25.2.1"
   }
 }

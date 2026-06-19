@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     "apps.messaging",
     "apps.inventory",
     "apps.notifications",
+    "apps.gigs",
 ]
 
 MIDDLEWARE = [

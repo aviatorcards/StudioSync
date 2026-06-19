@@ -28,13 +28,24 @@ import {
     FileText,
     Music,
     X,
-    ShieldCheck,
-    Pencil
+    Pencil,
+    MapPin,
 } from 'lucide-react'
 import { useNotifications } from '@/hooks/useNotifications'
 import { Button } from '@/components/ui/button'
 
-// Portal component for mobile menu to break out of parent stacking contexts
+// ─── Design tokens ───────────────────────────────────────────────────────────
+const S = {
+    bg: '#1c1309',
+    border: 'rgba(255,255,255,0.07)',
+    amber: '#c17c2e',
+    amberBg: 'rgba(193,124,46,0.14)',
+    text: 'rgba(250,247,242,0.9)',
+    muted: 'rgba(250,247,242,0.5)',
+    hoverBg: 'rgba(250,247,242,0.06)',
+    badgeBg: 'rgba(193,124,46,0.2)',
+} as const
+
 const MobileSidebarPortal = ({ children }: { children: React.ReactNode }) => {
     const [mounted, setMounted] = useState(false)
 
@@ -54,7 +65,6 @@ interface SidebarItem {
     icon: any
     badge?: string | number
     roles?: UserRole[]
-    /** If set, the item is hidden when this feature flag is disabled */
     featureFlag?: keyof FeatureFlags
 }
 
@@ -75,29 +85,18 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const { flags } = useFeatureFlags()
     const { unreadCount } = useNotifications(60000)
 
-    // Close sidebar on route change (mobile)
     useEffect(() => {
         onClose()
     }, [pathname, onClose])
 
-    // Prevent body scroll when mobile sidebar is open
     useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden'
-        } else {
-            document.body.style.overflow = 'unset'
-        }
-        return () => {
-            document.body.style.overflow = 'unset'
-        }
+        document.body.style.overflow = isOpen ? 'hidden' : 'unset'
+        return () => { document.body.style.overflow = 'unset' }
     }, [isOpen])
 
-    // Close on Escape key
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && isOpen) {
-                onClose()
-            }
+            if (e.key === 'Escape' && isOpen) onClose()
         }
         window.addEventListener('keydown', handleEscape)
         return () => window.removeEventListener('keydown', handleEscape)
@@ -116,6 +115,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             items: [
                 { name: 'Students', href: '/dashboard/students', icon: Users, roles: ['admin', 'teacher'] },
                 { name: 'Bands', href: '/dashboard/bands', icon: Music, roles: ['admin', 'teacher', 'student'], featureFlag: 'bands_enabled' },
+                { name: 'Gigs', href: '/dashboard/gigs', icon: MapPin, roles: ['admin', 'teacher', 'student'], featureFlag: 'bands_enabled' },
                 { name: 'Instructors', href: '/dashboard/teachers', icon: UserCheck, roles: ['admin'] },
                 { name: 'Schedule', href: '/dashboard/schedule', icon: Calendar, roles: ['admin', 'teacher', 'student'] },
                 { name: 'Lessons', href: '/dashboard/lessons', icon: BookOpen, roles: ['admin', 'teacher', 'student'] },
@@ -126,7 +126,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             title: 'TOOLS',
             items: [
                 { name: 'Resources', href: '/dashboard/resources', icon: Library, roles: ['admin', 'teacher', 'student'], featureFlag: 'resources_enabled' },
-{ name: 'Messages', href: '/dashboard/messages', icon: MessageSquare, roles: ['admin', 'teacher', 'student'], featureFlag: 'messaging_enabled' },
+                { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare, roles: ['admin', 'teacher', 'student'], featureFlag: 'messaging_enabled' },
                 { name: 'Notifications', href: '/dashboard/notifications', icon: Bell, badge: unreadCount > 0 ? unreadCount : undefined, roles: ['admin', 'teacher', 'student'] },
                 { name: 'Goals', href: '/dashboard/goals', icon: Target, roles: ['admin', 'teacher', 'student'], featureFlag: 'goals_enabled' },
                 { name: 'Inventory', href: '/dashboard/inventory', icon: Package, roles: ['admin', 'teacher'], featureFlag: 'inventory_enabled' },
@@ -156,70 +156,100 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     ]
 
     const isActive = (href: string) => {
-        if (href === '/dashboard') {
-            return pathname === href
-        }
-        // Check exact match or if pathname starts with href followed by /
+        if (href === '/dashboard') return pathname === href
         return pathname === href || (pathname?.startsWith(href + '/') ?? false)
     }
 
-    // Shared sidebar content component
     const SidebarContent = () => (
         <>
-            {/* Logo/Brand */}
-            <div className="p-6 border-b border-white/10">
-                <Link href="/" className="flex items-center space-x-3" onClick={onClose}>
-                    <Logo className="w-10 h-10" />
-                    <span className="text-xl font-bold">StudioSync</span>
+            {/* Logo / brand */}
+            <div
+                className="p-5 pb-4"
+                style={{ borderBottom: `1px solid ${S.border}` }}
+            >
+                <Link href="/" className="flex items-center gap-2.5 mb-2" onClick={onClose}>
+                    <Logo className="w-9 h-9" />
+                    <span
+                        className="text-base font-bold"
+                        style={{ color: S.text, fontFamily: 'Outfit, sans-serif' }}
+                    >
+                        StudioSync
+                    </span>
                 </Link>
-                <p className="text-xs text-white/60 mt-1">
-                    {currentUser?.role ? `Dashboard - ${currentUser.role === 'teacher' ? 'instructor' : currentUser.role}` : 'Studio Management'}
+                <p className="text-xs" style={{ color: S.muted }}>
+                    {currentUser?.role
+                        ? `${currentUser.role === 'teacher' ? 'Instructor' : currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)} dashboard`
+                        : 'Studio Management'}
                 </p>
             </div>
 
-            {/* Navigation */}
+            {/* Nav */}
             <nav className="flex-1 overflow-y-auto py-4 pb-24">
                 {sections.map((section, sectionIdx) => {
-                    // Check section role visibility
                     if (section.roles && (!currentUser || !section.roles.includes(currentUser.role))) return null
 
-                    // Filter items by role and feature flags
-                    const visibleItems = section.items.filter(item => {
-                        // Check role visibility
+                    const visibleItems = section.items.filter((item) => {
                         const hasRoleAccess = !item.roles || (currentUser && item.roles.includes(currentUser.role))
                         if (!hasRoleAccess) return false
-
-                        // Check feature flag (items without a flag are always visible)
                         if (item.featureFlag && !flags[item.featureFlag]) return false
-
                         return true
                     })
 
                     if (visibleItems.length === 0) return null
 
                     return (
-                        <div key={sectionIdx} className="mb-6">
+                        <div key={sectionIdx} className="mb-5">
                             {section.title && (
-                                <h3 className="px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                <p
+                                    className="px-5 text-[10px] font-semibold uppercase tracking-widest mb-1.5"
+                                    style={{ color: S.amber, opacity: 0.75 }}
+                                >
                                     {section.title}
-                                </h3>
+                                </p>
                             )}
-                            <ul className="space-y-1 px-3">
+                            <ul className="space-y-0.5 px-3">
                                 {visibleItems.map((item) => {
+                                    const active = isActive(item.href)
                                     const isExternal = item.href.startsWith('http')
-                                    const linkContent = (
+
+                                    const itemContent = (
                                         <>
-                                            <div className="flex items-center space-x-3">
-                                                <item.icon className="w-5 h-5" />
-                                                <span className="text-sm">{item.name}</span>
+                                            <div className="flex items-center gap-3">
+                                                <item.icon
+                                                    className="w-4 h-4 flex-shrink-0"
+                                                    style={{ color: active ? S.amber : S.muted }}
+                                                />
+                                                <span
+                                                    className="text-sm font-medium"
+                                                    style={{ color: active ? S.amber : S.text }}
+                                                >
+                                                    {item.name}
+                                                </span>
                                             </div>
-                                            {item.badge && (
-                                                <span className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full font-medium">
+                                            {item.badge !== undefined && (
+                                                <span
+                                                    className="text-xs px-1.5 py-0.5 rounded-full font-semibold"
+                                                    style={{
+                                                        backgroundColor: S.badgeBg,
+                                                        color: S.amber,
+                                                    }}
+                                                >
                                                     {item.badge}
                                                 </span>
                                             )}
                                         </>
                                     )
+
+                                    const itemStyle: React.CSSProperties = {
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        padding: '7px 12px',
+                                        borderRadius: '8px',
+                                        transition: 'background-color 0.15s',
+                                        backgroundColor: active ? S.amberBg : 'transparent',
+                                        borderLeft: active ? `2px solid ${S.amber}` : '2px solid transparent',
+                                    }
 
                                     if (isExternal) {
                                         return (
@@ -228,9 +258,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                                     href={item.href}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900`}
+                                                    style={itemStyle}
+                                                    onMouseEnter={(e) => {
+                                                        if (!active) e.currentTarget.style.backgroundColor = S.hoverBg
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        if (!active) e.currentTarget.style.backgroundColor = 'transparent'
+                                                    }}
                                                 >
-                                                    {linkContent}
+                                                    {itemContent}
                                                 </a>
                                             </li>
                                         )
@@ -241,12 +277,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                             <Link
                                                 href={item.href}
                                                 onClick={onClose}
-                                                className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${isActive(item.href)
-                                                    ? 'bg-primary text-white font-medium'
-                                                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                                                    }`}
+                                                style={itemStyle}
+                                                onMouseEnter={(e) => {
+                                                    if (!active) e.currentTarget.style.backgroundColor = S.hoverBg
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    if (!active) e.currentTarget.style.backgroundColor = active ? S.amberBg : 'transparent'
+                                                }}
                                             >
-                                                {linkContent}
+                                                {itemContent}
                                             </Link>
                                         </li>
                                     )
@@ -261,41 +300,43 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     return (
         <>
-            {/* Desktop Sidebar - Always visible on md+ screens */}
-            <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 bg-gray-100 text-gray-900 flex-col z-30">
+            {/* Desktop Sidebar */}
+            <aside
+                className="hidden md:flex fixed left-0 top-0 h-screen w-64 flex-col z-30"
+                style={{ backgroundColor: S.bg }}
+            >
                 <SidebarContent />
             </aside>
 
-            {/* Mobile Sidebar - Portal-based overlay */}
-            {/* Mobile Sidebar - Portal-based overlay */}
+            {/* Mobile Sidebar */}
             <AnimatePresence>
                 {isOpen && (
                     <MobileSidebarPortal>
-                        {/* Overlay backdrop */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={onClose}
-                            className="fixed inset-0 bg-black/50 z-[100] md:hidden"
+                            className="fixed inset-0 z-[100] md:hidden"
+                            style={{ backgroundColor: 'rgba(28,19,9,0.6)', backdropFilter: 'blur(2px)' }}
                         />
 
-                        {/* Sliding sidebar */}
                         <motion.aside
                             initial={{ x: '-100%' }}
                             animate={{ x: 0 }}
                             exit={{ x: '-100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white flex flex-col z-[101] md:hidden"
+                            className="fixed left-0 top-0 h-screen w-64 flex flex-col z-[101] md:hidden"
+                            style={{ backgroundColor: S.bg }}
                             onClick={(e) => e.stopPropagation()}
                         >
-                            {/* Close button */}
                             <div className="absolute top-4 right-4 z-10">
                                 <Button
                                     variant="ghost"
                                     size="icon"
                                     onClick={onClose}
-                                    className="bg-white/10 hover:bg-white/20 text-white shadow-none"
+                                    className="shadow-none"
+                                    style={{ color: S.muted }}
                                     aria-label="Close menu"
                                 >
                                     <X className="w-5 h-5" />

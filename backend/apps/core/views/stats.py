@@ -226,7 +226,6 @@ class DashboardStatsView(APIView):
 
         # Filter visibility
         if user.role == "admin":
-            from apps.core.models import Studio
             studio = Studio.objects.filter(owner=user).first() or Studio.objects.first()
             if studio:
                 qs = qs.filter(studio=studio)

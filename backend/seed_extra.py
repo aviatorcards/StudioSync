@@ -178,10 +178,10 @@ def seed_extra():
         # Create some checkouts for these items
         if item.available_quantity > 0:
             for _ in range(random.randint(0, 2)):
-                student_user = random.choice(students).user
+                student = random.choice(students)
                 CheckoutLog.objects.create(
                     item=item,
-                    student=student_user,
+                    student=student,
                     quantity=1,
                     due_date=date.today() + timedelta(days=7),
                     status=random.choice(["pending", "approved"]),
@@ -204,11 +204,11 @@ def seed_extra():
 
         # Create some reservations
         for i in range(5):
-            student_user = random.choice(students).user
+            student = random.choice(students)
             start = timezone.now() + timedelta(days=i, hours=random.randint(9, 17))
             RoomReservation.objects.get_or_create(
                 room=room,
-                student=student_user,
+                student=student,
                 start_time=start,
                 defaults={
                     "end_time": start + timedelta(hours=1),

@@ -487,12 +487,6 @@ export default function SettingsPage() {
 
                 updateCurrentUserSafe(response.data)
                 toast.success(`${settingsType} settings saved successfully`)
-
-                if (settingsType.toLowerCase() === 'appearance') {
-                    setTimeout(() => {
-                        window.location.reload()
-                    }, 500)
-                }
             }
         } catch (error) {
             console.error(`Failed to save ${settingsType} settings:`, error)
@@ -1235,7 +1229,11 @@ export default function SettingsPage() {
                                             <button
                                                 key={scheme.value}
                                                 type="button"
-                                                onClick={() => setAppearanceSettings({ ...appearanceSettings, color_scheme: scheme.value })}
+                                                onClick={() => {
+                                                    const newSettings = { ...appearanceSettings, color_scheme: scheme.value };
+                                                    setAppearanceSettings(newSettings);
+                                                    handleSaveSettings('Appearance', newSettings);
+                                                }}
                                                 className={`p-3 border-2 rounded-lg transition-all hover:scale-105 ${appearanceSettings.color_scheme === scheme.value
                                                     ? 'border-gray-900 shadow-md'
                                                     : 'border-gray-200 hover:border-gray-400'
@@ -1251,13 +1249,7 @@ export default function SettingsPage() {
                                             </button>
                                         ))}
                                     </div>
-                                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                                        <p className="text-xs text-blue-800">
-                                            <strong>Note:</strong> After saving, the page will reload to apply your new color scheme across the entire dashboard.
-                                        </p>
-                                    </div>
                                 </div>
-
                                 <div>
                                     <label className="flex items-start justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
                                         <div className="flex-1 pr-4">

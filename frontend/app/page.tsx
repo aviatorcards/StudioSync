@@ -227,33 +227,6 @@ const features = [
   },
 ]
 
-const testimonials = [
-  {
-    name: 'Laura Whitfield',
-    role: 'Voice & Piano Instructor',
-    studio: 'Whitfield Music Studio',
-    content:
-      'I was tracking everything in Google Sheets before this. Invoicing 30+ families used to eat my entire Sunday — now it just happens automatically. Genuinely wish I had this five years ago.',
-    rating: 5,
-  },
-  {
-    name: 'David Okonkwo',
-    role: 'Guitar & Bass Instructor',
-    studio: 'Backbeat Lessons',
-    content:
-      "Solid app overall. The scheduling and lesson notes are great — being able to pull up what we covered last week during a lesson is super handy. I'd love to see a mobile app eventually, but the browser works fine on my tablet for now.",
-    rating: 4,
-  },
-  {
-    name: 'Rachel Mori',
-    role: 'Studio Owner',
-    studio: 'North Shore Music Academy',
-    content:
-      'We have three instructors and about 80 students. Before StudioSync we were juggling Venmo, a shared Google Calendar, and a lot of text messages. Having it all in one place has cut down on so many miscommunications.',
-    rating: 5,
-  },
-]
-
 // ─── Feature Modal ───────────────────────────────────────────────────────────
 function FeatureModal({
   feature,
@@ -650,7 +623,7 @@ export default function Home() {
                       className="w-2 h-2 rounded-full"
                       style={{ backgroundColor: C.amber, opacity: 0.7 }}
                     />
-                    studiosync.app
+                    studiosync.cc
                   </div>
                 </div>
 
@@ -785,99 +758,6 @@ export default function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {features.map((f, i) => (
                 <FeatureCard key={i} feature={f} index={i} onClick={() => openFeature(f)} />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Testimonials ──────────────────────────────────────────────────── */}
-        <section
-          className="py-24 px-6"
-          style={{ backgroundColor: C.bgDark, ...staffLinesDark }}
-        >
-          <div className="max-w-6xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="mb-14"
-            >
-              <p
-                className="text-xs font-semibold uppercase tracking-widest mb-4"
-                style={{ color: C.amber }}
-              >
-                Studio notes
-              </p>
-              <h2
-                className="text-3xl md:text-5xl font-extrabold leading-tight"
-                style={{
-                  color: C.bg,
-                  letterSpacing: '-0.025em',
-                  fontFamily: 'Outfit, sans-serif',
-                }}
-              >
-                What music educators say
-              </h2>
-            </motion.div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {testimonials.map((t, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.1 }}
-                  className="rounded-2xl p-6 flex flex-col"
-                  style={{
-                    backgroundColor: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                  }}
-                >
-                  <div
-                    className="text-5xl font-serif mb-3 leading-none select-none"
-                    style={{ color: C.amber, opacity: 0.6 }}
-                  >
-                    &ldquo;
-                  </div>
-
-                  <div className="flex gap-1 mb-4">
-                    {Array.from({ length: t.rating }).map((_, j) => (
-                      <Star
-                        key={j}
-                        className="w-3.5 h-3.5 fill-current"
-                        style={{ color: C.amber }}
-                      />
-                    ))}
-                  </div>
-
-                  <p
-                    className="text-sm leading-relaxed flex-1 mb-6"
-                    style={{ color: 'rgba(250,247,242,0.78)', fontFamily: 'Manrope, sans-serif' }}
-                  >
-                    {t.content}
-                  </p>
-
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                      style={{ backgroundColor: C.amber, color: C.white }}
-                    >
-                      {t.name
-                        .split(' ')
-                        .map((n) => n[0])
-                        .join('')}
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold" style={{ color: C.bg }}>
-                        {t.name}
-                      </div>
-                      <div className="text-[11px]" style={{ color: C.faint }}>
-                        {t.role} · {t.studio}
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
               ))}
             </div>
           </div>

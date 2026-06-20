@@ -6,6 +6,28 @@ import Link from 'next/link'
 import { Logo } from '@/components/Logo'
 import { motion } from 'framer-motion'
 
+const A = {
+    bg: '#faf7f2',
+    card: '#ffffff',
+    border: '#e3d4bc',
+    amber: '#c17c2e',
+    amberDark: '#9e6020',
+    amberLight: 'rgba(193,124,46,0.12)',
+    text: '#1c1309',
+    muted: '#7a6145',
+    faint: '#b09870',
+} as const
+
+const staffLines: React.CSSProperties = {
+    backgroundImage: `repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 27px,
+        rgba(193,124,46,0.09) 27px,
+        rgba(193,124,46,0.09) 28px
+    )`,
+}
+
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('')
     const [isLoading, setIsLoading] = useState(false)
@@ -16,18 +38,13 @@ export default function ForgotPasswordPage() {
         e.preventDefault()
         setError('')
         setIsLoading(true)
-
         try {
             const res = await fetch('/api/auth/password/reset/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email })
+                body: JSON.stringify({ email }),
             })
-
-            if (!res.ok) {
-                throw new Error('No account found with this email address')
-            }
-
+            if (!res.ok) throw new Error('No account found with this email address')
             setSuccess(true)
         } catch (err: any) {
             setError(err.message || 'Something went wrong. Please try again.')
@@ -37,26 +54,33 @@ export default function ForgotPasswordPage() {
     }
 
     return (
-        <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
-            {/* Background Orbs */}
-            <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-indigo-50 rounded-full blur-3xl opacity-50 -translate-x-1/2 -translate-y-1/2" />
-            <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-50 rounded-full blur-3xl opacity-50 translate-x-1/2 translate-y-1/2" />
+        <div
+            className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden"
+            style={{ backgroundColor: A.bg, ...staffLines }}
+        >
+            {/* Subtle amber glow */}
+            <div
+                className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none"
+                style={{ background: 'radial-gradient(circle, rgba(193,124,46,0.07) 0%, transparent 70%)' }}
+            />
 
-            <div className="w-full max-w-md relative z-10">
+            <div className="w-full max-w-sm relative z-10">
+                {/* Logo */}
                 <div className="text-center mb-10">
-                    <div className="flex justify-center mb-8">
-                        <Logo className="h-10 w-auto" />
-                    </div>
+                    <Link href="/" className="inline-flex items-center gap-2.5 justify-center mb-8">
+                        <Logo className="h-9 w-9" />
+                        <span className="text-lg font-bold" style={{ color: A.text, fontFamily: 'Outfit, sans-serif' }}>StudioSync</span>
+                    </Link>
 
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5 }}
+                        transition={{ duration: 0.45 }}
                     >
-                        <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-3">
+                        <h1 className="text-2xl font-bold mb-2" style={{ color: A.text, fontFamily: 'Outfit, sans-serif', letterSpacing: '-0.02em' }}>
                             Reset your password
                         </h1>
-                        <p className="text-gray-500 font-medium">
+                        <p className="text-sm" style={{ color: A.muted }}>
                             We&apos;ll send you a link to get back into your account.
                         </p>
                     </motion.div>
@@ -66,89 +90,100 @@ export default function ForgotPasswordPage() {
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.4, delay: 0.1 }}
-                    className="bg-white p-8 md:p-10 rounded-2xl shadow-xl shadow-indigo-100/50 border border-gray-100"
+                    className="rounded-2xl p-8"
+                    style={{ backgroundColor: A.card, border: `1px solid ${A.border}`, boxShadow: '0 4px 32px rgba(28,19,9,0.06)' }}
                 >
                     {success ? (
                         <div className="text-center py-4 space-y-6">
-                            <div className="mx-auto flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600">
-                                <CheckCircle className="w-8 h-8" />
+                            <div
+                                className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center"
+                                style={{ backgroundColor: 'rgba(61,158,61,0.08)', border: '1px solid rgba(61,158,61,0.15)' }}
+                            >
+                                <CheckCircle className="w-8 h-8" style={{ color: '#3d9e3d' }} />
                             </div>
                             <div>
-                                <h3 className="text-xl font-bold text-gray-900 mb-2">Check your email</h3>
-                                <p className="text-gray-500 text-sm leading-relaxed">
-                                    We&apos;ve sent a password reset link to <br />
-                                    <span className="text-gray-900 font-semibold">{email}</span>
+                                <h3 className="text-lg font-bold mb-2" style={{ color: A.text }}>Check your email</h3>
+                                <p className="text-sm leading-relaxed" style={{ color: A.muted }}>
+                                    We&apos;ve sent a reset link to{' '}
+                                    <span className="font-semibold" style={{ color: A.text }}>{email}</span>
                                 </p>
                             </div>
-                            <div className="pt-4">
-                                <Link
-                                    href="/login"
-                                    className="inline-flex items-center justify-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors"
-                                >
-                                    <ArrowLeft className="w-4 h-4" />
-                                    Back to sign in
-                                </Link>
-                            </div>
+                            <Link
+                                href="/login"
+                                className="inline-flex items-center justify-center gap-2 text-sm font-bold transition-colors"
+                                style={{ color: A.amber }}
+                                onMouseEnter={e => (e.currentTarget.style.color = A.amberDark)}
+                                onMouseLeave={e => (e.currentTarget.style.color = A.amber)}
+                            >
+                                <ArrowLeft className="w-4 h-4" />
+                                Back to sign in
+                            </Link>
                         </div>
                     ) : (
-                        <form className="space-y-6" onSubmit={handleSubmit}>
+                        <form className="space-y-5" onSubmit={handleSubmit}>
                             {error && (
-                                <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-center gap-3 text-red-600 animate-in slide-in-from-top-2">
-                                    <AlertCircle className="w-5 h-5 shrink-0" />
-                                    <p className="text-sm font-medium">{error}</p>
+                                <div className="flex items-center gap-3 p-4 rounded-xl text-sm" style={{ backgroundColor: 'rgba(181,64,64,0.06)', border: '1px solid rgba(181,64,64,0.2)', color: '#b54040' }}>
+                                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                                    <p>{error}</p>
                                 </div>
                             )}
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-700 ml-1">Email address</label>
-                                <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <Mail className="h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: A.muted }}>
+                                    Email address
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                        <Mail className="h-4 w-4" style={{ color: A.faint }} />
                                     </div>
                                     <input
-                                        type="email"
-                                        required
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 focus:border-indigo-600 focus:bg-white rounded-xl outline-none font-medium text-gray-900 text-sm transition-all shadow-sm"
-                                        placeholder="you@studio.com"
+                                        type="email" required
+                                        value={email} onChange={e => setEmail(e.target.value)}
+                                        className="block w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm outline-none transition-all"
+                                        style={{ backgroundColor: A.bg, borderColor: A.border, color: A.text }}
+                                        onFocus={e => { e.currentTarget.style.borderColor = A.amber; e.currentTarget.style.backgroundColor = '#fff'; e.currentTarget.style.boxShadow = `0 0 0 3px rgba(193,124,46,0.12)` }}
+                                        onBlur={e => { e.currentTarget.style.borderColor = A.border; e.currentTarget.style.backgroundColor = A.bg; e.currentTarget.style.boxShadow = 'none' }}
+                                        placeholder="you@example.com"
                                     />
                                 </div>
                             </div>
 
                             <button
-                                type="submit"
-                                disabled={isLoading}
-                                className="w-full py-3.5 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-all shadow-lg active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3"
+                                type="submit" disabled={isLoading}
+                                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all disabled:opacity-50"
+                                style={{ backgroundColor: A.amber, color: '#fff' }}
+                                onMouseEnter={e => { if (!isLoading) e.currentTarget.style.backgroundColor = A.amberDark }}
+                                onMouseLeave={e => { e.currentTarget.style.backgroundColor = A.amber }}
                             >
-                                {isLoading ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        <span>Sending...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Send className="w-4 h-4" />
-                                        <span>Send reset link</span>
-                                    </>
-                                )}
+                                {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Sending…</> : <><Send className="w-4 h-4" /> Send reset link</>}
                             </button>
 
                             <div className="text-center">
                                 <Link
                                     href="/login"
-                                    className="text-sm font-bold text-gray-400 hover:text-gray-900 transition-colors"
+                                    className="text-sm font-semibold transition-colors"
+                                    style={{ color: A.faint }}
+                                    onMouseEnter={e => (e.currentTarget.style.color = A.muted)}
+                                    onMouseLeave={e => (e.currentTarget.style.color = A.faint)}
                                 >
-                                    Back to login
+                                    ← Back to sign in
                                 </Link>
                             </div>
                         </form>
                     )}
                 </motion.div>
 
-                <p className="mt-8 text-center text-xs text-gray-400">
+                <p className="mt-6 text-center text-xs" style={{ color: A.faint }}>
                     Don&apos;t have an account?{' '}
-                    <Link href="/signup" className="text-indigo-600 font-bold hover:underline">Sign up</Link>
+                    <Link
+                        href="/signup"
+                        className="font-semibold transition-colors"
+                        style={{ color: A.amber }}
+                        onMouseEnter={e => (e.currentTarget.style.color = A.amberDark)}
+                        onMouseLeave={e => (e.currentTarget.style.color = A.amber)}
+                    >
+                        Sign up
+                    </Link>
                 </p>
             </div>
         </div>

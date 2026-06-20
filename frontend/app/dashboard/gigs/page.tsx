@@ -430,7 +430,7 @@ function PayoutModal({ gig, open, onClose, onPaid }: {
                                     <p className="text-xs text-gray-400">This will create an invoice and payment record in billing and mark the gig as completed.</p>
                                     <div className="flex justify-end gap-3">
                                         <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors">Cancel</button>
-                                        <button type="submit" disabled={saving} className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors disabled:opacity-60 flex items-center gap-2">
+                                        <button type="submit" disabled={saving} className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-60 flex items-center gap-2">
                                             {saving && <Loader className="w-4 h-4 animate-spin" />} Pay ${parseFloat(amount || '0').toFixed(2)}
                                         </button>
                                     </div>

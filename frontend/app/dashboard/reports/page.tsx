@@ -346,7 +346,7 @@ export default function ReportsPage() {
                             <button
                                 onClick={() => handleDownloadExcel(report.id)}
                                 disabled={downloading === `${report.id}-excel`}
-                                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
                             >
                                 {downloading === `${report.id}-excel` ? (
                                     <>

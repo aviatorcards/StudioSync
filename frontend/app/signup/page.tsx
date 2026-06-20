@@ -3,64 +3,90 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Mail, Lock, User, Loader2, AlertCircle, ArrowRight, Check } from 'lucide-react'
-import Image from 'next/image'
+import { Mail, Lock, User, Loader2, AlertCircle, ArrowRight, Check, Music2 } from 'lucide-react'
 import { Logo } from '@/components/Logo'
+
+const A = {
+    bg: '#faf7f2',
+    card: '#ffffff',
+    panel: '#1c1309',
+    border: '#e3d4bc',
+    amber: '#c17c2e',
+    amberDark: '#9e6020',
+    amberLight: 'rgba(193,124,46,0.12)',
+    text: '#1c1309',
+    muted: '#7a6145',
+    faint: '#b09870',
+    panelText: 'rgba(250,247,242,0.9)',
+    panelMuted: 'rgba(250,247,242,0.55)',
+} as const
+
+const staffLines: React.CSSProperties = {
+    backgroundImage: `repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 27px,
+        rgba(193,124,46,0.07) 27px,
+        rgba(193,124,46,0.07) 28px
+    )`,
+}
+
+const inp = 'block w-full py-2.5 rounded-xl border text-sm transition-all outline-none'
+const inpStyle = (A: any) => ({
+    paddingLeft: '2.375rem',
+    paddingRight: '0.875rem',
+    backgroundColor: A.bg,
+    borderColor: A.border,
+    color: A.text,
+})
+const inpPlain = (A: any) => ({
+    padding: '0.625rem 0.875rem',
+    backgroundColor: A.bg,
+    borderColor: A.border,
+    color: A.text,
+})
 
 export default function SignupPage() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const [formData, setFormData] = useState({
-        email: '',
-        password: '',
-        confirmPassword: '',
-        firstName: '',
-        lastName: '',
-        role: 'student',
+        email: '', password: '', confirmPassword: '',
+        firstName: '', lastName: '', role: 'student',
     })
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
     const [selectedPlan, setSelectedPlan] = useState('starter')
 
-    // Get plan from URL params
     useEffect(() => {
         const plan = searchParams.get('plan')
-        if (plan) {
-            setSelectedPlan(plan)
-        }
+        if (plan) setSelectedPlan(plan)
     }, [searchParams])
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value,
-        })
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+        setFormData(p => ({ ...p, [e.target.name]: e.target.value }))
+
+    const focusStyle = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
+        e.currentTarget.style.borderColor = A.amber
+        e.currentTarget.style.backgroundColor = '#fff'
+        e.currentTarget.style.boxShadow = `0 0 0 3px ${A.amberLight}`
+    }
+    const blurStyle = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
+        e.currentTarget.style.borderColor = A.border
+        e.currentTarget.style.backgroundColor = A.bg
+        e.currentTarget.style.boxShadow = 'none'
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError('')
-
-        // Validation
-        if (formData.password !== formData.confirmPassword) {
-            setError('Passwords do not match')
-            return
-        }
-
-        if (formData.password.length < 8) {
-            setError('Password must be at least 8 characters')
-            return
-        }
-
+        if (formData.password !== formData.confirmPassword) { setError('Passwords do not match'); return }
+        if (formData.password.length < 8) { setError('Password must be at least 8 characters'); return }
         setLoading(true)
-
         try {
             const response = await fetch('/api/auth/register/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include',  // Required for CORS with credentials
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify({
                     email: formData.email,
                     password: formData.password,
@@ -69,16 +95,13 @@ export default function SignupPage() {
                     role: formData.role,
                 }),
             })
-
             if (response.ok) {
-                // Redirect to login with success message
                 router.push('/login?registered=true')
             } else {
                 const data = await response.json()
                 setError(data.error || data.detail || data.email?.[0] || 'Registration failed')
             }
-
-        } catch (err) {
+        } catch {
             setError('Connection error. Please try again.')
         } finally {
             setLoading(false)
@@ -86,159 +109,175 @@ export default function SignupPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex">
-            {/* Left Side - Branding */}
-            <div className="hidden lg:flex lg:w-1/2 bg-gray-900 p-12 flex-col justify-between relative overflow-hidden">
-                {/* Subtle gradient overlays */}
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/15 via-transparent to-purple-600/15" />
+        <div className="min-h-screen flex" style={{ backgroundColor: A.bg }}>
+            {/* Left panel */}
+            <div
+                className="hidden lg:flex lg:w-[45%] flex-col justify-between p-12 relative overflow-hidden"
+                style={{ backgroundColor: A.panel, ...staffLines }}
+            >
+                <div
+                    className="absolute top-0 right-0 w-96 h-96 rounded-full pointer-events-none"
+                    style={{ background: 'radial-gradient(circle, rgba(193,124,46,0.12) 0%, transparent 70%)', transform: 'translate(30%, -30%)' }}
+                />
 
-                <div className="relative z-10">
-                    <Link href="/" className="flex items-center gap-2.5 group">
-                        <Logo className="w-10 h-10" />
-                        <span className="text-2xl font-bold text-white">StudioSync</span>
-                    </Link>
-                </div>
+                <Link href="/" className="flex items-center gap-2.5 relative z-10">
+                    <Logo className="w-9 h-9" />
+                    <span className="text-lg font-bold" style={{ color: A.panelText, fontFamily: 'Outfit, sans-serif' }}>
+                        StudioSync
+                    </span>
+                </Link>
 
                 <div className="relative z-10 space-y-6">
-                    <h1 className="text-4xl font-bold text-white leading-tight">
-                        Start managing your studio today
+                    <div
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6"
+                        style={{ backgroundColor: A.amberLight, border: '1px solid rgba(193,124,46,0.2)' }}
+                    >
+                        <Music2 className="w-6 h-6" style={{ color: A.amber }} />
+                    </div>
+                    <h1
+                        className="text-4xl font-extrabold leading-tight"
+                        style={{ color: A.panelText, fontFamily: 'Outfit, sans-serif', letterSpacing: '-0.025em' }}
+                    >
+                        Built for musicians, not bookers.
                     </h1>
-                    <p className="text-lg text-gray-300">
-                        Music instructors trust StudioSync to run their studios.
+                    <p className="text-lg leading-relaxed" style={{ color: A.panelMuted }}>
+                        Bands set their own availability. Studios post gigs. Everyone gets paid fairly.
                     </p>
-
-                    {/* Features */}
                     <div className="space-y-3 pt-2">
                         {[
-                            'Free forever for up to 10 students',
-                            'No credit card required',
-                            'Set up in under 5 minutes'
-                        ].map((text) => (
-                            <div key={text} className="flex items-center gap-3">
-                                <div className="w-5 h-5 rounded-md bg-white/10 flex items-center justify-center">
-                                    <Check className="w-3.5 h-3.5 text-white" />
+                            'Gig marketplace with built-in pay scales',
+                            'Bands control their own schedule',
+                            'No middleman, no booking fees',
+                            'Free and open source',
+                        ].map((t) => (
+                            <div key={t} className="flex items-center gap-3">
+                                <div
+                                    className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
+                                    style={{ backgroundColor: A.amberLight }}
+                                >
+                                    <Check className="w-3 h-3" style={{ color: A.amber }} />
                                 </div>
-                                <span className="text-gray-300 text-sm">{text}</span>
+                                <span className="text-sm" style={{ color: A.panelMuted }}>{t}</span>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                <div className="relative z-10 text-gray-500 text-sm">
-                    © 2025 StudioSync. Open source and self-hostable.
-                </div>
+                <p className="text-xs relative z-10" style={{ color: 'rgba(250,247,242,0.25)' }}>
+                    © StudioSync · Open source · GPL-3.0
+                </p>
             </div>
 
-            {/* Right Side - Signup Form */}
-            <div className="flex-1 flex items-center justify-center p-8">
-                <div className="w-full max-w-md">
-                    {/* Mobile Logo */}
-                    <Link href="/" className="lg:hidden flex items-center gap-2.5 justify-center mb-8 group">
-                        <Logo className="w-10 h-10" />
-                        <span className="text-xl font-bold text-gray-900">StudioSync</span>
+            {/* Right panel */}
+            <div className="flex-1 flex items-center justify-center p-6 md:p-10 overflow-y-auto" style={{ backgroundColor: A.bg }}>
+                <div className="w-full max-w-md py-6">
+                    {/* Mobile logo */}
+                    <Link href="/" className="lg:hidden flex items-center gap-2.5 justify-center mb-8">
+                        <Logo className="w-9 h-9" />
+                        <span className="text-lg font-bold" style={{ color: A.text, fontFamily: 'Outfit, sans-serif' }}>StudioSync</span>
                     </Link>
 
-                    <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-100">
+                    <div
+                        className="rounded-2xl p-8 shadow-sm"
+                        style={{ backgroundColor: A.card, border: `1px solid ${A.border}`, boxShadow: '0 4px 32px rgba(28,19,9,0.06)' }}
+                    >
                         <div className="mb-6">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-1">
+                            <h2 className="text-2xl font-bold mb-1" style={{ color: A.text, fontFamily: 'Outfit, sans-serif' }}>
                                 Create your account
                             </h2>
-                            <p className="text-gray-500 text-sm">
+                            <p className="text-sm" style={{ color: A.muted }}>
                                 Already have an account?{' '}
-                                <Link href="/login" className="font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">
+                                <Link
+                                    href="/login"
+                                    className="font-semibold transition-colors"
+                                    style={{ color: A.amber }}
+                                    onMouseEnter={e => (e.currentTarget.style.color = A.amberDark)}
+                                    onMouseLeave={e => (e.currentTarget.style.color = A.amber)}
+                                >
                                     Sign in
                                 </Link>
                             </p>
                         </div>
 
-                        {/* Selected Plan Badge */}
                         {selectedPlan && selectedPlan !== 'starter' && (
-                            <div className="mb-5 p-3.5 bg-indigo-50 border border-indigo-100 rounded-xl">
-                                <p className="text-sm font-semibold text-gray-700">
-                                    Selected Plan: <span className="text-indigo-600 capitalize">{selectedPlan}</span>
+                            <div className="mb-5 p-3.5 rounded-xl" style={{ backgroundColor: A.amberLight, border: `1px solid ${A.border}` }}>
+                                <p className="text-sm font-semibold" style={{ color: A.text }}>
+                                    Selected plan:{' '}
+                                    <span className="capitalize" style={{ color: A.amber }}>{selectedPlan}</span>
                                 </p>
                             </div>
                         )}
 
                         <form className="space-y-4" onSubmit={handleSubmit}>
                             {error && (
-                                <div className="bg-red-50 border border-red-200 rounded-xl p-3.5 flex items-start gap-2.5 text-red-700 text-sm">
-                                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                                <div className="flex items-start gap-2.5 p-3.5 rounded-xl text-sm" style={{ backgroundColor: 'rgba(181,64,64,0.06)', border: '1px solid rgba(181,64,64,0.2)', color: '#b54040' }}>
+                                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                                     <p>{error}</p>
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-2 gap-3">
+                            {/* Name row */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                    <label htmlFor="firstName" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                                    <label htmlFor="firstName" className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: A.muted }}>
                                         First Name
                                     </label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                            <User className="h-4 w-4 text-gray-400" />
+                                            <User className="h-4 w-4" style={{ color: A.faint }} />
                                         </div>
                                         <input
-                                            id="firstName"
-                                            name="firstName"
-                                            type="text"
-                                            required
-                                            value={formData.firstName}
-                                            onChange={handleChange}
-                                            className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl bg-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
-                                            placeholder="John"
+                                            id="firstName" name="firstName" type="text" required
+                                            value={formData.firstName} onChange={handleChange}
+                                            className={inp} style={inpStyle(A)}
+                                            onFocus={focusStyle} onBlur={blurStyle}
+                                            placeholder="First"
                                         />
                                     </div>
                                 </div>
                                 <div>
-                                    <label htmlFor="lastName" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                                    <label htmlFor="lastName" className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: A.muted }}>
                                         Last Name
                                     </label>
                                     <input
-                                        id="lastName"
-                                        name="lastName"
-                                        type="text"
-                                        required
-                                        value={formData.lastName}
-                                        onChange={handleChange}
-                                        className="block w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
-                                        placeholder="Doe"
+                                        id="lastName" name="lastName" type="text" required
+                                        value={formData.lastName} onChange={handleChange}
+                                        className={inp} style={inpPlain(A)}
+                                        onFocus={focusStyle} onBlur={blurStyle}
+                                        placeholder="Last"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label htmlFor="email" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                                <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: A.muted }}>
                                     Email address
                                 </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                        <Mail className="h-4 w-4 text-gray-400" />
+                                        <Mail className="h-4 w-4" style={{ color: A.faint }} />
                                     </div>
                                     <input
-                                        id="email"
-                                        name="email"
-                                        type="email"
-                                        required
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl bg-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
+                                        id="email" name="email" type="email" required
+                                        value={formData.email} onChange={handleChange}
+                                        className={inp} style={inpStyle(A)}
+                                        onFocus={focusStyle} onBlur={blurStyle}
                                         placeholder="you@example.com"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label htmlFor="role" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                                <label htmlFor="role" className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: A.muted }}>
                                     I am a
                                 </label>
                                 <select
-                                    id="role"
-                                    name="role"
-                                    value={formData.role}
-                                    onChange={handleChange}
-                                    className="block w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
+                                    id="role" name="role"
+                                    value={formData.role} onChange={handleChange}
+                                    className={inp} style={inpPlain(A)}
+                                    onFocus={focusStyle} onBlur={blurStyle}
                                 >
-                                    <option value="student">Student</option>
+                                    <option value="student">Musician / Student</option>
                                     <option value="teacher">Instructor</option>
                                     <option value="parent">Parent</option>
                                     <option value="staff">Studio Staff</option>
@@ -246,81 +285,69 @@ export default function SignupPage() {
                             </div>
 
                             <div>
-                                <label htmlFor="password" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                                <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: A.muted }}>
                                     Password
                                 </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                        <Lock className="h-4 w-4 text-gray-400" />
+                                        <Lock className="h-4 w-4" style={{ color: A.faint }} />
                                     </div>
                                     <input
-                                        id="password"
-                                        name="password"
-                                        type="password"
-                                        required
-                                        value={formData.password}
-                                        onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl bg-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
+                                        id="password" name="password" type="password" required
+                                        value={formData.password} onChange={handleChange}
+                                        className={inp} style={inpStyle(A)}
+                                        onFocus={focusStyle} onBlur={blurStyle}
                                         placeholder="••••••••"
                                     />
                                 </div>
-                                <p className="mt-1 text-xs text-gray-400">At least 8 characters</p>
+                                <p className="mt-1 text-xs" style={{ color: A.faint }}>At least 8 characters</p>
                             </div>
 
                             <div>
-                                <label htmlFor="confirmPassword" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                                <label htmlFor="confirmPassword" className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: A.muted }}>
                                     Confirm Password
                                 </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                        <Lock className="h-4 w-4 text-gray-400" />
+                                        <Lock className="h-4 w-4" style={{ color: A.faint }} />
                                     </div>
                                     <input
-                                        id="confirmPassword"
-                                        name="confirmPassword"
-                                        type="password"
-                                        required
-                                        value={formData.confirmPassword}
-                                        onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl bg-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
+                                        id="confirmPassword" name="confirmPassword" type="password" required
+                                        value={formData.confirmPassword} onChange={handleChange}
+                                        className={inp} style={inpStyle(A)}
+                                        onFocus={focusStyle} onBlur={blurStyle}
                                         placeholder="••••••••"
                                     />
                                 </div>
                             </div>
 
                             <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
+                                type="submit" disabled={loading}
+                                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                style={{ backgroundColor: A.amber, color: '#fff' }}
+                                onMouseEnter={e => { if (!loading) e.currentTarget.style.backgroundColor = A.amberDark }}
+                                onMouseLeave={e => { e.currentTarget.style.backgroundColor = A.amber }}
                             >
-                                {loading ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        Creating account...
-                                    </>
-                                ) : (
-                                    <>
-                                        Create account
-                                        <ArrowRight className="w-4 h-4" />
-                                    </>
-                                )}
+                                {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating account…</> : <>Create account <ArrowRight className="w-4 h-4" /></>}
                             </button>
                         </form>
 
-                        <div className="mt-5 text-center text-xs text-gray-400">
+                        <p className="mt-5 text-center text-xs" style={{ color: A.faint }}>
                             By signing up, you agree to our{' '}
-                            <Link href="/terms" className="text-gray-500 hover:underline">
-                                Terms
-                            </Link>
+                            <Link href="/terms" style={{ color: A.muted }} className="hover:underline">Terms</Link>
                             {' '}and{' '}
-                            <Link href="/privacy" className="text-gray-500 hover:underline">
-                                Privacy Policy
-                            </Link>
-                        </div>
+                            <Link href="/privacy" style={{ color: A.muted }} className="hover:underline">Privacy Policy</Link>
+                        </p>
                     </div>
 
                     <div className="mt-5 text-center">
-                        <Link href="/" className="text-sm text-gray-400 hover:text-gray-600 transition-colors inline-flex items-center gap-1">
+                        <Link
+                            href="/"
+                            className="text-sm transition-colors inline-flex items-center gap-1"
+                            style={{ color: A.faint }}
+                            onMouseEnter={e => (e.currentTarget.style.color = A.muted)}
+                            onMouseLeave={e => (e.currentTarget.style.color = A.faint)}
+                        >
                             ← Back to home
                         </Link>
                     </div>

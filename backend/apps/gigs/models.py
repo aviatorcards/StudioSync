@@ -161,3 +161,31 @@ class GigPayout(models.Model):
 
     def __str__(self):
         return f"Payout of ${self.amount} for {self.gig.title} to {self.band.name}"
+
+
+class BandExternalEvent(models.Model):
+    """
+    Read-only event imported from an external calendar (iCal)
+    Used to block off availability on the Gig Marketplace
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    band = models.ForeignKey(
+        "core.Band",
+        on_delete=models.CASCADE,
+        related_name="external_events"
+    )
+    uid = models.CharField(max_length=255, db_index=True)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    start_time = models.DateTimeField(db_index=True)
+    end_time = models.DateTimeField(db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "band_external_events"
+        unique_together = ["band", "uid"]
+        ordering = ["start_time"]
+
+    def __str__(self):
+        return f"{self.title} ({self.start_time.strftime('%Y-%m-%d')})"

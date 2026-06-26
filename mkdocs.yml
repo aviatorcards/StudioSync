@@ -66,6 +66,8 @@ nav:
           - Messaging Overview: modules/messaging.md
       - Studio Builder:
           - Studio Builder Vision: STUDIO_BUILDER.md
+  - Integrations:
+      - 317booking: integrations/317booking.md
   - Development:
       - API Reference: api.md
       - Database Schema: database.md

@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(chmod +x /Users/tristan/Documents/code/StudioSync/scripts/init-production.sh)",
-      "Bash(bash -n /Users/tristan/Documents/code/StudioSync/scripts/init-production.sh)"
-    ]
-  }
-}

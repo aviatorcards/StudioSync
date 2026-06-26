@@ -122,3 +122,46 @@ def test_payout(admin_user, student_user, test_gig, band):
     assert payout.payment is not None
     assert payout.payment.invoice.total_amount == 250.00
     assert payout.payment.status == "completed"
+
+
+def test_booking_webhook_confirmed_and_cancelled(db, studio, band):
+    client = APIClient()
+    url = "/api/gigs/webhooks/317booking/"
+    
+    # 1. Test gig.confirmed webhook
+    data = {
+        "event": "gig.confirmed",
+        "gig": {
+            "id": "gig-123",
+            "date": "2026-07-15T20:00:00Z",
+            "studiosync_band_id": str(band.id),
+            "venue_name": "The Vogue",
+            "venue_address": "Indianapolis, IN",
+            "description": "Fun rock show!"
+        }
+    }
+    
+    response = client.post(url, data, format="json")
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data == {"ok": True}
+    
+    # Check that a BandExternalEvent was created
+    from apps.gigs.models import BandExternalEvent
+    ext_event = BandExternalEvent.objects.get(band=band, uid="gig-gig-123@317booking")
+    assert ext_event.title == "Gig @ The Vogue"
+    assert ext_event.description == "Fun rock show!"
+    
+    # 2. Test gig.cancelled webhook
+    data_cancel = {
+        "event": "gig.cancelled",
+        "gig": {
+            "id": "gig-123"
+        }
+    }
+    response = client.post(url, data_cancel, format="json")
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data == {"ok": True}
+    
+    # Check that the BandExternalEvent was deleted
+    assert not BandExternalEvent.objects.filter(uid="gig-gig-123@317booking").exists()
+

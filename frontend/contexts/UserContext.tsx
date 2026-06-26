@@ -95,12 +95,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 const userData = await res.json()
                 setCurrentUser(userData)
             } else {
-                // Token invalid and refresh failed
-                logout()
+                // Token invalid — clear storage and let route-level AuthGuard redirect
+                localStorage.removeItem('accessToken')
+                localStorage.removeItem('refreshToken')
+                setCurrentUser(null)
             }
         } catch (error) {
             console.error('Auth check failed:', error)
-            logout()
+            localStorage.removeItem('accessToken')
+            localStorage.removeItem('refreshToken')
+            setCurrentUser(null)
         } finally {
             setIsLoading(false)
         }

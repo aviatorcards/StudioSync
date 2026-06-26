@@ -61,9 +61,16 @@ def teacher_user(db):
 @pytest.fixture
 def teacher(db, studio, teacher_user):
     """Create and return a teacher instance."""
-    return Teacher.objects.create(
-        user=teacher_user, studio=studio, bio="Test teacher bio", hourly_rate=50.00
+    teacher, created = Teacher.objects.get_or_create(
+        user=teacher_user,
+        defaults={"studio": studio, "bio": "Test teacher bio", "hourly_rate": 50.00}
     )
+    if not created:
+        teacher.studio = studio
+        teacher.bio = "Test teacher bio"
+        teacher.hourly_rate = 50.00
+        teacher.save()
+    return teacher
 
 
 @pytest.fixture
@@ -81,9 +88,17 @@ def student_user(db):
 @pytest.fixture
 def student(db, studio, teacher, student_user):
     """Create and return a student instance."""
-    return Student.objects.create(
-        user=student_user, studio=studio, primary_teacher=teacher, instrument="Piano"
+    student, created = Student.objects.get_or_create(
+        user=student_user,
+        defaults={"studio": studio, "primary_teacher": teacher, "instrument": "Piano"}
     )
+    if not created:
+        student.studio = studio
+        student.primary_teacher = teacher
+        student.instrument = "Piano"
+        student.save()
+    return student
+
 
 
 @pytest.fixture

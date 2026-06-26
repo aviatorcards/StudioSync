@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { motion, useScroll, useSpring, useInView, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import Navigation from '@/components/Navigation'
@@ -13,48 +13,82 @@ import {
   Notebook,
   Library,
   MessageCircle,
-  ArrowRight,
-  Check,
   Music,
-  Sparkles,
   Star,
   X,
-  ChevronRight
+  Check,
+  ChevronRight,
+  ArrowRight,
+  Github,
 } from 'lucide-react'
 
+// ─── Design tokens ──────────────────────────────────────────────────────────
+const C = {
+  bg: '#faf7f2',
+  bgCard: '#f0e8d8',
+  bgDark: '#1c1309',
+  border: '#e3d4bc',
+  amber: '#c17c2e',
+  amberDark: '#9e6020',
+  amberLight: 'rgba(193,124,46,0.12)',
+  text: '#1c1309',
+  muted: '#7a6145',
+  faint: '#b09870',
+  white: '#ffffff',
+} as const
+
+const staffLines: React.CSSProperties = {
+  backgroundImage: `repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 27px,
+    rgba(193,124,46,0.11) 27px,
+    rgba(193,124,46,0.11) 28px
+  )`,
+}
+
+const staffLinesDark: React.CSSProperties = {
+  backgroundImage: `repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 27px,
+    rgba(193,124,46,0.07) 27px,
+    rgba(193,124,46,0.07) 28px
+  )`,
+}
+
+// ─── Data ───────────────────────────────────────────────────────────────────
 const features = [
   {
     icon: GraduationCap,
     title: 'Students',
     description: 'Manage students, bands, and track progress with detailed profiles and skill assessments.',
-    color: 'from-indigo-500 to-indigo-600',
-    iconBg: 'bg-indigo-50 text-indigo-600',
     details: {
-      overview: 'Comprehensive student management system designed for music studios. Track individual progress, organize by bands or groups, and maintain detailed profiles for each student.',
+      overview:
+        'Comprehensive student management designed for music studios. Track individual progress, organize by bands or groups, and maintain detailed profiles for each student.',
       capabilities: [
         'Student profiles with contact information and skill levels',
         'Band/group organization for collaborative billing',
         'Progress tracking and goal setting',
         'Skill level assessment (Beginner → Professional)',
         'Emergency contact and medical notes',
-        'Enrollment history and lesson count tracking'
+        'Enrollment history and lesson count tracking',
       ],
       benefits: [
         'Keep all student information in one place',
         'Track student growth over time',
         'Organize students into bands for group management',
-        'Quick access to emergency contacts'
-      ]
-    }
+        'Quick access to emergency contacts',
+      ],
+    },
   },
   {
     icon: Calendar,
     title: 'Scheduling',
     description: 'Smart calendar with recurring lessons, conflict detection, and calendar sync.',
-    color: 'from-emerald-500 to-teal-500',
-    iconBg: 'bg-emerald-50 text-emerald-600',
     details: {
-      overview: 'Intelligent scheduling system that handles private lessons, group sessions, and recurring patterns. Built-in conflict detection ensures no double-bookings.',
+      overview:
+        'Intelligent scheduling that handles private lessons, group sessions, and recurring patterns. Built-in conflict detection ensures no double-bookings.',
       capabilities: [
         'Private and group lesson scheduling',
         'Recurring patterns (weekly, bi-weekly, monthly)',
@@ -62,24 +96,23 @@ const features = [
         'Online and in-person lesson support',
         'Calendar sync with Google Calendar, iCal',
         'Cancellation and rescheduling with reason tracking',
-        'Makeup lesson management'
+        'Makeup lesson management',
       ],
       benefits: [
         'Never double-book a time slot',
         'Automate recurring lesson creation',
         'Sync with your personal calendar',
-        'Flexible rescheduling options'
-      ]
-    }
+        'Flexible rescheduling options',
+      ],
+    },
   },
   {
     icon: DollarSign,
     title: 'Billing',
     description: 'Automated invoices, payment tracking, and consolidated band-level billing.',
-    color: 'from-purple-500 to-indigo-500',
-    iconBg: 'bg-purple-50 text-purple-600',
     details: {
-      overview: 'Complete billing solution for music studios. Generate invoices automatically from lessons, track payments, and manage multiple payment methods.',
+      overview:
+        'Complete billing for music studios. Generate invoices automatically from lessons, track payments, and manage multiple payment methods.',
       capabilities: [
         'Automated invoice generation from lessons',
         'Multiple payment methods (cash, check, card, ACH)',
@@ -87,49 +120,70 @@ const features = [
         'Late fee automation',
         'Overdue invoice detection',
         'Band-level consolidated billing',
-        'Tax calculation and reporting'
+        'Tax calculation and reporting',
       ],
       benefits: [
         'Save time with automatic invoicing',
         'Never miss a payment with tracking',
         'Professional invoice generation',
-        'Simplified tax preparation'
-      ]
-    }
+        'Simplified tax preparation',
+      ],
+    },
   },
   {
     icon: Notebook,
     title: 'Lesson Notes',
     description: 'Rich lesson documentation, assignments, and progress tracking for students.',
-    color: 'from-amber-500 to-orange-500',
-    iconBg: 'bg-amber-50 text-amber-600',
     details: {
-      overview: 'Detailed lesson documentation system that helps teachers track student progress and assign practice materials. Students and parents can view notes and assignments.',
+      overview:
+        'Detailed lesson documentation that helps teachers track student progress and assign practice materials. Students and parents can view notes and assignments.',
       capabilities: [
         'Rich text lesson notes with formatting',
         'Practice assignments and homework tracking',
-        'Progress ratings (1-5 scale)',
+        'Progress ratings (1–5 scale)',
         'Strengths and improvement areas documentation',
         'Repertoire tracking (pieces being practiced)',
         'File attachments (audio, video, PDFs)',
-        'Visibility controls for students and parents'
+        'Visibility controls for students and parents',
       ],
       benefits: [
         'Maintain consistent teaching records',
         'Students can review practice assignments',
         'Parents stay informed of progress',
-        'Track which pieces students have mastered'
-      ]
-    }
+        'Track which pieces students have mastered',
+      ],
+    },
+  },
+  {
+    icon: Music,
+    title: 'Gig Marketplace',
+    description: 'Bands can set schedules, claim open gigs, and receive automated payouts.',
+    details: {
+      overview:
+        'A built-in gig management system where bands update their availability, release and pick up gigs, with integrated pay scales.',
+      capabilities: [
+        'Monthly availability tracking for bands',
+        'Gig claims and releases across the network',
+        'Built-in pay scales based on gig requirements',
+        'Automated payout generation and invoicing',
+        'Conflict-free gig assignment',
+        'Transparent financial tracking',
+      ],
+      benefits: [
+        'Eliminate the middleman for booking gigs',
+        'Streamline scheduling for all bands',
+        'Automate financial payouts',
+        'Easy gig pickups for available bands',
+      ],
+    },
   },
   {
     icon: Library,
     title: 'Resources',
     description: 'Digital library, physical item lending, and organized resource sharing.',
-    color: 'from-cyan-500 to-blue-500',
-    iconBg: 'bg-cyan-50 text-cyan-600',
     details: {
-      overview: 'Comprehensive resource management for both digital files and physical items. Share sheet music, recordings, and track instrument loans.',
+      overview:
+        'Comprehensive resource management for both digital files and physical items. Share sheet music, recordings, and track instrument loans.',
       capabilities: [
         'Digital file sharing (PDFs, audio, video)',
         'Physical item lending library',
@@ -137,24 +191,23 @@ const features = [
         'Due date management with overdue detection',
         'Tag-based organization',
         'Student-specific or public resource sharing',
-        'Quantity tracking for multiple copies'
+        'Quantity tracking for multiple copies',
       ],
       benefits: [
         'Centralized resource library',
         'Track loaned instruments and materials',
         'Share practice recordings with students',
-        'Organized by tags and categories'
-      ]
-    }
+        'Organized by tags and categories',
+      ],
+    },
   },
   {
     icon: MessageCircle,
     title: 'Messaging',
     description: 'Multi-channel communication with email, SMS, and in-app notifications.',
-    color: 'from-pink-500 to-rose-500',
-    iconBg: 'bg-pink-50 text-pink-600',
     details: {
-      overview: 'Multi-channel communication system to keep everyone connected. Send automated reminders, direct messages, and announcements through email, SMS, or in-app notifications.',
+      overview:
+        'Multi-channel communication to keep everyone connected. Send automated reminders, direct messages, and announcements through email, SMS, or in-app.',
       capabilities: [
         'In-app messaging between teachers, students, and parents',
         'Automatic email notifications',
@@ -162,54 +215,28 @@ const features = [
         'Automated lesson reminders',
         'Invoice and payment notifications',
         'Read/unread tracking',
-        'Message threading for conversations'
+        'Message threading for conversations',
       ],
       benefits: [
         'Reduce no-shows with automatic reminders',
         'Reach everyone on their preferred channel',
         'Keep communication history organized',
-        'Send announcements to all students at once'
-      ]
-    }
-  }
+        'Send announcements to all students at once',
+      ],
+    },
+  },
 ]
 
-const testimonials = [
-  {
-    name: 'Laura Whitfield',
-    role: 'Voice & Piano Instructor',
-    studio: 'Whitfield Music Studio',
-    content: 'I was tracking everything in Google Sheets before this. Invoicing 30+ families used to eat my entire Sunday — now it just happens automatically. Genuinely wish I had this five years ago.',
-    rating: 5
-  },
-  {
-    name: 'David Okonkwo',
-    role: 'Guitar & Bass Instructor',
-    studio: 'Backbeat Lessons',
-    content: 'Solid app overall. The scheduling and lesson notes are great — being able to pull up what we covered last week during a lesson is super handy. I\'d love to see a mobile app eventually, but the browser works fine on my tablet for now.',
-    rating: 4
-  },
-  {
-    name: 'Rachel Mori',
-    role: 'Studio Owner',
-    studio: 'North Shore Music Academy',
-    content: 'We have three instructors and about 80 students. Before StudioSync we were juggling Venmo, a shared Google Calendar, and a lot of text messages. Having it all in one place has cut down on so many miscommunications.',
-    rating: 5
-  }
-]
-
-function FeatureModal({ feature, isOpen, onClose }: { feature: typeof features[0] | null, isOpen: boolean, onClose: () => void }) {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [isOpen])
-
+// ─── Feature Modal ───────────────────────────────────────────────────────────
+function FeatureModal({
+  feature,
+  isOpen,
+  onClose,
+}: {
+  feature: (typeof features)[0] | null
+  isOpen: boolean
+  onClose: () => void
+}) {
   if (!feature) return null
 
   return (
@@ -221,7 +248,8 @@ function FeatureModal({ feature, isOpen, onClose }: { feature: typeof features[0
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+            className="fixed inset-0 z-50"
+            style={{ backgroundColor: 'rgba(28,19,9,0.65)', backdropFilter: 'blur(4px)' }}
           />
 
           <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -230,75 +258,110 @@ function FeatureModal({ feature, isOpen, onClose }: { feature: typeof features[0
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                transition={{ type: "spring", duration: 0.5 }}
-                className="relative w-full max-w-3xl"
+                transition={{ type: 'spring', duration: 0.45 }}
+                className="relative w-full max-w-2xl"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="bg-white rounded-2xl overflow-hidden shadow-2xl border border-gray-100">
-                  {/* Header */}
-                  <div className="sticky top-0 bg-white border-b border-gray-100 p-6 z-10">
+                <div
+                  className="rounded-2xl overflow-hidden shadow-2xl"
+                  style={{ backgroundColor: C.bg, border: `1px solid ${C.border}` }}
+                >
+                  <div className="p-6" style={{ borderBottom: `1px solid ${C.border}`, ...staffLines }}>
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center`}>
-                          <feature.icon className="w-6 h-6 text-white" />
+                        <div
+                          className="w-12 h-12 rounded-xl flex items-center justify-center"
+                          style={{ backgroundColor: C.amberLight }}
+                        >
+                          <feature.icon className="w-6 h-6" style={{ color: C.amber }} />
                         </div>
                         <div>
-                          <h2 className="text-2xl font-bold text-gray-900">{feature.title}</h2>
-                          <p className="text-gray-500 mt-0.5">{feature.description}</p>
+                          <h2 className="text-xl font-bold" style={{ color: C.text }}>
+                            {feature.title}
+                          </h2>
+                          <p className="text-sm mt-0.5" style={{ color: C.muted }}>
+                            {feature.description}
+                          </p>
                         </div>
                       </div>
                       <button
                         onClick={onClose}
-                        className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+                        className="p-2 rounded-lg"
+                        style={{ color: C.faint }}
                       >
-                        <X className="w-5 h-5 text-gray-400" />
+                        <X className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
 
-                  {/* Body */}
-                  <div className="p-6 max-h-[70vh] overflow-y-auto space-y-8">
-                    {/* Overview */}
+                  <div className="p-6 max-h-[65vh] overflow-y-auto space-y-6">
                     <div>
-                      <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Overview</h3>
-                      <p className="text-gray-600 leading-relaxed">{feature.details.overview}</p>
+                      <p
+                        className="text-xs font-semibold uppercase tracking-widest mb-3"
+                        style={{ color: C.amber }}
+                      >
+                        Overview
+                      </p>
+                      <p className="text-sm leading-relaxed" style={{ color: C.muted }}>
+                        {feature.details.overview}
+                      </p>
                     </div>
 
-                    {/* Capabilities */}
                     <div>
-                      <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Capabilities</h3>
+                      <p
+                        className="text-xs font-semibold uppercase tracking-widest mb-4"
+                        style={{ color: C.amber }}
+                      >
+                        Capabilities
+                      </p>
                       <div className="space-y-2.5">
-                        {feature.details.capabilities.map((capability, idx) => (
-                          <div key={idx} className="flex items-start gap-3">
-                            <div className="w-5 h-5 rounded-md bg-indigo-50 flex items-center justify-center flex-shrink-0 mt-0.5">
-                              <Check className="w-3.5 h-3.5 text-indigo-600" />
+                        {feature.details.capabilities.map((cap, i) => (
+                          <div key={i} className="flex items-start gap-3">
+                            <div
+                              className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5"
+                              style={{ backgroundColor: C.amberLight }}
+                            >
+                              <Check className="w-3 h-3" style={{ color: C.amber }} />
                             </div>
-                            <p className="text-gray-600 text-sm">{capability}</p>
+                            <p className="text-sm" style={{ color: C.muted }}>
+                              {cap}
+                            </p>
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    {/* Benefits */}
-                    <div className="bg-gray-50 rounded-xl p-6">
-                      <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Key Benefits</h3>
-                      <div className="grid md:grid-cols-2 gap-3">
-                        {feature.details.benefits.map((benefit, idx) => (
-                          <div key={idx} className="flex items-start gap-2.5 bg-white rounded-lg p-3 border border-gray-100">
-                            <Sparkles className="w-4 h-4 text-indigo-500 flex-shrink-0 mt-0.5" />
-                            <p className="text-gray-600 text-sm">{benefit}</p>
+                    <div className="rounded-xl p-5" style={{ backgroundColor: C.bgCard }}>
+                      <p
+                        className="text-xs font-semibold uppercase tracking-widest mb-4"
+                        style={{ color: C.amber }}
+                      >
+                        Key Benefits
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {feature.details.benefits.map((b, i) => (
+                          <div
+                            key={i}
+                            className="rounded-lg p-3 text-sm"
+                            style={{
+                              backgroundColor: C.bg,
+                              border: `1px solid ${C.border}`,
+                              color: C.muted,
+                            }}
+                          >
+                            {b}
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    {/* CTA */}
                     <div className="text-center pt-2">
                       <Link
                         href="/signup"
-                        className="inline-flex items-center gap-2 px-8 py-3.5 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-colors"
+                        className="inline-flex items-center gap-2 rounded-xl px-6 py-3 font-semibold text-sm"
+                        style={{ backgroundColor: C.amber, color: C.white }}
                       >
-                        Get Started Now
+                        Get started
                         <ArrowRight className="w-4 h-4" />
                       </Link>
                     </div>
@@ -313,318 +376,477 @@ function FeatureModal({ feature, isOpen, onClose }: { feature: typeof features[0
   )
 }
 
-function FeatureCard({ feature, index, onClick }: { feature: typeof features[0], index: number, onClick: () => void }) {
+// ─── Feature Card ────────────────────────────────────────────────────────────
+function FeatureCard({
+  feature,
+  index,
+  onClick,
+}: {
+  feature: (typeof features)[0]
+  index: number
+  onClick: () => void
+}) {
   const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: "-80px" })
+  const isInView = useInView(ref, { once: true, margin: '-60px' })
 
   return (
-    <motion.div
+    <motion.button
       ref={ref}
-      initial={{ opacity: 0, y: 30 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-      transition={{ duration: 0.5, delay: index * 0.08 }}
-      className="group bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-lg hover:border-gray-200 transition-all duration-300 cursor-pointer"
+      initial={{ opacity: 0, y: 24 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+      transition={{ duration: 0.45, delay: index * 0.07 }}
       onClick={onClick}
+      className="text-left group rounded-2xl p-6 w-full transition-all duration-300"
+      style={{
+        backgroundColor: C.bgCard,
+        border: `1px solid ${C.border}`,
+        cursor: 'pointer',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = C.amber
+        e.currentTarget.style.boxShadow = `0 4px 24px rgba(193,124,46,0.14)`
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = C.border
+        e.currentTarget.style.boxShadow = 'none'
+      }}
     >
-      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-5 group-hover:scale-105 transition-transform duration-300`}>
-        <feature.icon className="w-6 h-6 text-white" />
+      <div
+        className="w-11 h-11 rounded-xl flex items-center justify-center mb-5"
+        style={{ backgroundColor: C.amberLight }}
+      >
+        <feature.icon className="w-5 h-5" style={{ color: C.amber }} />
       </div>
 
-      <h3 className="text-lg font-bold text-gray-900 mb-2">
+      <h3 className="text-base font-bold mb-2" style={{ color: C.text }}>
         {feature.title}
       </h3>
 
-      <p className="text-gray-500 text-sm leading-relaxed mb-4">
+      <p className="text-sm leading-relaxed mb-5" style={{ color: C.muted }}>
         {feature.description}
       </p>
 
-      <div className="flex items-center text-indigo-600 text-sm font-semibold group-hover:gap-2 transition-all">
+      <div
+        className="flex items-center gap-0.5 text-sm font-semibold"
+        style={{ color: C.amber }}
+      >
         Learn more
-        <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-0.5 transition-transform" />
+        <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
       </div>
-    </motion.div>
+    </motion.button>
   )
 }
 
-function TestimonialCard({ testimonial, index }: { testimonial: typeof testimonials[0], index: number }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-all"
-    >
-      <div className="flex gap-1 mb-4">
-        {[...Array(testimonial.rating)].map((_, i) => (
-          <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-        ))}
-      </div>
-
-      <p className="text-gray-600 mb-5 leading-relaxed text-sm">
-        &ldquo;{testimonial.content}&rdquo;
-      </p>
-
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
-          {testimonial.name.split(' ').map(n => n[0]).join('')}
-        </div>
-        <div>
-          <div className="font-semibold text-gray-900 text-sm">{testimonial.name}</div>
-          <div className="text-xs text-gray-500">{testimonial.role} · {testimonial.studio}</div>
-        </div>
-      </div>
-    </motion.div>
-  )
-}
-
+// ─── Page ────────────────────────────────────────────────────────────────────
 export default function Home() {
   const { scrollYProgress } = useScroll()
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 })
 
-  const heroRef = useRef(null)
-
-  const [selectedFeature, setSelectedFeature] = useState<typeof features[0] | null>(null)
+  const [selectedFeature, setSelectedFeature] = useState<(typeof features)[0] | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const handleFeatureClick = (feature: typeof features[0]) => {
-    setSelectedFeature(feature)
+  const openFeature = (f: (typeof features)[0]) => {
+    setSelectedFeature(f)
     setIsModalOpen(true)
   }
 
-  const handleCloseModal = () => {
+  const closeFeature = () => {
     setIsModalOpen(false)
     setTimeout(() => setSelectedFeature(null), 300)
   }
 
   return (
     <>
-      <FeatureModal feature={selectedFeature} isOpen={isModalOpen} onClose={handleCloseModal} />
+      <FeatureModal feature={selectedFeature} isOpen={isModalOpen} onClose={closeFeature} />
 
-      {/* Scroll progress indicator */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 to-purple-500 origin-left z-50"
-        style={{ scaleX }}
+        className="fixed top-0 left-0 right-0 h-[2px] origin-left z-50"
+        style={{ scaleX, backgroundColor: C.amber }}
       />
 
       <Navigation />
 
-      <main className="bg-gray-50">
-        {/* Hero Section */}
-        <section ref={heroRef} className="relative overflow-hidden bg-white border-b border-gray-100">
-          {/* Subtle gradient bg */}
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/30" />
+      <main style={{ backgroundColor: C.bg }}>
+        {/* ── Hero ──────────────────────────────────────────────────────────── */}
+        <section
+          className="relative overflow-hidden"
+          style={{ backgroundColor: C.bg, ...staffLines }}
+        >
+          {/* Decorative oversized music note */}
+          <div
+            aria-hidden="true"
+            className="absolute top-0 right-0 pointer-events-none select-none"
+            style={{
+              fontSize: '380px',
+              lineHeight: 1,
+              color: C.amber,
+              opacity: 0.04,
+              fontFamily: 'Georgia, serif',
+              transform: 'translate(12%, -8%)',
+            }}
+          >
+            ♩
+          </div>
 
-          <div className="relative max-w-7xl mx-auto px-4 pt-20 pb-24 md:pt-28 md:pb-32">
+          <div className="relative max-w-6xl mx-auto px-6 pt-24 pb-16 md:pt-36 md:pb-24">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 28 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="text-center max-w-4xl mx-auto"
             >
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-sm font-medium mb-6">
-                <Sparkles className="w-3.5 h-3.5" />
-                Open source studio management
+              {/* Badge */}
+              <div
+                className="inline-flex items-center gap-2 mb-8 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wider"
+                style={{
+                  backgroundColor: C.amberLight,
+                  border: `1px solid ${C.border}`,
+                  color: C.amber,
+                }}
+              >
+                <Music className="w-3 h-3" />
+                Open source · Self-hosted
               </div>
 
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-gray-900 mb-6 leading-[1.1] tracking-tight">
-                Orchestrate your{' '}
-                <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  music studio
-                </span>
+              {/* Headline */}
+              <h1
+                className="mb-6"
+                style={{
+                  fontSize: 'clamp(42px, 7.5vw, 90px)',
+                  fontWeight: 800,
+                  lineHeight: 1.04,
+                  letterSpacing: '-0.03em',
+                  color: C.text,
+                  fontFamily: 'Outfit, sans-serif',
+                  maxWidth: '14ch',
+                }}
+              >
+                Run your studio,{' '}
+                <span style={{ color: C.amber }}>focus on the music.</span>
               </h1>
 
-              <p className="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed">
-                The all-in-one platform that harmonizes students, scheduling, and billing — so you can focus on what matters: making music.
+              {/* Sub */}
+              <p
+                className="mb-10"
+                style={{
+                  fontSize: '19px',
+                  color: C.muted,
+                  maxWidth: '500px',
+                  lineHeight: 1.7,
+                  fontFamily: 'Manrope, sans-serif',
+                }}
+              >
+                Students, scheduling, billing, and communication — all in tune, all in one
+                place. Free and open source.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+              {/* CTAs */}
+              <div className="flex flex-wrap gap-3 mb-8">
                 <Link
                   href="/signup"
-                  className="group px-7 py-3.5 bg-gray-900 text-white rounded-xl font-semibold text-base hover:bg-gray-800 transition-all flex items-center gap-2 shadow-lg shadow-gray-900/10"
+                  className="inline-flex items-center gap-2 rounded-xl px-6 py-3.5 font-semibold text-sm"
+                  style={{ backgroundColor: C.amber, color: C.white }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor = C.amberDark)
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor = C.amber)
+                  }
                 >
-                  Get Started Now
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                  Get started free
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
 
-                <button className="px-7 py-3.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold text-base hover:bg-gray-50 transition-all flex items-center gap-2">
-                  <Music className="w-4 h-4" />
-                  Watch Demo
-                </button>
+                <a
+                  href="https://github.com/aviatorcards/StudioSync"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl px-6 py-3.5 font-semibold text-sm"
+                  style={{
+                    backgroundColor: C.bgCard,
+                    color: C.text,
+                    border: `1px solid ${C.border}`,
+                  }}
+                >
+                  <Github className="w-4 h-4" />
+                  View on GitHub
+                </a>
               </div>
 
-              <p className="mt-6 text-sm text-gray-400">
-                Free and open-source · Easy deployment · Community supported
+              <p className="text-xs" style={{ color: C.faint }}>
+                Free & open source · GPL-3.0 · Docker ready in minutes
               </p>
             </motion.div>
 
-            {/* Dashboard Preview */}
+            {/* Dashboard preview */}
             <motion.div
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 44 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="mt-16 relative max-w-5xl mx-auto"
+              transition={{ duration: 0.85, delay: 0.35 }}
+              className="mt-20 relative"
             >
-              {/* Background Glow */}
-              <div className="absolute -inset-10 bg-gradient-to-tr from-indigo-500/10 to-purple-500/10 blur-[100px] opacity-70 -z-10" />
-
-              <div className="relative rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-900/40">
-                {/* Browser-like Window Header */}
-                <div className="h-10 bg-gray-50/80 border-b border-gray-100 flex items-center px-4 gap-1.5 backdrop-blur-md relative z-10 font-sans">
-                  <div className="w-3 h-3 rounded-full bg-red-400/80 shadow-sm shadow-red-500/20" />
-                  <div className="w-3 h-3 rounded-full bg-amber-400/80 shadow-sm shadow-amber-500/20" />
-                  <div className="w-3 h-3 rounded-full bg-emerald-400/80 shadow-sm shadow-emerald-500/20" />
-                  <div className="mx-auto flex items-center gap-2 bg-white/50 rounded-md px-3 py-1 border border-gray-100/50">
-                    <div className="w-3 h-3 rounded-full border border-indigo-200 flex items-center justify-center">
-                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                    </div>
-                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-tighter">studiosync.app</span>
+              <div
+                className="relative rounded-2xl overflow-hidden shadow-2xl"
+                style={{
+                  border: `1px solid ${C.border}`,
+                  boxShadow: `0 32px 80px rgba(28,19,9,0.14)`,
+                }}
+              >
+                {/* Browser chrome */}
+                <div
+                  className="h-9 flex items-center px-4 gap-1.5"
+                  style={{
+                    backgroundColor: C.bgCard,
+                    borderBottom: `1px solid ${C.border}`,
+                  }}
+                >
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: 'rgba(220,100,60,0.7)' }}
+                  />
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: 'rgba(220,180,60,0.7)' }}
+                  />
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: 'rgba(100,190,100,0.7)' }}
+                  />
+                  <div
+                    className="mx-auto flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-semibold uppercase tracking-widest"
+                    style={{
+                      backgroundColor: C.bg,
+                      color: C.faint,
+                      border: `1px solid ${C.border}`,
+                    }}
+                  >
+                    <div
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: C.amber, opacity: 0.7 }}
+                    />
+                    studiosync.cc
                   </div>
                 </div>
 
                 <div className="aspect-[16/9] relative">
                   <Image
                     src="/dashboard_preview.png"
-                    alt="StudioSync Dashboard Preview"
+                    alt="StudioSync Dashboard"
                     fill
-                    className="object-cover object-left-top scale-[1.02]"
+                    className="object-cover object-left-top scale-[1.01]"
                     priority
                     sizes="(max-width: 1280px) 100vw, 1280px"
                   />
                 </div>
               </div>
 
-              {/* Modern Toasts */}
-              <div className="absolute -left-6 top-1/4 md:-left-16 glass-card rounded-2xl p-4 shadow-2xl hidden md:flex items-center gap-4 animate-float-card group z-20">
-                <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-500/20 group-hover:scale-110 transition-transform duration-300">
-                  <Check className="w-6 h-6" />
+              {/* Floating toast — left */}
+              <motion.div
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.9 }}
+                className="absolute top-1/3 -left-4 md:-left-14 hidden md:flex items-center gap-3 rounded-2xl px-4 py-3 shadow-xl"
+                style={{ backgroundColor: C.bg, border: `1px solid ${C.border}` }}
+              >
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ backgroundColor: 'rgba(80,180,80,0.12)' }}
+                >
+                  <Check className="w-5 h-5" style={{ color: '#3d9e3d' }} />
                 </div>
                 <div>
-                  <div className="text-[13px] font-extrabold text-gray-900 leading-tight">Lesson Confirmed</div>
-                  <div className="text-[11px] text-gray-500 font-semibold mt-0.5">Sarah&apos;s piano lesson</div>
+                  <div className="text-xs font-bold" style={{ color: C.text }}>
+                    Lesson confirmed
+                  </div>
+                  <div className="text-[11px]" style={{ color: C.muted }}>
+                    Sarah · Piano · 3 PM
+                  </div>
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="absolute -right-6 top-1/2 md:-right-16 glass-card rounded-2xl p-4 shadow-2xl hidden md:flex items-center gap-4 animate-float-card-delayed group z-20">
-                <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-100 dark:border-indigo-500/20 group-hover:scale-110 transition-transform duration-300">
-                  <DollarSign className="w-6 h-6" />
+              {/* Floating toast — right */}
+              <motion.div
+                initial={{ opacity: 0, x: 16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 1.1 }}
+                className="absolute top-1/2 -right-4 md:-right-14 hidden md:flex items-center gap-3 rounded-2xl px-4 py-3 shadow-xl"
+                style={{ backgroundColor: C.bg, border: `1px solid ${C.border}` }}
+              >
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ backgroundColor: C.amberLight }}
+                >
+                  <DollarSign className="w-5 h-5" style={{ color: C.amber }} />
                 </div>
                 <div>
-                  <div className="text-[13px] font-extrabold text-gray-900 leading-tight">Payment Received</div>
-                  <div className="text-[11px] text-indigo-600 font-bold mt-0.5">+$250.00</div>
+                  <div className="text-xs font-bold" style={{ color: C.text }}>
+                    Invoice paid
+                  </div>
+                  <div className="text-[11px] font-semibold" style={{ color: C.amber }}>
+                    +$240.00
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             </motion.div>
           </div>
         </section>
 
-        {/* Features Grid */}
-        <section className="py-20 md:py-28 px-4">
-          <div className="max-w-7xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-center mb-14"
-            >
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Everything you need, beautifully simple
-              </h2>
-              <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-                Powerful features that work in harmony to run your studio smoothly
-              </p>
-            </motion.div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {features.map((feature, index) => (
-                <FeatureCard
-                  key={index}
-                  feature={feature}
-                  index={index}
-                  onClick={() => handleFeatureClick(feature)}
+        {/* ── Tagline bar ───────────────────────────────────────────────────── */}
+        <div
+          style={{
+            borderTop: `1px solid ${C.border}`,
+            borderBottom: `1px solid ${C.border}`,
+            backgroundColor: C.bgCard,
+          }}
+        >
+          <div className="max-w-6xl mx-auto px-6 py-5 flex flex-wrap justify-center gap-x-14 gap-y-4">
+            {[
+              { label: 'Free & open source', sub: 'GPL-3.0 licensed' },
+              { label: 'Self-hosted', sub: 'Your data, your server' },
+              { label: 'Docker ready', sub: 'Up in minutes' },
+            ].map(({ label, sub }) => (
+              <div key={label} className="flex items-center gap-2.5">
+                <div
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{ backgroundColor: C.amber }}
                 />
-              ))}
-            </div>
+                <div>
+                  <div className="text-sm font-semibold" style={{ color: C.text }}>
+                    {label}
+                  </div>
+                  <div className="text-xs" style={{ color: C.muted }}>
+                    {sub}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </section>
+        </div>
 
-        {/* Testimonials */}
-        <section className="py-20 md:py-28 px-4 bg-white border-y border-gray-100">
-          <div className="max-w-7xl mx-auto">
+        {/* ── Features ──────────────────────────────────────────────────────── */}
+        <section className="py-24 px-6" style={{ backgroundColor: C.bg }}>
+          <div className="max-w-6xl mx-auto">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-center mb-14"
+              className="mb-14"
             >
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Loved by music educators
+              <p
+                className="text-xs font-semibold uppercase tracking-widest mb-4"
+                style={{ color: C.amber }}
+              >
+                Features
+              </p>
+              <h2
+                className="text-3xl md:text-5xl font-extrabold leading-tight mb-4"
+                style={{
+                  color: C.text,
+                  letterSpacing: '-0.025em',
+                  fontFamily: 'Outfit, sans-serif',
+                }}
+              >
+                Everything in tune
               </h2>
-              <p className="text-lg text-gray-500">
-                See why music educators love StudioSync
+              <p
+                className="text-lg max-w-lg"
+                style={{ color: C.muted, fontFamily: 'Manrope, sans-serif' }}
+              >
+                Seven modules that work in harmony — from first lesson to final invoice.
               </p>
             </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
-              {testimonials.map((testimonial, index) => (
-                <TestimonialCard key={index} testimonial={testimonial} index={index} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {features.map((f, i) => (
+                <FeatureCard key={i} feature={f} index={i} onClick={() => openFeature(f)} />
               ))}
             </div>
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="py-20 md:py-28 px-4">
+        {/* ── Open-source CTA ───────────────────────────────────────────────── */}
+        <section className="py-24 px-6" style={{ backgroundColor: C.bg }}>
           <div className="max-w-4xl mx-auto">
             <motion.div
-              initial={{ opacity: 0, scale: 0.97 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="bg-gray-900 rounded-2xl overflow-hidden relative"
+              className="rounded-2xl overflow-hidden"
+              style={{ border: `1px solid ${C.border}` }}
             >
-              {/* Subtle gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-transparent to-purple-600/20" />
-
-              <div className="relative px-8 py-16 md:p-16 text-center text-white">
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                  Ready to transform your studio?
+              <div
+                className="p-8 md:p-14"
+                style={{ backgroundColor: C.bgCard, ...staffLines }}
+              >
+                <p
+                  className="text-xs font-semibold uppercase tracking-widest mb-4"
+                  style={{ color: C.amber }}
+                >
+                  Open source
+                </p>
+                <h2
+                  className="text-2xl md:text-4xl font-extrabold mb-4"
+                  style={{
+                    color: C.text,
+                    letterSpacing: '-0.025em',
+                    fontFamily: 'Outfit, sans-serif',
+                  }}
+                >
+                  Deploy in under five minutes.
                 </h2>
-                <p className="text-lg mb-8 text-gray-300 max-w-2xl mx-auto">
-                  Try StudioSync and manage students, schedules, and billing effortlessly.
+                <p
+                  className="text-base mb-8 max-w-lg"
+                  style={{ color: C.muted, fontFamily: 'Manrope, sans-serif', lineHeight: 1.7 }}
+                >
+                  One command spins up the full stack — PostgreSQL, Django, and Next.js. Your
+                  data stays on your server, always.
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Link
-                    href="/signup"
-                    className="inline-flex items-center gap-2 px-7 py-3.5 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-100 transition-colors"
-                  >
-                    Get Started Now
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-
-                  <Link
-                    href="/pricing"
-                    className="inline-flex items-center gap-2 px-7 py-3.5 bg-white/10 border border-white/20 text-white rounded-xl font-semibold hover:bg-white/15 transition-colors"
-                  >
-                    View Pricing
-                  </Link>
+                <div
+                  className="rounded-xl p-5 mb-8 font-mono text-sm leading-7 overflow-x-auto"
+                  style={{ backgroundColor: C.bgDark, color: '#e8d5b0' }}
+                >
+                  <div style={{ color: 'rgba(176,152,112,0.6)' }}>
+                    $ git clone https://github.com/aviatorcards/StudioSync
+                  </div>
+                  <div style={{ color: 'rgba(176,152,112,0.6)' }}>$ cd StudioSync</div>
+                  <div>
+                    <span style={{ color: C.amber }}>$</span>{' '}
+                    <span>./scripts/init-production.sh</span>
+                  </div>
+                  <div style={{ color: '#82c582', marginTop: '4px' }}>
+                    ✓ Studio ready at http://localhost:3000
+                  </div>
                 </div>
 
-                <div className="mt-8 flex items-center justify-center gap-5 text-sm text-gray-400">
-                  <div className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5" />
-                    Open source
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5" />
-                    Self-hosted
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5" />
-                    Docker ready
-                  </div>
+                <div className="flex flex-wrap gap-3">
+                  <Link
+                    href="/signup"
+                    className="inline-flex items-center gap-2 rounded-xl px-6 py-3 font-semibold text-sm"
+                    style={{ backgroundColor: C.amber, color: C.white }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor = C.amberDark)
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = C.amber)
+                    }
+                  >
+                    Create your studio
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                  <a
+                    href="https://github.com/aviatorcards/StudioSync"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-xl px-6 py-3 font-semibold text-sm"
+                    style={{
+                      backgroundColor: C.bg,
+                      color: C.text,
+                      border: `1px solid ${C.border}`,
+                    }}
+                  >
+                    <Github className="w-4 h-4" />
+                    Star on GitHub
+                  </a>
                 </div>
               </div>
             </motion.div>

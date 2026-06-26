@@ -332,7 +332,7 @@ export default function DashboardPage() {
           value: String(overview.weekly_lessons?.trend || ""),
           positive: !!overview.weekly_lessons?.positive,
         }}
-        color="green"
+        color="blue"
         icon={<Calendar className="w-6 h-6" />}
         onClick={() => !isEditing && router.push("/dashboard/schedule")}
         className={isEditing ? "pointer-events-none" : ""}
@@ -347,7 +347,7 @@ export default function DashboardPage() {
           value: String(overview.monthly_revenue?.trend || ""),
           positive: !!overview.monthly_revenue?.positive,
         }}
-        color="green"
+        color="blue"
         icon={<DollarSignIcon className="w-6 h-6" />}
         onClick={() => !isEditing && router.push("/dashboard/billing")}
         className={isEditing ? "pointer-events-none" : ""}
@@ -362,7 +362,7 @@ export default function DashboardPage() {
           value: String(overview.active_teachers?.trend || ""),
           positive: !!overview.active_teachers?.positive,
         }}
-        color="purple"
+        color="blue"
         icon={<GraduationCap className="w-6 h-6" />}
         onClick={() => !isEditing && router.push("/dashboard/teachers")}
         className={isEditing ? "pointer-events-none" : ""}
@@ -406,7 +406,7 @@ export default function DashboardPage() {
           value: String(overview.new_enquiries?.trend || ""),
           positive: !!overview.new_enquiries?.positive,
         }}
-        color="orange"
+        color="blue"
         icon={<Music className="w-6 h-6" />}
         className={isEditing ? "pointer-events-none" : ""}
       />
@@ -429,7 +429,7 @@ export default function DashboardPage() {
         title="Today's Schedule"
         value={overview.lessons_today?.value || 0}
         subtitle="lessons"
-        color="green"
+        color="blue"
         icon={<Calendar className="w-6 h-6" />}
         onClick={() => !isEditing && router.push("/dashboard/schedule")}
         className={isEditing ? "pointer-events-none" : ""}
@@ -440,7 +440,7 @@ export default function DashboardPage() {
         title="Hours This Month"
         value={overview.hours_taught?.value || 0}
         subtitle="hours"
-        color="purple"
+        color="blue"
         icon={<TrendingUp className="w-6 h-6" />}
         className={isEditing ? "pointer-events-none" : ""}
       />
@@ -467,7 +467,7 @@ export default function DashboardPage() {
             ? { value: "Goal Achieved!", positive: true }
             : { value: "Keep it up!", positive: true }
         }
-        color="green"
+        color="blue"
         icon={<Check className="w-6 h-6" />}
         className={isEditing ? "pointer-events-none" : ""}
       />
@@ -602,7 +602,7 @@ export default function DashboardPage() {
                   <h3 className="text-lg font-bold text-gray-900">Revenue Trend</h3>
                   <p className="text-sm text-gray-500 font-medium">Last 6 months</p>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center shadow-md">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-md">
                   <DollarSignIcon className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -644,7 +644,7 @@ export default function DashboardPage() {
                   <h3 className="text-lg font-bold text-gray-900">Lesson Attendance</h3>
                   <p className="text-sm text-gray-500 font-medium">This month breakdown</p>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-md">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-md">
                   <TrendingUp className="w-6 h-6 text-white" />
                 </div>
               </div>

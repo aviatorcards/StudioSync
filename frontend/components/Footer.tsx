@@ -3,94 +3,151 @@ import { Github } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 import CurrentYear from './CurrentYear'
 
+const C = {
+  bg: '#1c1309',
+  bgCard: 'rgba(255,255,255,0.04)',
+  border: 'rgba(255,255,255,0.08)',
+  amber: '#c17c2e',
+  text: '#faf7f2',
+  muted: 'rgba(250,247,242,0.5)',
+  faint: 'rgba(250,247,242,0.3)',
+} as const
+
+const staffLines: React.CSSProperties = {
+  backgroundImage: `repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 27px,
+    rgba(193,124,46,0.07) 27px,
+    rgba(193,124,46,0.07) 28px
+  )`,
+}
+
 export default function Footer() {
-    return (
-        <footer className="bg-white border-t border-gray-100">
-            <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center md:text-left">
-                    {/* Brand */}
-                    <div className="col-span-2">
-                        <div className="flex items-center justify-center md:justify-start gap-2.5 mb-4">
-                            <Logo className="w-8 h-8" />
-                            <span className="text-lg font-bold text-gray-900">StudioSync</span>
-                        </div>
-                        <p className="text-gray-500 text-sm max-w-sm mx-auto md:mx-0 leading-relaxed">
-                            Open-source studio management software designed for music teachers and schools.
-                            Sync your students, billing, scheduling, and more.
-                        </p>
-                    </div>
-
-                    {/* Quick Links */}
-                    <div>
-                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
-                            Product
-                        </h3>
-                        <ul className="space-y-2.5">
-                            <li>
-                                <Link href="/login" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-                                    Sign In
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/signup" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-                                    Get Started
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/#features" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-                                    Features
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-
-                    {/* Resources */}
-                    <div>
-                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
-                            Resources
-                        </h3>
-                        <ul className="space-y-2.5">
-                            <li>
-                                <a
-                                    href="https://github.com/aviatorcards/StudioSync"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-sm text-gray-500 hover:text-gray-900 transition-colors flex items-center justify-center md:justify-start gap-1.5"
-                                >
-                                    <Github className="w-3.5 h-3.5" />
-                                    GitHub
-                                </a>
-                            </li>
-                            <li>
-                                <Link href="/docs" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-                                    Documentation
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/support" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-                                    Support
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div className="mt-10 pt-6 border-t border-gray-100">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                        <p className="text-gray-400 text-sm">
-                            © <CurrentYear /> StudioSync. Open source software built with 💜
-                        </p>
-                        <div className="flex gap-6">
-                            <Link href="/privacy" className="text-gray-400 hover:text-gray-600 text-sm transition-colors">
-                                Privacy Policy
-                            </Link>
-                            <Link href="/terms" className="text-gray-400 hover:text-gray-600 text-sm transition-colors">
-                                Terms of Service
-                            </Link>
-                        </div>
-                    </div>
-                </div>
+  return (
+    <footer style={{ backgroundColor: C.bg, ...staffLines }}>
+      <div className="max-w-6xl mx-auto px-6 pt-14 pb-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10 mb-12">
+          {/* Brand */}
+          <div className="col-span-2">
+            <div className="flex items-center gap-2.5 mb-4">
+              <Logo className="w-8 h-8" />
+              <span
+                className="text-base font-bold"
+                style={{ color: C.text, fontFamily: 'Outfit, sans-serif' }}
+              >
+                StudioSync
+              </span>
             </div>
-        </footer>
-    )
+            <p
+              className="text-sm leading-relaxed max-w-xs"
+              style={{ color: C.muted, fontFamily: 'Manrope, sans-serif' }}
+            >
+              Open-source platform for musicians and studios. Gigs, scheduling,
+              billing, and communication — all in one place.
+            </p>
+          </div>
+
+          {/* Product */}
+          <div>
+            <p
+              className="text-xs font-semibold uppercase tracking-widest mb-5"
+              style={{ color: C.amber }}
+            >
+              Product
+            </p>
+            <ul className="space-y-3">
+              {[
+                { href: '/login', label: 'Sign in' },
+                { href: '/signup', label: 'Get started' },
+                { href: '/pricing', label: 'Pricing' },
+                { href: '/about', label: 'About' },
+              ].map(({ href, label }) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    className="text-sm transition-colors"
+                    style={{ color: C.muted }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = C.text)}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = C.muted)}
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Resources */}
+          <div>
+            <p
+              className="text-xs font-semibold uppercase tracking-widest mb-5"
+              style={{ color: C.amber }}
+            >
+              Resources
+            </p>
+            <ul className="space-y-3">
+              <li>
+                <a
+                  href="https://github.com/aviatorcards/StudioSync"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm inline-flex items-center gap-1.5 transition-colors"
+                  style={{ color: C.muted }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = C.text)}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = C.muted)}
+                >
+                  <Github className="w-3.5 h-3.5" />
+                  GitHub
+                </a>
+              </li>
+              {[
+                { href: '/docs', label: 'Documentation' },
+                { href: '/support', label: 'Support' },
+              ].map(({ href, label }) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    className="text-sm transition-colors"
+                    style={{ color: C.muted }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = C.text)}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = C.muted)}
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div
+          className="pt-6 flex flex-col md:flex-row justify-between items-center gap-4"
+          style={{ borderTop: `1px solid ${C.border}` }}
+        >
+          <p className="text-xs" style={{ color: C.faint }}>
+            © <CurrentYear /> StudioSync · Open source software · GPL-3.0
+          </p>
+          <div className="flex gap-6">
+            {[
+              { href: '/privacy', label: 'Privacy Policy' },
+              { href: '/terms', label: 'Terms of Service' },
+            ].map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className="text-xs transition-colors"
+                style={{ color: C.faint }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = C.muted)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = C.faint)}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </footer>
+  )
 }

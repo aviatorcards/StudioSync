@@ -32,7 +32,7 @@ export default function DashboardLayout({
                 <AppearanceProvider>
                     <ColorSchemeProvider>
                         <NotificationsProvider>
-                            <div className="flex h-screen bg-gray-50 overflow-x-hidden">
+                            <div className="flex h-screen overflow-x-hidden" style={{ backgroundColor: '#faf7f2' }}>
                             {/* Sidebar */}
                             <Sidebar isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
 

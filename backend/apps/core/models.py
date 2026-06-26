@@ -319,6 +319,13 @@ class Band(models.Model):
     billing_email = models.EmailField()
     billing_phone = models.CharField(max_length=20, blank=True)
 
+    # Calendar Integration
+    ical_feed_url = models.URLField(
+        blank=True, 
+        help_text="Public or secret iCal (.ics) feed URL for auto-syncing external events"
+    )
+    last_calendar_sync = models.DateTimeField(null=True, blank=True)
+
     # Address
     address_line1 = models.CharField(max_length=200, blank=True)
     address_line2 = models.CharField(max_length=200, blank=True)

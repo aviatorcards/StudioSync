@@ -9,7 +9,7 @@ The application is built using the following technologies:
 - **Frontend**: [Next.js](https://nextjs.org/) (React) with TypeScript and Tailwind CSS.
 - **Backend**: [Django REST Framework](https://www.django-rest-framework.org/) (Python) for the API.
 - **Database**: [PostgreSQL](https://www.postgresql.org/) for relational data.
-- **Caching & Tasks**: [Redis](https://redis.io/) and [Celery](https://docs.celeryq.dev/) for asynchronous background tasks.
+- **Caching & Tasks**: [Redis](https://redis.io/) and [Django Q](https://django-q.readthedocs.io/) for asynchronous background tasks.
 - **File Storage**: [AWS S3](https://aws.amazon.com/s3/) (or [MinIO](https://min.io/) for local development) for media and document storage.
 - **Infrastructure**: [Docker](https://www.docker.com/) and Docker Compose for orchestration.
 

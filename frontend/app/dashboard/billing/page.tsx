@@ -465,7 +465,7 @@ export default function BillingPage() {
                                                     {invoice.status !== 'paid' && invoice.status !== 'cancelled' ? (
                                                         <Button
                                                             onClick={() => handlePayInvoice(invoice.id)}
-                                                            className="gap-2 bg-green-600 hover:bg-green-700 h-9 px-4 active:scale-95"
+                                                            className="gap-2 bg-blue-600 hover:bg-blue-700 h-9 px-4 active:scale-95"
                                                         >
                                                             <CreditCard className="w-3.5 h-3.5" />
                                                             <span className="text-[10px] font-black uppercase tracking-widest">Pay</span>
@@ -523,7 +523,7 @@ export default function BillingPage() {
                                         {invoice.status !== 'paid' && invoice.status !== 'cancelled' ? (
                                             <Button
                                                 onClick={() => handlePayInvoice(invoice.id)}
-                                                className="flex-1 gap-2 bg-green-600 hover:bg-green-700 py-5 rounded-2xl active:scale-95 font-black uppercase tracking-widest text-[10px]"
+                                                className="flex-1 gap-2 bg-blue-600 hover:bg-blue-700 py-5 rounded-2xl active:scale-95 font-black uppercase tracking-widest text-[10px]"
                                             >
                                                 <CreditCard className="w-3.5 h-3.5" />
                                                 Pay Now

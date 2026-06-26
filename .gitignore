@@ -67,18 +67,5 @@ site/
 celerybeat-schedule
 *.tsbuildinfo
 
-# Playwright
-test-results/
-playwright-report/
-blob-report/
-.playwright/
-videos/
-screenshots/
 
-# Cypress
-cypress/videos/
-cypress/screenshots/
-cypress/reports/
-cypress/results/
-cypress/.cache/
 frontend/public/logo-new.png

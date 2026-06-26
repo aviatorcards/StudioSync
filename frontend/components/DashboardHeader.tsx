@@ -19,6 +19,20 @@ import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { useNotifications, NOTIFICATION_TYPE_META } from "@/hooks/useNotifications";
 
+// ─── Design tokens ────────────────────────────────────────────────────────────
+const H = {
+  bg: "#faf7f2",
+  border: "#e3d4bc",
+  text: "#1c1309",
+  muted: "#7a6145",
+  faint: "#b09870",
+  amber: "#c17c2e",
+  amberLight: "rgba(193,124,46,0.1)",
+  cardBg: "#f0e8d8",
+  dropBorder: "#e3d4bc",
+  hoverBg: "#f0e8d8",
+} as const;
+
 interface DashboardHeaderProps {
   onMenuClick: () => void;
 }
@@ -30,9 +44,9 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
 
-  const { notifications, unreadCount, markRead, markAllRead, clearAll } = useNotifications(30000);
+  const { notifications, unreadCount, markRead, markAllRead, clearAll } =
+    useNotifications(30000);
 
-  // Close dropdowns on Escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -44,14 +58,15 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
     return () => window.removeEventListener("keydown", handleEscape);
   }, []);
 
-  // Close notification dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target as Node)
+      ) {
         setShowNotifications(false);
       }
     }
-
     if (showNotifications) {
       document.addEventListener("mousedown", handleClickOutside);
       return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -68,29 +83,33 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
     toast.success("All notifications cleared");
   };
 
-  const handleNotificationClick = async (notification: (typeof notifications)[0]) => {
-    if (!notification.read) {
-      await markRead(notification.id);
-    }
+  const handleNotificationClick = async (
+    notification: (typeof notifications)[0]
+  ) => {
+    if (!notification.read) await markRead(notification.id);
     setShowNotifications(false);
-    if (notification.link) {
-      router.push(notification.link);
-    }
+    if (notification.link) router.push(notification.link);
   };
 
-  const getTypeMeta = (type: string) => {
-    return NOTIFICATION_TYPE_META[type] ?? NOTIFICATION_TYPE_META["system_update"];
-  };
+  const getTypeMeta = (type: string) =>
+    NOTIFICATION_TYPE_META[type] ?? NOTIFICATION_TYPE_META["system_update"];
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
+    <header
+      className="sticky top-0 z-40"
+      style={{
+        backgroundColor: H.bg,
+        borderBottom: `1px solid ${H.border}`,
+      }}
+    >
       <div className="flex items-center justify-between px-4 md:px-8 py-3 md:py-4">
         {/* Mobile Menu Button */}
         <Button
           variant="ghost"
           size="icon"
           onClick={onMenuClick}
-          className="md:hidden mr-2 text-gray-600"
+          className="md:hidden mr-2"
+          style={{ color: H.muted }}
           aria-label="Open menu"
         >
           <Menu className="w-6 h-6" />
@@ -98,282 +117,471 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
 
         {/* Left: Page Title */}
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900 truncate">Dashboard</h1>
-          <p className="text-xs md:text-sm text-gray-500 truncate">
+          <h1
+            className="text-xl md:text-2xl font-bold truncate"
+            style={{ color: H.text, fontFamily: "Outfit, sans-serif" }}
+          >
+            Dashboard
+          </h1>
+          <p className="text-xs md:text-sm truncate" style={{ color: H.muted }}>
             Welcome back, {currentUser?.full_name}
           </p>
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center space-x-2 md:space-x-3">
-          <div className="flex items-center space-x-1 md:space-x-2">
-            {/* Notification Bell */}
-            <div className="relative" ref={notificationRef}>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="relative text-gray-500"
-                aria-label="Notifications"
-              >
-                <Bell className="w-5 h-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 min-w-[8px] h-2 bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
-                    {unreadCount > 9 && (
-                      <span className="text-white text-[7px] font-black leading-none px-0.5">
-                        {unreadCount > 99 ? "99+" : unreadCount}
-                      </span>
-                    )}
-                  </span>
-                )}
-              </Button>
-
-              {showNotifications && (
-                <div className="absolute right-0 mt-2 w-96 bg-white border rounded-xl shadow-xl z-50 animate-in fade-in zoom-in-95 duration-200 ring-1 ring-black/5 overflow-hidden">
-                  {/* Header */}
-                  <div className="p-3 border-b flex justify-between items-center bg-gray-50/70">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-sm text-gray-900">Notifications</h3>
-                      {unreadCount > 0 && (
-                        <span className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full leading-none">
-                          {unreadCount}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      {unreadCount > 0 && (
-                        <Button
-                          variant="link"
-                          size="sm"
-                          onClick={handleMarkAllRead}
-                          className="h-auto p-0 text-xs text-primary hover:underline cursor-pointer shadow-none"
-                        >
-                          Mark all read
-                        </Button>
-                      )}
-                      {unreadCount > 0 && <span className="text-gray-300">|</span>}
-                      <Button
-                        variant="link"
-                        size="sm"
-                        onClick={handleClearAll}
-                        className="h-auto p-0 text-xs text-gray-500 hover:text-red-600 hover:underline cursor-pointer shadow-none"
-                      >
-                        Clear all
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Notification List */}
-                  <div className="max-h-[360px] overflow-y-auto divide-y divide-gray-50">
-                    {notifications.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-10 gap-3">
-                        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-2xl">
-                          🔔
-                        </div>
-                        <p className="text-sm font-medium text-gray-500">You're all caught up!</p>
-                        <p className="text-xs text-gray-400">No notifications yet.</p>
-                      </div>
-                    ) : (
-                      notifications.slice(0, 10).map((notification) => {
-                        const meta = getTypeMeta(notification.notification_type);
-                        return (
-                          <div
-                            key={notification.id}
-                            onClick={() => handleNotificationClick(notification)}
-                            className={`p-3 hover:bg-gray-50 cursor-pointer transition-colors flex gap-3 ${!notification.read ? "bg-blue-50/30" : ""}`}
-                          >
-                            {/* Icon */}
-                            <div
-                              className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-base ${meta.color}`}
-                            >
-                              {meta.emoji}
-                            </div>
-
-                            {/* Content */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-start justify-between gap-1">
-                                <p
-                                  className={`text-sm leading-tight truncate ${!notification.read ? "font-semibold text-gray-900" : "text-gray-700"}`}
-                                >
-                                  {notification.title}
-                                </p>
-                                {!notification.read && (
-                                  <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1" />
-                                )}
-                              </div>
-                              <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
-                                {notification.message}
-                              </p>
-                              <p className="text-[10px] text-gray-400 mt-1 font-medium">
-                                {notification.time_ago}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-
-                  {/* Footer */}
-                  <div className="p-2.5 border-t bg-gray-50/50 text-center">
-                    <Link
-                      href="/dashboard/notifications"
-                      onClick={() => setShowNotifications(false)}
-                      className="text-xs font-semibold text-primary hover:underline"
+        <div className="flex items-center gap-1.5 md:gap-2">
+          {/* Notification Bell */}
+          <div className="relative" ref={notificationRef}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative"
+              style={{ color: H.muted }}
+              aria-label="Notifications"
+            >
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span
+                  className="absolute top-1.5 right-1.5 min-w-[8px] h-2 rounded-full border-2 flex items-center justify-center"
+                  style={{
+                    backgroundColor: H.amber,
+                    borderColor: H.bg,
+                  }}
+                >
+                  {unreadCount > 9 && (
+                    <span
+                      className="text-[7px] font-black leading-none px-0.5"
+                      style={{ color: "#fff" }}
                     >
-                      View all notifications →
-                    </Link>
-                  </div>
-                </div>
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
+                </span>
               )}
-            </div>
-
-            <div className="hidden md:flex p-2 rounded-lg text-gray-500 w-9 h-9 items-center justify-center">
-              {/* @ts-ignore */}
-              <google-cast-launcher
-                style={{ width: "20px", height: "20px", opacity: 0.6 }}
-              ></google-cast-launcher>
-            </div>
-
-            <Button variant="ghost" size="icon" className="hidden sm:inline-flex text-gray-500">
-              <Search className="w-5 h-5" />
             </Button>
 
-            <Link href="/dashboard/settings" className="hidden sm:block">
-              <Button variant="ghost" size="icon" className="text-gray-500">
-                <Settings className="w-5 h-5" />
-              </Button>
-            </Link>
-
-            {/* User Menu */}
-            <div className="relative">
-              <Button
-                variant="ghost"
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center space-x-2 h-auto p-2 hover:bg-gray-100 rounded-lg group transition-colors"
+            {/* Notifications dropdown */}
+            {showNotifications && (
+              <div
+                className="absolute right-0 mt-2 w-96 max-w-[calc(100vw-1rem)] rounded-xl shadow-xl z-50 animate-in fade-in zoom-in-95 duration-200 overflow-hidden"
+                style={{
+                  backgroundColor: H.bg,
+                  border: `1px solid ${H.dropBorder}`,
+                  boxShadow: `0 8px 40px rgba(28,19,9,0.12)`,
+                }}
               >
-                {currentUser?.avatar ? (
-                  <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-gray-200 group-hover:ring-gray-300 transition-all">
-                    <img
-                      src={currentUser.avatar}
-                      alt={currentUser.full_name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium shadow-sm group-hover:shadow-md transition-shadow">
-                    {currentUser?.initials}
-                  </div>
-                )}
-                <div className="text-left hidden md:block">
-                  <div className="flex items-center space-x-1">
-                    <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                      {currentUser?.full_name}
-                    </span>
-                  </div>
-                  <span className="text-xs text-gray-500 capitalize">
-                    {currentUser?.role === "teacher" ? "Instructor" : currentUser?.role}
-                  </span>
-                </div>
+                {/* Header */}
                 <div
-                  className={`text-gray-400 transition-transform duration-200 ${showUserMenu ? "rotate-180" : ""}`}
+                  className="p-3 flex justify-between items-center"
+                  style={{
+                    borderBottom: `1px solid ${H.border}`,
+                    backgroundColor: H.cardBg,
+                  }}
                 >
-                  ▼
-                </div>
-              </Button>
-
-              {/* Dropdown Menu */}
-              {showUserMenu && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowUserMenu(false)} />
-                  <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-in fade-in zoom-in-95 duration-200 overflow-hidden ring-1 ring-black/5 antialiased">
-                    {/* User Info */}
-                    <div className="p-4 bg-gray-50/50 border-b border-gray-100">
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-                        Signed in as
-                      </p>
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {currentUser?.email}
-                      </p>
-                    </div>
-
-                    {/* Quick Access */}
-                    <div className="p-2 border-b border-gray-100">
-                      <p className="px-2 py-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                        Quick Access
-                      </p>
-                      <Link
-                        href="/dashboard/lessons"
-                        className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-slate-50 hover:text-indigo-600 rounded-lg transition-colors group"
+                  <div className="flex items-center gap-2">
+                    <h3
+                      className="font-bold text-sm"
+                      style={{ color: H.text }}
+                    >
+                      Notifications
+                    </h3>
+                    {unreadCount > 0 && (
+                      <span
+                        className="text-[10px] font-black px-1.5 py-0.5 rounded-full leading-none"
+                        style={{ backgroundColor: H.amber, color: "#fff" }}
                       >
-                        <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-md group-hover:bg-indigo-100 transition-colors">
-                          <BookOpen className="w-4 h-4" />
-                        </div>
-                        <span>My Lessons</span>
-                      </Link>
-                      <Link
-                        href="/dashboard/students"
-                        className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-slate-50 hover:text-indigo-600 rounded-lg transition-colors group"
-                      >
-                        <div className="p-1.5 bg-pink-50 text-pink-600 rounded-md group-hover:bg-pink-100 transition-colors">
-                          <FileText className="w-4 h-4" />
-                        </div>
-                        <span>My Students</span>
-                      </Link>
-                    </div>
-
-                    {/* Knowledge Base */}
-                    <div className="p-2 border-b border-gray-100">
-                      <Link
-                        href="/dashboard/resources"
-                        className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-800 bg-amber-50/50 hover:bg-amber-50 rounded-lg transition-colors group border border-amber-100/50 hover:border-amber-200"
-                      >
-                        <div className="p-1.5 bg-amber-100 text-amber-700 rounded-lg group-hover:bg-amber-200 transition-colors shadow-sm">
-                          <GraduationCap className="w-4 h-4" />
-                        </div>
-                        <div className="flex-1">
-                          <span className="block text-amber-900">Learning Base</span>
-                          <span className="text-[10px] text-amber-700/70 font-normal">
-                            Explore resources & guides
-                          </span>
-                        </div>
-                      </Link>
-                    </div>
-
-                    {/* Account Settings */}
-                    <div className="p-2 border-b border-gray-100">
-                      <p className="px-2 py-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                        Account
-                      </p>
-                      <Link
-                        href="/dashboard/settings"
-                        className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-                      >
-                        <Settings className="w-4 h-4 text-gray-400" />
-                        <span>Settings</span>
-                      </Link>
-                    </div>
-
-                    {/* Logout */}
-                    <div className="p-2 bg-gray-50/50">
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          setShowUserMenu(false);
-                          logout();
-                        }}
-                        className="w-full flex items-center justify-between px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-all group border border-transparent hover:border-red-100 h-auto"
-                      >
-                        <span className="flex items-center gap-2">
-                          <LogOut className="w-4 h-4" />
-                          <span>Log Out</span>
-                        </span>
-                      </Button>
-                    </div>
+                        {unreadCount}
+                      </span>
+                    )}
                   </div>
-                </>
+                  <div className="flex gap-2 items-center">
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={handleMarkAllRead}
+                        className="text-xs font-medium hover:underline"
+                        style={{ color: H.amber }}
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                    {unreadCount > 0 && (
+                      <span style={{ color: H.border }}>|</span>
+                    )}
+                    <button
+                      onClick={handleClearAll}
+                      className="text-xs font-medium hover:underline"
+                      style={{ color: H.muted }}
+                    >
+                      Clear all
+                    </button>
+                  </div>
+                </div>
+
+                {/* List */}
+                <div
+                  className="max-h-[360px] overflow-y-auto"
+                  style={{ borderBottom: `1px solid ${H.border}` }}
+                >
+                  {notifications.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-10 gap-3">
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center text-2xl"
+                        style={{ backgroundColor: H.cardBg }}
+                      >
+                        🔔
+                      </div>
+                      <p
+                        className="text-sm font-medium"
+                        style={{ color: H.muted }}
+                      >
+                        You&apos;re all caught up!
+                      </p>
+                      <p className="text-xs" style={{ color: H.faint }}>
+                        No notifications yet.
+                      </p>
+                    </div>
+                  ) : (
+                    notifications.slice(0, 10).map((n) => {
+                      const meta = getTypeMeta(n.notification_type);
+                      return (
+                        <div
+                          key={n.id}
+                          onClick={() => handleNotificationClick(n)}
+                          className="p-3 flex gap-3 cursor-pointer transition-colors"
+                          style={{
+                            backgroundColor: !n.read
+                              ? "rgba(193,124,46,0.05)"
+                              : "transparent",
+                            borderBottom: `1px solid ${H.border}`,
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.backgroundColor = H.hoverBg)
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.backgroundColor = !n.read
+                              ? "rgba(193,124,46,0.05)"
+                              : "transparent")
+                          }
+                        >
+                          <div
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-base ${meta.color}`}
+                          >
+                            {meta.emoji}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-1">
+                              <p
+                                className="text-sm leading-tight truncate"
+                                style={{
+                                  color: H.text,
+                                  fontWeight: !n.read ? 600 : 400,
+                                }}
+                              >
+                                {n.title}
+                              </p>
+                              {!n.read && (
+                                <span
+                                  className="w-2 h-2 rounded-full flex-shrink-0 mt-1"
+                                  style={{ backgroundColor: H.amber }}
+                                />
+                              )}
+                            </div>
+                            <p
+                              className="text-xs mt-0.5 line-clamp-2"
+                              style={{ color: H.muted }}
+                            >
+                              {n.message}
+                            </p>
+                            <p
+                              className="text-[10px] mt-1 font-medium"
+                              style={{ color: H.faint }}
+                            >
+                              {n.time_ago}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div className="p-2.5 text-center" style={{ backgroundColor: H.cardBg }}>
+                  <Link
+                    href="/dashboard/notifications"
+                    onClick={() => setShowNotifications(false)}
+                    className="text-xs font-semibold hover:underline"
+                    style={{ color: H.amber }}
+                  >
+                    View all notifications →
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Google Cast */}
+          <div
+            className="hidden md:flex p-2 rounded-lg w-9 h-9 items-center justify-center"
+            style={{ color: H.muted }}
+          >
+            {/* @ts-ignore */}
+            <google-cast-launcher
+              style={{ width: "20px", height: "20px", opacity: 0.5 }}
+            ></google-cast-launcher>
+          </div>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden sm:inline-flex"
+            style={{ color: H.muted }}
+          >
+            <Search className="w-5 h-5" />
+          </Button>
+
+          <Link href="/dashboard/settings" className="hidden sm:block">
+            <Button
+              variant="ghost"
+              size="icon"
+              style={{ color: H.muted }}
+            >
+              <Settings className="w-5 h-5" />
+            </Button>
+          </Link>
+
+          {/* User Menu */}
+          <div className="relative">
+            <Button
+              variant="ghost"
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="flex items-center gap-2 h-auto p-2 rounded-lg"
+              style={{ color: H.text }}
+            >
+              {currentUser?.avatar ? (
+                <div
+                  className="w-8 h-8 rounded-full overflow-hidden ring-2"
+                  style={{ ringColor: H.border }}
+                >
+                  <img
+                    src={currentUser.avatar}
+                    alt={currentUser.full_name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-white font-medium text-sm"
+                  style={{
+                    background: `linear-gradient(135deg, #c17c2e 0%, #7a4010 100%)`,
+                  }}
+                >
+                  {currentUser?.initials}
+                </div>
               )}
-            </div>
+              <div className="text-left hidden md:block">
+                <div
+                  className="text-sm font-semibold"
+                  style={{ color: H.text }}
+                >
+                  {currentUser?.full_name}
+                </div>
+                <div className="text-xs capitalize" style={{ color: H.muted }}>
+                  {currentUser?.role === "teacher"
+                    ? "Instructor"
+                    : currentUser?.role}
+                </div>
+              </div>
+              <span
+                className={`text-xs transition-transform duration-200 ${showUserMenu ? "rotate-180" : ""}`}
+                style={{ color: H.faint }}
+              >
+                ▼
+              </span>
+            </Button>
+
+            {/* User dropdown */}
+            {showUserMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowUserMenu(false)}
+                />
+                <div
+                  className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-1rem)] rounded-xl shadow-xl z-50 animate-in fade-in zoom-in-95 duration-200 overflow-hidden"
+                  style={{
+                    backgroundColor: H.bg,
+                    border: `1px solid ${H.dropBorder}`,
+                    boxShadow: `0 8px 40px rgba(28,19,9,0.12)`,
+                  }}
+                >
+                  {/* User info */}
+                  <div
+                    className="p-4"
+                    style={{
+                      backgroundColor: H.cardBg,
+                      borderBottom: `1px solid ${H.border}`,
+                    }}
+                  >
+                    <p
+                      className="text-xs font-semibold uppercase tracking-wider mb-1"
+                      style={{ color: H.amber }}
+                    >
+                      Signed in as
+                    </p>
+                    <p
+                      className="text-sm font-medium truncate"
+                      style={{ color: H.text }}
+                    >
+                      {currentUser?.email}
+                    </p>
+                  </div>
+
+                  {/* Quick access */}
+                  <div
+                    className="p-2"
+                    style={{ borderBottom: `1px solid ${H.border}` }}
+                  >
+                    <p
+                      className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider"
+                      style={{ color: H.faint }}
+                    >
+                      Quick Access
+                    </p>
+                    {[
+                      { href: "/dashboard/lessons", label: "My Lessons", icon: BookOpen },
+                      { href: "/dashboard/students", label: "My Students", icon: FileText },
+                    ].map(({ href, label, icon: Icon }) => (
+                      <Link
+                        key={href}
+                        href={href}
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors"
+                        style={{ color: H.muted }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = H.hoverBg;
+                          e.currentTarget.style.color = H.text;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                          e.currentTarget.style.color = H.muted;
+                        }}
+                      >
+                        <div
+                          className="p-1.5 rounded-md"
+                          style={{ backgroundColor: H.amberLight }}
+                        >
+                          <Icon
+                            className="w-4 h-4"
+                            style={{ color: H.amber }}
+                          />
+                        </div>
+                        <span className="text-sm">{label}</span>
+                      </Link>
+                    ))}
+                  </div>
+
+                  {/* Learning base */}
+                  <div
+                    className="p-2"
+                    style={{ borderBottom: `1px solid ${H.border}` }}
+                  >
+                    <Link
+                      href="/dashboard/resources"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors"
+                      style={{
+                        backgroundColor: H.amberLight,
+                        border: `1px solid ${H.border}`,
+                        color: H.text,
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.backgroundColor =
+                          "rgba(193,124,46,0.18)")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor = H.amberLight)
+                      }
+                    >
+                      <div
+                        className="p-1.5 rounded-lg"
+                        style={{ backgroundColor: "rgba(193,124,46,0.2)" }}
+                      >
+                        <GraduationCap
+                          className="w-4 h-4"
+                          style={{ color: H.amber }}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <span
+                          className="block text-sm font-medium"
+                          style={{ color: H.text }}
+                        >
+                          Learning Base
+                        </span>
+                        <span
+                          className="text-[10px]"
+                          style={{ color: H.muted }}
+                        >
+                          Explore resources & guides
+                        </span>
+                      </div>
+                    </Link>
+                  </div>
+
+                  {/* Settings */}
+                  <div
+                    className="p-2"
+                    style={{ borderBottom: `1px solid ${H.border}` }}
+                  >
+                    <p
+                      className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider"
+                      style={{ color: H.faint }}
+                    >
+                      Account
+                    </p>
+                    <Link
+                      href="/dashboard/settings"
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm"
+                      style={{ color: H.muted }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = H.hoverBg;
+                        e.currentTarget.style.color = H.text;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "transparent";
+                        e.currentTarget.style.color = H.muted;
+                      }}
+                    >
+                      <Settings className="w-4 h-4" style={{ color: H.faint }} />
+                      <span>Settings</span>
+                    </Link>
+                  </div>
+
+                  {/* Logout */}
+                  <div className="p-2" style={{ backgroundColor: H.cardBg }}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        logout();
+                      }}
+                      className="w-full flex items-center justify-start gap-2 px-3 py-2 text-sm rounded-lg h-auto font-normal"
+                      style={{ color: "#b54040" }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor =
+                          "rgba(181,64,64,0.08)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "transparent";
+                      }}
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Log Out</span>
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

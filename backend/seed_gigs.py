@@ -39,9 +39,16 @@ GENRES = ["Rock", "Jazz", "Classical", "Pop", "Blues", "Country", "R&B", "Folk",
 BAND_ADJECTIVES = ["Electric", "Acoustic", "Midnight", "Golden", "Silver", "Crystal", "Thunder", "Neon", "Wild", "Velvet"]
 BAND_NOUNS = ["Wolves", "Rivers", "Echoes", "Storm", "Sparks", "Tide", "Horizon", "Drift", "Pulse", "Cadence"]
 VENUES = [
-    "The Blue Note Lounge", "Riverside Amphitheater", "The Grand Ballroom",
-    "Murphy's Pub", "City Park Stage", "The Jazz Cellar", "Rooftop Sessions",
-    "The Mill Concert Hall", "Harbor Festival Grounds", "Blackwood Theater",
+    "The Vogue Theatre",
+    "Hi-Fi",
+    "Deluxe at Old National Centre",
+    "The Slippery Noodle Inn",
+    "White Rabbit Cabaret",
+    "Fountain Square Theatre",
+    "The Bluebird",
+    "City Park Stage",
+    "The Jazz Cellar",
+    "Blackwood Theater",
 ]
 GIG_TITLES = [
     "Summer Showcase", "Friday Night Live", "Charity Benefit Concert",
@@ -127,21 +134,14 @@ def seed():
 
     # --- Bands ---
     bands = []
-    band_defs = [
-        {"name": f"{random.choice(BAND_ADJECTIVES)} {random.choice(BAND_NOUNS)}", "genre": random.choice(GENRES)}
-        for _ in range(6)
+    unique_band_defs = [
+        {"name": "The Static Palms", "genre": "Indie Rock", "notes": "Four-piece indie rock band known for layered guitar work and driving rhythms."},
+        {"name": "Ghost Meridian", "genre": "Dream Pop", "notes": "Ambient-leaning dream pop duo. Toured regionally, currently writing their second LP."},
+        {"name": "Copper & The Rust", "genre": "Americana / Folk", "notes": "Roots band blending Americana, folk, and country. Strong harmonies, steel guitar."},
+        {"name": "Voltage Drop", "genre": "Post-Punk", "notes": "High-energy post-punk trio. Short sets, loud amps, no encore."},
+        {"name": "Electric Tide", "genre": "Indie Pop", "notes": "Melodic indie pop quintet with big hooks and tight harmonies."},
+        {"name": "Velvet Cadence", "genre": "R&B / Soul", "notes": "Soul-influenced R&B group with a full horn section."},
     ]
-    # Deduplicate names in case of collision
-    seen_names = set()
-    unique_band_defs = []
-    for bd in band_defs:
-        if bd["name"] not in seen_names:
-            seen_names.add(bd["name"])
-            unique_band_defs.append(bd)
-        else:
-            bd["name"] = f"The {random.choice(LAST_NAMES)} Collective"
-            seen_names.add(bd["name"])
-            unique_band_defs.append(bd)
 
     admin_user = User.objects.filter(role="admin").first()
 
@@ -156,7 +156,7 @@ def seed():
                 "billing_phone": f"555-010{i}",
                 "city": studio.city or "Nashville",
                 "state": studio.state or "TN",
-                "notes": f"A {bd['genre']} band with {random.randint(3, 6)} members.",
+                "notes": bd.get("notes", f"A {bd['genre']} band."),
             },
         )
         bands.append(band)

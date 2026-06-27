@@ -54,9 +54,9 @@ def seed_extra():
 
     # 1. Get existing core data
     try:
-        admin = User.objects.filter(email="admin@demo.com").first() or User.objects.filter(role="admin").first()
+        admin = User.objects.filter(role="admin").first()
         if not admin:
-            print("❌ Error: Demo admin found. Please run seed_data.py first.")
+            print("❌ Error: No admin found. Please complete /setup and run seed_data.py first.")
             return
 
         studio = Studio.objects.filter(owner=admin).first() or Studio.objects.filter(name="StudioSync Academy").first() or Studio.objects.first()

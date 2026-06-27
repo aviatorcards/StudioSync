@@ -82,35 +82,6 @@ services:
         condition: service_started
     restart: unless-stopped
 
-  # Demo Seeder — flushes and reseeds the DB on startup, then every 24 h
-  seeder:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      network: host
-    command: >
-      sh -c "
-        echo 'Waiting for DB...' &&
-        while ! python manage.py check --database default > /dev/null 2>&1; do sleep 2; done &&
-        echo 'Running initial demo reset...' &&
-        python manage.py reset_demo &&
-        echo 'Done. Sleeping 24 h before next reset...' &&
-        while true; do
-          sleep 86400 &&
-          echo 'Running scheduled demo reset...' &&
-          python manage.py reset_demo
-        done
-      "
-    environment:
-      DATABASE_URL: postgresql://studio_user:studio_password@db:5432/studiosync
-      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
-    depends_on:
-      db:
-        condition: service_healthy
-      backend:
-        condition: service_started
-    restart: unless-stopped
-
   # Next.js Frontend
   frontend:
     build:

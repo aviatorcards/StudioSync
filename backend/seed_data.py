@@ -97,88 +97,22 @@ def get_password(env_var, default, role):
 def seed():
     print("🌱 Starting database seed...")
 
-    # Get passwords based on security mode
-    admin_password = get_password("SEED_ADMIN_PASSWORD", "demo123", "admin")
     teacher_password = get_password("SEED_TEACHER_PASSWORD", "teacher123", "teachers")
     student_password = get_password("SEED_STUDENT_PASSWORD", "student123", "students")
 
-    # 1. Consolidate Admin user
-    # If any admin already exists with a different email, we migrate it to ensure consistency
-    other_admin = User.objects.filter(role="admin").exclude(email="admin@demo.com").first()
-    if other_admin:
-        print(f"🔄 Migrating old admin {other_admin.email} to admin@demo.com...")
-        if not User.objects.filter(email="admin@demo.com").exists():
-            other_admin.email = "admin@demo.com"
-            other_admin.save()
-            admin = other_admin
-        else:
-            admin = User.objects.get(email="admin@demo.com")
-    else:
-        admin, created = User.objects.get_or_create(
-            email="admin@demo.com",
-            defaults={
-                "first_name": "Admin",
-                "last_name": "User",
-                "role": "admin",
-                "is_staff": True,
-                "is_superuser": True,
-                "is_active": True,
-            },
-        )
-    
-    admin.set_password(admin_password)
-    admin.save()
-    print("✅ Admin user verified: admin@demo.com / demo123")
+    # 1. Find admin created by the /setup wizard
+    admin = User.objects.filter(role="admin").first()
+    if not admin:
+        print("❌ No admin user found. Please complete the /setup wizard at /setup first.")
+        sys.exit(1)
+    print(f"✅ Using admin: {admin.email}")
 
-    # 2. Ensure Studio exists
-    studio_timezone = os.getenv("SEED_STUDIO_TIMEZONE", "America/New_York")
-    studio_currency = os.getenv("SEED_STUDIO_CURRENCY", "USD")
-    
-    studio, created = Studio.objects.get_or_create(
-        name="StudioSync Academy",
-        defaults={
-            "owner": admin,
-            "email": "contact@studiosync.com",
-            "address_line1": "123 Music Lane",
-            "city": "Nashville",
-            "state": "TN",
-            "timezone": studio_timezone,
-            "currency": studio_currency,
-        },
-    )
-    if not created and studio.owner != admin:
-        print(f"🔄 Re-associating studio '{studio.name}' with admin@demo.com")
-        studio.owner = admin
-        studio.save()
-    
-    if created:
-        print(f"✅ Studio created: {studio.name}")
-
-    # 2.5 Ensure SetupStatus is complete (to prevent redirect to wizard)
-    setup_status, status_created = SetupStatus.objects.get_or_create(
-        defaults={
-            "is_completed": True,
-            "completed_at": timezone.now(),
-            "setup_version": "1.0",
-            "features_enabled": {
-                "billing": True,
-                "inventory": True,
-                "messaging": True,
-                "resources": True,
-                "goals": True,
-                "bands": True,
-                "analytics": True,
-                "practice_rooms": True,
-            },
-            "setup_data": {"completed_by": admin.email},
-        }
-    )
-    if not setup_status.is_completed:
-        setup_status.is_completed = True
-        setup_status.save()
-        print("✅ SetupStatus marked as complete")
-    elif status_created:
-        print("✅ SetupStatus created (complete)")
+    # 2. Find studio created by the /setup wizard
+    studio = Studio.objects.first()
+    if not studio:
+        print("❌ No studio found. Please complete the /setup wizard at /setup first.")
+        sys.exit(1)
+    print(f"✅ Using studio: {studio.name}")
 
     # 3. Create 5 Teachers
     teachers = []

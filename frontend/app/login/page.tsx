@@ -34,7 +34,6 @@ const staffLines: React.CSSProperties = {
 const inp = 'block w-full py-2.5 rounded-xl border text-sm transition-all outline-none'
 
 const DEMO_USERS = [
-    { label: 'Admin', email: 'admin@demo.com', password: 'demo123' },
     { label: 'Teacher', email: 'teacher1@test.com', password: 'teacher123' },
     { label: 'Student', email: 'gig_student1@test.com', password: 'student123' },
 ] as const

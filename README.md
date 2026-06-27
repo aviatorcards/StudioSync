@@ -112,17 +112,7 @@ The script will prompt you for:
 
 All integrations are optional — you can skip any and add them later by editing `.env` and running `docker compose restart`.
 
-### Option 2 — Demo Setup
-
-Spins up a pre-seeded environment with sample students, lessons, and resources. Useful for evaluating the app before committing to a full setup.
-
-```bash
-./scripts/init-demo.sh
-```
-
-Demo login: `admin@demo.com` / `demo123`
-
-### Option 3 — Manual Setup
+### Option 2 — Manual Setup
 
 ```bash
 git clone https://github.com/aviatorcards/StudioSync.git
@@ -136,7 +126,23 @@ docker compose exec backend python manage.py migrate
 docker compose exec backend python manage.py createcachetable
 ```
 
-Then open the setup wizard at **http://localhost:3000/setup** to configure your studio and admin account.
+Open **http://localhost:3000/setup** to run the setup wizard — this creates your admin account and studio. After setup, optionally seed demo data:
+
+```bash
+docker compose exec backend python seed_data.py          # teachers, students
+docker compose exec backend python seed_extra.py         # lessons, billing, inventory
+docker compose exec backend python seed_resources.py     # digital library
+docker compose exec backend python seed_extra_resources.py
+docker compose exec backend python seed_gigs.py          # bands, gigs
+```
+
+Demo credentials after seeding:
+
+| Role | Email | Password |
+|---|---|---|
+| **Admin** | *(your /setup credentials)* | *(your /setup password)* |
+| **Teacher** | `teacher1@test.com` | `teacher123` |
+| **Student** | `gig_student1@test.com` | `student123` |
 
 ### Access Points
 

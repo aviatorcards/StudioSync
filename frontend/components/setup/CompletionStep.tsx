@@ -3,6 +3,13 @@ import { motion } from 'framer-motion'
 import { CheckCircle, ArrowRight } from 'lucide-react'
 import { Confetti } from '@/components/Confetti'
 
+const A = {
+    amber: '#c17c2e',
+    amberDark: '#9e6020',
+    text: '#1c1309',
+    muted: '#7a6145',
+} as const
+
 export const CompletionStep = () => {
     return (
         <>
@@ -11,28 +18,30 @@ export const CompletionStep = () => {
                 <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                    className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-8"
+                    transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+                    className="w-24 h-24 rounded-full flex items-center justify-center mb-8"
+                    style={{ backgroundColor: 'rgba(193,124,46,0.12)', border: '2px solid rgba(193,124,46,0.25)' }}
                 >
-                    <CheckCircle className="w-12 h-12 text-green-600" />
+                    <CheckCircle className="w-12 h-12" style={{ color: A.amber }} />
                 </motion.div>
 
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 mb-4">
-                All Set!
-            </h1>
-            <p className="text-lg text-gray-600 max-w-md mb-8">
-                Your studio has been successfully configured. You are now ready to start managing your music school like a pro.
-            </p>
+                <h1 className="text-4xl font-bold tracking-tight mb-4" style={{ color: A.text, fontFamily: 'Outfit, sans-serif' }}>
+                    All Set!
+                </h1>
+                <p className="text-lg max-w-md mb-8" style={{ color: A.muted }}>
+                    Your studio has been configured. You&apos;re ready to start managing your music school.
+                </p>
 
-            <div className="flex space-x-4">
                 <Link
                     href="/dashboard"
-                    className="rounded-full bg-indigo-600 px-8 py-3.5 text-base font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-all hover:scale-105 active:scale-95 flex items-center"
+                    className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-base font-semibold text-white transition-all hover:scale-105 active:scale-95"
+                    style={{ backgroundColor: A.amber }}
+                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = A.amberDark)}
+                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = A.amber)}
                 >
                     Go to Dashboard
-                    <ArrowRight className="ml-2 h-5 w-5" />
+                    <ArrowRight className="w-5 h-5" />
                 </Link>
-            </div>
             </div>
         </>
     )

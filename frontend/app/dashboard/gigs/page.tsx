@@ -24,11 +24,20 @@ interface GigClaim {
     created_at: string
 }
 
+interface Venue {
+    id: string
+    name: string
+    address: string
+    allowed_poster_names: string[]
+}
+
 interface Gig {
     id: string
     title: string
     description: string
     venue: string
+    venue_ref: string | null
+    venue_name: string | null
     scheduled_start: string
     scheduled_end: string
     band: string | null
@@ -37,6 +46,10 @@ interface Gig {
     pay_rate: string
     pay_type: 'flat' | 'hourly'
     claims: GigClaim[]
+}
+
+function gigVenue(gig: Gig) {
+    return gig.venue_name ?? gig.venue
 }
 
 interface Band {
@@ -103,19 +116,26 @@ const inp = 'w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 t
 const lbl = 'block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5'
 
 // ─── Post Gig Modal (admin) ───────────────────────────────────────────────────
-const EMPTY = { title: '', description: '', venue: '', scheduled_start: '', scheduled_end: '', pay_rate: '', pay_type: 'flat' as const }
+const EMPTY_GIG = { title: '', description: '', venue_ref: '', scheduled_start: '', scheduled_end: '', pay_rate: '', pay_type: 'flat' as const }
 
 function PostGigModal({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
-    const [form, setForm] = useState(EMPTY)
+    const [form, setForm] = useState(EMPTY_GIG)
+    const [venues, setVenues] = useState<Venue[]>([])
     const [saving, setSaving] = useState(false)
 
-    useEffect(() => { if (open) setForm(EMPTY) }, [open])
+    useEffect(() => {
+        if (open) {
+            setForm(EMPTY_GIG)
+            api.get('/gigs/venues/').then(r => setVenues(r.data?.results ?? r.data ?? [])).catch(() => {})
+        }
+    }, [open])
 
-    const set = (k: keyof typeof EMPTY) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    const set = (k: keyof typeof EMPTY_GIG) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
         setForm(p => ({ ...p, [k]: e.target.value }))
 
     const submit = async (e: React.FormEvent) => {
         e.preventDefault()
+        if (!form.venue_ref) { toast.error('Select a venue'); return }
         if (new Date(form.scheduled_start) >= new Date(form.scheduled_end)) {
             toast.error('End time must be after start time'); return
         }
@@ -128,6 +148,8 @@ function PostGigModal({ open, onClose, onCreated }: { open: boolean; onClose: ()
             toast.error(err?.response?.data?.detail || 'Failed to post gig')
         } finally { setSaving(false) }
     }
+
+    const selectedVenue = venues.find(v => v.id === form.venue_ref)
 
     return (
         <AnimatePresence>
@@ -156,11 +178,31 @@ function PostGigModal({ open, onClose, onCreated }: { open: boolean; onClose: ()
                                 <form onSubmit={submit} className="p-6 space-y-4">
                                     <div>
                                         <label className={lbl}>Title <span className="text-red-400">*</span></label>
-                                        <input type="text" value={form.title} onChange={set('title')} placeholder="e.g. Saturday Night Jazz at The Venue" className={inp} required />
+                                        <input type="text" value={form.title} onChange={set('title')} placeholder="e.g. Saturday Night Jazz" className={inp} required />
                                     </div>
                                     <div>
                                         <label className={lbl}>Venue <span className="text-red-400">*</span></label>
-                                        <input type="text" value={form.venue} onChange={set('venue')} placeholder="e.g. The Blue Note, 123 Main St" className={inp} required />
+                                        {venues.length === 0 ? (
+                                            <p className="text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
+                                                No venues set up yet.{' '}
+                                                <a href="/dashboard/settings/gig-venues/" className="underline font-bold">Add venues in Settings → Gig Venues</a>
+                                                {' '}before posting gigs.
+                                            </p>
+                                        ) : (
+                                            <select value={form.venue_ref} onChange={set('venue_ref')} className={inp} required>
+                                                <option value="">Select a venue…</option>
+                                                {venues.map(v => (
+                                                    <option key={v.id} value={v.id}>
+                                                        {v.name}{v.address ? ` — ${v.address}` : ''}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        )}
+                                        {selectedVenue?.allowed_poster_names.length ? (
+                                            <p className="text-[10px] text-gray-400 mt-1.5">
+                                                Authorized posters: {selectedVenue.allowed_poster_names.join(', ')}
+                                            </p>
+                                        ) : null}
                                     </div>
                                     <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 gap-3">
                                         <div>
@@ -191,7 +233,7 @@ function PostGigModal({ open, onClose, onCreated }: { open: boolean; onClose: ()
                                     </div>
                                     <div className="flex justify-end gap-3 pt-2">
                                         <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors">Cancel</button>
-                                        <button type="submit" disabled={saving} className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-60 flex items-center gap-2">
+                                        <button type="submit" disabled={saving || venues.length === 0} className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-60 flex items-center gap-2">
                                             {saving && <Loader className="w-4 h-4 animate-spin" />} Post Gig
                                         </button>
                                     </div>
@@ -245,7 +287,7 @@ function ClaimModal({ gig, bands, open, onClose, onClaimed }: {
                                 <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
                                     <div>
                                         <h2 className="text-base font-bold text-gray-900">Claim This Gig</h2>
-                                        <p className="text-xs text-gray-400 mt-0.5">{gig.title} · {gig.venue}</p>
+                                        <p className="text-xs text-gray-400 mt-0.5">{gig.title} · {gigVenue(gig)}</p>
                                     </div>
                                     <button onClick={onClose} className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"><X className="w-4 h-4" /></button>
                                 </div>
@@ -319,7 +361,7 @@ function ApproveClaimModal({ gig, open, onClose, onApproved }: {
                                 <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
                                     <div>
                                         <h2 className="text-base font-bold text-gray-900">Review Claims</h2>
-                                        <p className="text-xs text-gray-400 mt-0.5">{gig.title} · {gig.venue} · {fmt(gig.scheduled_start)}</p>
+                                        <p className="text-xs text-gray-400 mt-0.5">{gig.title} · {gigVenue(gig)} · {fmt(gig.scheduled_start)}</p>
                                     </div>
                                     <button onClick={onClose} className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"><X className="w-4 h-4" /></button>
                                 </div>
@@ -408,7 +450,7 @@ function PayoutModal({ gig, open, onClose, onPaid }: {
                                 <form onSubmit={submit} className="p-6 space-y-4">
                                     <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 text-sm space-y-1">
                                         <div className="flex justify-between"><span className="text-gray-500">Gig</span><span className="font-semibold text-gray-800">{gig.title}</span></div>
-                                        <div className="flex justify-between"><span className="text-gray-500">Venue</span><span className="font-semibold text-gray-800">{gig.venue}</span></div>
+                                        <div className="flex justify-between"><span className="text-gray-500">Venue</span><span className="font-semibold text-gray-800">{gigVenue(gig)}</span></div>
                                         <div className="flex justify-between"><span className="text-gray-500">Date</span><span className="font-semibold text-gray-800">{fmt(gig.scheduled_start)}</span></div>
                                         <div className="flex justify-between"><span className="text-gray-500">Duration</span><span className="font-semibold text-gray-800">{gigHours(gig)} hrs</span></div>
                                         <div className="flex justify-between"><span className="text-gray-500">Base rate</span><span className="font-semibold text-gray-800"><PayBadge gig={gig} /></span></div>
@@ -450,7 +492,7 @@ function MarketplaceTab({ gigs, bands, isAdmin, onClaim, onRefresh }: {
 }) {
     const [search, setSearch] = useState('')
     const open = gigs.filter(g => g.status === 'open' &&
-        (g.title.toLowerCase().includes(search.toLowerCase()) || g.venue.toLowerCase().includes(search.toLowerCase()))
+        (g.title.toLowerCase().includes(search.toLowerCase()) || gigVenue(g).toLowerCase().includes(search.toLowerCase()))
     )
 
     return (
@@ -482,7 +524,7 @@ function MarketplaceTab({ gigs, bands, isAdmin, onClaim, onRefresh }: {
                                 <div className="space-y-1.5 mb-4 text-sm text-gray-500">
                                     <div className="flex items-center gap-2">
                                         <MapPin className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
-                                        {gig.venue}
+                                        {gigVenue(gig)}
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Calendar className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
@@ -565,7 +607,7 @@ function ManageTab({ gigs, onApprove, onPayout, onRefresh }: {
                                     <td className="px-5 py-4 font-semibold text-sm text-gray-900 max-w-[160px]">
                                         <p className="truncate">{gig.title}</p>
                                     </td>
-                                    <td className="px-5 py-4 text-xs text-gray-500">{gig.venue}</td>
+                                    <td className="px-5 py-4 text-xs text-gray-500">{gigVenue(gig)}</td>
                                     <td className="px-5 py-4 text-xs text-gray-500 whitespace-nowrap">{fmt(gig.scheduled_start)}</td>
                                     <td className="px-5 py-4"><PayBadge gig={gig} /></td>
                                     <td className="px-5 py-4 text-xs font-semibold text-gray-600">{gig.band_name || <span className="text-gray-300">—</span>}</td>
@@ -643,7 +685,7 @@ function MyGigsTab({ gigs, onRefresh }: { gigs: Gig[]; onRefresh: () => void }) 
                             </span>
                         </div>
                         <div className="space-y-1.5 text-sm text-gray-500 mb-4">
-                            <div className="flex items-center gap-2"><MapPin className="w-3.5 h-3.5 text-gray-300" />{gig.venue}</div>
+                            <div className="flex items-center gap-2"><MapPin className="w-3.5 h-3.5 text-gray-300" />{gigVenue(gig)}</div>
                             <div className="flex items-center gap-2"><Calendar className="w-3.5 h-3.5 text-gray-300" />{fmt(gig.scheduled_start)}</div>
                         </div>
                         <div className="flex items-center justify-between pt-4 border-t border-gray-50">

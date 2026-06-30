@@ -2,6 +2,39 @@ import uuid
 from django.db import models
 
 
+class Venue(models.Model):
+    """
+    A venue that the studio books gigs at.
+    allowed_posters controls which users can post gigs here;
+    empty means admin-only.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    studio = models.ForeignKey(
+        "core.Studio",
+        on_delete=models.CASCADE,
+        related_name="venues",
+    )
+    name = models.CharField(max_length=200)
+    address = models.CharField(max_length=300, blank=True)
+    notes = models.TextField(blank=True)
+    allowed_posters = models.ManyToManyField(
+        "core.User",
+        blank=True,
+        related_name="authorized_venues",
+        help_text="Users authorized to post gigs here. Empty = admin only.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "gig_venues"
+        ordering = ["name"]
+        unique_together = [["studio", "name"]]
+
+    def __str__(self):
+        return self.name
+
+
 class BandAvailability(models.Model):
     """
     Stores band monthly availability data
@@ -53,7 +86,16 @@ class Gig(models.Model):
     )
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    venue = models.CharField(max_length=200)
+    # venue_ref is the canonical venue FK used for authorization and the dropdown UI.
+    # venue (text) is kept for backward compat with the 317booking webhook and old data.
+    venue_ref = models.ForeignKey(
+        Venue,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="gigs",
+    )
+    venue = models.CharField(max_length=200, blank=True)
     scheduled_start = models.DateTimeField()
     scheduled_end = models.DateTimeField()
     

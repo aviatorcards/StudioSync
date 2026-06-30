@@ -3,6 +3,7 @@ from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter  # noqa: F401
 
 from apps.core.views import (
+    APIKeyViewSet,
     BandViewSet,
     DashboardAnalyticsView,
     DashboardStatsView,
@@ -24,6 +25,7 @@ router.register(r"studios", StudioViewSet, basename="studio")
 router.register(r"teachers", TeacherViewSet, basename="teacher")
 router.register(r"students", StudentViewSet, basename="student")
 router.register(r"bands", BandViewSet, basename="band")
+router.register(r"api-keys", APIKeyViewSet, basename="api-key")
 # Explicitly handle users/me with optional slash to prevent 404s
 me_list = UserViewSet.as_view({"get": "me", "put": "me", "patch": "me"})
 

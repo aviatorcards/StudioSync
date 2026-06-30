@@ -1,5 +1,6 @@
 import { Switch } from '@headlessui/react'
 import { SetupWizardData, FeatureFlags, FEATURE_DESCRIPTIONS } from '@/types/setup'
+import { ArrowRight, Loader2 } from 'lucide-react'
 import * as Icons from 'lucide-react'
 
 interface StepProps {
@@ -10,6 +11,18 @@ interface StepProps {
     isLoading?: boolean
 }
 
+const A = {
+    border: '#e3d4bc',
+    amber: '#c17c2e',
+    amberDark: '#9e6020',
+    amberLight: 'rgba(193,124,46,0.10)',
+    amberBorder: 'rgba(193,124,46,0.25)',
+    text: '#1c1309',
+    muted: '#7a6145',
+    faint: '#b09870',
+    divider: '#ede4d6',
+} as const
+
 export const FeatureSelectionStep = ({ data, updateFeatures, onNext, onBack, isLoading = false }: StepProps) => {
     const { features } = data
 
@@ -19,9 +32,11 @@ export const FeatureSelectionStep = ({ data, updateFeatures, onNext, onBack, isL
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto py-4 animate-in fade-in slide-in-from-right-8 duration-500">
-            <div className="border-b border-gray-200 pb-6 text-center">
-                <h2 className="text-2xl font-bold leading-7 text-gray-900">Customize Your Studio</h2>
-                <p className="mt-1 text-sm leading-6 text-gray-600">
+            <div className="pb-6 text-center" style={{ borderBottom: `1px solid ${A.divider}` }}>
+                <h2 className="text-2xl font-bold" style={{ color: A.text, fontFamily: 'Outfit, sans-serif' }}>
+                    Customize Your Studio
+                </h2>
+                <p className="mt-1 text-sm" style={{ color: A.muted }}>
                     Enable the features you need right now. You can always change this later in settings.
                 </p>
             </div>
@@ -34,41 +49,43 @@ export const FeatureSelectionStep = ({ data, updateFeatures, onNext, onBack, isL
                     return (
                         <div
                             key={key}
-                            className={`
-                relative flex items-start space-x-4 p-4 rounded-xl border transition-all duration-200
-                ${isEnabled ? 'border-indigo-200 bg-indigo-50/50' : 'border-gray-200 hover:border-gray-300 bg-white'}
-              `}
+                            className="relative flex items-start space-x-4 p-4 rounded-xl border transition-all duration-200 cursor-pointer"
+                            style={{
+                                borderColor: isEnabled ? A.amberBorder : A.border,
+                                backgroundColor: isEnabled ? A.amberLight : '#fff',
+                            }}
+                            onClick={() => toggleFeature(key)}
                         >
-                            <div className={`
-                flex-shrink-0 p-2 rounded-lg
-                ${isEnabled ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-500'}
-              `}>
+                            <div
+                                className="flex-shrink-0 p-2 rounded-lg"
+                                style={{
+                                    backgroundColor: isEnabled ? 'rgba(193,124,46,0.15)' : '#f5f0e8',
+                                    color: isEnabled ? A.amber : A.faint,
+                                }}
+                            >
                                 <Icon className="h-6 w-6" />
                             </div>
 
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between">
-                                    <p className={`text-sm font-medium ${isEnabled ? 'text-indigo-900' : 'text-gray-900'}`}>
+                                    <p className="text-sm font-semibold" style={{ color: isEnabled ? A.text : A.muted }}>
                                         {info.name}
                                     </p>
                                     <Switch
                                         checked={isEnabled}
                                         onChange={() => toggleFeature(key)}
-                                        className={`
-                      relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2
-                      ${isEnabled ? 'bg-indigo-600' : 'bg-gray-200'}
-                    `}
+                                        onClick={e => e.stopPropagation()}
+                                        className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                                        style={{ backgroundColor: isEnabled ? A.amber : A.border }}
                                     >
                                         <span
                                             aria-hidden="true"
-                                            className={`
-                        pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out
-                        ${isEnabled ? 'translate-x-5' : 'translate-x-0'}
-                      `}
+                                            className="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                                            style={{ transform: isEnabled ? 'translateX(20px)' : 'translateX(0)' }}
                                         />
                                     </Switch>
                                 </div>
-                                <p className="mt-1 text-xs text-gray-500 pr-10">
+                                <p className="mt-1 text-xs pr-10" style={{ color: A.faint }}>
                                     {info.description}
                                 </p>
                             </div>
@@ -80,22 +97,25 @@ export const FeatureSelectionStep = ({ data, updateFeatures, onNext, onBack, isL
             <div className="pt-6 flex items-center justify-between">
                 <button
                     onClick={onBack}
-                    className="text-sm font-semibold leading-6 text-gray-900 hover:text-gray-700"
+                    className="text-sm font-semibold transition-colors"
+                    style={{ color: A.muted }}
+                    onMouseEnter={e => (e.currentTarget.style.color = A.text)}
+                    onMouseLeave={e => (e.currentTarget.style.color = A.muted)}
                 >
-                    Back
+                    ← Back
                 </button>
                 <button
                     onClick={onNext}
                     disabled={isLoading}
-                    className="rounded-md bg-indigo-600 px-8 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center space-x-2"
+                    className="flex items-center gap-2 px-8 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: A.amber }}
+                    onMouseEnter={e => { if (!isLoading) e.currentTarget.style.backgroundColor = A.amberDark }}
+                    onMouseLeave={e => { e.currentTarget.style.backgroundColor = A.amber }}
                 >
-                    {isLoading && (
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                    )}
-                    <span>{isLoading ? 'Setting up...' : 'Complete Setup'}</span>
+                    {isLoading
+                        ? <><Loader2 className="w-4 h-4 animate-spin" /> Setting up…</>
+                        : <>Complete Setup <ArrowRight className="w-4 h-4" /></>
+                    }
                 </button>
             </div>
         </div>

@@ -1,19 +1,31 @@
+import hashlib
+import hmac
+import logging
+from datetime import timedelta
+
+from django.conf import settings
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.db import transaction
 from django.db.models import Q
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from apps.core.models import Studio, Band
 from apps.billing.models import Invoice, Payment, InvoiceLineItem
-from .models import BandAvailability, Gig, GigClaim, GigPayout
+from .models import BandAvailability, BandExternalEvent, Gig, GigClaim, GigPayout, Venue
 from .serializers import (
     BandAvailabilitySerializer,
+    BandExternalEventSerializer,
     GigSerializer,
     GigClaimSerializer,
     GigPayoutSerializer,
+    VenueSerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class BandAvailabilityViewSet(viewsets.ModelViewSet):
@@ -90,6 +102,49 @@ class BandAvailabilityViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+class VenueViewSet(viewsets.ModelViewSet):
+    """
+    CRUD for venues. Only admins can create/update/delete; all authenticated users can list.
+    """
+    serializer_class = VenueSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        studio = self._get_studio(user)
+        if not studio:
+            return Venue.objects.none()
+        return Venue.objects.filter(studio=studio).prefetch_related("allowed_posters")
+
+    def _get_studio(self, user):
+        if user.role == "admin":
+            return Studio.objects.filter(owner=user).first()
+        if hasattr(user, "teacher_profile"):
+            return user.teacher_profile.studio
+        if hasattr(user, "student_profile"):
+            return user.student_profile.studio
+        return None
+
+    def perform_create(self, serializer):
+        if self.request.user.role != "admin":
+            raise permissions.exceptions.PermissionDenied("Only admins can manage venues.")
+        studio = Studio.objects.filter(owner=self.request.user).first()
+        if not studio:
+            from rest_framework import serializers as drf_s
+            raise drf_s.ValidationError("Cannot determine studio.")
+        serializer.save(studio=studio)
+
+    def perform_update(self, serializer):
+        if self.request.user.role != "admin":
+            raise permissions.exceptions.PermissionDenied("Only admins can manage venues.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if self.request.user.role != "admin":
+            raise permissions.exceptions.PermissionDenied("Only admins can manage venues.")
+        instance.delete()
+
+
 class GigViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing gigs & the marketplace
@@ -99,7 +154,7 @@ class GigViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Gig.objects.select_related("studio", "band").prefetch_related("claims")
+        queryset = Gig.objects.select_related("studio", "band", "venue_ref").prefetch_related("claims")
 
         # Admin sees all gigs in their studios
         if user.role == "admin":
@@ -113,9 +168,7 @@ class GigViewSet(viewsets.ModelViewSet):
         # Band members see gigs assigned to their band OR open gigs in their studio
         if user.role == "student" or user.role == "parent":
             bands = Band.objects.filter(Q(primary_contact=user) | Q(members__user=user)).distinct()
-            # Find the user's student studio (or check their bands' studios)
             studios = Studio.objects.filter(bands__in=bands).distinct()
-            
             return queryset.filter(
                 Q(band__in=bands) | Q(status="open", studio__in=studios)
             ).distinct()
@@ -124,15 +177,33 @@ class GigViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
-        if user.role != "admin":
+        venue_ref = serializer.validated_data.get("venue_ref")
+
+        # Venue-level authorization:
+        # - If venue has allowed_posters defined, only those users (plus admin) can post.
+        # - If venue has no allowed_posters, only admin can post.
+        # - If no venue_ref provided at all, only admin can post.
+        if venue_ref and venue_ref.allowed_posters.exists():
+            if user.role != "admin" and not venue_ref.allowed_posters.filter(pk=user.pk).exists():
+                raise permissions.exceptions.PermissionDenied(
+                    f"You are not authorized to post gigs at {venue_ref.name}."
+                )
+        elif user.role != "admin":
             raise permissions.exceptions.PermissionDenied("Only admins can create gigs.")
-        
-        # Default studio to the admin's first owned studio if not provided
+
+        # Populate the legacy venue text field from the FK for display consistency.
+        if venue_ref and not serializer.validated_data.get("venue"):
+            serializer.validated_data["venue"] = venue_ref.name
+
         studio = serializer.validated_data.get("studio")
         if not studio:
-            studio = Studio.objects.filter(owner=user).first()
+            if venue_ref:
+                studio = venue_ref.studio
+            else:
+                studio = Studio.objects.filter(owner=user).first()
             if not studio:
-                raise serializers.ValidationError({"studio": "Admin must own a studio to create gigs."})
+                from rest_framework import serializers as drf_s
+                raise drf_s.ValidationError({"studio": "Cannot determine studio context."})
             serializer.validated_data["studio"] = studio
 
         serializer.save()
@@ -323,3 +394,118 @@ class GigClaimViewSet(viewsets.ModelViewSet):
             return queryset.filter(band__in=bands)
 
         return queryset.none()
+
+
+class BandExternalEventViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Read-only access to BandExternalEvent records (confirmed gigs from 317booking).
+
+    GET /api/gigs/external-events/?band=<uuid>   — list events for a band
+    POST /api/gigs/external-events/<id>/sync/     — trigger an immediate iCal re-sync for that band
+    """
+
+    serializer_class = BandExternalEventSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = BandExternalEvent.objects.select_related("band")
+
+        if user.role == "admin":
+            studios = Studio.objects.filter(owner=user)
+            qs = qs.filter(band__studio__in=studios)
+        elif hasattr(user, "teacher_profile"):
+            qs = qs.filter(band__studio=user.teacher_profile.studio)
+        else:
+            bands = Band.objects.filter(Q(primary_contact=user) | Q(members__user=user)).distinct()
+            qs = qs.filter(band__in=bands)
+
+        band_id = self.request.query_params.get("band")
+        if band_id:
+            qs = qs.filter(band_id=band_id)
+
+        return qs.order_by("start_time")
+
+    @action(detail=False, methods=["post"], url_path="sync")
+    def sync(self, request):
+        """Trigger an immediate iCal re-sync for a specific band."""
+        band_id = request.data.get("band_id")
+        if not band_id:
+            return Response({"detail": "band_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            band = Band.objects.get(id=band_id)
+        except Band.DoesNotExist:
+            return Response({"detail": "Band not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if not band.ical_feed_url:
+            return Response({"detail": "This band has no iCal feed configured."}, status=status.HTTP_400_BAD_REQUEST)
+
+        from .tasks import sync_band_calendar
+        try:
+            sync_band_calendar(band_id)
+        except Exception as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
+        events = BandExternalEvent.objects.filter(band=band).order_by("start_time")
+        serializer = BandExternalEventSerializer(events, many=True)
+        return Response({"synced": True, "events": serializer.data})
+
+
+class ThreeSeventeenBookingWebhookView(APIView):
+    """
+    Inbound webhook from 317booking.
+    Handles gig.confirmed and gig.cancelled events, creating/deleting BandExternalEvent records
+    so confirmed gigs block availability on the StudioSync gig marketplace.
+    """
+
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request):
+        secret = getattr(settings, "BOOKING_317_WEBHOOK_SECRET", "")
+        if secret:
+            signature = request.META.get("HTTP_X_317BOOKING_SIGNATURE", "")
+            expected = "sha256=" + hmac.new(
+                secret.encode(), request.body, hashlib.sha256
+            ).hexdigest()
+            if not hmac.compare_digest(expected.encode(), signature.encode()):
+                return Response({"error": "Invalid signature"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        event = request.data.get("event")
+        gig_data = request.data.get("gig", {})
+        gig_id = gig_data.get("id")
+
+        if not gig_id:
+            return Response({"error": "Missing gig.id"}, status=status.HTTP_400_BAD_REQUEST)
+
+        uid = f"gig-{gig_id}@317booking"
+
+        if event == "gig.confirmed":
+            band_id = gig_data.get("studiosync_band_id")
+            try:
+                band = Band.objects.get(id=band_id)
+            except Band.DoesNotExist:
+                return Response({"error": "Band not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            start_time = parse_datetime(gig_data.get("date", ""))
+            if not start_time:
+                return Response({"error": "Invalid or missing date"}, status=status.HTTP_400_BAD_REQUEST)
+
+            BandExternalEvent.objects.update_or_create(
+                band=band,
+                uid=uid,
+                defaults={
+                    "title": f"Gig @ {gig_data.get('venue_name', 'Venue')}",
+                    "description": gig_data.get("description", ""),
+                    "start_time": start_time,
+                    "end_time": start_time + timedelta(hours=3),
+                },
+            )
+            return Response({"ok": True})
+
+        if event == "gig.cancelled":
+            BandExternalEvent.objects.filter(uid=uid).delete()
+            return Response({"ok": True})
+
+        return Response({"error": "Unknown event"}, status=status.HTTP_400_BAD_REQUEST)

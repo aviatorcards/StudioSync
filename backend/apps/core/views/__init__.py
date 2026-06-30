@@ -1,5 +1,6 @@
 # Expose modules for direct access
-from . import backup, core, gdpr, setup, stats, update  # noqa: F401
+from . import api_keys, backup, core, gdpr, setup, stats, update  # noqa: F401
+from .api_keys import APIKeyViewSet  # noqa: F401
 from .backup import export_system, import_system  # noqa: F401
 from .core import (  # noqa: F401
     BandViewSet,

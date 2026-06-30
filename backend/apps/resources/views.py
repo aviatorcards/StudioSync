@@ -143,22 +143,21 @@ class ResourceViewSet(viewsets.ModelViewSet):
             ).distinct()
         # Admin and Teachers see all resources within their studio context
 
-        # 4. Handle Band filtering via query params
-        # This allows the frontend to show "Band Repository" vs "General Library"
-        band_param = self.request.query_params.get("band")
-        if band_param:
-            qs = qs.filter(band_id=band_param)
-        else:
-            # By default (in the main library), only show resources NOT assigned to a band
-            # to prevent cluttering the main library with band-specific charts.
-            qs = qs.filter(band__isnull=True)
+        # 4 & 5. Band/folder filtering only applies to list — detail actions (retrieve,
+        # update, destroy) must be able to find any studio-scoped resource regardless
+        # of whether it belongs to a band or folder.
+        if self.action == "list":
+            band_param = self.request.query_params.get("band")
+            if band_param:
+                qs = qs.filter(band_id=band_param)
+            else:
+                qs = qs.filter(band__isnull=True)
 
-        # 5. Handle Folder filtering
-        folder_param = self.request.query_params.get("folder")
-        if folder_param == "root":
-            qs = qs.filter(folder__isnull=True)
-        elif folder_param:
-            qs = qs.filter(folder_id=folder_param)
+            folder_param = self.request.query_params.get("folder")
+            if folder_param == "root":
+                qs = qs.filter(folder__isnull=True)
+            elif folder_param:
+                qs = qs.filter(folder_id=folder_param)
 
         return qs
 

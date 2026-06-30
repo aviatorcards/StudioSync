@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Band, Family, SetupStatus, SignedDocument, Student, Studio, Teacher, User
+from .models import APIKey, Band, Family, SetupStatus, SignedDocument, Student, Studio, Teacher, User
 
 
 class BandSerializer(serializers.ModelSerializer):
@@ -668,3 +668,14 @@ class SignedDocumentSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["signed_by", "signed_at", "ip_address", "created_at"]
+
+
+class APIKeySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = APIKey
+        fields = ["id", "name", "prefix", "is_active", "last_used_at", "created_at", "revoked_at"]
+        read_only_fields = fields
+
+
+class APIKeyCreateSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=100)

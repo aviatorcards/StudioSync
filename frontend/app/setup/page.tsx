@@ -4,31 +4,46 @@ import React, { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSetupWizard } from '@/hooks/useSetupWizard'
 import { WizardProgress } from '@/components/setup/WizardProgress'
+import { Logo } from '@/components/Logo'
 
 // Steps
 import { StudioAdminStep } from '@/components/setup/StudioAdminStep'
 import { FeatureSelectionStep } from '@/components/setup/FeatureSelectionStep'
 import { CompletionStep } from '@/components/setup/CompletionStep'
 
-import Image from 'next/image'
+const A = {
+    bg: '#faf7f2',
+    card: '#ffffff',
+    panel: '#1c1309',
+    border: '#e3d4bc',
+    amber: '#c17c2e',
+    text: '#1c1309',
+    muted: '#7a6145',
+    faint: '#b09870',
+    panelText: 'rgba(250,247,242,0.9)',
+    panelMuted: 'rgba(250,247,242,0.55)',
+} as const
+
+const staffLines: React.CSSProperties = {
+    backgroundImage: `repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 27px,
+        rgba(193,124,46,0.07) 27px,
+        rgba(193,124,46,0.07) 28px
+    )`,
+}
 
 export default function SetupPage() {
     const router = useRouter()
     const wizard = useSetupWizard()
 
-    // Verify setup status on mount — if already complete, send to dashboard
     useEffect(() => {
         const checkStatus = async () => {
             try {
                 const res = await fetch('/api/core/setup/status/')
-
                 const contentType = res.headers.get('content-type')
-                if (!contentType || !contentType.includes('application/json')) {
-                    const text = await res.text()
-                    console.error('Non-JSON response from setup status:', text)
-                    return
-                }
-
+                if (!contentType || !contentType.includes('application/json')) return
                 const data = await res.json()
                 if (data.is_completed && wizard.currentStep < wizard.totalSteps - 1) {
                     router.replace('/dashboard')
@@ -69,26 +84,40 @@ export default function SetupPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
-            <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl overflow-hidden min-h-[600px] flex flex-col">
-                {/* Header */}
-                <div className="bg-white p-8 border-b border-gray-100 flex justify-between items-center">
-                    <div className="flex items-center space-x-2">
-                        <div className="relative h-10 w-10">
-                            <Image
-                                src="/logo.png"
-                                alt="StudioSync Logo"
-                                fill
-                                className="object-contain"
-                            />
-                        </div>
-                        <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600">
+        <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ backgroundColor: A.bg }}>
+            <div
+                className="w-full max-w-5xl rounded-2xl overflow-hidden flex flex-col"
+                style={{
+                    backgroundColor: A.card,
+                    border: `1px solid ${A.border}`,
+                    boxShadow: '0 8px 48px rgba(28,19,9,0.1)',
+                    minHeight: '600px',
+                }}
+            >
+                {/* Header — dark panel like the login left-side */}
+                <div
+                    className="p-7 flex justify-between items-center"
+                    style={{ backgroundColor: A.panel, ...staffLines }}
+                >
+                    <div className="flex items-center gap-2.5">
+                        <Logo className="w-8 h-8" />
+                        <span
+                            className="text-lg font-bold"
+                            style={{ color: A.panelText, fontFamily: 'Outfit, sans-serif' }}
+                        >
                             StudioSync
                         </span>
                     </div>
-                    <div className="text-sm font-medium text-gray-500">
+                    <span
+                        className="text-xs font-semibold uppercase tracking-widest px-3 py-1 rounded-full"
+                        style={{
+                            color: A.amber,
+                            backgroundColor: 'rgba(193,124,46,0.12)',
+                            border: '1px solid rgba(193,124,46,0.2)',
+                        }}
+                    >
                         Setup Wizard
-                    </div>
+                    </span>
                 </div>
 
                 {/* Progress Bar */}
@@ -101,24 +130,26 @@ export default function SetupPage() {
                 {/* Content Area */}
                 <div className="flex-1 px-12 py-10 overflow-y-auto">
                     {wizard.error && (
-                        <div className="mb-6 rounded-md bg-red-50 p-4">
-                            <div className="flex">
-                                <div className="ml-3">
-                                    <h3 className="text-sm font-medium text-red-800">Something went wrong</h3>
-                                    <div className="mt-2 text-sm text-red-700">
-                                        <p>{wizard.error}</p>
-                                    </div>
-                                </div>
-                            </div>
+                        <div
+                            className="mb-6 flex items-start gap-2.5 p-4 rounded-xl text-sm"
+                            style={{
+                                backgroundColor: 'rgba(181,64,64,0.06)',
+                                border: '1px solid rgba(181,64,64,0.2)',
+                                color: '#b54040',
+                            }}
+                        >
+                            <p>{wizard.error}</p>
                         </div>
                     )}
-
                     {renderStep()}
                 </div>
 
                 {/* Footer */}
-                <div className="bg-gray-50 p-4 border-t border-gray-100 text-center text-xs text-gray-400">
-                    &copy; {new Date().getFullYear()} StudioSync. All rights reserved.
+                <div
+                    className="p-4 border-t text-center text-xs"
+                    style={{ backgroundColor: A.bg, borderColor: A.border, color: A.faint }}
+                >
+                    &copy; {new Date().getFullYear()} StudioSync &middot; Open source &middot; GPL-3.0
                 </div>
             </div>
         </div>

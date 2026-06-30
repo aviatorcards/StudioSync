@@ -9,7 +9,7 @@ export default function SetupLayout({
     children: React.ReactNode
 }) {
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen" style={{ backgroundColor: '#faf7f2' }}>
             {children}
         </div>
     )

@@ -497,3 +497,29 @@ class SetupStatus(models.Model):
         self.is_completed = True
         self.completed_at = timezone.now()
         self.save()
+
+
+class APIKey(models.Model):
+    """API key for authenticating external services (e.g. 317booking) against the StudioSync API."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    studio = models.ForeignKey(Studio, on_delete=models.CASCADE, related_name="api_keys")
+    created_by = models.ForeignKey(
+        "User", on_delete=models.SET_NULL, null=True, blank=True, related_name="api_keys"
+    )
+    name = models.CharField(max_length=100)
+    # First 16 chars of the full key (ss_ + 13 hex) — safe to display in the UI
+    prefix = models.CharField(max_length=16, unique=True)
+    # SHA-256 of the full key — never store plaintext
+    key_hash = models.CharField(max_length=64)
+    is_active = models.BooleanField(default=True)
+    last_used_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    revoked_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "api_keys"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.name} ({self.prefix}...)"

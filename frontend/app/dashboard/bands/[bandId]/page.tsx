@@ -7,7 +7,7 @@ import {
     Mail, Upload, Download, ExternalLink, Trash,
     FileText, Video, Image as ImageIcon, Link as LinkIcon,
     File, Search, Plus, X, Sparkles, BookOpen, ChevronLeft,
-    Library
+    Library, CalendarDays, RefreshCw, MapPin, Clock
 } from 'lucide-react'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
@@ -46,6 +46,16 @@ interface Band {
     notes: string
     members_count: number
     member_details: BandMember[]
+    ical_feed_url: string
+    last_calendar_sync: string | null
+}
+
+interface ExternalEvent {
+    id: string
+    title: string
+    description: string
+    start_time: string
+    end_time: string
 }
 
 export default function BandDetailPage() {
@@ -55,6 +65,8 @@ export default function BandDetailPage() {
 
     const [band, setBand] = useState<Band | null>(null)
     const [resources, setResources] = useState<Resource[]>([])
+    const [externalEvents, setExternalEvents] = useState<ExternalEvent[]>([])
+    const [syncing, setSyncing] = useState(false)
     const [loading, setLoading] = useState(true)
     const [uploading, setUploading] = useState(false)
     const [showUploadModal, setShowUploadModal] = useState(false)
@@ -76,19 +88,36 @@ export default function BandDetailPage() {
 
     const fetchBandData = async () => {
         try {
-            const [bandResponse, resourcesResponse] = await Promise.all([
+            const [bandResponse, resourcesResponse, eventsResponse] = await Promise.all([
                 api.get(`/core/bands/${bandId}/`),
-                api.get(`/resources/library/?band=${bandId}`)
+                api.get(`/resources/library/?band=${bandId}`),
+                api.get(`/gigs/external-events/?band=${bandId}`),
             ])
-            
+
             setBand(bandResponse.data)
             setResources(resourcesResponse.data.results || resourcesResponse.data || [])
+            const evts = eventsResponse.data.results ?? eventsResponse.data ?? []
+            setExternalEvents(evts)
         } catch (error) {
             console.error('Failed to fetch band data:', error)
             toast.error('Failed to load band details')
             router.push('/dashboard/bands')
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleSync = async () => {
+        setSyncing(true)
+        try {
+            const res = await api.post('/gigs/external-events/sync/', { band_id: bandId })
+            setExternalEvents(res.data.events ?? [])
+            toast.success('Calendar synced with 317booking')
+        } catch (err: any) {
+            const msg = err.response?.data?.detail || 'Sync failed'
+            toast.error(msg)
+        } finally {
+            setSyncing(false)
         }
     }
 
@@ -371,6 +400,108 @@ export default function BandDetailPage() {
                     </div>
                 </div>
             )}
+
+            {/* 317booking Calendar */}
+            <div className="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-sm space-y-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-3">
+                            <CalendarDays className="w-6 h-6 text-primary" />
+                            Confirmed Gigs
+                            {externalEvents.length > 0 && (
+                                <span className="bg-primary/10 text-primary text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                                    {externalEvents.length}
+                                </span>
+                            )}
+                        </h2>
+                        <p className="text-xs text-gray-400 mt-1 font-medium">
+                            Synced from 317booking
+                            {band?.last_calendar_sync && (
+                                <> · Last synced {new Date(band.last_calendar_sync).toLocaleString()}</>
+                            )}
+                        </p>
+                    </div>
+                    {band?.ical_feed_url && (
+                        <Button
+                            variant="ghost"
+                            onClick={handleSync}
+                            disabled={syncing}
+                            className="gap-2 text-gray-500 hover:text-primary text-xs font-bold uppercase tracking-widest"
+                        >
+                            <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
+                            Sync Now
+                        </Button>
+                    )}
+                </div>
+
+                {!band?.ical_feed_url ? (
+                    <div className="text-center py-10 text-gray-400">
+                        <CalendarDays className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                        <p className="text-sm font-bold uppercase tracking-widest">Not connected to 317booking</p>
+                        <p className="text-xs mt-1">Create this band in 317booking to start syncing confirmed gigs.</p>
+                    </div>
+                ) : externalEvents.length === 0 ? (
+                    <div className="text-center py-10 text-gray-400">
+                        <CalendarDays className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                        <p className="text-sm font-bold uppercase tracking-widest">No confirmed gigs</p>
+                        <p className="text-xs mt-1">Confirmed gigs from 317booking will appear here.</p>
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        {externalEvents.map(evt => {
+                            const start = new Date(evt.start_time)
+                            const end = new Date(evt.end_time)
+                            const isPast = end < new Date()
+                            return (
+                                <div
+                                    key={evt.id}
+                                    className={`flex items-start gap-4 p-4 rounded-2xl border transition-colors ${
+                                        isPast
+                                            ? 'bg-gray-50 border-gray-100 opacity-60'
+                                            : 'bg-primary/[0.02] border-primary/10 hover:bg-primary/[0.04]'
+                                    }`}
+                                >
+                                    {/* Date block */}
+                                    <div className="shrink-0 w-12 text-center">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                            {start.toLocaleString('default', { month: 'short' })}
+                                        </p>
+                                        <p className="text-2xl font-black text-gray-900 leading-none">
+                                            {start.getDate()}
+                                        </p>
+                                        <p className="text-[10px] font-bold text-gray-400">
+                                            {start.getFullYear()}
+                                        </p>
+                                    </div>
+
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-black text-sm text-gray-900 uppercase tracking-tight">{evt.title}</p>
+                                        {evt.description && (
+                                            <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{evt.description}</p>
+                                        )}
+                                        <div className="flex items-center gap-3 mt-1.5 text-[11px] text-gray-400 font-semibold">
+                                            <span className="flex items-center gap-1">
+                                                <Clock className="w-3 h-3" />
+                                                {start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                {' – '}
+                                                {end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <span className={`shrink-0 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${
+                                        isPast
+                                            ? 'bg-gray-100 text-gray-400'
+                                            : 'bg-primary/10 text-primary'
+                                    }`}>
+                                        {isPast ? 'Past' : 'Upcoming'}
+                                    </span>
+                                </div>
+                            )
+                        })}
+                    </div>
+                )}
+            </div>
 
             {/* Resources Section */}
             <div className="space-y-6">

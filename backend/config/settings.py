@@ -211,6 +211,7 @@ APPEND_SLASH = False
 # REST Framework settings
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "apps.core.authentication.APIKeyAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
@@ -294,6 +295,10 @@ TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER", "")
 # Stream Chat
 STREAM_API_KEY = os.getenv("STREAM_API_KEY")
 STREAM_API_SECRET = os.getenv("STREAM_API_SECRET")
+
+# 317booking integration
+BOOKING_317_URL = os.getenv("BOOKING_317_URL", "")
+BOOKING_317_WEBHOOK_SECRET = os.getenv("BOOKING_317_WEBHOOK_SECRET", "")
 
 # MinIO/S3/R2 settings
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID") or os.getenv("MINIO_ACCESS_KEY", "minio_admin")

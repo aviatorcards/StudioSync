@@ -1,9 +1,14 @@
 """
-Seed script to populate the database with instructors, students, bands, and gigs.
-Requires seed_data.py to have been run first (needs Studio to exist).
+Seed script: instructors, students, Indianapolis bands, and gigs.
+Requires seed_data.py to have been run first (Studio must exist).
+
+Band profiles are Indianapolis-based with 317 contact details — suitable for
+passing to 317booking via the StudioSync API:
+
+  GET /api/core/bands/        — all bands (requires auth token)
+  GET /api/core/bands/<id>/   — single band detail
 
 Usage:
-    python seed_gigs.py
     docker compose exec backend python seed_gigs.py
 """
 
@@ -135,28 +140,66 @@ def seed():
     # --- Bands ---
     bands = []
     unique_band_defs = [
-        {"name": "The Static Palms", "genre": "Indie Rock", "notes": "Four-piece indie rock band known for layered guitar work and driving rhythms."},
-        {"name": "Ghost Meridian", "genre": "Dream Pop", "notes": "Ambient-leaning dream pop duo. Toured regionally, currently writing their second LP."},
-        {"name": "Copper & The Rust", "genre": "Americana / Folk", "notes": "Roots band blending Americana, folk, and country. Strong harmonies, steel guitar."},
-        {"name": "Voltage Drop", "genre": "Post-Punk", "notes": "High-energy post-punk trio. Short sets, loud amps, no encore."},
-        {"name": "Electric Tide", "genre": "Indie Pop", "notes": "Melodic indie pop quintet with big hooks and tight harmonies."},
-        {"name": "Velvet Cadence", "genre": "R&B / Soul", "notes": "Soul-influenced R&B group with a full horn section."},
+        {
+            "name": "The Static Palms",
+            "genre": "Indie Rock",
+            "billing_email": "booking@staticpalms.com",
+            "billing_phone": "+13175550201",
+            "notes": "Four-piece indie rock band known for layered guitar work and driving rhythms. Based in Broad Ripple, Indianapolis.",
+        },
+        {
+            "name": "Ghost Meridian",
+            "genre": "Dream Pop",
+            "billing_email": "ghostmeridian@gmail.com",
+            "billing_phone": "+13175550202",
+            "notes": "Ambient-leaning dream pop duo. Toured regionally, currently writing their second LP. Out of Fountain Square.",
+        },
+        {
+            "name": "Copper & The Rust",
+            "genre": "Americana / Folk",
+            "billing_email": "copperandtherust@outlook.com",
+            "billing_phone": "+13175550203",
+            "notes": "Roots band blending Americana, folk, and country. Strong harmonies, steel guitar. Regular at The Slippery Noodle.",
+        },
+        {
+            "name": "Voltage Drop",
+            "genre": "Post-Punk",
+            "billing_email": "voltagedrop317@gmail.com",
+            "billing_phone": "+13175550204",
+            "notes": "High-energy post-punk trio from the near-Eastside. Short sets, loud amps, no encore.",
+        },
+        {
+            "name": "Electric Tide",
+            "genre": "Indie Pop",
+            "billing_email": "booking@electrictide.band",
+            "billing_phone": "+13175550205",
+            "notes": "Melodic indie pop quintet with big hooks and tight harmonies. Regulars at Hi-Fi and The Vogue.",
+        },
+        {
+            "name": "Velvet Cadence",
+            "genre": "R&B / Soul",
+            "billing_email": "velvtcadence@gmail.com",
+            "billing_phone": "+13175550206",
+            "notes": "Soul-influenced R&B group with a full horn section. Based in Indianapolis, available for private events.",
+        },
     ]
 
     admin_user = User.objects.filter(role="admin").first()
 
-    for i, bd in enumerate(unique_band_defs, start=1):
+    for bd in unique_band_defs:
         band, created = Band.objects.get_or_create(
             studio=studio,
             name=bd["name"],
             defaults={
                 "genre": bd["genre"],
                 "primary_contact": admin_user,
-                "billing_email": f"band{i}@test.com",
-                "billing_phone": f"555-010{i}",
-                "city": studio.city or "Nashville",
-                "state": studio.state or "TN",
-                "notes": bd.get("notes", f"A {bd['genre']} band."),
+                "billing_email": bd["billing_email"],
+                "billing_phone": bd["billing_phone"],
+                "city": "Indianapolis",
+                "state": "IN",
+                "postal_code": "46204",
+                "country": "US",
+                "notes": bd["notes"],
             },
         )
         bands.append(band)
@@ -249,6 +292,10 @@ def seed():
     print("   Credentials summary:")
     print("   Instructors: instructor1@test.com … instructor5@test.com  /  teacher123")
     print("   Students:    gig_student1@test.com … gig_student15@test.com  /  student123")
+    print()
+    print("   317booking API:")
+    print("   Bands list:  GET /api/core/bands/   (Bearer token required)")
+    print("   Auth:        POST /api/auth/token/  { email, password }")
 
 
 if __name__ == "__main__":

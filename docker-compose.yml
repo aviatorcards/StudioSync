@@ -8,12 +8,11 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: studiosync
-      POSTGRES_USER: studio_user
-      POSTGRES_PASSWORD: studio_password
+      POSTGRES_USER: ${POSTGRES_USER:-studio_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-studio_password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    # Postgres stays on the compose network. Do not publish 5432 by default.
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U studio_user -d studiosync" ]
       interval: 10s
@@ -43,8 +42,10 @@ services:
       - media_data:/app/media
       - static_data:/app/staticfiles
     environment:
-      DEBUG: "True"
-      DATABASE_URL: postgresql://studio_user:studio_password@db:5432/studiosync
+      DEBUG: ${DEBUG:-False}
+      DATABASE_URL: postgresql://studio_user:${POSTGRES_PASSWORD:-studio_password}@db:5432/studiosync
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-studio_password}
+      REDIS_URL: redis://redis:6379/0
       SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://10.0.0.162:3000}
@@ -73,7 +74,9 @@ services:
       - media_data:/app/media
       - static_data:/app/staticfiles
     environment:
-      DATABASE_URL: postgresql://studio_user:studio_password@db:5432/studiosync
+      DEBUG: ${DEBUG:-False}
+      DATABASE_URL: postgresql://studio_user:${POSTGRES_PASSWORD:-studio_password}@db:5432/studiosync
+      REDIS_URL: redis://redis:6379/0
       SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
     depends_on:
       db:

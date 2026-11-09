@@ -11,7 +11,7 @@ from stream_chat import StreamChat
 
 logger = logging.getLogger(__name__)
 
-from .models import Band, Family, Student, Studio, Teacher, User
+from .models import Band, User
 
 
 @receiver(post_save, sender=User)
@@ -19,25 +19,9 @@ def create_user_profile(sender, instance, created, **kwargs):
     if not created:
         return
 
-    # Assign to a default studio if none exists for simplicity in this demo
-    studio = Studio.objects.first()
-    
-    # If no studio exists, and this is NOT an admin being created, we can't do much yet
-    # If this IS an admin being created, they will become the owner of the first studio
-    if not studio and instance.role == 'admin':
-        studio = Studio.objects.create(name="My Studio", owner=instance)
-    
-    if not studio:
-        # Fallback for students/teachers created before any studio exists (rare)
-        # In a real app, studio selection would be mandatory
-        return
-
-    if instance.role == "student":
-        Student.objects.get_or_create(user=instance, studio=studio)
-    elif instance.role == "teacher":
-        Teacher.objects.get_or_create(user=instance, studio=studio)
-    elif instance.role == "parent":
-        Family.objects.get_or_create(primary_parent=instance, studio=studio)
+    # Profiles are created by the setup wizard or an admin action that already
+    # knows the studio. Guessing Studio.objects.first() attaches people to the
+    # wrong school.
 
     # Sync User to Stream Chat
     if not settings.STREAM_API_KEY or not settings.STREAM_API_SECRET:

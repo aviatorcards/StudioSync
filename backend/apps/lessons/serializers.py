@@ -10,10 +10,25 @@ from apps.lessons.models import Lesson, LessonNote, LessonPlan, RecurringPattern
 class LessonListSerializer(serializers.ModelSerializer):
     """Simple serializer for lesson lists"""
 
-    student_name = serializers.CharField(source="student.user.get_full_name", read_only=True)
+    student_name = serializers.SerializerMethodField()
     teacher_name = serializers.CharField(source="teacher.user.get_full_name", read_only=True)
-    student_instrument = serializers.CharField(source="student.instrument", read_only=True)
-    band_name = serializers.CharField(source="band.name", read_only=True)
+    student_instrument = serializers.SerializerMethodField()
+    band_name = serializers.SerializerMethodField()
+
+    def get_student_name(self, obj):
+        if obj.student_id:
+            return obj.student.user.get_full_name()
+        return None
+
+    def get_student_instrument(self, obj):
+        if obj.student_id:
+            return obj.student.instrument
+        return None
+
+    def get_band_name(self, obj):
+        if obj.band_id:
+            return obj.band.name
+        return None
     room_name = serializers.CharField(source="room.name", read_only=True)
     lesson_plan_title = serializers.CharField(source="lesson_plan.title", read_only=True)
     duration_minutes = serializers.IntegerField(read_only=True)
@@ -99,6 +114,41 @@ class LessonDetailSerializer(serializers.ModelSerializer):
         }
 
 
+def _lesson_value(data, instance, name):
+    if name in data:
+        return data[name]
+    return getattr(instance, name, None) if instance is not None else None
+
+
+def _reject_lesson_mismatch(teacher, student, room, studio, start, end):
+    if start and end and start >= end:
+        raise serializers.ValidationError("scheduled_end must be after scheduled_start.")
+    if teacher is not None and studio is not None and teacher.studio_id != studio.id:
+        raise serializers.ValidationError("The teacher must belong to the lesson's studio.")
+    if student is not None and studio is not None and student.studio_id != studio.id:
+        raise serializers.ValidationError("The student must belong to the lesson's studio.")
+    if room is not None and studio is not None and room.studio_id and room.studio_id != studio.id:
+        raise serializers.ValidationError("The room must belong to the lesson's studio.")
+
+
+def _reject_lesson_overlap(instance, teacher, student, room, start, end):
+    if not (start and end and (teacher or student or room)):
+        return
+    overlap = Lesson.objects.filter(
+        status__in=["scheduled", "in_progress"],
+        scheduled_start__lt=end,
+        scheduled_end__gt=start,
+    )
+    if instance is not None:
+        overlap = overlap.exclude(pk=instance.pk)
+    if teacher and overlap.filter(teacher=teacher).exists():
+        raise serializers.ValidationError("That teacher already has a lesson at this time.")
+    if student and overlap.filter(student=student).exists():
+        raise serializers.ValidationError("That student already has a lesson at this time.")
+    if room and overlap.filter(room=room).exists():
+        raise serializers.ValidationError("That room is already booked at this time.")
+
+
 class LessonCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating/updating lessons"""
 
@@ -123,11 +173,22 @@ class LessonCreateSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
-        """Ensure either student, band, or room is provided"""
-        if not data.get("student") and not data.get("band") and not data.get("room"):
+        """Require a subject and reject overlapping teacher, student, or room times."""
+        instance = getattr(self, "instance", None)
+        student = _lesson_value(data, instance, "student")
+        band = _lesson_value(data, instance, "band")
+        room = _lesson_value(data, instance, "room")
+        if not student and not band and not room:
             raise serializers.ValidationError(
                 "Either a student, band, or room must be selected for the lesson."
             )
+
+        start = _lesson_value(data, instance, "scheduled_start")
+        end = _lesson_value(data, instance, "scheduled_end")
+        teacher = _lesson_value(data, instance, "teacher")
+        studio = _lesson_value(data, instance, "studio")
+        _reject_lesson_mismatch(teacher, student, room, studio, start, end)
+        _reject_lesson_overlap(instance, teacher, student, room, start, end)
         return data
 
 
@@ -315,7 +376,9 @@ class ExternalCalendarFeedSerializer(serializers.ModelSerializer):
         try:
             validator(value)
         except DjangoValidationError:
-            raise serializers.ValidationError("Enter a valid iCal feed URL (http or https).")
+            raise serializers.ValidationError(
+                "Enter a valid iCal feed URL (http or https)."
+            ) from None
 
         return value
 

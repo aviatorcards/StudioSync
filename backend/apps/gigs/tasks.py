@@ -29,7 +29,14 @@ def sync_band_calendar(band_id):
     if not band.ical_feed_url:
         return
 
-    # Fetch the .ics file
+    from apps.core.security import assert_public_http_url
+
+    try:
+        assert_public_http_url(band.ical_feed_url)
+    except ValueError as exc:
+        logger.error(f"Refusing calendar URL for {band.name}: {exc}")
+        return
+
     req = urllib.request.Request(band.ical_feed_url, headers={'User-Agent': 'StudioSync/1.0'})
     try:
         with urllib.request.urlopen(req, timeout=10) as response:

@@ -3,7 +3,7 @@ import logging
 
 from django.utils import timezone
 from rest_framework.authentication import BaseAuthentication
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +41,11 @@ class APIKeyAuthentication(BaseAuthentication):
         if api_key.revoked_at:
             raise AuthenticationFailed("API key has been revoked.")
 
+        if api_key.access == "read" and request.method not in ("GET", "HEAD", "OPTIONS"):
+            raise PermissionDenied("This API key is read-only.")
+
         APIKey.objects.filter(pk=api_key.pk).update(last_used_at=timezone.now())
-        # Attach studio for multi-tenancy enforcement downstream
+        # Views must scope querysets to this studio instead of the user's other studios.
         request.studio = api_key.studio
         return (api_key.created_by, api_key)
 

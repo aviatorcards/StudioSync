@@ -10,13 +10,14 @@ import requests
 
 from django.utils import timezone as dj_timezone
 
-from rest_framework import status, viewsets
+from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from icalendar import Calendar as ICalendar
 
+from apps.core.security import assert_public_http_url
 from apps.lessons.models import ExternalCalendarEvent, ExternalCalendarFeed
 from apps.lessons.serializers import ExternalCalendarEventSerializer, ExternalCalendarFeedSerializer
 
@@ -39,7 +40,10 @@ def _fetch_ical(url: str) -> bytes:
         "User-Agent": "StudioSync/1.0 (iCal import)",
         "Accept": "text/calendar, application/ics, */*",
     }
-    resp = requests.get(url, headers=headers, timeout=FETCH_TIMEOUT_SECONDS, stream=True)
+    assert_public_http_url(url)
+    resp = requests.get(
+        url, headers=headers, timeout=FETCH_TIMEOUT_SECONDS, stream=True, allow_redirects=False
+    )
     resp.raise_for_status()
 
     content_type = resp.headers.get("Content-Type", "")
@@ -134,6 +138,10 @@ class ExternalCalendarFeedViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Save the feed and immediately attempt a first sync."""
         url = serializer.validated_data["url"]
+        try:
+            assert_public_http_url(url)
+        except ValueError as exc:
+            raise serializers.ValidationError({"url": str(exc)}) from exc
         feed = serializer.save(user=self.request.user, last_error="")
 
         # Attempt initial fetch

@@ -1,17 +1,28 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import default_token_generator
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.mail import send_mail
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
 from rest_framework import permissions, status
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
+
+from apps.core.security import revoke_user_tokens
 
 from apps.core.serializers import UserSerializer
 
 User = get_user_model()
+
+
+class AuthAnonThrottle(AnonRateThrottle):
+    """Slow down anonymous registration and password-reset attempts."""
+
+    rate = "30/hour"
 
 
 class MeView(APIView):
@@ -33,12 +44,16 @@ class RegisterView(APIView):
     """
 
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [AuthAnonThrottle]
 
     def post(self, request):
         email = request.data.get("email")
         password = request.data.get("password")
+        password2 = request.data.get("password2")
         first_name = request.data.get("first_name")
         last_name = request.data.get("last_name")
+        if password2 is not None and password2 != password:
+            return Response({"error": "Passwords do not match"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Validation
         if not all([email, password, first_name, last_name]):
@@ -46,6 +61,14 @@ class RegisterView(APIView):
                 {"error": "Email, password, first name, and last name are required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        try:
+            validate_password(
+                password,
+                user=User(email=email, first_name=first_name, last_name=last_name),
+            )
+        except DjangoValidationError as exc:
+            return Response({"error": exc.messages}, status=status.HTTP_400_BAD_REQUEST)
 
         # Check if user exists
         if User.objects.filter(email=email).exists():
@@ -102,6 +125,7 @@ class RegisterView(APIView):
 
 class PasswordResetRequestView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [AuthAnonThrottle]
 
     def post(self, request):
         email = request.data.get("email")
@@ -133,6 +157,7 @@ class PasswordResetRequestView(APIView):
 
 class PasswordResetConfirmView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [AuthAnonThrottle]
 
     def post(self, request):
         uidb64 = request.data.get("uid")
@@ -149,8 +174,13 @@ class PasswordResetConfirmView(APIView):
             return Response({"error": "Invalid link"}, status=status.HTTP_400_BAD_REQUEST)
 
         if default_token_generator.check_token(user, token):
+            try:
+                validate_password(password, user=user)
+            except DjangoValidationError as exc:
+                return Response({"error": exc.messages}, status=status.HTTP_400_BAD_REQUEST)
             user.set_password(password)
             user.save()
+            revoke_user_tokens(user)
             return Response({"message": "Password has been reset successfully."})
 
         return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)

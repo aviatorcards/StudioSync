@@ -13,6 +13,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from apps.core.tenancy import studios_for_request
 from apps.lessons.models import Lesson, LessonPlan, StudentGoal
 from apps.lessons.serializers import (
     LessonCreateSerializer,
@@ -53,22 +54,20 @@ class LessonViewSet(viewsets.ModelViewSet):
         - Admins: See all lessons
         """
         user = self.request.user
-        # Default to full queryset
-        queryset = Lesson.objects.select_related("student__user", "teacher__user", "studio")
+        queryset = Lesson.objects.select_related(
+            "student__user", "teacher__user", "studio", "band"
+        ).filter(studio__in=studios_for_request(self.request))
 
-        # Admin sees everything
         if user.role == "admin":
-            pass  # No filtering for admins
-
-        # Teachers see only their own students
+            pass
         elif user.role == "teacher" and hasattr(user, "teacher_profile"):
             queryset = queryset.filter(teacher=user.teacher_profile)
-
-        # Students see only their own lessons
         elif user.role == "student" and hasattr(user, "student_profile"):
             queryset = queryset.filter(student=user.student_profile)
-
-        # Fallback: If role unclear, show nothing (maximum privacy)
+        elif user.role == "parent":
+            queryset = queryset.filter(
+                Q(student__family__primary_parent=user) | Q(student__family__secondary_parent=user)
+            )
         else:
             queryset = Lesson.objects.none()
 
@@ -141,29 +140,43 @@ class LessonViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    def _reject_student_mutation(self):
+        if self.request.user.role in ("student", "parent"):
+            raise PermissionDenied("Students and parents cannot edit lessons.")
+
+    def update(self, request, *args, **kwargs):
+        self._reject_student_mutation()
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        self._reject_student_mutation()
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        self._reject_student_mutation()
+        return super().destroy(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         user = self.request.user
-        if hasattr(user, "teacher_profile"):
+        if hasattr(user, "teacher_profile") and user.role == "teacher":
             serializer.save(teacher=user.teacher_profile, studio=user.teacher_profile.studio)
-        elif hasattr(user, "student_profile"):
-            # allow student to book, forcing themselves as the student
+        elif hasattr(user, "student_profile") and user.role == "student":
+            # Students can request a scheduled lesson for themselves. They cannot
+            # set status, rate, or a studio other than their own.
             serializer.save(
                 student=user.student_profile,
                 studio=user.student_profile.studio,
-                # If teacher is not in payload, validation would have failed if required.
-                # If it is in payload, it is used.
-                # We could default to primary_teacher if we wanted to make it optional in serializer,
-                # but for now assume frontend sends it.
+                status="scheduled",
+                rate=None,
             )
         elif user.role == "admin":
-            # Admin needs to provide teacher/studio or we try to guess/default?
-            # For now, let validation fail if not provided, or default if possible.
-            # But the serializer will require them.
-            # If admin is creating, they likely send the data.
+            studio = serializer.validated_data.get("studio")
+            allowed = studios_for_request(self.request)
+            if studio is None or not allowed.filter(pk=studio.pk).exists():
+                raise PermissionDenied("Choose a studio you own.")
             serializer.save()
         else:
-            # Fallback
-            serializer.save()
+            raise PermissionDenied("You cannot create lessons.")
 
 
 class LessonPlanViewSet(viewsets.ModelViewSet):
@@ -184,10 +197,7 @@ class LessonPlanViewSet(viewsets.ModelViewSet):
         qs = LessonPlan.objects.select_related("created_by__user", "created_by__studio")
 
         if user.role == "admin":
-            # Admin sees all plans in their studio(s)
-            from apps.core.models import Studio
-
-            studios = Studio.objects.filter(owner=user)
+            studios = studios_for_request(self.request)
             qs = qs.filter(created_by__studio__in=studios)
         elif hasattr(user, "teacher_profile") and user.teacher_profile:
             # Teacher sees: their own plans + public plans from same studio
@@ -218,22 +228,20 @@ class LessonPlanViewSet(viewsets.ModelViewSet):
                 from apps.core.models import Teacher
 
                 try:
-                    teacher = Teacher.objects.get(id=teacher_id)
+                    teacher = Teacher.objects.get(
+                        id=teacher_id, studio__in=studios_for_request(self.request)
+                    )
                 except (Teacher.DoesNotExist, ValueError):
                     raise serializers.ValidationError(
                         {"created_by": "Teacher with this ID does not exist"}
                     ) from None
 
             if not teacher:
-                # Try to find a sensible default teacher for this admin
-                from apps.core.models import Studio, Teacher
+                from apps.core.models import Teacher
 
-                studio = Studio.objects.filter(owner=user).first()
-                if studio:
-                    teacher = Teacher.objects.filter(studio=studio).first()
-
-                if not teacher:
-                    teacher = Teacher.objects.first()
+                teacher = Teacher.objects.filter(
+                    studio__in=studios_for_request(self.request)
+                ).first()
 
             if not teacher:
                 raise serializers.ValidationError(
@@ -270,11 +278,9 @@ class StudentGoalViewSet(viewsets.ModelViewSet):
             # Student: Their own goals
             return StudentGoal.objects.filter(student=user.student_profile)
         elif user.role == "admin":
-            # Admin: Goals for students in their studio(s) only
-            from apps.core.models import Student, Studio
+            from apps.core.models import Student
 
-            studios = Studio.objects.filter(owner=user)
-            students = Student.objects.filter(studio__in=studios)
+            students = Student.objects.filter(studio__in=studios_for_request(self.request))
             return StudentGoal.objects.filter(student__in=students)
         else:
             return StudentGoal.objects.none()

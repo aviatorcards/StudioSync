@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from apps.core.models import Family, Student
+from apps.core.tenancy import studio_for_request, studios_for_request
 from apps.students.serializers import (
     StudentCreateUpdateSerializer,
     StudentDetailSerializer,
@@ -33,22 +34,24 @@ class StudentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        # Only show students whose user role is still 'student' (exclude promoted users)
         queryset = Student.objects.select_related("user", "primary_teacher__user", "family").filter(
-            user__role="student"
+            user__role="student", studio__in=studios_for_request(self.request)
         )
 
-        # Admin can see everything
         if user.role == "admin":
             return queryset
 
-        # Teachers can see their own students
-        if hasattr(user, "teacher_profile"):
+        if user.role == "teacher" and hasattr(user, "teacher_profile"):
             return queryset.filter(primary_teacher=user.teacher_profile)
 
-        # Students can only see themselves and their band members
+        if user.role == "parent":
+            return queryset.filter(
+                models.Q(family__primary_parent=user) | models.Q(family__secondary_parent=user)
+            )
+
         if hasattr(user, "student_profile"):
             student_profile = user.student_profile
+            # Bandmates are visible for scheduling, but retrieve() hides medical fields.
             user_bands = student_profile.bands.all()
             if user_bands.exists():
                 return queryset.filter(
@@ -56,14 +59,18 @@ class StudentViewSet(viewsets.ModelViewSet):
                 ).distinct()
             return queryset.filter(id=student_profile.id)
 
-        # Fallback
         return queryset.none()
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if request.user.role == "student" and instance.user_id != request.user.id:
+            serializer = StudentListSerializer(instance, context={"request": request})
+            return Response(serializer.data)
+        return super().retrieve(request, *args, **kwargs)
 
     @action(detail=False, methods=["get"], url_path="instruments")
     def instruments(self, request):
         """Return sorted unique instrument list: studio curated list + instruments used by existing students."""
-        from apps.core.models import Studio
-
         # 1. Instruments already assigned to students
         student_instruments = (
             self.get_queryset()
@@ -75,9 +82,7 @@ class StudentViewSet(viewsets.ModelViewSet):
 
         # 2. Curated list stored in studio settings
         curated: list = []
-        studio = Studio.objects.filter(owner=request.user).first()
-        if not studio:
-            studio = Studio.objects.first()
+        studio = studio_for_request(request)
         if studio and isinstance(studio.settings, dict):
             curated = studio.settings.get("instruments", [])
 
@@ -102,21 +107,17 @@ class StudentViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
-        # Automatically assign the studio from the admin's owned studio
-        # For MVP, we'll use the first studio or admin's owned studio
-        from apps.core.models import Studio
-
         user = self.request.user
-        if user.role == "admin":
-            studio = Studio.objects.filter(owner=user).first()
-            if not studio:
-                studio = Studio.objects.first()  # Fallback to any studio
-            if studio:
-                serializer.save(studio=studio)
-            else:
-                serializer.save()  # Will fail if studio is required
-        else:
-            serializer.save()
+        if user.role != "admin":
+            from rest_framework.exceptions import PermissionDenied
+
+            raise PermissionDenied("Only admins can create students.")
+        studio = studio_for_request(self.request)
+        if studio is None:
+            from rest_framework.exceptions import ValidationError
+
+            raise ValidationError("No studio is associated with this account.")
+        serializer.save(studio=studio)
 
 
 class FamilyViewSet(viewsets.ModelViewSet):
@@ -124,12 +125,50 @@ class FamilyViewSet(viewsets.ModelViewSet):
     API endpoints for managing families
     """
 
-    permission_classes = [permissions.IsAuthenticated]  # Adjust permissions as needed (Admin only?)
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = FamilySerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ["primary_parent__last_name", "primary_parent__email"]
 
     def get_queryset(self):
-        return Family.objects.select_related("primary_parent", "secondary_parent").prefetch_related(
-            "students__user"
-        )
+        user = self.request.user
+        queryset = Family.objects.select_related(
+            "primary_parent", "secondary_parent"
+        ).prefetch_related("students__user").filter(studio__in=studios_for_request(self.request))
+        if user.role in ("admin", "teacher"):
+            return queryset
+        if user.role == "parent":
+            return queryset.filter(models.Q(primary_parent=user) | models.Q(secondary_parent=user))
+        if hasattr(user, "student_profile") and user.student_profile.family_id:
+            return queryset.filter(pk=user.student_profile.family_id)
+        return queryset.none()
+
+    def _require_manager(self):
+        if self.request.user.role not in ("admin", "teacher"):
+            from rest_framework.exceptions import PermissionDenied
+
+            raise PermissionDenied("Only admins and teachers can change families.")
+
+    def create(self, request, *args, **kwargs):
+        self._require_manager()
+        return super().create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        studio = studio_for_request(self.request)
+        if studio is None:
+            from rest_framework.exceptions import ValidationError
+
+            raise ValidationError("No studio is associated with this account.")
+        serializer.save(studio=studio)
+
+    def update(self, request, *args, **kwargs):
+        self._require_manager()
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        self._require_manager()
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        self._require_manager()
+        return super().destroy(request, *args, **kwargs)

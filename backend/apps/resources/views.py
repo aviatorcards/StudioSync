@@ -32,22 +32,10 @@ def _detect_resource_type(file) -> str:
 
 
 def _get_studio_for_user(user):
-    """Return the studio associated with the requesting user, or None."""
-    if hasattr(user, "teacher_profile") and user.teacher_profile:
-        return user.teacher_profile.studio
-    if hasattr(user, "student_profile") and user.student_profile:
-        return user.student_profile.studio
-    if user.role == "admin":
-        from apps.core.models import Studio
+    """Return one studio this user belongs to, or None."""
+    from apps.core.tenancy import studios_for_user
 
-        # Try to find studio by owner
-        studio = Studio.objects.filter(owner=user).first()
-        if studio:
-            return studio
-        # Fallback: find any studio this user might be part of via profiles (if they have one)
-        # or just the first studio in the system if there's only one (dev mode)
-        return Studio.objects.first()
-    return None
+    return studios_for_user(user).order_by("created_at").first()
 
 
 # ---------------------------------------------------------------------------
@@ -117,13 +105,7 @@ class ResourceViewSet(viewsets.ModelViewSet):
         # 1. Determine the Studio context
         studio = _get_studio_for_user(user)
         if not studio:
-            # Fallback for superusers if they don't have a studio-specific role
-            if user.is_staff or user.is_superuser:
-                # Return everything if admin/staff and no studio context, 
-                # but usually they should be linked.
-                pass
-            else:
-                return Resource.objects.none()
+            return Resource.objects.none()
 
         # 2. Filter by studio if we found one
         if studio:

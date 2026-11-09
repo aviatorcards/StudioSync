@@ -59,7 +59,9 @@ def seed_extra():
             print("❌ Error: No admin found. Please complete /setup and run seed_data.py first.")
             return
 
-        studio = Studio.objects.filter(owner=admin).first() or Studio.objects.filter(name="StudioSync Academy").first() or Studio.objects.first()
+        from apps.core.tenancy import seed_studio
+
+        studio = admin.owned_studios.order_by("created_at").first() or seed_studio()
         if not studio:
             print("❌ Error: Studio found. Please run seed_data.py first.")
             return

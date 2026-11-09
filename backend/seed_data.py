@@ -108,7 +108,13 @@ def seed():
     print(f"✅ Using admin: {admin.email}")
 
     # 2. Find studio created by the /setup wizard
-    studio = Studio.objects.first()
+    from apps.core.tenancy import seed_studio
+
+    try:
+        studio = seed_studio()
+    except RuntimeError as exc:
+        print(f"❌ {exc}")
+        sys.exit(1)
     if not studio:
         print("❌ No studio found. Please complete the /setup wizard at /setup first.")
         sys.exit(1)

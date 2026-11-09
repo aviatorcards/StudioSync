@@ -3,10 +3,15 @@ from datetime import timedelta
 from django.db.models import Q
 from django.utils import timezone
 
+from django.db import transaction
+
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
+from apps.core.tenancy import studio_for_request, studios_for_request
 
 from .models import CheckoutLog, InventoryItem, PracticeRoom, RoomReservation
 from .serializers import (
@@ -25,8 +30,8 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Filter based on query params"""
-        queryset = super().get_queryset()
+        """Filter based on query params and the caller's studio."""
+        queryset = super().get_queryset().filter(studio__in=studios_for_request(self.request))
 
         # Filter by category
         category = self.request.query_params.get("category")
@@ -45,9 +50,31 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def _require_manager(self):
+        if self.request.user.role not in ("admin", "teacher"):
+            raise PermissionDenied("Only admins and teachers can change inventory.")
+
+    def create(self, request, *args, **kwargs):
+        self._require_manager()
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        self._require_manager()
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        self._require_manager()
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        self._require_manager()
+        return super().destroy(request, *args, **kwargs)
+
     def perform_create(self, serializer):
-        """Set created_by to current user"""
-        serializer.save(created_by=self.request.user)
+        studio = studio_for_request(self.request)
+        if studio is None:
+            raise serializers.ValidationError("No studio is associated with this account.")
+        serializer.save(created_by=self.request.user, studio=studio)
 
     @action(detail=False, methods=["get"])
     def stats(self, request):
@@ -77,12 +104,16 @@ class CheckoutLogViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Filter checkouts"""
-        queryset = super().get_queryset()
+        """Filter checkouts to the caller's studio."""
+        queryset = super().get_queryset().filter(item__studio__in=studios_for_request(self.request))
 
-        # Students can only see their own checkouts
         if self.request.user.role == "student":
             queryset = queryset.filter(student__user=self.request.user)
+        elif self.request.user.role == "parent":
+            queryset = queryset.filter(
+                Q(student__family__primary_parent=self.request.user)
+                | Q(student__family__secondary_parent=self.request.user)
+            )
 
         # Filter by status
         status = self.request.query_params.get("status")
@@ -96,28 +127,32 @@ class CheckoutLogViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    @transaction.atomic
     def perform_create(self, serializer):
-        """Create a new checkout request"""
-        item = serializer.validated_data["item"]
+        """Create a new checkout request for the signed-in student."""
+        student = getattr(self.request.user, "student_profile", None)
+        if self.request.user.role != "student" or student is None:
+            raise PermissionDenied("Only students can request a checkout.")
+
+        item = InventoryItem.objects.select_for_update().get(
+            pk=serializer.validated_data["item"].pk, studio=student.studio
+        )
         quantity = serializer.validated_data.get("quantity", 1)
 
-        # Check if enough quantity available
         if item.available_quantity < quantity:
             raise serializers.ValidationError(
                 {"quantity": f"Only {item.available_quantity} available"}
             )
 
-        # Set due date if not provided
         if "due_date" not in serializer.validated_data:
-            due_date = timezone.now().date() + timedelta(days=item.max_checkout_days)
-            serializer.validated_data["due_date"] = due_date
+            serializer.validated_data["due_date"] = timezone.now().date() + timedelta(
+                days=item.max_checkout_days
+            )
 
-        # Save the checkout
-        serializer.save(student=self.request.user.student_profile, status="pending")
+        serializer.save(student=student, status="pending", item=item)
 
-        # Decrease available quantity
         item.available_quantity -= quantity
-        item.save()
+        item.save(update_fields=["available_quantity"])
 
     @action(detail=True, methods=["post"])
     def approve(self, request, pk=None):
@@ -137,22 +172,23 @@ class CheckoutLogViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def return_item(self, request, pk=None):
         """Mark item as returned"""
-        checkout = self.get_object()
+        with transaction.atomic():
+            checkout = self.get_object()
 
-        if checkout.status != "approved":
-            return Response(
-                {"detail": "Only approved checkouts can be returned"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            if checkout.status != "approved":
+                return Response(
+                    {"detail": "Only approved checkouts can be returned"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-        checkout.status = "returned"
-        checkout.return_date = timezone.now()
-        checkout.notes = request.data.get("notes", checkout.notes)
-        checkout.save()
+            checkout.status = "returned"
+            checkout.return_date = timezone.now()
+            checkout.notes = request.data.get("notes", checkout.notes)
+            checkout.save()
 
-        # Increase available quantity
-        checkout.item.available_quantity += checkout.quantity
-        checkout.item.save()
+            item = InventoryItem.objects.select_for_update().get(pk=checkout.item_id)
+            item.available_quantity += checkout.quantity
+            item.save(update_fields=["available_quantity"])
 
         serializer = self.get_serializer(checkout)
         return Response(serializer.data)
@@ -164,6 +200,35 @@ class PracticeRoomViewSet(viewsets.ModelViewSet):
     queryset = PracticeRoom.objects.filter(is_active=True)
     serializer_class = PracticeRoomSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return super().get_queryset().filter(studio__in=studios_for_request(self.request))
+
+    def _require_manager(self):
+        if self.request.user.role not in ("admin", "teacher"):
+            raise PermissionDenied("Only admins and teachers can change practice rooms.")
+
+    def create(self, request, *args, **kwargs):
+        self._require_manager()
+        return super().create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        studio = studio_for_request(self.request)
+        if studio is None:
+            raise serializers.ValidationError("No studio is associated with this account.")
+        serializer.save(studio=studio)
+
+    def update(self, request, *args, **kwargs):
+        self._require_manager()
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        self._require_manager()
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        self._require_manager()
+        return super().destroy(request, *args, **kwargs)
 
     @action(detail=True, methods=["get"])
     def availability(self, request, pk=None):
@@ -190,7 +255,12 @@ class PracticeRoomViewSet(viewsets.ModelViewSet):
             {
                 "start": res.start_time.isoformat(),
                 "end": res.end_time.isoformat(),
-                "student": res.student.user.get_full_name(),
+                "student": (
+                    res.student.user.get_full_name()
+                    if request.user.role in ("admin", "teacher")
+                    or res.student.user_id == request.user.id
+                    else "Reserved"
+                ),
             }
             for res in reservations
         ]
@@ -206,12 +276,18 @@ class RoomReservationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Filter reservations"""
-        queryset = super().get_queryset()
+        """Filter reservations to the caller's studio."""
+        queryset = super().get_queryset().filter(
+            room__studio__in=studios_for_request(self.request)
+        )
 
-        # Students can only see their own reservations
         if self.request.user.role == "student":
             queryset = queryset.filter(student__user=self.request.user)
+        elif self.request.user.role == "parent":
+            queryset = queryset.filter(
+                Q(student__family__primary_parent=self.request.user)
+                | Q(student__family__secondary_parent=self.request.user)
+            )
 
         # Filter by date range
         start_date = self.request.query_params.get("start_date")
@@ -230,8 +306,14 @@ class RoomReservationViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        """Create a new reservation"""
-        serializer.save(student=self.request.user.student_profile)
+        """Create a new reservation for the signed-in student."""
+        student = getattr(self.request.user, "student_profile", None)
+        if self.request.user.role != "student" or student is None:
+            raise PermissionDenied("Only students can reserve a room.")
+        room = serializer.validated_data["room"]
+        if room.studio_id != student.studio_id:
+            raise serializers.ValidationError("That room is not in your studio.")
+        serializer.save(student=student)
 
     @action(detail=True, methods=["post"])
     def cancel(self, request, pk=None):

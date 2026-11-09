@@ -464,13 +464,15 @@ class ThreeSeventeenBookingWebhookView(APIView):
 
     def post(self, request):
         secret = getattr(settings, "BOOKING_317_WEBHOOK_SECRET", "")
-        if secret:
-            signature = request.META.get("HTTP_X_317BOOKING_SIGNATURE", "")
-            expected = "sha256=" + hmac.new(
-                secret.encode(), request.body, hashlib.sha256
-            ).hexdigest()
-            if not hmac.compare_digest(expected.encode(), signature.encode()):
-                return Response({"error": "Invalid signature"}, status=status.HTTP_401_UNAUTHORIZED)
+        if not secret:
+            return Response(
+                {"error": "Webhook secret is not configured."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        signature = request.META.get("HTTP_X_317BOOKING_SIGNATURE", "")
+        expected = "sha256=" + hmac.new(secret.encode(), request.body, hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(expected.encode(), signature.encode()):
+            return Response({"error": "Invalid signature"}, status=status.HTTP_401_UNAUTHORIZED)
 
         event = request.data.get("event")
         gig_data = request.data.get("gig", {})

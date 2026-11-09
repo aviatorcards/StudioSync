@@ -121,7 +121,7 @@ def complete_setup_wizard(request):
         # 2. Setup Studio
         # Check if signals.py already created a default studio for this user,
         # or if there's any studio at all (since we only support 1 for MVP)
-        studio = Studio.objects.filter(owner=admin_user).first() or Studio.objects.first()
+        studio = Studio.objects.filter(owner=admin_user).first()
         
         if studio:
             studio.name = data["studio_name"]

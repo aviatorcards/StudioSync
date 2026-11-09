@@ -5,13 +5,19 @@ from django.core.files.base import ContentFile
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
-from apps.core.models import Studio, User
+from apps.core.models import User
 from apps.resources.models import Resource
 
 def seed_more_resources():
     print("🌱 Seeding even more resources...")
     
-    studio = Studio.objects.first()
+    from apps.core.tenancy import seed_studio
+
+    try:
+        studio = seed_studio()
+    except RuntimeError as exc:
+        print(f"❌ Error: {exc}")
+        return
     admin = User.objects.filter(role='admin').first()
 
     extra_resources = [

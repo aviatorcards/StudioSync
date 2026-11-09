@@ -6,15 +6,18 @@ from django.utils import timezone
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
-from apps.core.models import Studio, User
+from apps.core.models import User
 from apps.resources.models import Resource
 
 def seed_resources():
     print("🌱 Seeding resources...")
     
-    studio = Studio.objects.first()
-    if not studio:
-        print("❌ Error: No studio found. Run seed_data.py first.")
+    from apps.core.tenancy import seed_studio
+
+    try:
+        studio = seed_studio()
+    except RuntimeError as exc:
+        print(f"❌ Error: {exc}")
         return
         
     admin = User.objects.filter(role='admin').first()

@@ -1,5 +1,8 @@
 from rest_framework import serializers
 
+from apps.core.security import merge_preferences, redact_preferences
+from apps.core.tenancy import studio_for_request
+
 from .models import APIKey, Band, Family, SetupStatus, SignedDocument, Student, Studio, Teacher, User
 
 
@@ -151,7 +154,9 @@ class UserSerializer(serializers.ModelSerializer):
             "bio",
             "instrument",
         ]
-        read_only_fields = ["id", "email", "full_name"]
+        # role, is_active, and is_approved are not self-serve. Admins change
+        # them for other users in update().
+        read_only_fields = ["id", "email", "full_name", "role", "is_active", "is_approved"]
         extra_kwargs = {
             "bio": {"required": False},
             "instrument": {"required": False},
@@ -226,9 +231,64 @@ class UserSerializer(serializers.ModelSerializer):
 
         return internal_value
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get("request")
+        actor = getattr(request, "user", None)
+        include_technical = bool(
+            actor
+            and getattr(actor, "is_authenticated", False)
+            and actor.role == "admin"
+            and actor.pk == instance.pk
+        )
+        data["preferences"] = redact_preferences(
+            data.get("preferences"), include_technical=include_technical
+        )
+        return data
+
     def update(self, instance, validated_data):  # noqa: C901
         # Track approval status for notification
         was_approved = instance.is_approved
+        request = self.context.get("request")
+        actor = getattr(request, "user", None)
+
+        # An admin may change role and approval on someone else. Never on themselves
+        # through this serializer, which is what blocked self-promotion.
+        if (
+            actor
+            and getattr(actor, "is_authenticated", False)
+            and actor.role == "admin"
+            and actor.pk != instance.pk
+            and request is not None
+        ):
+            incoming = request.data
+            if "role" in incoming:
+                role = incoming.get("role")
+                if role not in dict(instance.ROLE_CHOICES):
+                    raise serializers.ValidationError({"role": "Invalid role."})
+                instance.role = role
+            for flag in ("is_active", "is_approved"):
+                if flag in incoming:
+                    value = incoming.get(flag)
+                    if not isinstance(value, bool):
+                        value = str(value).lower() in {"1", "true", "yes"}
+                    setattr(instance, flag, value)
+
+        if "preferences" in validated_data:
+            incoming_prefs = validated_data["preferences"]
+            if not (
+                actor
+                and getattr(actor, "is_authenticated", False)
+                and actor.role == "admin"
+                and actor.pk == instance.pk
+            ):
+                if isinstance(incoming_prefs, dict):
+                    incoming_prefs = {
+                        key: value for key, value in incoming_prefs.items() if key != "technical"
+                    }
+            validated_data["preferences"] = merge_preferences(
+                instance.preferences, incoming_prefs
+            )
 
         # Extract profile-specific fields
         bio = validated_data.pop("_bio", None)
@@ -288,23 +348,20 @@ class UserSerializer(serializers.ModelSerializer):
         role = instance.role
 
         if role == "teacher" and not hasattr(instance, "teacher_profile"):
-            from .models import Studio, Teacher
+            from .models import Teacher
 
-            # Assign to first studio available or owner's studio (fallback logic)
-            studio = Studio.objects.first()
-            Teacher.objects.create(user=instance, studio=studio)
-            # Refresh to ensure teacher_profile is accessible immediately
-            instance.refresh_from_db()
+            studio = studio_for_request(request) if request is not None else None
+            if studio is not None:
+                Teacher.objects.create(user=instance, studio=studio)
+                instance.refresh_from_db()
 
         elif role == "student" and not hasattr(instance, "student_profile"):
-            from .models import Student, Studio
+            from .models import Student
 
-            studio = Studio.objects.first()
-            # Default to active=True or copy user state? Should match logic above, but create assumes Active usually.
-            # If user is inactive, maybe student should be too?
-            # Let's trust the defaults or subsequent updates.
-            Student.objects.create(user=instance, studio=studio, instrument="")
-            instance.refresh_from_db()
+            studio = studio_for_request(request) if request is not None else None
+            if studio is not None:
+                Student.objects.create(user=instance, studio=studio, instrument="")
+                instance.refresh_from_db()
 
         return instance
 
@@ -470,11 +527,19 @@ class TeacherSerializer(serializers.ModelSerializer):
     phone = serializers.CharField(source="user.phone", read_only=True)
     avatar = serializers.SerializerMethodField()
     students_count = serializers.SerializerMethodField()
+    user = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(), write_only=True, required=False
+    )
+    studio = serializers.PrimaryKeyRelatedField(
+        queryset=Studio.objects.all(), write_only=True, required=False
+    )
 
     class Meta:
         model = Teacher
         fields = [
             "id",
+            "user",
+            "studio",
             "email",
             "first_name",
             "last_name",
@@ -499,6 +564,18 @@ class TeacherSerializer(serializers.ModelSerializer):
         if obj.user.avatar:
             return obj.user.avatar.url
         return None
+
+    def validate(self, data):
+        request = self.context.get("request")
+        studio = data.get("studio") or getattr(self.instance, "studio", None)
+        if request is not None and studio is not None:
+            from apps.core.tenancy import studios_for_request
+
+            if not studios_for_request(request).filter(pk=studio.pk).exists():
+                raise serializers.ValidationError({"studio": "Choose a studio you belong to."})
+        if self.instance is None and ("user" not in data or "studio" not in data):
+            raise serializers.ValidationError("user and studio are required to create a teacher.")
+        return data
 
 
 class StudentSerializer(serializers.ModelSerializer):

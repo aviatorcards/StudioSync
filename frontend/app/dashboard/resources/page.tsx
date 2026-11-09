@@ -35,7 +35,7 @@ import {
     Target,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { proxyFileUrl } from '@/lib/utils'
+import { downloadAuthenticatedFile } from '@/lib/utils'
 
 // ─────────────────────────────────────────────
 // Types
@@ -333,16 +333,17 @@ export default function ResourcesPage() {
 
     // ── Resource actions ──────────────────────
 
-    const handleDownload = (resource: Resource) => {
+    const handleDownload = async (resource: Resource) => {
         if (resource.resource_type === 'link') {
             window.open(resource.external_url, '_blank')
             return
         }
         if (!resource.file_url) { toast.error('File URL unavailable'); return }
-        const downloadUrl = proxyFileUrl(resource.file_url)
-        if (downloadUrl) {
-            window.open(downloadUrl, '_blank')
+        try {
+            await downloadAuthenticatedFile(resource.file_url, resource.title)
             toast.success('Download started')
+        } catch {
+            toast.error('Download failed')
         }
     }
 

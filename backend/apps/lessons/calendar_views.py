@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.core.models import Student, Studio, Teacher
+from apps.core.tenancy import studios_for_request
 
 from .calendar_utils import (
     generate_student_calendar,
@@ -18,13 +19,40 @@ from .calendar_utils import (
 )
 
 
+def _can_view_teacher(user, teacher):
+    if not getattr(user, "is_authenticated", False):
+        return False
+    if user.pk == teacher.user_id:
+        return True
+    return user.role == "admin" and teacher.studio.owner_id == user.id
+
+
+def _can_view_student(user, student):
+    if not getattr(user, "is_authenticated", False):
+        return False
+    if user.pk == student.user_id:
+        return True
+    if user.role == "admin" and student.studio.owner_id == user.id:
+        return True
+    if user.role == "teacher" and hasattr(user, "teacher_profile"):
+        if student.primary_teacher_id == user.teacher_profile.id:
+            return True
+        return student.lessons.filter(teacher=user.teacher_profile).exists()
+    if user.role == "parent":
+        family = student.family
+        return family is not None and user.pk in {family.primary_parent_id, family.secondary_parent_id}
+    return False
+
+
 @api_view(["GET"])
 def teacher_calendar_feed(request, teacher_id):
     """
-    Generate ICS calendar feed for a teacher's lessons
-    URL: /api/calendar/teacher/{teacher_id}/lessons.ics
+    Generate ICS calendar feed for a teacher's lessons.
+    Only that teacher and their studio admin may download it.
     """
     teacher = get_object_or_404(Teacher, id=teacher_id)
+    if not _can_view_teacher(request.user, teacher):
+        return Response({"error": "Permission denied"}, status=403)
 
     # Generate calendar
     ical_data = generate_teacher_calendar(teacher)
@@ -44,6 +72,8 @@ def student_calendar_feed(request, student_id):
     URL: /api/calendar/student/{student_id}/lessons.ics
     """
     student = get_object_or_404(Student, id=student_id)
+    if not _can_view_student(request.user, student):
+        return Response({"error": "Permission denied"}, status=403)
 
     # Generate calendar
     ical_data = generate_student_calendar(student)
@@ -64,10 +94,9 @@ def studio_calendar_feed(request, studio_id):
     URL: /api/calendar/studio/{studio_id}/lessons.ics
     Requires authentication
     """
-    studio = get_object_or_404(Studio, id=studio_id)
+    studio = get_object_or_404(Studio, id=studio_id, pk__in=studios_for_request(request))
 
-    # Check permission (user must be studio owner or staff)
-    if request.user != studio.owner and not request.user.is_staff:
+    if request.user.role != "admin" or studio.owner_id != request.user.id:
         return Response({"error": "Permission denied"}, status=403)
 
     # Generate calendar

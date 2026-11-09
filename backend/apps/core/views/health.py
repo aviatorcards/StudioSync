@@ -27,11 +27,11 @@ def health_check(request):
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")
         health_status["checks"]["database"] = "ok"
-    except Exception as e:
+    except Exception:
         health_status["status"] = "unhealthy"
-        health_status["checks"]["database"] = f"error: {str(e)}"
+        health_status["checks"]["database"] = "error"
 
-    # Check cache/Redis connectivity
+    # Check cache connectivity. The message stays generic for anonymous callers.
     try:
         cache.set("health_check", "ok", 10)
         cache_value = cache.get("health_check")
@@ -39,8 +39,8 @@ def health_check(request):
             health_status["checks"]["cache"] = "ok"
         else:
             health_status["checks"]["cache"] = "degraded"
-    except Exception as e:
-        health_status["checks"]["cache"] = f"error: {str(e)}"
+    except Exception:
+        health_status["checks"]["cache"] = "error"
         # Cache is not critical, so we don't mark overall status as unhealthy
 
     # Return appropriate status code

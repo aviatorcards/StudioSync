@@ -1,7 +1,6 @@
 import logging
 
 from django.conf import settings
-from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -11,6 +10,7 @@ from rest_framework import permissions, status, views
 from rest_framework.response import Response
 
 from .models import Invoice, Payment
+from .views import payable_invoices, visible_invoices
 
 logger = logging.getLogger(__name__)
 
@@ -21,13 +21,15 @@ class CreateCheckoutSessionView(views.APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, invoice_id):
+        invoice = payable_invoices(request.user).filter(id=invoice_id).first()
+        if invoice is None:
+            return Response({"error": "Invoice not found."}, status=status.HTTP_404_NOT_FOUND)
+
         if not settings.STRIPE_SECRET_KEY:
             return Response(
-                {"error": "Stripe is not configured. Please add STRIPE_SECRET_KEY to your environment."},
+                {"error": "Stripe is not configured."},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
-
-        invoice = get_object_or_404(Invoice, id=invoice_id)
 
         # Determine success/cancel URLs
         from apps.core.email_utils import get_frontend_url
@@ -64,29 +66,32 @@ class CreateCheckoutSessionView(views.APIView):
             invoice.save()
 
             return Response({"sessionId": checkout_session["id"], "url": checkout_session["url"]})
-        except Exception as e:
-            logger.error(f"Stripe Checkout Error: {str(e)}")
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            logger.exception("Stripe Checkout Error")
+            return Response(
+                {"error": "Unable to start checkout."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
 class CreateSubscriptionCheckoutSessionView(views.APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, plan_id):
-        from .models import SubscriptionPlan, Subscription
-        plan = get_object_or_404(SubscriptionPlan, id=plan_id)
-        
-        student = getattr(request.user, "student_profile", None)
-        if not student and request.user.role == "student":
-            from apps.core.models import Student
-            student = Student.objects.filter(user=request.user).first()
+        from .models import Subscription, SubscriptionPlan
 
-        if not student:
-            return Response({"error": "Could not identify student profile."}, status=400)
+        plan = SubscriptionPlan.objects.filter(id=plan_id, is_active=True).first()
+        if plan is None:
+            return Response({"error": "Plan not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        student = getattr(request.user, "student_profile", None)
+        if student is None or student.studio_id != plan.studio_id:
+            return Response(
+                {"error": "That plan is not available for this account."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         from apps.core.email_utils import get_frontend_url
         domain_url = get_frontend_url(request)
 
-        
         try:
             subscription = Subscription.objects.create(
                 studio=plan.studio,
@@ -122,34 +127,54 @@ class CreateSubscriptionCheckoutSessionView(views.APIView):
             )
 
             return Response({"sessionId": checkout_session["id"], "url": checkout_session["url"]})
-        except Exception as e:
-            logger.error(f"Stripe Subscription Checkout Error: {str(e)}")
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            logger.exception("Stripe Subscription Checkout Error")
+            return Response(
+                {"error": "Unable to start checkout."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class VerifyCheckoutSessionView(views.APIView):
-    # Allow unauthenticated access: this endpoint is called right after
-    # returning from Stripe checkout, when the JWT access token may have
-    # expired during the external redirect. The endpoint only uses the
-    # Stripe session ID to verify payment status — no user-specific data.
-    permission_classes = [permissions.AllowAny]
+    """Read Stripe's status for a session the caller is allowed to see.
+
+    Marking an invoice paid stays on the signed webhook. This endpoint used to
+    apply that transition for anyone who knew a session id.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         session_id = request.data.get("session_id")
         if not session_id:
             return Response({"error": "session_id is required"}, status=400)
-            
+        if not settings.STRIPE_SECRET_KEY:
+            return Response({"error": "Stripe is not configured."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
         try:
             session = stripe.checkout.Session.retrieve(session_id)
-            if session.payment_status == "paid" or session.status == "complete":
-                # Reuse the existing webhook handler safely to apply states
-                webhook_view = StripeWebhookView()
-                webhook_view.handle_checkout_session(session)
-                return Response({"status": "success", "message": "Payment verified"})
-            return Response({"status": session.payment_status or session.status})
-        except Exception as e:
-            logger.error(f"Verify Session Error: {str(e)}")
-            return Response({"error": str(e)}, status=400)
+        except Exception:
+            logger.exception("Verify Session Error")
+            return Response({"error": "Unable to verify that session."}, status=400)
+
+        metadata = session.get("metadata") or {}
+        if metadata.get("type") == "subscription":
+            from .models import Subscription
+
+            sub_id = metadata.get("subscription_id") or session.get("client_reference_id")
+            sub = Subscription.objects.filter(id=sub_id).first() if sub_id else None
+            student = getattr(request.user, "student_profile", None)
+            allowed = sub is not None and (
+                (request.user.role == "admin" and sub.studio.owner_id == request.user.id)
+                or (student is not None and sub.student_id == student.id)
+            )
+            if not allowed:
+                return Response({"error": "Session not found."}, status=404)
+        else:
+            invoice_id = metadata.get("invoice_id") or session.get("client_reference_id")
+            if not invoice_id or not visible_invoices(request.user).filter(id=invoice_id).exists():
+                return Response({"error": "Session not found."}, status=404)
+
+        return Response({"status": session.payment_status or session.status})
 
 @method_decorator(csrf_exempt, name="dispatch")
 class StripeWebhookView(views.APIView):

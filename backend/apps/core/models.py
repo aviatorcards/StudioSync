@@ -512,6 +512,12 @@ class APIKey(models.Model):
     prefix = models.CharField(max_length=16, unique=True)
     # SHA-256 of the full key — never store plaintext
     key_hash = models.CharField(max_length=64)
+    access = models.CharField(
+        max_length=10,
+        choices=[("full", "Full"), ("read", "Read")],
+        default="full",
+        help_text="Read keys cannot call unsafe methods.",
+    )
     is_active = models.BooleanField(default=True)
     last_used_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

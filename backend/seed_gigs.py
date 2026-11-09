@@ -24,7 +24,7 @@ django.setup()
 
 from django.utils import timezone  # noqa: E402
 
-from apps.core.models import Band, Student, Studio, Teacher, User  # noqa: E402
+from apps.core.models import Band, Student, Teacher, User  # noqa: E402
 from apps.gigs.models import BandAvailability, Gig, GigClaim  # noqa: E402
 
 FIRST_NAMES = [
@@ -71,9 +71,12 @@ def random_name():
 def seed():
     print("🌱 Seeding instructors, students, bands, and gigs...")
 
-    studio = Studio.objects.first()
-    if not studio:
-        print("❌ No Studio found. Run seed_data.py first.")
+    from apps.core.tenancy import seed_studio
+
+    try:
+        studio = seed_studio()
+    except RuntimeError as exc:
+        print(f"❌ {exc}")
         sys.exit(1)
 
     print(f"   Using studio: {studio.name}")

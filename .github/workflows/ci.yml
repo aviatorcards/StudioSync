@@ -156,7 +156,7 @@ jobs:
 
       - name: Run frontend tests (if exist)
         working-directory: ./frontend
-        run: npm run test || echo "No tests configured yet"
+        run: npm run test
 
       - name: Build frontend
         working-directory: ./frontend
@@ -181,7 +181,7 @@ jobs:
 
       - name: Run Python dependency security scan
         working-directory: ./backend
-        run: safety check --file requirements.txt --continue-on-error || true
+        run: safety check --file requirements.txt
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -196,4 +196,4 @@ jobs:
 
       - name: Run npm audit
         working-directory: ./frontend
-        run: npm audit --audit-level=moderate || true
+        run: npm audit --audit-level=moderate

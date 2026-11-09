@@ -6,11 +6,14 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.core.models import Band, Family, Student, Studio, Teacher, User
+from apps.core.security import assert_public_host
+from apps.core.tenancy import studio_for_request, studios_for_request
 from apps.core.serializers import (
     BandSerializer,
     PublicTeacherSerializer,
@@ -28,21 +31,25 @@ class BandViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Admin sees all, teachers see theirs, students see theirs
         user = self.request.user
-        if user.role == "admin":
-            return Band.objects.all()
-        elif user.role == "teacher" and hasattr(user, "teacher_profile"):
-            # This is complex if teachers aren't directly linked to bands
-            # For now, allow listing all for choice in UI
-            return Band.objects.all()
-        elif user.role == "student" and hasattr(user, "student_profile"):
-            return user.student_profile.bands.all()
+        studios = studios_for_request(self.request)
+        queryset = Band.objects.filter(studio__in=studios)
+        if user.role == "student" and hasattr(user, "student_profile"):
+            return queryset.filter(pk__in=user.student_profile.bands.all())
+        if user.role in ("admin", "teacher"):
+            return queryset
+        if user.role == "parent":
+            return queryset.filter(
+                models.Q(primary_contact=user) | models.Q(members__family__primary_parent=user)
+            ).distinct()
         return Band.objects.none()
 
     def perform_create(self, serializer):
-        # Auto-assign studio to current user's studio
-        studio = Studio.objects.filter(owner=self.request.user).first() or Studio.objects.first()
+        if self.request.user.role not in ("admin", "teacher"):
+            raise PermissionDenied("Only admins and teachers can create bands.")
+        studio = studio_for_request(self.request)
+        if studio is None:
+            raise PermissionDenied("No studio is associated with this account.")
         serializer.save(studio=studio)
 
 
@@ -60,24 +67,19 @@ class UserViewSet(viewsets.ModelViewSet):
     ordering = ["-created_at"]
 
     def get_queryset(self):
-        queryset = User.objects.none()
+        user = self.request.user
+        studios = studios_for_request(self.request)
+        queryset = User.objects.filter(
+            models.Q(id=user.id)
+            | models.Q(owned_studios__in=studios)
+            | models.Q(teacher_profile__studio__in=studios)
+            | models.Q(student_profile__studio__in=studios)
+            | models.Q(primary_parent_families__studio__in=studios)
+            | models.Q(secondary_parent_families__studio__in=studios)
+        ).distinct()
 
-        # Admins can manage everyone
-        if self.request.user.role == "admin":
-            queryset = User.objects.all()
-
-        # Teachers see their studio members
-        elif self.request.user.role == "teacher" and hasattr(self.request.user, "teacher_profile"):
-            studio = self.request.user.teacher_profile.studio
-            if studio:
-                queryset = User.objects.filter(
-                    models.Q(teacher_profile__studio=studio)
-                    | models.Q(student_profile__studio=studio)
-                    | models.Q(id=self.request.user.id)
-                ).distinct()
-
-        else:
-            queryset = User.objects.filter(id=self.request.user.id)
+        if user.role not in ("admin", "teacher"):
+            queryset = queryset.filter(id=user.id)
 
         # Apply Manual Role Filter
         role = self.request.query_params.get("role")
@@ -86,9 +88,41 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def _require_self_or_admin(self, target):
+        actor = self.request.user
+        if target.pk == actor.pk:
+            return
+        if actor.role != "admin":
+            raise PermissionDenied("You can only edit your own account.")
+        if not studios_for_request(self.request).filter(
+            models.Q(owner=target)
+            | models.Q(teachers__user=target)
+            | models.Q(students__user=target)
+            | models.Q(families__primary_parent=target)
+            | models.Q(families__secondary_parent=target)
+        ).exists() and target.pk != actor.pk:
+            raise PermissionDenied("That account is not in your studio.")
+
+    def update(self, request, *args, **kwargs):
+        self._require_self_or_admin(self.get_object())
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        self._require_self_or_admin(self.get_object())
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        target = self.get_object()
+        if request.user.role != "admin" or target.pk == request.user.pk:
+            raise PermissionDenied("Only an admin can delete another account.")
+        self._require_self_or_admin(target)
+        return super().destroy(request, *args, **kwargs)
+
     @action(detail=True, methods=["post"])
     def assign_to_band(self, request, pk=None):
         """Assign a student user to a band"""
+        if request.user.role not in ("admin", "teacher"):
+            raise PermissionDenied("Only admins and teachers can assign bands.")
         user = self.get_object()
         if user.role != "student" or not hasattr(user, "student_profile"):
             return Response(
@@ -102,7 +136,12 @@ class UserViewSet(viewsets.ModelViewSet):
                 {"band_id": ["This field is required."]}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        band = get_object_or_404(Band, id=band_id)
+        band = get_object_or_404(Band, id=band_id, studio__in=studios_for_request(request))
+        if user.student_profile.studio_id != band.studio_id:
+            return Response(
+                {"detail": "That band is not in this student's studio."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         user.student_profile.bands.add(band)
 
         return Response({"detail": f"Assigned to {band.name}"})
@@ -110,6 +149,8 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def remove_from_band(self, request, pk=None):
         """Remove a student user from a band"""
+        if request.user.role not in ("admin", "teacher"):
+            raise PermissionDenied("Only admins and teachers can change bands.")
         user = self.get_object()
         if user.role != "student" or not hasattr(user, "student_profile"):
             return Response(
@@ -117,7 +158,7 @@ class UserViewSet(viewsets.ModelViewSet):
             )
 
         band_id = request.data.get("band_id")
-        band = get_object_or_404(Band, id=band_id)
+        band = get_object_or_404(Band, id=band_id, studio__in=studios_for_request(request))
         user.student_profile.bands.remove(band)
 
         return Response({"detail": f"Removed from {band.name}"})
@@ -125,6 +166,8 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def link_family(self, request, pk=None):
         """Link a parent to a student (creates a Family if needed)"""
+        if request.user.role not in ("admin", "teacher"):
+            raise PermissionDenied("Only admins and teachers can link families.")
         target_user = self.get_object()  # The student
         parent_id = request.data.get("parent_id")
 
@@ -133,7 +176,9 @@ class UserViewSet(viewsets.ModelViewSet):
                 {"parent_id": ["This field is required."]}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        parent = get_object_or_404(User, id=parent_id, role="parent")
+        parent = get_object_or_404(
+            self.get_queryset(), id=parent_id, role="parent"
+        )
 
         if target_user.role != "student" or not hasattr(target_user, "student_profile"):
             return Response(
@@ -247,12 +292,9 @@ class UserViewSet(viewsets.ModelViewSet):
         # Auto-create profile based on role
         try:
             # Find admin's studio (or fallback)
-            from apps.core.models import Student, Studio, Teacher
+            from apps.core.models import Student, Teacher
 
-            studio = Studio.objects.filter(owner=request.user).first()
-            if not studio:
-                # Fallback to first studio in system (for dev/demo)
-                studio = Studio.objects.first()
+            studio = studio_for_request(request)
 
             if studio:
                 if role == "student":
@@ -271,6 +313,8 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["post"])
     def send_test_email(self, request):
         """Send a test email using provided SMTP settings"""
+        if request.user.role != "admin":
+            raise PermissionDenied("Only admins can send a test email.")
         import traceback
 
         from django.core.mail import get_connection
@@ -298,6 +342,13 @@ class UserViewSet(viewsets.ModelViewSet):
             print("ERROR: Missing required SMTP configuration")
             return Response(
                 {"detail": "Missing SMTP configurations"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            assert_public_host(str(smtp_host), int(smtp_port))
+        except (ValueError, TypeError):
+            return Response(
+                {"detail": "That SMTP host is not allowed."}, status=status.HTTP_400_BAD_REQUEST
             )
 
         try:
@@ -340,10 +391,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 print(f"❌ SMTP connection failed: {conn_error}")
                 print(f"Connection error traceback:\n{traceback.format_exc()}")
                 return Response(
-                    {
-                        "detail": f"SMTP connection failed: {str(conn_error)}",
-                        "error_type": type(conn_error).__name__,
-                    },
+                    {"detail": "SMTP connection failed."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -431,7 +479,7 @@ The {smtp_from_name} Team
             print(f"Full traceback:\n{traceback.format_exc()}")
             print("=" * 60)
             return Response(
-                {"detail": f"Failed to send email: {str(e)}", "error_type": type(e).__name__},
+                {"detail": "Failed to send email."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -441,18 +489,10 @@ The {smtp_from_name} Team
         if request.user.role != "admin":
             return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
 
-        from apps.core.models import Studio
+        studio = studio_for_request(request)
 
-        studio = Studio.objects.filter(owner=request.user).first()
-
-        # If no studio, just return the user themselves as a fallback or empty list
         if not studio:
-            # Fallback: if admin creates users but hasn't set up studio object yet,
-            # they should still see users they created?
-            # For now, let's just return all users if admin (simple mode)
-            # or strictly follow the studio logic.
-            # Let's simple return all users for now to unblock 'Add User' visibility
-            all_users = User.objects.all()
+            all_users = User.objects.filter(id=request.user.id)
         else:
             # Get users from all profiles linked to this studio
             # Teachers
@@ -476,29 +516,33 @@ class StudioViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = StudioSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
-        # Users can only see studios they own or are associated with
+        return studios_for_request(self.request)
+
+    def _require_owner(self, studio):
         user = self.request.user
-
-        if not user.is_authenticated:
-            return Studio.objects.none()
-
-        if user.role == "admin":
-            return Studio.objects.filter(owner=user)
-        elif hasattr(user, "teacher_profile") and user.teacher_profile:
-            # Teachers see their studio (read-only via permissions)
-            return Studio.objects.filter(id=user.teacher_profile.studio.id)
-        elif hasattr(user, "student_profile") and user.student_profile:
-            # Students see their studio (read-only via permissions)
-            return Studio.objects.filter(id=user.student_profile.studio.id)
-        else:
-            return Studio.objects.none()
+        if user.role != "admin" or studio.owner_id != user.id:
+            raise PermissionDenied("Only the studio owner can change studio settings.")
 
     def perform_create(self, serializer):
+        if self.request.user.role != "admin":
+            raise PermissionDenied("Only admins can create a studio.")
         serializer.save(owner=self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        self._require_owner(self.get_object())
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        self._require_owner(self.get_object())
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        self._require_owner(self.get_object())
+        return super().destroy(request, *args, **kwargs)
 
     @action(detail=False, methods=["get", "put", "patch", "post"])
     def current(self, request):
@@ -571,18 +615,42 @@ class TeacherViewSet(viewsets.ModelViewSet):
     serializer_class = TeacherSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_serializer_class(self):
+        if self.request.user.role in ("admin", "teacher"):
+            return TeacherSerializer
+        return PublicTeacherSerializer
+
     def get_queryset(self):
-        # Admin: see all teachers in their studios
-        if self.request.user.role == "admin":
-            # Admin: see all teachers (consistent with UserViewSet)
-            return Teacher.objects.all()
-        # Teachers: see self?
-        if hasattr(self.request.user, "teacher_profile"):
-            return Teacher.objects.filter(studio=self.request.user.teacher_profile.studio)
-        # Students: see teachers in their studio
-        if hasattr(self.request.user, "student_profile"):
-            return Teacher.objects.filter(studio=self.request.user.student_profile.studio)
-        return Teacher.objects.none()
+        return Teacher.objects.filter(studio__in=studios_for_request(self.request)).select_related(
+            "user", "studio"
+        )
+
+    def _require_manager(self):
+        if self.request.user.role not in ("admin", "teacher"):
+            raise PermissionDenied("Only admins and teachers can change instructor records.")
+
+    def create(self, request, *args, **kwargs):
+        self._require_manager()
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        self._require_manager()
+        teacher = self.get_object()
+        if request.user.role == "teacher" and teacher.user_id != request.user.id:
+            raise PermissionDenied("Teachers can only edit their own profile.")
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        self._require_manager()
+        teacher = self.get_object()
+        if request.user.role == "teacher" and teacher.user_id != request.user.id:
+            raise PermissionDenied("Teachers can only edit their own profile.")
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        if request.user.role != "admin":
+            raise PermissionDenied("Only admins can delete instructor records.")
+        return super().destroy(request, *args, **kwargs)
 
 
 class StudentViewSet(viewsets.ModelViewSet):
@@ -599,18 +667,18 @@ class StudentViewSet(viewsets.ModelViewSet):
     ordering = ["user__last_name"]
 
     def get_queryset(self):
-        queryset = Student.objects.none()
-
-        # Determine base queryset based on role
-        if self.request.user.role == "admin":
-            queryset = Student.objects.all()
-        elif self.request.user.role == "teacher":
-            if hasattr(self.request.user, "teacher_profile"):
-                queryset = Student.objects.filter(
-                    studio=self.request.user.teacher_profile.studio, user__role="student"
-                )
-        elif hasattr(self.request.user, "student_profile"):
-            queryset = Student.objects.filter(id=self.request.user.student_profile.id)
+        user = self.request.user
+        queryset = Student.objects.filter(studio__in=studios_for_request(self.request))
+        if user.role == "teacher":
+            queryset = queryset.filter(user__role="student")
+        elif user.role == "student" and hasattr(user, "student_profile"):
+            queryset = queryset.filter(id=user.student_profile.id)
+        elif user.role == "parent":
+            queryset = queryset.filter(
+                models.Q(family__primary_parent=user) | models.Q(family__secondary_parent=user)
+            )
+        elif user.role != "admin":
+            queryset = Student.objects.none()
 
         # Apply Manual Filters
         instrument = self.request.query_params.get("instrument")
@@ -656,10 +724,8 @@ class ReportsExportView(APIView):
         # Robust Studio Lookup
         from apps.core.models import Studio
 
-        studio = Studio.objects.filter(owner=user).first()
-        if not studio and user.role == "admin":
-            # If admin but not technically owner in DB record, fallback to first studio
-            studio = Studio.objects.first()
+        studios = studios_for_request(self.request) if user.role == "admin" else Studio.objects.none()
+        studio = studios.first()
 
         if report_type == "financial":
             headers = ["date", "description", "category", "amount", "status"]

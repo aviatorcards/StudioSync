@@ -30,6 +30,7 @@ def admin_user(db):
         role="admin",
         is_staff=True,
         is_superuser=True,
+        is_approved=True,
     )
 
 
@@ -55,6 +56,7 @@ def teacher_user(db):
         first_name="Teacher",
         last_name="Test",
         role="teacher",
+        is_approved=True,
     )
 
 
@@ -82,6 +84,7 @@ def student_user(db):
         first_name="Student",
         last_name="Test",
         role="student",
+        is_approved=True,
     )
 
 

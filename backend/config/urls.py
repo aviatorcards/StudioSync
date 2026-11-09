@@ -1,10 +1,9 @@
-from django.conf import settings
-from django.conf.urls.static import static
-from django.urls import include, path
+from django.urls import include, path, re_path
 
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from apps.core.views import health_check, readiness_check
+from apps.core.views.media import ProtectedMediaView
 
 urlpatterns = [
     # Health and readiness checks
@@ -26,16 +25,10 @@ urlpatterns = [
     # path('admin/', admin.site.urls),
 ]
 
-from django.urls import re_path
-from django.views.static import serve
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-else:
-    urlpatterns += [
-        re_path(
-            r"^media/(?P<path>.*)$",
-            serve,
-            {"document_root": settings.MEDIA_ROOT},
-        )
-    ]
+urlpatterns += [
+    re_path(
+        r"^media/(?P<path>.*)$",
+        ProtectedMediaView.as_view(),
+        name="protected-media",
+    )
+]

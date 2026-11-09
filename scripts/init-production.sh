@@ -104,7 +104,9 @@ if [[ "$SKIP_ENV" != "true" ]]; then
 
     step "🔐 Generating secrets..."
     SECRET_KEY=$(generate_key)
+    POSTGRES_PASSWORD=$(generate_key)
     success "SECRET_KEY generated"
+    success "Database password generated"
 
     # ---- Core ----
     step "🌐 Site configuration"
@@ -214,7 +216,8 @@ FRONTEND_BASE_URL=${FRONTEND_BASE_URL}
 # =============================================================================
 # Database  (connects to the "db" service in Docker Compose)
 # =============================================================================
-DATABASE_URL=postgresql://studio_user:studio_password@db:5432/studiosync
+POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+DATABASE_URL=postgresql://studio_user:${POSTGRES_PASSWORD}@db:5432/studiosync
 
 # =============================================================================
 # Stripe — billing & invoices

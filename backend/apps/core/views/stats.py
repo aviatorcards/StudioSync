@@ -10,7 +10,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.billing.models import Invoice
-from apps.core.models import Student, Studio, Teacher
+from apps.core.models import Student, Teacher
+from apps.core.tenancy import studio_for_request
 from apps.lessons.models import Lesson
 
 
@@ -31,7 +32,7 @@ class DashboardStatsView(APIView):
 
         # ADMIN VIEW
         if user.role == "admin":
-            studio = Studio.objects.filter(owner=user).first() or Studio.objects.first()
+            studio = studio_for_request(request)
 
             if not studio:
                 total_students = 0
@@ -226,7 +227,7 @@ class DashboardStatsView(APIView):
 
         # Filter visibility
         if user.role == "admin":
-            studio = Studio.objects.filter(owner=user).first() or Studio.objects.first()
+            studio = studio_for_request(request)
             if studio:
                 qs = qs.filter(studio=studio)
         elif user.role == "teacher" and hasattr(user, "teacher_profile"):
@@ -290,7 +291,7 @@ class DashboardAnalyticsView(APIView):
         if user.role != "admin":
             return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
 
-        studio = Studio.objects.filter(owner=user).first() or Studio.objects.first()
+        studio = studio_for_request(request)
 
         if not studio:
             return Response(

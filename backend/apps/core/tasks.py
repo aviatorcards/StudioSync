@@ -255,6 +255,8 @@ def check_upcoming_lessons():
     reminders_sent = 0
 
     for lesson in upcoming_lessons:
+        if not lesson.student_id:
+            continue
         # Check if reminder already sent to student
         student_reminder_exists = Notification.objects.filter(
             related_lesson_id=lesson.id,

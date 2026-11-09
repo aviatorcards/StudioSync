@@ -1153,7 +1153,8 @@ export default function GeneralSettingsPage() {
                                         <div>
                                             <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
                                             <div className="relative">
-                                                <input type={showSmtpPassword ? 'text' : 'password'} value={technicalSettings.smtp_password} onChange={e => setTechnicalSettings({ ...technicalSettings, smtp_password: e.target.value })} placeholder="••••••••" className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+                                                <input type={showSmtpPassword ? 'text' : 'password'} value={technicalSettings.smtp_password} onChange={e => setTechnicalSettings({ ...technicalSettings, smtp_password: e.target.value })} placeholder={currentUser?.preferences?.technical?.smtp_password_set ? 'Saved password on file' : '••••••••'} className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+                                                <p className="text-xs text-gray-500 mt-1">Leave blank to keep the saved password. It is not sent back by the API.</p>
                                                 <button type="button" onClick={() => setShowSmtpPassword(!showSmtpPassword)} className="absolute right-3 top-2.5 text-gray-500">
                                                     {showSmtpPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                                 </button>

@@ -124,10 +124,27 @@ def test_payout(admin_user, student_user, test_gig, band):
     assert payout.payment.status == "completed"
 
 
-def test_booking_webhook_confirmed_and_cancelled(db, studio, band):
+def _signed_post(client, url, payload, secret="test-webhook-secret"):
+    import hashlib
+    import hmac
+    import json
+
+    body = json.dumps(payload).encode()
+    signature = "sha256=" + hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
+    return client.post(
+        url,
+        data=body,
+        content_type="application/json",
+        HTTP_X_317BOOKING_SIGNATURE=signature,
+    )
+
+
+@pytest.mark.django_db
+def test_booking_webhook_confirmed_and_cancelled(db, studio, band, settings):
     client = APIClient()
     url = "/api/gigs/webhooks/317booking/"
-    
+    settings.BOOKING_317_WEBHOOK_SECRET = "test-webhook-secret"
+
     # 1. Test gig.confirmed webhook
     data = {
         "event": "gig.confirmed",
@@ -140,8 +157,8 @@ def test_booking_webhook_confirmed_and_cancelled(db, studio, band):
             "description": "Fun rock show!"
         }
     }
-    
-    response = client.post(url, data, format="json")
+
+    response = _signed_post(client, url, data)
     assert response.status_code == status.HTTP_200_OK
     assert response.data == {"ok": True}
     
@@ -158,7 +175,7 @@ def test_booking_webhook_confirmed_and_cancelled(db, studio, band):
             "id": "gig-123"
         }
     }
-    response = client.post(url, data_cancel, format="json")
+    response = _signed_post(client, url, data_cancel)
     assert response.status_code == status.HTTP_200_OK
     assert response.data == {"ok": True}
     

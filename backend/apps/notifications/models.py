@@ -102,7 +102,10 @@ class Notification(models.Model):
                     user=user,
                     notification_type="lesson_scheduled",
                     title="New Lesson Scheduled",
-                    message=f'Lesson with {lesson.student.user.get_full_name()} scheduled for {lesson.scheduled_start.strftime("%B %d at %I:%M %p")}',
+                    message=(
+                f'Lesson with {lesson.student.user.get_full_name() if lesson.student_id else (lesson.band.name if lesson.band_id else "a group")} '
+                f'scheduled for {lesson.scheduled_start.strftime("%B %d at %I:%M %p")}'
+            ),
                     link=f"/dashboard/lessons/{lesson.id}",
                     related_lesson_id=lesson.id,
                 )

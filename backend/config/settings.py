@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     # Third party apps
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "drf_spectacular",
     "corsheaders",
     "django_q",
@@ -152,6 +153,23 @@ MAX_MEDIA_SIZE = 50 * 1024 * 1024  # 50MB
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Refuse known-insecure defaults outside local debug. Tests and CI use their own secrets.
+_INSECURE_SECRET_KEYS = {None, "", "dev-secret-key-change-in-production"}
+_db_url = os.getenv("DATABASE_URL", "")
+if not DEBUG:
+    from django.core.exceptions import ImproperlyConfigured
+
+    if SECRET_KEY in _INSECURE_SECRET_KEYS:
+        raise ImproperlyConfigured(
+            "SECRET_KEY is missing or still the published default. "
+            "Set a unique SECRET_KEY when DEBUG is False."
+        )
+    if "studio_password" in _db_url:
+        raise ImproperlyConfigured(
+            "DATABASE_URL still uses the default database password. "
+            "Set POSTGRES_PASSWORD and DATABASE_URL when DEBUG is False."
+        )
+
 # CORS and CSRF settings
 CORS_ALLOWED_ORIGINS = os.getenv(
     "CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"
@@ -233,6 +251,10 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
+    # The schema names every route. Require a logged-in user outside local debug.
+    "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"]
+    if DEBUG
+    else ["rest_framework.permissions.IsAuthenticated"],
 }
 
 # JWT settings
@@ -264,12 +286,22 @@ Q_CLUSTER = {
     "orm": "default",  # Use Postgres (default DB)
 }
 
-# Channels settings (Single-node/In-memory)
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
-    },
-}
+# Channels. Use Redis when REDIS_URL is set so sockets work across Gunicorn workers.
+# Tests and single-process dev keep the in-memory layer.
+_redis_url = os.getenv("REDIS_URL", "")
+if _redis_url:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {"hosts": [_redis_url]},
+        },
+    }
+else:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        },
+    }
 
 ### Docs???
 

@@ -43,9 +43,12 @@ class Command(BaseCommand):
         self.stdout.write(f"🎲 Generating calendar chaos for the next {days_forward} days and past {days_back} days...")
 
         # 1. Get existing data
-        studio = Studio.objects.first()
-        if not studio:
-            self.stdout.write(self.style.ERROR("❌ Error: No studio found. Please run seed_data.py first."))
+        from apps.core.tenancy import seed_studio
+
+        try:
+            studio = seed_studio()
+        except RuntimeError as exc:
+            self.stdout.write(self.style.ERROR(f"❌ Error: {exc}"))
             return
 
         teachers = list(Teacher.objects.filter(studio=studio))

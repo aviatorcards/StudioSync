@@ -29,17 +29,17 @@ export const CompletionStep = () => {
                     All Set!
                 </h1>
                 <p className="text-lg max-w-md mb-8" style={{ color: A.muted }}>
-                    Your studio has been configured. You&apos;re ready to start managing your music school.
+                    Your studio has been configured. Sign in with the admin account you just created.
                 </p>
 
                 <Link
-                    href="/dashboard"
+                    href="/login"
                     className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-base font-semibold text-white transition-all hover:scale-105 active:scale-95"
                     style={{ backgroundColor: A.amber }}
                     onMouseEnter={e => (e.currentTarget.style.backgroundColor = A.amberDark)}
                     onMouseLeave={e => (e.currentTarget.style.backgroundColor = A.amber)}
                 >
-                    Go to Dashboard
+                    Sign in
                     <ArrowRight className="w-5 h-5" />
                 </Link>
             </div>

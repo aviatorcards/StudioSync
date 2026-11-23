@@ -477,6 +477,8 @@ class SetupStatus(models.Model):
     setup_data = models.JSONField(
         default=dict, blank=True, help_text="Additional setup configuration"
     )
+    # One-time bootstrap secret. Cleared when setup finishes. Never returned by the API.
+    setup_token = models.CharField(max_length=128, blank=True, default="")
 
     class Meta:
         db_table = "setup_status"

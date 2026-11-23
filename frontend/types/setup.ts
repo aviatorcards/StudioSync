@@ -47,6 +47,7 @@ export interface AdminAccount {
   admin_last_name: string
   admin_password: string
   admin_phone: string
+  setup_token: string
 }
 
 export interface QuickSettings {

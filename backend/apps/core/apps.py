@@ -7,3 +7,11 @@ class CoreConfig(AppConfig):
 
     def ready(self):
         import apps.core.signals  # noqa: F401
+
+        try:
+            from apps.core.setup_token import log_setup_token
+
+            log_setup_token()
+        except Exception:
+            # Migrations and the first import can run before the table exists.
+            return

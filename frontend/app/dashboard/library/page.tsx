@@ -1,6 +1,7 @@
 'use client'
 
 import { usePublicResources } from '@/hooks/usePublicResources'
+import { useUser } from '@/contexts/UserContext'
 import {
     FileText,
     Music,
@@ -52,7 +53,11 @@ const RESOURCE_TYPES: { value: MusicResourceType; label: string; icon: any }[] =
 ]
 
 export default function LibraryPage() {
-    const { resources: publicResources, loading, refetch } = usePublicResources()
+    const { currentUser } = useUser()
+    const studioId = currentUser?.studio?.id
+    const { resources: publicResources, loading, refetch } = usePublicResources(
+        studioId ? { studio: studioId } : undefined
+    )
 
     // Filter only music resources
     const musicResources = publicResources.filter((r: any) => 

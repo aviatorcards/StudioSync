@@ -42,7 +42,10 @@ class StudentViewSet(viewsets.ModelViewSet):
             return queryset
 
         if user.role == "teacher" and hasattr(user, "teacher_profile"):
-            return queryset.filter(primary_teacher=user.teacher_profile)
+            teacher = user.teacher_profile
+            return queryset.filter(
+                models.Q(primary_teacher=teacher) | models.Q(lessons__teacher=teacher)
+            ).distinct()
 
         if user.role == "parent":
             return queryset.filter(
@@ -105,6 +108,48 @@ class StudentViewSet(viewsets.ModelViewSet):
                 "unassigned_students": unassigned,
             }
         )
+
+    def _authorize_write(self, student):
+        from rest_framework.exceptions import PermissionDenied
+
+        from apps.core.tenancy import teacher_teaches
+
+        user = self.request.user
+        if user.role == "admin":
+            return
+        if user.role == "teacher":
+            if teacher_teaches(user, student):
+                return
+            raise PermissionDenied("You can only edit students you teach.")
+        if user.role == "parent":
+            family = student.family
+            if family and user.id in {family.primary_parent_id, family.secondary_parent_id}:
+                return
+            raise PermissionDenied("You can only edit students in your family.")
+        if user.role == "student" and getattr(user, "student_profile", None):
+            if student.id != user.student_profile.id:
+                raise PermissionDenied("You can only edit your own profile.")
+            allowed = {"instrument", "instruments"}
+            extra = set(self.request.data.keys()) - allowed
+            if extra:
+                raise PermissionDenied("You can only update your instrument.")
+            return
+        raise PermissionDenied("You cannot edit this student.")
+
+    def update(self, request, *args, **kwargs):
+        self._authorize_write(self.get_object())
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        self._authorize_write(self.get_object())
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        from rest_framework.exceptions import PermissionDenied
+
+        if request.user.role != "admin":
+            raise PermissionDenied("Only an admin can delete a student.")
+        return super().destroy(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         user = self.request.user

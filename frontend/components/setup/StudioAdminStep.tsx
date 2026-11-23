@@ -93,7 +93,8 @@ export const StudioAdminStep = ({ data, updateStudioInfo, updateAdminAccount, on
         admin_account.admin_last_name &&
         admin_account.admin_email &&
         admin_account.admin_password &&
-        admin_account.admin_password.length >= 8
+        admin_account.admin_password.length >= 8 &&
+        admin_account.setup_token
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
@@ -324,6 +325,26 @@ export const StudioAdminStep = ({ data, updateStudioInfo, updateAdminAccount, on
                             onBlur={e => fieldBlur(e)}
                         />
                         <p className="mt-1.5 text-xs" style={{ color: A.faint }}>Must be at least 8 characters.</p>
+                    </div>
+
+                    <div className="sm:col-span-2">
+                        <label htmlFor="setup-token" className="flex items-center text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: A.muted }}>
+                            Setup token *
+                            <HelpTooltip content="Printed in the server log the first time StudioSync starts, or set with the SETUP_TOKEN environment variable." />
+                        </label>
+                        <input
+                            type="password"
+                            id="setup-token"
+                            autoComplete="off"
+                            required
+                            value={admin_account.setup_token || ''}
+                            onChange={e => updateAdminAccount({ setup_token: e.target.value })}
+                            className={inputClass}
+                            style={inputStyle}
+                            placeholder="From the server log"
+                            onFocus={fieldFocus}
+                            onBlur={e => fieldBlur(e)}
+                        />
                     </div>
                 </div>
             </div>

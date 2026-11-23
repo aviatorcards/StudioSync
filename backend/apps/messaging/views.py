@@ -4,7 +4,8 @@ from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from apps.core.models import Studio, User
+from apps.core.models import Studio
+from apps.core.tenancy import studios_for_request, users_in_studios
 
 from .models import Message, MessageThread
 from .serializers import MessageSerializer, MessageThreadSerializer
@@ -71,10 +72,14 @@ class MessageThreadViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Get participants
-        recipients = User.objects.filter(id__in=recipient_ids)
-        if not recipients.exists():
-            return Response({"error": "Invalid recipients"}, status=status.HTTP_400_BAD_REQUEST)
+        # Recipients have to belong to a studio the sender belongs to.
+        allowed_studios = studios_for_request(request)
+        recipients = users_in_studios(allowed_studios).filter(id__in=recipient_ids)
+        if recipients.count() != len(set(recipient_ids)):
+            return Response(
+                {"error": "Recipients must belong to your studio."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # Find or create Studio (Assuming single studio context for now or derived from user)
         # For MV, try to get studio from request.user's teacher profile or student profile

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useUser } from '@/contexts/UserContext'
 import { Command } from 'cmdk'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -31,6 +32,7 @@ interface CommandItem {
 
 export function CommandPalette() {
   const router = useRouter()
+  const { logout } = useUser()
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
 
@@ -177,9 +179,8 @@ export function CommandPalette() {
       subtitle: 'Sign out of your account',
       icon: LogOut,
       action: () => {
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
-        navigate('/login')
+        setOpen(false)
+        logout()
       },
       keywords: ['sign out', 'exit']
     }

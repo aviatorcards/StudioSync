@@ -397,6 +397,12 @@ class UserSerializer(serializers.ModelSerializer):
             studio = obj.owned_studios.first()
         elif obj.role == "teacher" and hasattr(obj, "teacher_profile"):
             studio = obj.teacher_profile.studio
+        elif obj.role == "student" and hasattr(obj, "student_profile"):
+            studio = obj.student_profile.studio
+        elif obj.role == "parent":
+            from apps.core.tenancy import studios_for_user
+
+            studio = studios_for_user(obj).order_by("created_at").first()
 
         if studio:
             return SimpleStudioSerializer(studio).data
@@ -587,10 +593,8 @@ class StudentSerializer(serializers.ModelSerializer):
     phone = serializers.CharField(source="user.phone", read_only=True)
     user = UserSerializer(read_only=True)
 
-    # Allow passing user ID directly for writes
-    user_id = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(), source="user", write_only=True, required=False
-    )
+    # Identity and tenancy are assigned by the server, not the client.
+    user_id = serializers.PrimaryKeyRelatedField(source="user", read_only=True)
 
     primary_teacher = PublicTeacherSerializer(read_only=True)
     primary_teacher_id = serializers.PrimaryKeyRelatedField(
@@ -621,6 +625,7 @@ class StudentSerializer(serializers.ModelSerializer):
             "is_active",
             "bands",
         ]
+        read_only_fields = ["studio", "user", "user_id"]
 
 
 # ============================================================================

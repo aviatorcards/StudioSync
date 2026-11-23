@@ -30,6 +30,25 @@ const nextConfig = {
                 source: '/:path*',
                 headers: [
                     {
+                        key: 'Content-Security-Policy',
+                        value: [
+                            "default-src 'self'",
+                            "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+                            "style-src 'self' 'unsafe-inline'",
+                            "img-src 'self' data: blob: https:",
+                            "font-src 'self' data:",
+                            "connect-src 'self' ws: wss: https:",
+                            "frame-ancestors 'none'",
+                            "base-uri 'self'",
+                            "object-src 'none'",
+                            "form-action 'self'",
+                        ].join('; '),
+                    },
+                    {
+                        key: 'X-Content-Type-Options',
+                        value: 'nosniff',
+                    },
+                    {
                         key: 'Access-Control-Allow-Origin',
                         value: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
                     },

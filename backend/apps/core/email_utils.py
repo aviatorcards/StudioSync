@@ -57,33 +57,14 @@ def get_email_settings():
 
 
 def get_frontend_url(request=None):
+    """Absolute frontend origin used in email and payment links.
+
+    The request is ignored on purpose. Origin and Referer are caller-controlled
+    and must not decide where a reset or payment link sends someone.
     """
-    Get the frontend base URL.
-    Priority:
-    1. settings.FRONTEND_BASE_URL (if it's not the localhost default)
-    2. request.headers['Origin'] (if available)
-    3. settings.FRONTEND_BASE_URL (fallback)
-    """
-    base_url = getattr(settings, "FRONTEND_BASE_URL", "http://localhost:3000")
-
-    # If it's explicitly set to something else than the default localhost, trust it
-    if base_url and "localhost" not in base_url and "127.0.0.1" not in base_url:
-        return base_url.rstrip("/")
-
-    if request:
-        # Origin is the best source for the frontend URL
-        origin = request.headers.get("Origin")
-        if origin:
-            return origin.rstrip("/")
-
-        # Fallback to Referer
-        referer = request.headers.get("Referer")
-        if referer:
-            from urllib.parse import urlparse
-
-            parsed = urlparse(referer)
-            return f"{parsed.scheme}://{parsed.netloc}"
-
+    base_url = (getattr(settings, "FRONTEND_BASE_URL", "") or "").strip()
+    if not base_url:
+        base_url = "http://localhost:3000"
     return base_url.rstrip("/")
 
 

@@ -33,6 +33,7 @@ const INITIAL_DATA: SetupWizardData = {
         admin_last_name: '',
         admin_password: '',
         admin_phone: '',
+        setup_token: '',
     },
     features: DEFAULT_FEATURES,
     quick_settings: {
@@ -158,6 +159,7 @@ export const useSetupWizard = () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-Setup-Token': data.admin_account.setup_token || '',
                 },
                 body: JSON.stringify(payload),
             })
@@ -181,13 +183,7 @@ export const useSetupWizard = () => {
                 throw new Error(result.detail || 'Setup failed. Please check your inputs.')
             }
 
-            // Store tokens
-            if (typeof window !== 'undefined') {
-                localStorage.setItem('accessToken', result.tokens.access)
-                localStorage.setItem('refreshToken', result.tokens.refresh)
-            }
-
-            // Move to completion step (last step)
+            // Move to completion step (last step). Sign-in happens on /login.
             setCurrentStep(totalSteps - 1)
 
         } catch (err: any) {

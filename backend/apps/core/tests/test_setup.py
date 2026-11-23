@@ -109,6 +109,16 @@ class SetupStatusViewTests(TestCase):
 class CompleteSetupViewTests(TestCase):
     def setUp(self):
         self.client = APIClient()
+        original = self.client.post
+
+        def post(path, data=None, **kwargs):
+            if path == setup_url("setup/complete"):
+                from apps.core.setup_token import get_setup_token
+
+                kwargs.setdefault("HTTP_X_SETUP_TOKEN", get_setup_token())
+            return original(path, data, **kwargs)
+
+        self.client.post = post
 
     def test_complete_setup_happy_path(self):
         """Full valid payload creates admin, studio, and tokens."""
@@ -120,10 +130,8 @@ class CompleteSetupViewTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.json())
         data = response.json()
 
-        # Check response shape
-        self.assertIn("tokens", data)
-        self.assertIn("access", data["tokens"])
-        self.assertIn("refresh", data["tokens"])
+        # Setup does not hand out a session. The owner signs in afterwards.
+        self.assertNotIn("tokens", data)
         self.assertIn("studio", data)
         self.assertEqual(data["studio"]["name"], VALID_SETUP_PAYLOAD["studio_name"])
         self.assertIn("user", data)
@@ -259,6 +267,16 @@ class CompleteSetupViewTests(TestCase):
 class SampleDataTests(TestCase):
     def setUp(self):
         self.client = APIClient()
+        original = self.client.post
+
+        def post(path, data=None, **kwargs):
+            if path == setup_url("setup/complete"):
+                from apps.core.setup_token import get_setup_token
+
+                kwargs.setdefault("HTTP_X_SETUP_TOKEN", get_setup_token())
+            return original(path, data, **kwargs)
+
+        self.client.post = post
 
     def test_sample_data_creates_teacher_and_students(self):
         """When create_sample_data=True, teachers and students must be seeded."""

@@ -76,11 +76,12 @@ class TestUserLogin:
         """Test login with valid credentials returns tokens."""
         url = reverse("token_obtain_pair")
         data = {"email": "admin@test.com", "password": "testpass123"}
-        response = api_client.post(url, data, format="json")
+        response = api_client.post(url, data, format="json", HTTP_X_RETURN_TOKENS="1")
 
         assert response.status_code == status.HTTP_200_OK
         assert "access" in response.data
         assert "refresh" in response.data
+        assert "studiosync_access" in response.cookies
 
     def test_login_with_invalid_credentials(self, api_client, admin_user):
         """Test login with invalid credentials fails."""
@@ -109,13 +110,17 @@ class TestTokenRefresh:
         # First, get tokens
         login_url = reverse("token_obtain_pair")
         login_data = {"email": "admin@test.com", "password": "testpass123"}
-        login_response = api_client.post(login_url, login_data, format="json")
+        login_response = api_client.post(
+            login_url, login_data, format="json", HTTP_X_RETURN_TOKENS="1"
+        )
         refresh_token = login_response.data["refresh"]
 
         # Now refresh the token
         refresh_url = reverse("token_refresh")
         refresh_data = {"refresh": refresh_token}
-        response = api_client.post(refresh_url, refresh_data, format="json")
+        response = api_client.post(
+            refresh_url, refresh_data, format="json", HTTP_X_RETURN_TOKENS="1"
+        )
 
         assert response.status_code == status.HTTP_200_OK
         assert "access" in response.data

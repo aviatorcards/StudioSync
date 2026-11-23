@@ -86,6 +86,129 @@ class FileValidator:
             raise ValidationError("Unable to validate file content.") from None
 
 
+_ACTIVE_CONTENT_PREFIXES = (
+    b"<html",
+    b"<!doctype",
+    b"<script",
+    b"<?php",
+    b"<svg",
+    b"<?xml",
+    b"javascript:",
+    b"mz",
+)
+
+
+def _header_is_active_content(header: bytes) -> bool:
+    sample = header.lstrip()[:64].lower()
+    return sample.startswith(_ACTIVE_CONTENT_PREFIXES)
+
+
+def _sniffed_mime(header: bytes) -> str:
+    try:
+        import magic
+
+        return magic.from_buffer(header, mime=True) or ""
+    except Exception:
+        return ""
+
+
+_ALLOWED_RESOURCE_MIMES = {
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/zip",  # docx/office files are zip containers
+    "text/plain",
+    "audio/mpeg",
+    "audio/wav",
+    "audio/x-wav",
+    "audio/mp4",
+    "audio/x-m4a",
+    "audio/ogg",
+    "audio/vorbis",
+    "video/mp4",
+    "video/quicktime",
+    "video/x-msvideo",
+    "video/webm",
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+}
+
+
+def validate_resource_upload(uploaded):
+    """Reject resource uploads that are not an allowlisted type or look active."""
+    if uploaded is None:
+        return
+    name = getattr(uploaded, "name", "") or ""
+    ext = os.path.splitext(name)[1].lower()
+    allowed = (
+        list(getattr(settings, "ALLOWED_DOCUMENT_EXTENSIONS", []))
+        + list(getattr(settings, "ALLOWED_AUDIO_EXTENSIONS", []))
+        + list(getattr(settings, "ALLOWED_VIDEO_EXTENSIONS", []))
+        + list(getattr(settings, "ALLOWED_IMAGE_EXTENSIONS", []))
+    )
+    if ext not in allowed:
+        raise ValidationError(
+            f'File type "{ext or "unknown"}" is not allowed. Allowed types: {", ".join(allowed)}'
+        )
+
+    size_limit = getattr(settings, "MAX_MEDIA_SIZE", 50 * 1024 * 1024)
+    if ext in getattr(settings, "ALLOWED_DOCUMENT_EXTENSIONS", []):
+        size_limit = getattr(settings, "MAX_DOCUMENT_SIZE", size_limit)
+    elif ext in getattr(settings, "ALLOWED_IMAGE_EXTENSIONS", []):
+        size_limit = getattr(settings, "MAX_AVATAR_SIZE", size_limit)
+    if uploaded.size and uploaded.size > size_limit:
+        raise ValidationError("File is too large.")
+
+    try:
+        uploaded.seek(0)
+        header = uploaded.read(2048)
+        uploaded.seek(0)
+    except Exception as exc:
+        raise ValidationError("Unable to read the uploaded file.") from exc
+
+    if _header_is_active_content(header):
+        raise ValidationError("That file content is not allowed.")
+
+    mime = _sniffed_mime(header)
+    if mime in {
+        "text/html",
+        "image/svg+xml",
+        "application/javascript",
+        "text/javascript",
+        "application/x-httpd-php",
+        "application/x-executable",
+        "application/x-dosexec",
+    }:
+        raise ValidationError("That file content is not allowed.")
+    if (
+        mime
+        and mime != "application/octet-stream"
+        and mime not in _ALLOWED_RESOURCE_MIMES
+        and not mime.startswith(("audio/", "video/", "image/"))
+    ):
+        raise ValidationError("That file content is not allowed.")
+
+
+def image_content_type(path) -> str | None:
+    """Return an image mime when the file sniffs as an image, else None."""
+    try:
+        with open(path, "rb") as handle:
+            header = handle.read(64)
+    except OSError:
+        return None
+    if header.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if header.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if header.startswith((b"GIF87a", b"GIF89a")):
+        return "image/gif"
+    if header.startswith(b"RIFF") and b"WEBP" in header[:16]:
+        return "image/webp"
+    return None
+
+
 def sanitize_filename(filename):
     """
     Sanitize filename to prevent directory traversal and other attacks

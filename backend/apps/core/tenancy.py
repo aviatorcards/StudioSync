@@ -52,6 +52,31 @@ def studio_for_request(request):
     return studios_for_request(request).order_by("created_at").first()
 
 
+def teacher_teaches(user, student):
+    """True when this teacher is the primary teacher or has a lesson with the student."""
+    if getattr(user, "role", None) != "teacher":
+        return False
+    teacher = _related(user, "teacher_profile")
+    if teacher is None:
+        return False
+    if student.primary_teacher_id == teacher.id:
+        return True
+    return student.lessons.filter(teacher=teacher).exists()
+
+
+def users_in_studios(studios):
+    """Users who belong to one of these studios."""
+    from apps.core.models import User
+
+    return User.objects.filter(
+        Q(owned_studios__in=studios)
+        | Q(teacher_profile__studio__in=studios)
+        | Q(student_profile__studio__in=studios)
+        | Q(primary_parent_families__studio__in=studios)
+        | Q(secondary_parent_families__studio__in=studios)
+    ).distinct()
+
+
 def seed_studio():
     """Studio owned by the earliest admin. Seed scripts must not guess."""
     from apps.core.models import User

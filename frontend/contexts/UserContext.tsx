@@ -39,6 +39,13 @@ const UserContext = createContext<UserContextType | undefined>(undefined)
 // API URL configuration
 // API URL configuration
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api'
+const CSRF_COOKIE = 'studiosync_csrf'
+
+function readCookie(name: string): string | null {
+    if (typeof document === 'undefined') return null
+    const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'))
+    return match ? decodeURIComponent(match[1]) : null
+}
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
     const [currentUser, setCurrentUser] = useState<User | null>(null)
@@ -52,42 +59,27 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             return
         }
 
-        const token = localStorage.getItem('accessToken')
-        if (!token) {
-            setIsLoading(false)
-            return
-        }
-
         try {
             let res = await fetch(`${API_URL}/auth/me/`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                credentials: 'include'
+                credentials: 'include',
             })
 
-            // If token expired, try refreshing before giving up
             if (res.status === 401) {
-                const refreshToken = localStorage.getItem('refreshToken')
-                if (refreshToken) {
-                    try {
-                        const refreshRes = await fetch(`${API_URL}/auth/token/refresh/`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ refresh: refreshToken })
-                        })
-                        if (refreshRes.ok) {
-                            const { access } = await refreshRes.json()
-                            localStorage.setItem('accessToken', access)
-                            // Retry with new token
-                            res = await fetch(`${API_URL}/auth/me/`, {
-                                headers: { 'Authorization': `Bearer ${access}` },
-                                credentials: 'include'
-                            })
-                        }
-                    } catch (refreshErr) {
-                        console.error('Token refresh failed:', refreshErr)
+                try {
+                    const csrf = readCookie(CSRF_COOKIE)
+                    const refreshRes = await fetch(`${API_URL}/auth/token/refresh/`, {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(csrf ? { 'X-CSRFToken': csrf } : {}),
+                        },
+                    })
+                    if (refreshRes.ok) {
+                        res = await fetch(`${API_URL}/auth/me/`, { credentials: 'include' })
                     }
+                } catch (refreshErr) {
+                    console.error('Token refresh failed:', refreshErr)
                 }
             }
 
@@ -95,15 +87,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 const userData = await res.json()
                 setCurrentUser(userData)
             } else {
-                // Token invalid — clear storage and let route-level AuthGuard redirect
-                localStorage.removeItem('accessToken')
-                localStorage.removeItem('refreshToken')
                 setCurrentUser(null)
             }
         } catch (error) {
             console.error('Auth check failed:', error)
-            localStorage.removeItem('accessToken')
-            localStorage.removeItem('refreshToken')
             setCurrentUser(null)
         } finally {
             setIsLoading(false)
@@ -131,10 +118,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 throw new Error(error.detail || 'Login failed')
             }
 
-            const data = await res.json()
-            localStorage.setItem('accessToken', data.access)
-            localStorage.setItem('refreshToken', data.refresh)
-
             await checkAuth()
             router.push('/dashboard')
         } catch (error) {
@@ -146,10 +129,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const logout = () => {
         if (typeof window === 'undefined') return
 
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
-        setCurrentUser(null)
-        router.push('/login')
+        const csrf = readCookie(CSRF_COOKIE)
+        fetch(`${API_URL}/auth/logout/`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: csrf ? { 'X-CSRFToken': csrf } : {},
+        }).finally(() => {
+            setCurrentUser(null)
+            router.push('/login')
+        })
     }
 
     return (

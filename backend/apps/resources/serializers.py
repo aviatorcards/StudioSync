@@ -90,7 +90,18 @@ class ResourceSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
     def validate(self, data):
-        """Validate that music resources have required fields"""
+        """Validate that music resources have required fields and safe files."""
+        uploaded = data.get("file")
+        if uploaded is not None:
+            from django.core.exceptions import ValidationError as DjangoValidationError
+
+            from apps.core.validators import validate_resource_upload
+
+            try:
+                validate_resource_upload(uploaded)
+            except DjangoValidationError as exc:
+                raise serializers.ValidationError({"file": exc.messages}) from exc
+
         resource_type = data.get("resource_type")
         music_types = ["sheet_music", "chord_chart", "tablature", "lyrics"]
 

@@ -119,14 +119,7 @@ export function NotificationsProvider({ children, pollInterval = 30000 }: { chil
         let retryDelay = 1000 // start at 1 s, double each attempt up to 30 s
 
         const connect = () => {
-            const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
-            if (!token) {
-                // Token not ready yet — retry quickly
-                reconnectTimeout = setTimeout(connect, 500)
-                return
-            }
-
-            const wsUrl = `${buildWsBase()}/ws/notifications/?token=${token}`
+            const wsUrl = `${buildWsBase()}/ws/notifications/`
             socket = new WebSocket(wsUrl)
 
             socket.onopen = () => {

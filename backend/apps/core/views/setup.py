@@ -8,19 +8,23 @@ Handles initial system setup including:
 - Optional sample data generation
 """
 
+import hmac
+
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import transaction
 from django.utils import timezone
 
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
 
+from apps.auth.views import SetupRateThrottle
 from apps.core.models import SetupStatus, Student, Studio, Teacher, User
 from apps.core.serializers import SetupWizardCompleteSerializer
+from apps.core.setup_token import clear_setup_token, get_setup_token
 
 
 @api_view(["GET"])
@@ -60,8 +64,16 @@ def check_setup_status(request):
     )
 
 
+def _require_setup_token(request):
+    provided = request.headers.get("X-Setup-Token", "")
+    expected = get_setup_token()
+    if not expected or not provided or not hmac.compare_digest(str(provided), str(expected)):
+        raise PermissionDenied("Setup token is invalid.")
+
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([SetupRateThrottle])
 @transaction.atomic
 def complete_setup_wizard(request):
     """
@@ -74,7 +86,7 @@ def complete_setup_wizard(request):
     - Optionally: Sample data (teachers, students)
 
     Returns:
-        Response with created entities and JWT tokens for immediate login
+        Response with the new studio and admin. The owner signs in afterwards.
     """
 
     # Check if setup already completed
@@ -83,6 +95,8 @@ def complete_setup_wizard(request):
         return Response(
             {"detail": "Setup has already been completed"}, status=status.HTTP_400_BAD_REQUEST
         )
+
+    _require_setup_token(request)
 
     # Validate input
     serializer = SetupWizardCompleteSerializer(data=request.data)
@@ -243,12 +257,11 @@ the StudioSync Team
             except Exception as e:
                 print(f"Failed to send welcome email: {e}")
 
-        # Generate tokens for immediate redirect
-        refresh = RefreshToken.for_user(admin_user)
+        clear_setup_token()
 
         return Response(
             {
-                "message": "Setup completed successfully",
+                "message": "Setup completed successfully. Sign in with the admin account you just created.",
                 "studio": {"id": str(studio.id), "name": studio.name, "email": studio.email},
                 "user": {
                     "id": str(admin_user.id),
@@ -257,7 +270,6 @@ the StudioSync Team
                     "last_name": admin_user.last_name,
                     "role": admin_user.role,
                 },
-                "tokens": {"access": str(refresh.access_token), "refresh": str(refresh)},
             },
             status=status.HTTP_201_CREATED,
         )

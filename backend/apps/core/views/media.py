@@ -13,6 +13,8 @@ from django.http import FileResponse, Http404, JsonResponse
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 
+from apps.core.validators import image_content_type
+
 PUBLIC_PREFIXES = ("avatars/", "studio_logos/", "studio_covers/", "bands/")
 
 
@@ -34,4 +36,13 @@ class ProtectedMediaView(APIView):
         if not is_public and not request.user.is_authenticated:
             return JsonResponse({"detail": "Authentication required."}, status=401)
 
-        return FileResponse(full.open("rb"))
+        image_type = image_content_type(full) if is_public else None
+        response = FileResponse(
+            full.open("rb"),
+            as_attachment=image_type is None,
+            content_type=image_type or "application/octet-stream",
+            filename=full.name,
+        )
+        response["X-Content-Type-Options"] = "nosniff"
+        response["Content-Security-Policy"] = "default-src 'none'; sandbox"
+        return response

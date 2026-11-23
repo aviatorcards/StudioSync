@@ -3,6 +3,7 @@ Django settings for Music Studio Manager
 """
 
 import os
+import sys
 from datetime import timedelta
 from pathlib import Path
 
@@ -129,9 +130,11 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Media files (user uploads)
-MEDIA_URL = "/media/"
+# Media files (user uploads). Set MEDIA_BASE_URL to a dedicated host so file
+# links are not served from the same origin as the app.
 MEDIA_ROOT = BASE_DIR / "media"
+_media_base = os.getenv("MEDIA_BASE_URL", "").strip().rstrip("/")
+MEDIA_URL = f"{_media_base}/media/" if _media_base else "/media/"
 
 # File Upload Security Settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
@@ -154,7 +157,12 @@ MAX_MEDIA_SIZE = 50 * 1024 * 1024  # 50MB
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Refuse known-insecure defaults outside local debug. Tests and CI use their own secrets.
-_INSECURE_SECRET_KEYS = {None, "", "dev-secret-key-change-in-production"}
+_INSECURE_SECRET_KEYS = {
+    None,
+    "",
+    "dev-secret-key-change-in-production",
+    "replace-with-a-unique-random-string",
+}
 _db_url = os.getenv("DATABASE_URL", "")
 if not DEBUG:
     from django.core.exceptions import ImproperlyConfigured
@@ -230,7 +238,7 @@ APPEND_SLASH = False
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "apps.core.authentication.APIKeyAuthentication",
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "apps.core.authentication.ApprovedJWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -265,13 +273,27 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
 }
 
-# Database Caching
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
-        "LOCATION": "cache_table",
-    }
+_RUNNING_TESTS = any("pytest" in arg or arg == "test" for arg in sys.argv)
+_THROTTLE_RATES = {
+    "login": "10000/min" if _RUNNING_TESTS else "5/min",
+    "token_refresh": "10000/min" if _RUNNING_TESTS else "30/min",
+    "password_change": "10000/min" if _RUNNING_TESTS else "5/min",
+    "auth_anon": "10000/hour" if _RUNNING_TESTS else "30/hour",
+    "setup": "10000/hour" if _RUNNING_TESTS else "10/hour",
 }
+REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = _THROTTLE_RATES
+
+# Database Caching. Tests use a local memory cache so rate limits work without
+# the cache table migration.
+if _RUNNING_TESTS:
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+            "LOCATION": "cache_table",
+        }
+    }
 
 # Background Tasks (Django Q with Postgres)
 Q_CLUSTER = {

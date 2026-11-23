@@ -21,15 +21,16 @@ export function formatPhoneNumber(value: string) {
 export function proxyFileUrl(url: string | null): string | null {
     if (!url) return null
     try {
-        const parsed = new URL(url)
-        // Extract just the path (e.g. /media/resources/2026/02/file.pdf)
-        // and serve it through Next.js which proxies /media/* → backend container
+        const parsed = new URL(url, typeof window !== 'undefined' ? window.location.origin : 'http://localhost')
+        // A dedicated media host should be loaded directly, not pulled back onto the app origin.
+        if (typeof window !== 'undefined' && parsed.host && parsed.host !== window.location.host) {
+            return url
+        }
         if (parsed.pathname.startsWith('/media/')) {
             return parsed.pathname
         }
         return url
     } catch {
-        // If it's already a relative path or unparseable, return as-is
         return url
     }
 }
@@ -44,12 +45,7 @@ export function isPublicMediaPath(url: string): boolean {
 export async function downloadAuthenticatedFile(url: string, filename?: string): Promise<void> {
     const path = proxyFileUrl(url)
     if (!path) throw new Error('Missing file URL')
-    const headers: Record<string, string> = {}
-    if (!isPublicMediaPath(path) && typeof window !== 'undefined') {
-        const token = localStorage.getItem('accessToken')
-        if (token) headers.Authorization = `Bearer ${token}`
-    }
-    const response = await fetch(path, { headers })
+    const response = await fetch(path, { credentials: 'include' })
     if (!response.ok) throw new Error('Download failed')
     const blob = await response.blob()
     const objectUrl = URL.createObjectURL(blob)

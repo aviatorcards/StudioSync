@@ -1,6 +1,10 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from apps.core.authentication import GENERIC_AUTH_DETAIL
 
 User = get_user_model()
 
@@ -8,11 +12,22 @@ User = get_user_model()
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
-        if not self.user.is_approved:
-            raise serializers.ValidationError(
-                "Your account is pending approval by an administrator. Please wait for an email confirmation before you can log in."
-            )
+        if not self.user.is_active or not self.user.is_approved:
+            raise AuthenticationFailed(GENERIC_AUTH_DETAIL, code="no_active_account")
         return data
+
+
+class ApprovedTokenRefreshSerializer(TokenRefreshSerializer):
+    def validate(self, attrs):
+        raw = attrs.get("refresh")
+        try:
+            token = RefreshToken(raw)
+            user = User.objects.get(id=token.get("user_id"))
+        except Exception as exc:
+            raise AuthenticationFailed(GENERIC_AUTH_DETAIL, code="no_active_account") from exc
+        if not user.is_active or not user.is_approved:
+            raise AuthenticationFailed(GENERIC_AUTH_DETAIL, code="no_active_account")
+        return super().validate(attrs)
 
 
 class UserSerializer(serializers.ModelSerializer):

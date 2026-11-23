@@ -47,6 +47,10 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-studio_password}
       REDIS_URL: redis://redis:6379/0
       SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost:3000}
+      SETUP_TOKEN: ${SETUP_TOKEN:-}
+      MEDIA_BASE_URL: ${MEDIA_BASE_URL:-}
+      IS_HTTPS: ${IS_HTTPS:-False}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://10.0.0.162:3000}
       # AWS / Stripe Config
@@ -78,6 +82,7 @@ services:
       DATABASE_URL: postgresql://studio_user:${POSTGRES_PASSWORD:-studio_password}@db:5432/studiosync
       REDIS_URL: redis://redis:6379/0
       SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost:3000}
     depends_on:
       db:
         condition: service_healthy

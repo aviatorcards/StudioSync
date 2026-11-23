@@ -40,28 +40,42 @@ class TestSetupWizard:
         assert response.status_code == status.HTTP_200_OK
         assert response.data["is_completed"] is True
 
+    def _token(self):
+        from apps.core.setup_token import get_setup_token
+
+        return get_setup_token()
+
     def test_complete_setup_wizard_success(self, api_client):
         url = reverse("setup-complete")
-        response = api_client.post(url, VALID_PAYLOAD, format="json")
+        response = api_client.post(
+            url, VALID_PAYLOAD, format="json", HTTP_X_SETUP_TOKEN=self._token()
+        )
 
         assert response.status_code == status.HTTP_201_CREATED
         assert Studio.objects.filter(name="New Music Studio").exists()
-        assert response.data["tokens"]["access"]
+        assert "tokens" not in response.data
 
     def test_complete_setup_wizard_missing_data(self, api_client):
         url = reverse("setup-complete")
-        response = api_client.post(url, {"studio_name": "Incomplete Studio"}, format="json")
+        response = api_client.post(
+            url,
+            {"studio_name": "Incomplete Studio"},
+            format="json",
+            HTTP_X_SETUP_TOKEN=self._token(),
+        )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_complete_setup_wizard_is_single_use(self, api_client):
         url = reverse("setup-complete")
-        first = api_client.post(url, VALID_PAYLOAD, format="json")
+        token = self._token()
+        first = api_client.post(url, VALID_PAYLOAD, format="json", HTTP_X_SETUP_TOKEN=token)
         assert first.status_code == status.HTTP_201_CREATED
 
         second = api_client.post(
             url,
             {**VALID_PAYLOAD, "admin_email": "other@newstudio.test", "studio_name": "Second"},
             format="json",
+            HTTP_X_SETUP_TOKEN=token,
         )
         assert second.status_code == status.HTTP_400_BAD_REQUEST

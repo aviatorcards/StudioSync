@@ -57,7 +57,14 @@ class PublicResourceViewSet(viewsets.ReadOnlyModelViewSet):
     ordering_fields = ["created_at", "title"]
 
     def get_queryset(self):
-        return Resource.objects.filter(is_public=True).select_related("studio", "uploaded_by")
+        studio_id = self.request.query_params.get("studio")
+        subdomain = self.request.query_params.get("subdomain")
+        qs = Resource.objects.filter(is_public=True).select_related("studio", "uploaded_by")
+        if studio_id:
+            return qs.filter(studio_id=studio_id)
+        if subdomain:
+            return qs.filter(studio__subdomain=subdomain)
+        return Resource.objects.none()
 
 
 
@@ -143,13 +150,42 @@ class ResourceViewSet(viewsets.ModelViewSet):
 
         return qs
 
+    def _public_flag(self, serializer):
+        user = self.request.user
+        if getattr(user, "role", None) not in ("admin", "teacher"):
+            return False
+        if "is_public" in serializer.validated_data:
+            return bool(serializer.validated_data["is_public"])
+        if serializer.instance is not None:
+            return bool(serializer.instance.is_public)
+        return False
+
     def perform_create(self, serializer):
         """Assign studio and uploader based on user role."""
         user = self.request.user
         studio = _get_studio_for_user(user)
         if not studio:
             raise drf_serializers.ValidationError("Cannot determine studio context for this user")
-        serializer.save(uploaded_by=user, studio=studio)
+        serializer.save(uploaded_by=user, studio=studio, is_public=self._public_flag(serializer))
+
+    def perform_update(self, serializer):
+        serializer.save(is_public=self._public_flag(serializer))
+
+    def update(self, request, *args, **kwargs):
+        resource = self.get_object()
+        if request.user.role == "student" and resource.uploaded_by_id != request.user.id:
+            from rest_framework.exceptions import PermissionDenied
+
+            raise PermissionDenied("You can only edit resources you uploaded.")
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        resource = self.get_object()
+        if request.user.role == "student" and resource.uploaded_by_id != request.user.id:
+            from rest_framework.exceptions import PermissionDenied
+
+            raise PermissionDenied("You can only edit resources you uploaded.")
+        return super().partial_update(request, *args, **kwargs)
 
     @action(
         detail=False,
@@ -203,7 +239,15 @@ class ResourceViewSet(viewsets.ModelViewSet):
         created = []
         errors = []
 
+        from apps.core.validators import validate_resource_upload
+        from django.core.exceptions import ValidationError
+
         for file in files:
+            try:
+                validate_resource_upload(file)
+            except ValidationError as exc:
+                errors.append({"file": file.name, "error": " ".join(exc.messages)})
+                continue
             resource_type = explicit_type or _detect_resource_type(file)
             # Derive a clean title from the filename
             title = os.path.splitext(file.name)[0].replace("_", " ").replace("-", " ").strip()

@@ -11,6 +11,7 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.auth.views import PasswordChangeThrottle
 from apps.core.models import Band, Family, Student, Studio, Teacher, User
 from apps.core.security import assert_public_host
 from apps.core.tenancy import studio_for_request, studios_for_request
@@ -221,7 +222,7 @@ class UserViewSet(viewsets.ModelViewSet):
             user.save()
         return Response({"detail": "Avatar removed", "avatar": None})
 
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=["post"], throttle_classes=[PasswordChangeThrottle])
     def change_password(self, request):
         """Allow user to change their password"""
         user = request.user
@@ -240,8 +241,19 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        from django.contrib.auth.password_validation import validate_password
+        from django.core.exceptions import ValidationError as DjangoValidationError
+
+        from apps.core.security import revoke_user_tokens
+
+        try:
+            validate_password(new_password, user=user)
+        except DjangoValidationError as exc:
+            return Response({"detail": exc.messages}, status=status.HTTP_400_BAD_REQUEST)
+
         user.set_password(new_password)
         user.save()
+        revoke_user_tokens(user)
         return Response({"detail": "Password updated successfully."})
 
     def create(self, request):
@@ -669,8 +681,11 @@ class StudentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         queryset = Student.objects.filter(studio__in=studios_for_request(self.request))
-        if user.role == "teacher":
-            queryset = queryset.filter(user__role="student")
+        if user.role == "teacher" and hasattr(user, "teacher_profile"):
+            teacher = user.teacher_profile
+            queryset = queryset.filter(
+                models.Q(primary_teacher=teacher) | models.Q(lessons__teacher=teacher)
+            ).distinct()
         elif user.role == "student" and hasattr(user, "student_profile"):
             queryset = queryset.filter(id=user.student_profile.id)
         elif user.role == "parent":
@@ -690,6 +705,31 @@ class StudentViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(primary_teacher_id=teacher_id)
 
         return queryset
+
+    def _reject_core_student_write(self):
+        user = self.request.user
+        if user.role == "admin":
+            return
+        if user.role == "teacher":
+            from apps.core.tenancy import teacher_teaches
+
+            student = self.get_object()
+            if teacher_teaches(user, student):
+                return
+        raise PermissionDenied("You cannot edit this student.")
+
+    def update(self, request, *args, **kwargs):
+        self._reject_core_student_write()
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        self._reject_core_student_write()
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        if request.user.role != "admin":
+            raise PermissionDenied("Only an admin can delete a student.")
+        return super().destroy(request, *args, **kwargs)
 
     @action(detail=False, methods=["get"])
     def stats(self, request):

@@ -150,8 +150,7 @@ export function useMessages() {
                 .replace(/^http/, 'ws')
                 .replace(/\/$/, '');
 
-            const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-            const wsUrl = `${finalBase}/ws/chat/${activeThread.id}/${token ? `?token=${token}` : ''}`;
+            const wsUrl = `${finalBase}/ws/chat/${activeThread.id}/`;
             socket = new WebSocket(wsUrl);
 
             socket.onmessage = (event) => {

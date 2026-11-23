@@ -9,9 +9,11 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
 from rest_framework import permissions, status
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle
+from rest_framework.throttling import SimpleRateThrottle
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 
+from apps.core.auth_cookies import REFRESH_COOKIE, clear_auth_cookies, enforce_csrf
 from apps.core.security import revoke_user_tokens
 
 from apps.core.serializers import UserSerializer
@@ -19,10 +21,33 @@ from apps.core.serializers import UserSerializer
 User = get_user_model()
 
 
-class AuthAnonThrottle(AnonRateThrottle):
+class IPRateThrottle(SimpleRateThrottle):
+    """Throttle every caller by IP, including authenticated ones."""
+
+    def get_cache_key(self, request, view):
+        return self.cache_format % {"scope": self.scope, "ident": self.get_ident(request)}
+
+
+class AuthAnonThrottle(IPRateThrottle):
     """Slow down anonymous registration and password-reset attempts."""
 
-    rate = "30/hour"
+    scope = "auth_anon"
+
+
+class LoginRateThrottle(IPRateThrottle):
+    scope = "login"
+
+
+class RefreshRateThrottle(IPRateThrottle):
+    scope = "token_refresh"
+
+
+class SetupRateThrottle(IPRateThrottle):
+    scope = "setup"
+
+
+class PasswordChangeThrottle(IPRateThrottle):
+    scope = "password_change"
 
 
 class MeView(APIView):
@@ -136,20 +161,22 @@ class PasswordResetRequestView(APIView):
         if user:
             from apps.core.email_utils import get_frontend_url
 
-            token = default_token_generator.make_token(user)
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            base_url = get_frontend_url(request)
-            reset_link = f"{base_url}/reset-password?uid={uid}&token={token}"
+            try:
+                token = default_token_generator.make_token(user)
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
+                base_url = get_frontend_url(request)
+                reset_link = f"{base_url}/reset-password?uid={uid}&token={token}"
+                send_mail(
+                    "Password Reset Request",
+                    f"Click the link to reset your password: {reset_link}",
+                    settings.DEFAULT_FROM_EMAIL,
+                    [email],
+                    fail_silently=False,
+                )
+            except Exception:
+                # Same response whether or not the account exists and whether mail sent.
+                pass
 
-            send_mail(
-                "Password Reset Request",
-                f"Click the link to reset your password: {reset_link}",
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                fail_silently=False,
-            )
-
-        # Always return success to prevent email enumeration
         return Response(
             {"message": "If an account exists with this email, a reset link has been sent."}
         )
@@ -184,3 +211,23 @@ class PasswordResetConfirmView(APIView):
             return Response({"message": "Password has been reset successfully."})
 
         return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LogoutView(APIView):
+    """Blacklist the refresh cookie and clear the browser session."""
+
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        enforce_csrf(request)
+        raw = request.data.get("refresh") or request.COOKIES.get(REFRESH_COOKIE)
+        if raw:
+            try:
+                token = RefreshToken(raw)
+                token.blacklist()
+            except Exception:
+                pass
+        response = Response({"detail": "Logged out."})
+        clear_auth_cookies(response)
+        return response

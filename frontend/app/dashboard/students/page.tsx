@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useFormatter, useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/contexts/UserContext'
 import { useStudents, useTeachers, useStudentStats, useInstruments } from '@/hooks/useDashboardData'
@@ -44,7 +45,7 @@ interface StudentData {
 }
 
 // --- Helper Functions ---
-const getTeacherName = (student: StudentData, teachers: any[]): string => {
+const getTeacherName = (student: StudentData, teachers: any[], unassigned: string): string => {
     if (student.teacher_name) return student.teacher_name
     if (student.primary_teacher && typeof student.primary_teacher === 'object') {
         const t = student.primary_teacher as TeacherProfile
@@ -58,7 +59,7 @@ const getTeacherName = (student: StudentData, teachers: any[]): string => {
             return `${teacher.first_name} ${teacher.last_name}`
         }
     }
-    return 'Unassigned'
+    return unassigned
 }
 
 const getNextLessonDate = (student: StudentData): Date | null => {
@@ -66,14 +67,16 @@ const getNextLessonDate = (student: StudentData): Date | null => {
     return d ? new Date(d) : null
 }
 
-const formatDate = (date: Date | null): string => {
-    if (!date) return 'TBD'
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })
-}
-
 export default function StudentsPage() {
+    const t = useTranslations('Students')
+    const format = useFormatter()
     const router = useRouter()
     const { currentUser } = useUser()
+    const timeZone = currentUser?.timezone || 'UTC'
+    const formatDate = (date: Date | null): string => {
+        if (!date || Number.isNaN(date.getTime())) return t('tbd')
+        return format.dateTime(date, { month: 'short', day: 'numeric', year: '2-digit', timeZone })
+    }
     const { teachers } = useTeachers()
 
     // --- State ---
@@ -133,13 +136,13 @@ export default function StudentsPage() {
         setIsSubmitting(true)
         try {
             await api.patch(`/students/${selectedStudent.id}/`, formData)
-            toast.success('Changes saved')
+            toast.success(t('saved'))
             setIsEditModalOpen(false)
             if (refresh) refresh()
             refreshInstruments() // update instrument list in case a new one was added
         } catch (error: any) {
             console.error('Update failed:', error)
-            toast.error(error.response?.data?.detail || 'Failed to update member')
+            toast.error(error.response?.data?.detail || t('updateFailed'))
         } finally {
             setIsSubmitting(false)
         }
@@ -149,12 +152,12 @@ export default function StudentsPage() {
         return isActive ? (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border border-emerald-100">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
-                Active
+                {t('active')}
             </span>
         ) : (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-gray-50 text-gray-400 border border-gray-100">
                 <div className="w-1.5 h-1.5 rounded-full bg-gray-300" />
-                Inactive
+                {t('inactive')}
             </span>
         )
     }
@@ -163,7 +166,7 @@ export default function StudentsPage() {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-in fade-in duration-500">
                 <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Loading Roster...</p>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t('loading')}</p>
             </div>
         )
     }
@@ -174,29 +177,29 @@ export default function StudentsPage() {
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4">
                 <div className="space-y-2">
                     <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight flex items-center gap-3">
-                        Student Roster
+                        {t('title')}
                         <div className="bg-primary/10 px-3 py-1 rounded-full text-xs font-black text-primary uppercase tracking-widest">
-                            {meta?.count || 0} Students
+                            {t('count', { count: meta?.count || 0 })}
                         </div>
                     </h1>
-                    <p className="text-gray-500 font-medium max-w-lg">Nurture development, oversee learning goals, and verify enrollment status.</p>
+                    <p className="text-gray-500 font-medium max-w-lg">{t('subtitle')}</p>
                 </div>
                 <Button
                     onClick={() => router.push('/dashboard/students/add')}
                     className="gap-2 hover:scale-105 shadow-lg shadow-primary/20 transition-all py-6 px-8"
                 >
                     <Plus className="w-4 h-4" />
-                    Add Student
+                    {t('add')}
                 </Button>
             </header>
 
             {/* Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                    { label: 'Total Roster', value: statsLoading ? '-' : (studentStats?.total_students || 0), icon: GraduationCap, color: 'blue' },
-                    { label: 'Active Students', value: statsLoading ? '-' : (studentStats?.active_students || 0), icon: Target, color: 'purple' },
-                    { label: 'Engagement Rate', value: statsLoading ? '-' : (studentStats?.total_students ? Math.round((studentStats.active_students / studentStats.total_students) * 100) + '%' : '0%'), icon: Star, color: 'emerald' },
-                    { label: 'Unassigned', value: statsLoading ? '-' : (studentStats?.unassigned_students || 0), icon: UserCog, color: 'orange' }
+                    { label: t('totalRoster'), value: statsLoading ? '-' : format.number(studentStats?.total_students || 0), icon: GraduationCap, color: 'blue' },
+                    { label: t('activeStudents'), value: statsLoading ? '-' : format.number(studentStats?.active_students || 0), icon: Target, color: 'purple' },
+                    { label: t('engagementRate'), value: statsLoading ? '-' : format.number(studentStats?.total_students ? (studentStats.active_students / studentStats.total_students) : 0, { style: 'percent', maximumFractionDigits: 0 }), icon: Star, color: 'emerald' },
+                    { label: t('unassigned'), value: statsLoading ? '-' : format.number(studentStats?.unassigned_students || 0), icon: UserCog, color: 'orange' }
                 ].map((stat, i) => (
                     <div key={i} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex items-center justify-between mb-4">
@@ -218,7 +221,7 @@ export default function StudentsPage() {
                         onChange={(e) => setFilterInstrument(e.target.value)}
                         className="px-4 py-3 bg-white border-2 border-transparent focus:border-primary/20 focus:ring-2 focus:ring-primary/20 focus:ring-inset rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-700 outline-none transition-all shadow-sm appearance-none min-w-[140px] text-center"
                     >
-                        <option value="all">Every Instrument</option>
+                        <option value="all">{t('everyInstrument')}</option>
                         {allInstruments.map(inst => <option key={inst} value={inst}>{inst}</option>)}
                     </select>
 
@@ -230,7 +233,7 @@ export default function StudentsPage() {
                                 onClick={() => setShowAllStudents(false)}
                                 className={`px-6 rounded-xl text-[10px] font-black uppercase tracking-widest ${!showAllStudents ? 'bg-white shadow-sm' : 'text-gray-400'}`}
                             >
-                                My Scholars
+                                {t('myScholars')}
                             </Button>
                             <Button
                                 variant={showAllStudents ? 'secondary' : 'ghost'}
@@ -238,7 +241,7 @@ export default function StudentsPage() {
                                 onClick={() => setShowAllStudents(true)}
                                 className={`px-6 rounded-xl text-[10px] font-black uppercase tracking-widest ${showAllStudents ? 'bg-white shadow-sm' : 'text-gray-400'}`}
                             >
-                                Studio Wide
+                                {t('studioWide')}
                             </Button>
                         </div>
                     )}
@@ -248,7 +251,7 @@ export default function StudentsPage() {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                         type="text"
-                        placeholder="Search student or focus areas..."
+                        placeholder={t('searchPlaceholder')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-transparent focus:bg-white border-2 focus:border-primary rounded-2xl font-bold text-sm text-gray-700 outline-none transition-all shadow-sm"
@@ -262,12 +265,12 @@ export default function StudentsPage() {
                     <table className="w-full border-separate border-spacing-0">
                         <thead className="bg-gray-50/50">
                             <tr>
-                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">The Scholar</th>
-                                <th className="px-8 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
-                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Areas of Focus</th>
-                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Mentor</th>
-                                <th className="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Up Next</th>
-                                <th className="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
+                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('colStudent')}</th>
+                                <th className="px-8 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('colStatus')}</th>
+                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('colFocus')}</th>
+                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('colMentor')}</th>
+                                <th className="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('colNext')}</th>
+                                <th className="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('colActions')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
@@ -291,7 +294,7 @@ export default function StudentsPage() {
                                     </td>
                                     <td className="px-8 py-6">
                                         <div className="flex flex-wrap items-center gap-2">
-                                            {(student.instruments?.length > 0 ? student.instruments : [student.instrument || 'Foundation']).map((inst: string) => (
+                                            {(student.instruments?.length > 0 ? student.instruments : [student.instrument || t('foundation')]).map((inst: string) => (
                                                 <div key={inst} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-600 border border-blue-100/50">
                                                     <Music className="w-3 h-3" />
                                                     <span className="text-[9px] font-black uppercase tracking-wider">{inst}</span>
@@ -305,7 +308,7 @@ export default function StudentsPage() {
                                                 <User className="w-4 h-4 text-gray-400" />
                                             </div>
                                             <span className="text-sm font-bold text-gray-600">
-                                                {getTeacherName(student, teachers)}
+                                                {getTeacherName(student, teachers, t('unassigned'))}
                                             </span>
                                         </div>
                                     </td>
@@ -390,7 +393,7 @@ export default function StudentsPage() {
             {/* Edit Modal */}
             <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
                 <DialogContent size="lg">
-                    <DialogHeader title="Update Student Profile" />
+                    <DialogHeader title={t('editTitle')} />
                     <form id="edit-student-form" onSubmit={handleSubmit} className="space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
@@ -470,7 +473,7 @@ export default function StudentsPage() {
                                                     }
                                                 }
                                             }}
-                                            placeholder="Type and press Enter to add..."
+                                            placeholder={t('instrumentPlaceholder')}
                                             className="w-full px-5 py-3.5 bg-white border-transparent focus:border-primary border-2 rounded-2xl font-bold text-gray-700 outline-none transition-all"
                                         />
                                         <datalist id="instrument-options">
@@ -485,7 +488,7 @@ export default function StudentsPage() {
                                         onChange={e => setFormData({ ...formData, primary_teacher: e.target.value })}
                                         className="w-full px-5 py-3.5 bg-white border-transparent focus:border-primary border-2 rounded-2xl font-bold text-gray-700 outline-none transition-all appearance-none"
                                     >
-                                        <option value="">Unassigned</option>
+                                        <option value="">{t('unassigned')}</option>
                                         {teachers.map((t: any) => (
                                             <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>
                                         ))}
@@ -500,7 +503,7 @@ export default function StudentsPage() {
                                             }`}
                                     >
                                         <span className={`text-[10px] font-black uppercase tracking-widest ${formData.is_active ? 'text-emerald-600' : 'text-gray-400'}`}>
-                                            {formData.is_active ? 'Active' : 'Inactive'}
+                                            {formData.is_active ? t('active') : t('inactive')}
                                         </span>
                                         <div className={`w-10 h-6 rounded-full p-1 transition-colors ${formData.is_active ? 'bg-emerald-500' : 'bg-gray-400'}`}>
                                             <div className={`w-4 h-4 bg-white rounded-full transition-transform ${formData.is_active ? 'translate-x-4' : 'translate-x-0'}`} />
@@ -527,10 +530,10 @@ export default function StudentsPage() {
                             {isSubmitting ? (
                                 <>
                                     <Loader2 className="w-4 h-4 animate-spin" />
-                                    Saving Changes...
+                                    {t('saving')}
                                 </>
                             ) : (
-                                'Save Changes'
+                                t('save')
                             )}
                         </Button>
                     </DialogFooter>

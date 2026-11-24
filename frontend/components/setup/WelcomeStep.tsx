@@ -1,5 +1,8 @@
-import { motion } from 'framer-motion'
+'use client'
+
+import { useTranslations } from 'next-intl'
 import { SetupWizardData } from '@/types/setup'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
 interface StepProps {
     data: SetupWizardData
@@ -7,24 +10,24 @@ interface StepProps {
     onNext: () => void
 }
 
-export const WelcomeStep = ({ data, updateData, onNext }: StepProps) => {
+export const WelcomeStep = ({ onNext }: StepProps) => {
+    const t = useTranslations('Setup')
     return (
         <div className="flex flex-col items-center text-center space-y-8 py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="space-y-4 max-w-lg">
                 <h1 className="text-4xl font-bold tracking-tight text-gray-900">
-                    Welcome to StudioSync
+                    {t('welcomeTitle')}
                 </h1>
                 <p className="text-lg text-gray-600">
-                    Let's get your music studio set up in just a few minutes.
-                    We'll configure your studio details, create your admin account, and customize your features.
+                    {t('welcomeBody')}
                 </p>
             </div>
 
-            {/* Language selection removed - only English supported currently */}
             <div className="w-full max-w-md space-y-4">
                 <p className="text-sm text-gray-500">
-                    Currently available in English
+                    {t('welcomeLanguage')}
                 </p>
+                <LanguageSwitcher />
             </div>
 
             <div className="pt-8">
@@ -32,7 +35,7 @@ export const WelcomeStep = ({ data, updateData, onNext }: StepProps) => {
                     onClick={onNext}
                     className="rounded-full bg-indigo-600 px-8 py-3.5 text-base font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-all hover:scale-105 active:scale-95"
                 >
-                    Get Started &rarr;
+                    {t('getStarted')} &rarr;
                 </button>
             </div>
         </div>

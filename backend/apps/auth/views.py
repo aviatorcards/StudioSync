@@ -4,8 +4,12 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.mail import send_mail
+from django.utils import translation
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.translation import gettext as _
+
+from apps.core.i18n import language_for_user, normalize_language
 
 from rest_framework import permissions, status
 from rest_framework.response import Response
@@ -53,12 +57,14 @@ class RegisterView(APIView):
         first_name = request.data.get("first_name")
         last_name = request.data.get("last_name")
         if password2 is not None and password2 != password:
-            return Response({"error": "Passwords do not match"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": _("Passwords do not match")}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         # Validation
         if not all([email, password, first_name, last_name]):
             return Response(
-                {"error": "Email, password, first name, and last name are required"},
+                {"error": _("Email, password, first name, and last name are required")},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -73,7 +79,7 @@ class RegisterView(APIView):
         # Check if user exists
         if User.objects.filter(email=email).exists():
             return Response(
-                {"error": "A user with this email already exists"},
+                {"error": _("A user with this email already exists")},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -94,6 +100,7 @@ class RegisterView(APIView):
             role=actual_role,
             is_active=True,
             is_approved=False,
+            language=normalize_language(request.data.get("language") or translation.get_language()),
         )
 
         # Notify student and admins
@@ -116,7 +123,10 @@ class RegisterView(APIView):
         serializer = UserSerializer(user)
         return Response(
             {
-                "message": "Account created successfully. Your account is pending approval. You will receive an email once an instructor or admin has approved your access.",
+                "message": _(
+                    "Account created successfully. Your account is pending approval. "
+                    "You will receive an email once an instructor or admin has approved your access."
+                ),
                 "user": serializer.data,
             },
             status=status.HTTP_201_CREATED,
@@ -130,7 +140,7 @@ class PasswordResetRequestView(APIView):
     def post(self, request):
         email = request.data.get("email")
         if not email:
-            return Response({"error": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": _("Email is required")}, status=status.HTTP_400_BAD_REQUEST)
 
         user = User.objects.filter(email=email).first()
         if user:
@@ -141,17 +151,18 @@ class PasswordResetRequestView(APIView):
             base_url = get_frontend_url(request)
             reset_link = f"{base_url}/reset-password?uid={uid}&token={token}"
 
-            send_mail(
-                "Password Reset Request",
-                f"Click the link to reset your password: {reset_link}",
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                fail_silently=False,
-            )
+            with translation.override(language_for_user(user)):
+                send_mail(
+                    _("Password Reset Request"),
+                    _("Click the link to reset your password: %(link)s") % {"link": reset_link},
+                    settings.DEFAULT_FROM_EMAIL,
+                    [email],
+                    fail_silently=False,
+                )
 
         # Always return success to prevent email enumeration
         return Response(
-            {"message": "If an account exists with this email, a reset link has been sent."}
+            {"message": _("If an account exists with this email, a reset link has been sent.")}
         )
 
 
@@ -165,13 +176,13 @@ class PasswordResetConfirmView(APIView):
         password = request.data.get("password")
 
         if not all([uidb64, token, password]):
-            return Response({"error": "Missing fields"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": _("Missing fields")}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk=uid)
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            return Response({"error": "Invalid link"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": _("Invalid link")}, status=status.HTTP_400_BAD_REQUEST)
 
         if default_token_generator.check_token(user, token):
             try:
@@ -181,6 +192,8 @@ class PasswordResetConfirmView(APIView):
             user.set_password(password)
             user.save()
             revoke_user_tokens(user)
-            return Response({"message": "Password has been reset successfully."})
+            return Response({"message": _("Password has been reset successfully.")})
 
-        return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"error": _("Invalid or expired token")}, status=status.HTTP_400_BAD_REQUEST
+        )

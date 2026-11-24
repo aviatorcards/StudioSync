@@ -6,7 +6,9 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { Logo } from '@/components/Logo'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
 const C = {
   bg: '#faf7f2',
@@ -34,6 +36,7 @@ const MobileMenuPortal = ({ children }: { children: React.ReactNode }) => {
 
 export default function Navigation() {
   const pathname = usePathname()
+  const t = useTranslations('Nav')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
@@ -57,10 +60,10 @@ export default function Navigation() {
   }, [isMobileMenuOpen])
 
   const navLinks = [
-    { href: '/', label: 'Home' },
-    { href: '/pricing', label: 'Pricing' },
-    { href: '/about', label: 'About' },
-    { href: '/docs', label: 'Docs' },
+    { href: '/', label: t('home') },
+    { href: '/pricing', label: t('pricing') },
+    { href: '/about', label: t('about') },
+    { href: '/docs', label: t('docs') },
   ]
 
   return (
@@ -122,6 +125,7 @@ export default function Navigation() {
 
           {/* Desktop auth */}
           <div className="hidden md:flex items-center gap-2">
+            <LanguageSwitcher />
             <Link
               href="/login"
               className="px-3.5 py-2 rounded-lg text-sm font-medium transition-colors"
@@ -129,7 +133,7 @@ export default function Navigation() {
               onMouseEnter={(e) => (e.currentTarget.style.color = C.text)}
               onMouseLeave={(e) => (e.currentTarget.style.color = C.muted)}
             >
-              Log in
+              {t('login')}
             </Link>
             <Link
               href="/signup"
@@ -138,7 +142,7 @@ export default function Navigation() {
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = C.amberDark)}
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = C.amber)}
             >
-              Sign up
+              {t('signup')}
             </Link>
           </div>
 
@@ -147,7 +151,7 @@ export default function Navigation() {
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="md:hidden z-50 p-2 rounded-lg transition-colors"
             style={{ color: C.muted }}
-            aria-label="Toggle menu"
+            aria-label={t('toggleMenu')}
           >
             {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -187,7 +191,7 @@ export default function Navigation() {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="p-2 rounded-lg"
                   style={{ color: C.muted }}
-                  aria-label="Close menu"
+                  aria-label={t('closeMenu')}
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -229,7 +233,7 @@ export default function Navigation() {
                   }}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Log in
+                  {t('login')}
                 </Link>
                 <Link
                   href="/signup"
@@ -237,8 +241,11 @@ export default function Navigation() {
                   style={{ backgroundColor: C.amber, color: C.white }}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Sign up free
+                  {t('signupFree')}
                 </Link>
+                <div className="pt-2 flex justify-center">
+                  <LanguageSwitcher />
+                </div>
               </div>
             </motion.div>
           </MobileMenuPortal>

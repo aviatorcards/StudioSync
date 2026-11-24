@@ -1,0 +1,446 @@
+# English source catalog. msgstr is left empty so Django uses the msgid.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: StudioSync\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-24 14:59+0000\n"
+"PO-Revision-Date: 2026-11-24 00:00+0000\n"
+"Last-Translator: StudioSync <dev@example.com>\n"
+"Language-Team: English <en@example.com>\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+#: apps/auth/views.py:61
+msgid "Passwords do not match"
+msgstr ""
+
+#: apps/auth/views.py:67
+msgid "Email, password, first name, and last name are required"
+msgstr ""
+
+#: apps/auth/views.py:82
+msgid "A user with this email already exists"
+msgstr ""
+
+#: apps/auth/views.py:127
+msgid ""
+"Account created successfully. Your account is pending approval. You will "
+"receive an email once an instructor or admin has approved your access."
+msgstr ""
+
+#: apps/auth/views.py:143
+msgid "Email is required"
+msgstr ""
+
+#: apps/auth/views.py:156 tests/core/test_i18n.py:69 tests/core/test_i18n.py:71
+msgid "Password Reset Request"
+msgstr ""
+
+#: apps/auth/views.py:157
+#, python-format
+msgid "Click the link to reset your password: %(link)s"
+msgstr ""
+
+#: apps/auth/views.py:167
+msgid "If an account exists with this email, a reset link has been sent."
+msgstr ""
+
+#: apps/auth/views.py:183
+msgid "Missing fields"
+msgstr ""
+
+#: apps/auth/views.py:189
+msgid "Invalid link"
+msgstr ""
+
+#: apps/auth/views.py:199
+msgid "Password has been reset successfully."
+msgstr ""
+
+#: apps/auth/views.py:201
+msgid "Invalid or expired token"
+msgstr ""
+
+#: apps/core/email_utils.py:112
+msgid "Welcome to StudioSync! 🎵"
+msgstr ""
+
+#: apps/core/email_utils.py:136
+msgid "Account Registration Received 🎵"
+msgstr ""
+
+#: apps/core/email_utils.py:168
+msgid "New Student Pending Approval 🚀"
+msgstr ""
+
+#: apps/core/email_utils.py:188
+msgid "Account Approved! Welcome to StudioSync 🎵"
+msgstr ""
+
+#: apps/core/tasks.py:278 apps/notifications/models.py:158
+#: apps/notifications/models.py:178
+msgid "Upcoming Lesson Reminder"
+msgstr ""
+
+#: apps/core/tasks.py:280 apps/notifications/models.py:159
+#, python-format
+msgid "Your %(instrument)s lesson is tomorrow at %(when)s"
+msgstr ""
+
+#: apps/core/tasks.py:282
+msgid "Lesson Reminder 🎵"
+msgstr ""
+
+#: apps/lessons/signals.py:34
+msgid "Group/Band"
+msgstr ""
+
+#: apps/lessons/signals.py:35
+msgid "Music"
+msgstr ""
+
+#: apps/lessons/signals.py:41 apps/lessons/signals.py:71
+msgid "New Lesson Scheduled 🎵"
+msgstr ""
+
+#: apps/messaging/signals.py:64 apps/messaging/signals.py:79
+#, python-format
+msgid "New Message from %(name)s"
+msgstr ""
+
+#: apps/notifications/models.py:92 apps/notifications/models.py:117
+#: templates/emails/lesson_scheduled.html:4
+msgid "New Lesson Scheduled"
+msgstr ""
+
+#: apps/notifications/models.py:93
+#, python-format
+msgid "Your %(instrument)s lesson is scheduled for %(when)s"
+msgstr ""
+
+#: apps/notifications/models.py:114
+msgid "a group"
+msgstr ""
+
+#: apps/notifications/models.py:118
+#, python-format
+msgid "Lesson with %(who)s scheduled for %(when)s"
+msgstr ""
+
+#: apps/notifications/models.py:136
+msgid "New Student Assigned"
+msgstr ""
+
+#: apps/notifications/models.py:137
+#, python-format
+msgid "%(name)s has been added to your students"
+msgstr ""
+
+#: apps/notifications/models.py:179
+#, python-format
+msgid "Lesson with %(name)s tomorrow at %(when)s"
+msgstr ""
+
+#: apps/notifications/models.py:196
+msgid "Document Requires Signature"
+msgstr ""
+
+#: apps/notifications/models.py:197
+#, python-format
+msgid "Please review and sign: %(name)s"
+msgstr ""
+
+#: apps/notifications/models.py:212
+msgid "Instructor Role Requested"
+msgstr ""
+
+#: apps/notifications/models.py:214
+#, python-format
+msgid "%(name)s (%(email)s) has requested to be an instructor."
+msgstr ""
+
+#: apps/notifications/models.py:230
+#: templates/emails/admin_approval_request.html:4
+msgid "New Student Registration"
+msgstr ""
+
+#: apps/notifications/models.py:232
+#, python-format
+msgid ""
+"New student %(name)s (%(email)s) has registered and is pending approval."
+msgstr ""
+
+#: templates/emails/account_approved.html:4
+msgid "Account Approved!"
+msgstr ""
+
+#: templates/emails/account_approved.html:7
+#, python-format
+msgid "Great news, %(first_name)s! 🎉"
+msgstr ""
+
+#: templates/emails/account_approved.html:10
+#, python-format
+msgid ""
+"Your account at %(site_name)s has been approved by our team. You can now log "
+"in to the student portal and start your musical journey!"
+msgstr ""
+
+#: templates/emails/account_approved.html:14
+msgid "Your Next Step:"
+msgstr ""
+
+#: templates/emails/account_approved.html:14
+msgid ""
+"Log in to the dashboard to view your schedule, access resources, and more."
+msgstr ""
+
+#: templates/emails/account_approved.html:18
+msgid "Log In Now"
+msgstr ""
+
+#: templates/emails/account_approved.html:22
+msgid "We're excited to have you with us!"
+msgstr ""
+
+#: templates/emails/account_approved.html:26
+msgid ""
+"If you have any questions or need help finding your way around, don't "
+"hesitate to reach out."
+msgstr ""
+
+#: templates/emails/admin_approval_request.html:7
+msgid "Hello Admin! 🚀"
+msgstr ""
+
+#: templates/emails/admin_approval_request.html:10
+msgid ""
+"A new student has registered on the website and is waiting for your approval."
+msgstr ""
+
+#: templates/emails/admin_approval_request.html:14
+msgid "Student Name:"
+msgstr ""
+
+#: templates/emails/admin_approval_request.html:15
+msgid "Email Address:"
+msgstr ""
+
+#: templates/emails/admin_approval_request.html:19
+msgid ""
+"Please review the registration and approve or assign them to an instructor "
+"in the user management portal."
+msgstr ""
+
+#: templates/emails/admin_approval_request.html:23
+msgid "Go to User Management"
+msgstr ""
+
+#: templates/emails/admin_approval_request.html:27
+msgid "This is an automated notification from your StudioSync dashboard."
+msgstr ""
+
+#: templates/emails/base.html:105
+msgid "Your Music Studio Companion"
+msgstr ""
+
+#: templates/emails/base.html:114
+msgid "All rights reserved."
+msgstr ""
+
+#: templates/emails/lesson_reminder.html:4
+msgid "Lesson Reminder"
+msgstr ""
+
+#: templates/emails/lesson_reminder.html:7
+#, python-format
+msgid "Upcoming Lesson with %(instructor_name)s"
+msgstr ""
+
+#: templates/emails/lesson_reminder.html:9
+#: templates/emails/lesson_scheduled.html:11
+msgid "Main Studio"
+msgstr ""
+
+#: templates/emails/lesson_reminder.html:11
+#: templates/emails/lesson_scheduled.html:13
+msgid "Time:"
+msgstr ""
+
+#: templates/emails/lesson_reminder.html:12
+#: templates/emails/lesson_scheduled.html:14
+msgid "Location:"
+msgstr ""
+
+#: templates/emails/lesson_reminder.html:15
+#: templates/emails/lesson_scheduled.html:17
+msgid "Lesson Details:"
+msgstr ""
+
+#: templates/emails/lesson_reminder.html:17
+#: templates/emails/lesson_scheduled.html:19
+msgid "Student:"
+msgstr ""
+
+#: templates/emails/lesson_reminder.html:18
+#: templates/emails/lesson_scheduled.html:21
+msgid "Instrument:"
+msgstr ""
+
+#: templates/emails/lesson_reminder.html:19
+#: templates/emails/lesson_scheduled.html:22
+msgid "Duration:"
+msgstr ""
+
+#: templates/emails/lesson_reminder.html:19
+#: templates/emails/lesson_scheduled.html:22
+#, python-format
+msgid "%(duration_minutes)s minutes"
+msgstr ""
+
+#: templates/emails/lesson_reminder.html:23
+msgid "View Lesson Details"
+msgstr ""
+
+#: templates/emails/lesson_reminder.html:26
+msgid "Need to reschedule? Please contact your instructor as soon as possible."
+msgstr ""
+
+#: templates/emails/lesson_scheduled.html:7
+#, python-format
+msgid "Hi %(recipient_name)s,"
+msgstr ""
+
+#: templates/emails/lesson_scheduled.html:9
+msgid "A new lesson has been scheduled in your calendar."
+msgstr ""
+
+#: templates/emails/lesson_scheduled.html:20
+msgid "Instructor:"
+msgstr ""
+
+#: templates/emails/lesson_scheduled.html:26
+msgid "View Lesson on Dashboard"
+msgstr ""
+
+#: templates/emails/lesson_scheduled.html:29
+msgid "If you have any questions, please contact the studio."
+msgstr ""
+
+#: templates/emails/new_message_notification.html:5
+#, python-format
+msgid "New Message from %(sender_name)s"
+msgstr ""
+
+#: templates/emails/new_message_notification.html:11
+#, python-format
+msgid "You have received a new message in %(site_name)s."
+msgstr ""
+
+#: templates/emails/new_message_notification.html:14
+msgid "View Message"
+msgstr ""
+
+#: templates/emails/new_message_notification.html:18
+msgid ""
+"Please allow up to 24 hours for a response if this is regarding a lesson "
+"change."
+msgstr ""
+
+#: templates/emails/registration_pending.html:4
+msgid "Registration Received"
+msgstr ""
+
+#: templates/emails/registration_pending.html:7
+#: templates/emails/welcome_email.html:4
+#, python-format
+msgid "Hello %(first_name)s! 👋"
+msgstr ""
+
+#: templates/emails/registration_pending.html:10
+#, python-format
+msgid ""
+"Thank you for registering an account with %(site_name)s. We've received your "
+"application and it's currently pending review."
+msgstr ""
+
+#: templates/emails/registration_pending.html:14
+msgid "Status:"
+msgstr ""
+
+#: templates/emails/registration_pending.html:14
+msgid "Pending Approval"
+msgstr ""
+
+#: templates/emails/registration_pending.html:15
+msgid "What happens next?"
+msgstr ""
+
+#: templates/emails/registration_pending.html:15
+msgid ""
+"An instructor or administrator will review your account. You'll receive "
+"another email once your account has been approved and you're ready to log in."
+msgstr ""
+
+#: templates/emails/registration_pending.html:19
+msgid ""
+"In the meantime, feel free to gather your musical materials and get ready "
+"for your first lesson!"
+msgstr ""
+
+#: templates/emails/registration_pending.html:23
+msgid ""
+"If you have any urgent questions, please reply to this email or contact us "
+"through our website."
+msgstr ""
+
+#: templates/emails/welcome_email.html:7
+msgid ""
+"We're thrilled to have you join our music community! Your account has been "
+"created successfully."
+msgstr ""
+
+#: templates/emails/welcome_email.html:11
+msgid "Your Login Email:"
+msgstr ""
+
+#: templates/emails/welcome_email.html:13
+msgid "Temporary Password:"
+msgstr ""
+
+#: templates/emails/welcome_email.html:13
+msgid "Please change your password in the Security settings after you log in."
+msgstr ""
+
+#: templates/emails/welcome_email.html:17
+msgid "What you can do now:"
+msgstr ""
+
+#: templates/emails/welcome_email.html:19
+msgid "Schedule and manage your lessons"
+msgstr ""
+
+#: templates/emails/welcome_email.html:20
+msgid "Track your progress and set goals"
+msgstr ""
+
+#: templates/emails/welcome_email.html:21
+msgid "Access learning resources and materials"
+msgstr ""
+
+#: templates/emails/welcome_email.html:22
+msgid "Connect with instructors and students"
+msgstr ""
+
+#: templates/emails/welcome_email.html:26
+msgid "Log In to Dashboard"
+msgstr ""
+
+#: templates/emails/welcome_email.html:30
+msgid ""
+"If you have any questions or need assistance, our support team is here to "
+"help!"
+msgstr ""

@@ -1,26 +1,25 @@
 {% extends "emails/base.html" %}
+{% load i18n %}
 
-{% block header %}Registration Received{% endblock %}
+{% block header %}{% trans "Registration Received" %}{% endblock %}
 
 {% block content %}
-<div class="greeting">Hello {{ first_name }}! 👋</div>
+<div class="greeting">{% blocktrans with first_name=first_name %}Hello {{ first_name }}! 👋{% endblocktrans %}</div>
 
 <p>
-    Thank you for registering an account with <strong>{{ site_name }}</strong>. We've received your application and it's
-    currently pending review.
+    {% blocktrans with site_name=site_name %}Thank you for registering an account with {{ site_name }}. We've received your application and it's currently pending review.{% endblocktrans %}
 </p>
 
 <div class="info-box">
-    <strong>Status:</strong> Pending Approval<br />
-    <strong>What happens next?</strong> An instructor or administrator will review your account. You'll receive another
-    email once your account has been approved and you're ready to log in.
+    <strong>{% trans "Status:" %}</strong> {% trans "Pending Approval" %}<br />
+    <strong>{% trans "What happens next?" %}</strong> {% trans "An instructor or administrator will review your account. You'll receive another email once your account has been approved and you're ready to log in." %}
 </div>
 
 <p>
-    In the meantime, feel free to gather your musical materials and get ready for your first lesson!
+    {% trans "In the meantime, feel free to gather your musical materials and get ready for your first lesson!" %}
 </p>
 
 <p>
-    If you have any urgent questions, please reply to this email or contact us through our website.
+    {% trans "If you have any urgent questions, please reply to this email or contact us through our website." %}
 </p>
 {% endblock %}

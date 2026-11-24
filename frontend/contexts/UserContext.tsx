@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 export type UserRole = 'admin' | 'teacher' | 'student' | 'parent'
 
@@ -15,6 +16,8 @@ export interface User {
     role: UserRole
     avatar: string | null
     timezone: string
+    /** Saved language. Empty means "follow the browser cookie". */
+    language?: string
     is_staff: boolean
     preferences?: Record<string, any>
     phone?: string
@@ -41,6 +44,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined)
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api'
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
+    const t = useTranslations('Auth')
     const [currentUser, setCurrentUser] = useState<User | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const router = useRouter()
@@ -128,7 +132,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
             if (!res.ok) {
                 const error = await res.json()
-                throw new Error(error.detail || 'Login failed')
+                throw new Error(error.detail || t('loginFailed'))
             }
 
             const data = await res.json()

@@ -1,34 +1,32 @@
-{% extends "emails/base.html" %} {% block content %}
-<div class="greeting">Hello {{ first_name }}! 👋</div>
+{% extends "emails/base.html" %}
+{% load i18n %}
+{% block content %}
+<div class="greeting">{% blocktrans with first_name=first_name %}Hello {{ first_name }}! 👋{% endblocktrans %}</div>
 
 <p>
-  We're thrilled to have you join our music community! Your account has been
-  created successfully.
+  {% trans "We're thrilled to have you join our music community! Your account has been created successfully." %}
 </p>
 
 <div class="info-box">
-  <strong>Your Login Email:</strong> {{ user_email }}<br />
+  <strong>{% trans "Your Login Email:" %}</strong> {{ user_email }}<br />
   {% if temp_password %}
-  <strong>Temporary Password:</strong> {{ temp_password }} <br /><small>Please change your password in the Security
-    settings after you log
-    in.</small>
+  <strong>{% trans "Temporary Password:" %}</strong> {{ temp_password }} <br /><small>{% trans "Please change your password in the Security settings after you log in." %}</small>
   {% endif %}
 </div>
 
-<h3>What you can do now:</h3>
+<h3>{% trans "What you can do now:" %}</h3>
 <ul>
-  <li>📅 Schedule and manage your lessons</li>
-  <li>🎯 Track your progress and set goals</li>
-  <li>📚 Access learning resources and materials</li>
-  <li>👥 Connect with instructors and students</li>
+  <li>{% trans "Schedule and manage your lessons" %}</li>
+  <li>{% trans "Track your progress and set goals" %}</li>
+  <li>{% trans "Access learning resources and materials" %}</li>
+  <li>{% trans "Connect with instructors and students" %}</li>
 </ul>
 
 <div style="text-align: center">
-  <a href="{{ dashboard_url }}" class="button">Log In to Dashboard</a>
+  <a href="{{ dashboard_url }}" class="button">{% trans "Log In to Dashboard" %}</a>
 </div>
 
 <p>
-  If you have any questions or need assistance, our support team is here to
-  help!
+  {% trans "If you have any questions or need assistance, our support team is here to help!" %}
 </p>
 {% endblock %}

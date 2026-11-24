@@ -2,9 +2,11 @@
 
 import React, { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useSetupWizard } from '@/hooks/useSetupWizard'
 import { WizardProgress } from '@/components/setup/WizardProgress'
 import { Logo } from '@/components/Logo'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
 // Steps
 import { StudioAdminStep } from '@/components/setup/StudioAdminStep'
@@ -35,6 +37,7 @@ const staffLines: React.CSSProperties = {
 }
 
 export default function SetupPage() {
+    const t = useTranslations('Setup')
     const router = useRouter()
     const wizard = useSetupWizard()
 
@@ -108,16 +111,19 @@ export default function SetupPage() {
                             StudioSync
                         </span>
                     </div>
-                    <span
-                        className="text-xs font-semibold uppercase tracking-widest px-3 py-1 rounded-full"
-                        style={{
-                            color: A.amber,
-                            backgroundColor: 'rgba(193,124,46,0.12)',
-                            border: '1px solid rgba(193,124,46,0.2)',
-                        }}
-                    >
-                        Setup Wizard
-                    </span>
+                    <div className="flex items-center gap-3">
+                        <LanguageSwitcher />
+                        <span
+                            className="text-xs font-semibold uppercase tracking-widest px-3 py-1 rounded-full"
+                            style={{
+                                color: A.amber,
+                                backgroundColor: 'rgba(193,124,46,0.12)',
+                                border: '1px solid rgba(193,124,46,0.2)',
+                            }}
+                        >
+                            {t('wizard')}
+                        </span>
+                    </div>
                 </div>
 
                 {/* Progress Bar */}
@@ -149,7 +155,7 @@ export default function SetupPage() {
                     className="p-4 border-t text-center text-xs"
                     style={{ backgroundColor: A.bg, borderColor: A.border, color: A.faint }}
                 >
-                    &copy; {new Date().getFullYear()} StudioSync &middot; Open source &middot; GPL-3.0
+                    {t('copyright', { year: new Date().getFullYear() })}
                 </div>
             </div>
         </div>

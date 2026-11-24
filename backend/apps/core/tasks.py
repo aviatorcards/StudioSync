@@ -6,7 +6,11 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives, get_connection
 from django.template.loader import render_to_string
+from django.utils import translation
 from django.utils.html import strip_tags
+from django.utils.translation import gettext as _
+
+from apps.core.i18n import format_when, language_for_user, normalize_language
 
 from django_q.tasks import async_task
 
@@ -34,7 +38,7 @@ def _get_local_version() -> str:
     # Works whether running inside Docker (where BASE_DIR is /app) or bare-metal
     candidates = [
         Path(settings.BASE_DIR).parent / "VERSION",  # repo root when backend/ is BASE_DIR
-        Path(settings.BASE_DIR) / "VERSION",          # fallback: VERSION next to manage.py
+        Path(settings.BASE_DIR) / "VERSION",  # fallback: VERSION next to manage.py
     ]
     for path in candidates:
         if path.exists():
@@ -184,10 +188,12 @@ def send_email_async(subject, to_email, template_name, context, from_email=None,
 
         # Add common context variables
         context["site_name"] = real_from_name
+        language = normalize_language(context.get("language"))
 
-        # Render HTML body
-        html_content = render_to_string(template_name, context)
-        text_content = strip_tags(html_content)
+        # Render HTML body in the recipient's language so {% trans %} resolves.
+        with translation.override(language):
+            html_content = render_to_string(template_name, context)
+            text_content = strip_tags(html_content)
 
         # Configure connection if settings found in DB
         connection = None
@@ -267,14 +273,22 @@ def check_upcoming_lessons():
         if not student_reminder_exists:
             try:
                 user = lesson.student.user
-                
+                with translation.override(language_for_user(user)):
+                    when = format_when(lesson.scheduled_start, user)
+                    reminder_title = _("Upcoming Lesson Reminder")
+                    reminder_message = _("Your %(instrument)s lesson is tomorrow at %(when)s") % {
+                        "instrument": lesson.student.instrument,
+                        "when": when,
+                    }
+                    reminder_subject = _("Lesson Reminder 🎵")
+
                 # Create in-app notification (respecting prefs)
                 if user.wants_notification("lesson_reminder", "push"):
                     Notification.create_notification(
                         user=user,
                         notification_type="lesson_reminder",
-                        title="Upcoming Lesson Reminder",
-                        message=f'Your {lesson.student.instrument} lesson is tomorrow at {lesson.scheduled_start.strftime("%I:%M %p")}',
+                        title=reminder_title,
+                        message=reminder_message,
                         link=f"/dashboard/lessons/{lesson.id}",
                     )
 
@@ -282,17 +296,18 @@ def check_upcoming_lessons():
                 if user.wants_notification("lesson_reminder", "email"):
                     context = {
                         "instructor_name": lesson.teacher.user.get_full_name(),
-                        "lesson_start_time": lesson.scheduled_start.strftime("%A, %B %d at %I:%M %p"),
+                        "lesson_start_time": when,
                         "location": lesson.location,
                         "student_name": lesson.student.user.get_full_name(),
                         "instrument": lesson.student.instrument,
                         "duration_minutes": lesson.duration_minutes,
                         "lesson_url": f"{settings.FRONTEND_BASE_URL}/dashboard/lessons/{lesson.id}",
+                        "language": language_for_user(user),
                     }
 
                     async_task(
                         send_email_async,
-                        "Lesson Reminder 🎵",
+                        reminder_subject,
                         user.email,
                         "emails/lesson_reminder.html",
                         context,

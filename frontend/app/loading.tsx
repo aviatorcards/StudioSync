@@ -1,6 +1,8 @@
+import { useTranslations } from 'next-intl'
 import { Logo } from '@/components/Logo'
 
 export default function Loading() {
+  const t = useTranslations('Errors')
   return (
     <div className="min-h-screen flex items-center justify-center bg-white relative overflow-hidden">
       {/* Subtle background gradient */}
@@ -41,8 +43,8 @@ export default function Loading() {
           </div>
         </div>
 
-        <h2 className="text-lg font-bold text-gray-900 mb-1">Loading StudioSync...</h2>
-        <p className="text-sm text-gray-400">Please wait a moment</p>
+        <h2 className="text-lg font-bold text-gray-900 mb-1">{t('loadingTitle')}</h2>
+        <p className="text-sm text-gray-400">{t('loadingBody')}</p>
       </div>
     </div>
   )

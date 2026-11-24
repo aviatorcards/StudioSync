@@ -1,4 +1,6 @@
-import { motion } from 'framer-motion'
+'use client'
+
+import { useTranslations } from 'next-intl'
 import { Check } from 'lucide-react'
 
 interface Props {
@@ -14,13 +16,14 @@ const A = {
     faint: '#b09870',
 } as const
 
-const STEPS = [
-    { name: 'Studio & Admin' },
-    { name: 'Features' },
-    { name: 'Done' },
-]
-
 export const WizardProgress = ({ currentStep, totalSteps }: Props) => {
+    const t = useTranslations('Setup.steps')
+    const steps = [
+        { name: t('studioAdmin') },
+        { name: t('features') },
+        { name: t('done') },
+    ]
+
     return (
         <div className="w-full max-w-4xl mx-auto mb-8 px-4">
             <div className="relative flex justify-between">
@@ -38,7 +41,7 @@ export const WizardProgress = ({ currentStep, totalSteps }: Props) => {
                     }}
                 />
 
-                {STEPS.map((step, index) => {
+                {steps.map((step, index) => {
                     const isCompleted = index < currentStep
                     const isCurrent = index === currentStep
 

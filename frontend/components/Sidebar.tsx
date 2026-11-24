@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useUser, UserRole } from '@/contexts/UserContext'
 import { useFeatureFlags } from '@/hooks/useFeatureFlags'
 import { FeatureFlags } from '@/types/setup'
@@ -60,7 +61,7 @@ const MobileSidebarPortal = ({ children }: { children: React.ReactNode }) => {
 }
 
 interface SidebarItem {
-    name: string
+    labelKey: 'dashboard' | 'studio' | 'students' | 'bands' | 'gigs' | 'instructors' | 'schedule' | 'lessons' | 'billing' | 'resources' | 'messages' | 'notifications' | 'goals' | 'inventory' | 'reports' | 'studioBuilder' | 'users' | 'settings' | 'documentation'
     href: string
     icon: any
     badge?: string | number
@@ -69,7 +70,7 @@ interface SidebarItem {
 }
 
 interface SidebarSection {
-    title?: string
+    titleKey?: 'overview' | 'management' | 'tools' | 'admin' | 'settingsSection' | 'help'
     items: SidebarItem[]
     roles?: UserRole[]
 }
@@ -81,6 +82,8 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname()
+    const t = useTranslations('Sidebar')
+    const roles = useTranslations('Roles')
     const { currentUser } = useUser()
     const { flags } = useFeatureFlags()
     const { unreadCount } = useNotifications(60000)
@@ -104,53 +107,53 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     const sections: SidebarSection[] = [
         {
-            title: 'OVERVIEW',
+            titleKey: 'overview',
             items: [
-                { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'teacher', 'student'] },
-                { name: 'Studio', href: '/dashboard/studios', icon: Building2, roles: ['admin', 'teacher', 'student'] },
+                { labelKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'teacher', 'student'] },
+                { labelKey: 'studio', href: '/dashboard/studios', icon: Building2, roles: ['admin', 'teacher', 'student'] },
             ],
         },
         {
-            title: 'MANAGEMENT',
+            titleKey: 'management',
             items: [
-                { name: 'Students', href: '/dashboard/students', icon: Users, roles: ['admin', 'teacher'] },
-                { name: 'Bands', href: '/dashboard/bands', icon: Music, roles: ['admin', 'teacher', 'student'], featureFlag: 'bands_enabled' },
-                { name: 'Gigs', href: '/dashboard/gigs', icon: MapPin, roles: ['admin', 'teacher', 'student'], featureFlag: 'bands_enabled' },
-                { name: 'Instructors', href: '/dashboard/teachers', icon: UserCheck, roles: ['admin'] },
-                { name: 'Schedule', href: '/dashboard/schedule', icon: Calendar, roles: ['admin', 'teacher', 'student'] },
-                { name: 'Lessons', href: '/dashboard/lessons', icon: BookOpen, roles: ['admin', 'teacher', 'student'] },
-                { name: 'Billing', href: '/dashboard/billing', icon: CreditCard, roles: ['admin', 'teacher', 'student'], featureFlag: 'billing_enabled' },
+                { labelKey: 'students', href: '/dashboard/students', icon: Users, roles: ['admin', 'teacher'] },
+                { labelKey: 'bands', href: '/dashboard/bands', icon: Music, roles: ['admin', 'teacher', 'student'], featureFlag: 'bands_enabled' },
+                { labelKey: 'gigs', href: '/dashboard/gigs', icon: MapPin, roles: ['admin', 'teacher', 'student'], featureFlag: 'bands_enabled' },
+                { labelKey: 'instructors', href: '/dashboard/teachers', icon: UserCheck, roles: ['admin'] },
+                { labelKey: 'schedule', href: '/dashboard/schedule', icon: Calendar, roles: ['admin', 'teacher', 'student'] },
+                { labelKey: 'lessons', href: '/dashboard/lessons', icon: BookOpen, roles: ['admin', 'teacher', 'student'] },
+                { labelKey: 'billing', href: '/dashboard/billing', icon: CreditCard, roles: ['admin', 'teacher', 'student'], featureFlag: 'billing_enabled' },
             ],
         },
         {
-            title: 'TOOLS',
+            titleKey: 'tools',
             items: [
-                { name: 'Resources', href: '/dashboard/resources', icon: Library, roles: ['admin', 'teacher', 'student'], featureFlag: 'resources_enabled' },
-                { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare, roles: ['admin', 'teacher', 'student'], featureFlag: 'messaging_enabled' },
-                { name: 'Notifications', href: '/dashboard/notifications', icon: Bell, badge: unreadCount > 0 ? unreadCount : undefined, roles: ['admin', 'teacher', 'student'] },
-                { name: 'Goals', href: '/dashboard/goals', icon: Target, roles: ['admin', 'teacher', 'student'], featureFlag: 'goals_enabled' },
-                { name: 'Inventory', href: '/dashboard/inventory', icon: Package, roles: ['admin', 'teacher'], featureFlag: 'inventory_enabled' },
-                { name: 'Reports', href: '/dashboard/reports', icon: BarChart3, roles: ['admin'], featureFlag: 'analytics_enabled' },
+                { labelKey: 'resources', href: '/dashboard/resources', icon: Library, roles: ['admin', 'teacher', 'student'], featureFlag: 'resources_enabled' },
+                { labelKey: 'messages', href: '/dashboard/messages', icon: MessageSquare, roles: ['admin', 'teacher', 'student'], featureFlag: 'messaging_enabled' },
+                { labelKey: 'notifications', href: '/dashboard/notifications', icon: Bell, badge: unreadCount > 0 ? unreadCount : undefined, roles: ['admin', 'teacher', 'student'] },
+                { labelKey: 'goals', href: '/dashboard/goals', icon: Target, roles: ['admin', 'teacher', 'student'], featureFlag: 'goals_enabled' },
+                { labelKey: 'inventory', href: '/dashboard/inventory', icon: Package, roles: ['admin', 'teacher'], featureFlag: 'inventory_enabled' },
+                { labelKey: 'reports', href: '/dashboard/reports', icon: BarChart3, roles: ['admin'], featureFlag: 'analytics_enabled' },
             ],
         },
         {
-            title: 'ADMIN',
+            titleKey: 'admin',
             roles: ['admin'],
             items: [
-                { name: 'Studio Builder', href: '/dashboard/studio-builder', icon: Pencil, roles: ['admin'] },
-                { name: 'Users', href: '/dashboard/users', icon: UserCog, roles: ['admin'] },
+                { labelKey: 'studioBuilder', href: '/dashboard/studio-builder', icon: Pencil, roles: ['admin'] },
+                { labelKey: 'users', href: '/dashboard/users', icon: UserCog, roles: ['admin'] },
             ],
         },
         {
-            title: 'SETTINGS',
+            titleKey: 'settingsSection',
             items: [
-                { name: 'Settings', href: '/dashboard/settings', icon: Settings, roles: ['admin', 'teacher', 'student'] },
+                { labelKey: 'settings', href: '/dashboard/settings', icon: Settings, roles: ['admin', 'teacher', 'student'] },
             ],
         },
         {
-            title: 'HELP',
+            titleKey: 'help',
             items: [
-                { name: 'Documentation', href: '/docs', icon: FileText, roles: ['admin', 'teacher', 'student'] },
+                { labelKey: 'documentation', href: '/docs', icon: FileText, roles: ['admin', 'teacher', 'student'] },
             ],
         },
     ]
@@ -178,8 +181,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 </Link>
                 <p className="text-xs" style={{ color: S.muted }}>
                     {currentUser?.role
-                        ? `${currentUser.role === 'teacher' ? 'Instructor' : currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)} dashboard`
-                        : 'Studio Management'}
+                        ? t('roleDashboard', { role: roles(currentUser.role) })
+                        : t('studioManagement')}
                 </p>
             </div>
 
@@ -199,12 +202,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                     return (
                         <div key={sectionIdx} className="mb-5">
-                            {section.title && (
+                            {section.titleKey && (
                                 <p
                                     className="px-5 text-[10px] font-semibold uppercase tracking-widest mb-1.5"
                                     style={{ color: S.amber, opacity: 0.75 }}
                                 >
-                                    {section.title}
+                                    {t(section.titleKey)}
                                 </p>
                             )}
                             <ul className="space-y-0.5 px-3">
@@ -223,7 +226,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                                     className="text-sm font-medium"
                                                     style={{ color: active ? S.amber : S.text }}
                                                 >
-                                                    {item.name}
+                                                    {t(item.labelKey)}
                                                 </span>
                                             </div>
                                             {item.badge !== undefined && (
@@ -337,7 +340,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                     onClick={onClose}
                                     className="shadow-none"
                                     style={{ color: S.muted }}
-                                    aria-label="Close menu"
+                                    aria-label={t('close')}
                                 >
                                     <X className="w-5 h-5" />
                                 </Button>

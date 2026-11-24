@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useUser } from '@/contexts/UserContext';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import {
     User,
     Building2,
@@ -19,78 +21,78 @@ import {
 
 const SECTIONS = [
     {
-        title: 'Account',
-        description: 'Profile photo, name, bio, and primary instrument',
+        titleKey: 'account' as const,
+        descriptionKey: 'accountHelp' as const,
         icon: User,
         href: '/dashboard/settings/general/?tab=profile',
         roles: ['admin', 'teacher', 'student', 'parent'],
     },
     {
-        title: 'Security',
-        description: 'Change your password and manage login settings',
+        titleKey: 'security' as const,
+        descriptionKey: 'securityHelp' as const,
         icon: ShieldAlert,
         href: '/dashboard/settings/general/?tab=security',
         roles: ['admin', 'teacher', 'student', 'parent'],
     },
     {
-        title: 'Studio',
-        description: 'Studio name, address, timezone, currency, and instruments',
+        titleKey: 'studio' as const,
+        descriptionKey: 'studioHelp' as const,
         icon: Building2,
         href: '/dashboard/settings/general/?tab=studio',
         roles: ['admin'],
     },
     {
-        title: 'Appearance',
-        description: 'Theme, primary color, font size, and compact mode',
+        titleKey: 'appearance' as const,
+        descriptionKey: 'appearanceHelp' as const,
         icon: Palette,
         href: '/dashboard/settings/general/?tab=appearance',
         roles: ['admin', 'teacher', 'student', 'parent'],
     },
     {
-        title: 'Notifications',
-        description: 'Channels, alert types, and quiet hours',
+        titleKey: 'notifications' as const,
+        descriptionKey: 'notificationsHelp' as const,
         icon: Bell,
         href: '/dashboard/settings/general/?tab=notifications',
         roles: ['admin', 'teacher', 'student', 'parent'],
     },
     {
-        title: 'Communication',
-        description: 'Email and SMS notification preferences',
+        titleKey: 'communication' as const,
+        descriptionKey: 'communicationHelp' as const,
         icon: Mail,
         href: '/dashboard/settings/general/?tab=communication',
         roles: ['admin', 'teacher', 'student', 'parent'],
     },
     {
-        title: 'Features',
-        description: 'Enable or disable modules such as billing, messaging, and inventory',
+        titleKey: 'features' as const,
+        descriptionKey: 'featuresHelp' as const,
         icon: Layers,
         href: '/dashboard/settings/features/',
         roles: ['admin'],
     },
     {
-        title: 'API Keys',
-        description: 'Generate keys for external integrations like 317booking',
+        titleKey: 'apiKeys' as const,
+        descriptionKey: 'apiKeysHelp' as const,
         icon: Key,
         href: '/dashboard/settings/api-keys/',
         roles: ['admin'],
     },
     {
-        title: 'Gig Venues',
-        description: 'Manage venues and control who can post gigs for each',
+        titleKey: 'venues' as const,
+        descriptionKey: 'venuesHelp' as const,
         icon: MapPin,
         href: '/dashboard/settings/gig-venues/',
         roles: ['admin'],
     },
     {
-        title: 'Technical',
-        description: 'SMTP email server and SMS provider configuration',
+        titleKey: 'technical' as const,
+        descriptionKey: 'technicalHelp' as const,
         icon: Server,
         href: '/dashboard/settings/general/?tab=technical',
         roles: ['admin'],
     },
     {
-        title: 'Maintenance',
-        description: 'Export and import your full studio data for backup or migration',
+        titleKey: 'maintenance' as const,
+        descriptionKey: 'maintenanceHelp' as const,
         icon: Database,
         href: '/dashboard/settings/general/?tab=maintenance',
         roles: ['admin'],
@@ -98,6 +100,7 @@ const SECTIONS = [
 ];
 
 export default function SettingsHubPage() {
+    const t = useTranslations('Settings');
     const { currentUser } = useUser();
 
     const visible = SECTIONS.filter(
@@ -107,9 +110,17 @@ export default function SettingsHubPage() {
     return (
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <header className="pt-8 pb-8">
-                <h1 className="text-3xl font-black text-gray-900 tracking-tight">Settings</h1>
-                <p className="text-gray-500 mt-1 font-medium">Manage your account, studio, and integrations.</p>
+                <h1 className="text-3xl font-black text-gray-900 tracking-tight">{t('title')}</h1>
+                <p className="text-gray-500 mt-1 font-medium">{t('subtitle')}</p>
             </header>
+
+            <section className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-white border border-gray-100 rounded-2xl shadow-sm">
+                <div>
+                    <p className="font-bold text-gray-900 text-sm">{t('language')}</p>
+                    <p className="text-xs text-gray-500 mt-0.5 leading-snug max-w-xl">{t('languageHelp')}</p>
+                </div>
+                <LanguageSwitcher />
+            </section>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {visible.map(section => {
@@ -124,8 +135,8 @@ export default function SettingsHubPage() {
                                 <Icon className="w-5 h-5 text-primary" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="font-bold text-gray-900 text-sm">{section.title}</p>
-                                <p className="text-xs text-gray-500 mt-0.5 leading-snug">{section.description}</p>
+                                <p className="font-bold text-gray-900 text-sm">{t(section.titleKey)}</p>
+                                <p className="text-xs text-gray-500 mt-0.5 leading-snug">{t(section.descriptionKey)}</p>
                             </div>
                             <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-primary transition-colors mt-0.5 shrink-0" />
                         </Link>

@@ -144,6 +144,7 @@ class UserSerializer(serializers.ModelSerializer):
             "phone",
             "role",
             "timezone",
+            "language",
             "avatar",
             "preferences",
             "student_profile",
@@ -160,6 +161,7 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             "bio": {"required": False},
             "instrument": {"required": False},
+            "language": {"required": False, "allow_blank": True},
         }
 
     def get_avatar(self, obj):

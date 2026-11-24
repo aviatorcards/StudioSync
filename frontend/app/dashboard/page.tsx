@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useFormatter, useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { useUser } from "@/contexts/UserContext";
 import { useDashboardStats, useDashboardAnalytics } from "@/hooks/useDashboardData";
@@ -159,6 +160,7 @@ interface SortableWidgetProps {
 }
 
 function SortableWidget({ widget, children, isEditing, onToggleVisibility }: SortableWidgetProps) {
+  const t = useTranslations("Dashboard");
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: widget.id,
     disabled: !isEditing,
@@ -189,7 +191,7 @@ function SortableWidget({ widget, children, isEditing, onToggleVisibility }: Sor
               onToggleVisibility(widget.id);
             }}
             className={`p-2 rounded-lg shadow-md border transition-all ${widget.visible ? "bg-white hover:bg-gray-50" : "bg-gray-100 hover:bg-gray-200"}`}
-            title={widget.visible ? "Hide Widget" : "Show Widget"}
+            title={widget.visible ? t("hideWidget") : t("showWidget")}
           >
             {widget.visible ? (
               <Eye className="w-4 h-4 text-gray-600" />
@@ -213,7 +215,12 @@ function SortableWidget({ widget, children, isEditing, onToggleVisibility }: Sor
 // --- Main Page Component ---
 export default function DashboardPage() {
   const router = useRouter();
+  const t = useTranslations("Dashboard");
+  const format = useFormatter();
   const { currentUser } = useUser();
+  const currency = currentUser?.studio?.currency || "USD";
+  const formatMoney = (value: unknown) =>
+    format.number(Number(value) || 0, { style: "currency", currency });
   const { updateProfile } = useSettings();
   const { stats, loading, error } = useDashboardStats();
   const { analytics, loading: analyticsLoading } = useDashboardAnalytics();
@@ -291,8 +298,8 @@ export default function DashboardPage() {
     return (
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-12">
         <div className="p-6 bg-red-50 text-red-600 rounded-2xl border border-red-200">
-          <h3 className="font-bold text-lg mb-2">Error Loading Dashboard</h3>
-          <p>Unable to load dashboard data. Please try refreshing the page.</p>
+          <h3 className="font-bold text-lg mb-2">{t("errorTitle")}</h3>
+          <p>{t("errorBody")}</p>
         </div>
       </div>
     );
@@ -310,9 +317,9 @@ export default function DashboardPage() {
     // Admin Widgets
     total_students: (
       <MetricCard
-        title="Total Students"
-        value={overview.total_students?.value || 0}
-        subtitle="students"
+        title={t("totalStudents")}
+        value={format.number(Number(overview.total_students?.value) || 0)}
+        subtitle={t("students")}
         trend={{
           value: String(overview.total_students?.trend || ""),
           positive: !!overview.total_students?.positive,
@@ -325,9 +332,9 @@ export default function DashboardPage() {
     ),
     weekly_lessons: (
       <MetricCard
-        title="This Week's Lessons"
-        value={overview.weekly_lessons?.value || 0}
-        subtitle="scheduled"
+        title={t("weeklyLessons")}
+        value={format.number(Number(overview.weekly_lessons?.value) || 0)}
+        subtitle={t("scheduled")}
         trend={{
           value: String(overview.weekly_lessons?.trend || ""),
           positive: !!overview.weekly_lessons?.positive,
@@ -340,9 +347,9 @@ export default function DashboardPage() {
     ),
     monthly_revenue: (
       <MetricCard
-        title="Revenue (Month)"
-        value={`$${overview.monthly_revenue?.value || 0}`}
-        subtitle="USD"
+        title={t("revenueMonth")}
+        value={formatMoney(overview.monthly_revenue?.value)}
+        subtitle={currency}
         trend={{
           value: String(overview.monthly_revenue?.trend || ""),
           positive: !!overview.monthly_revenue?.positive,
@@ -355,9 +362,9 @@ export default function DashboardPage() {
     ),
     active_teachers: (
       <MetricCard
-        title="Active Instructors"
-        value={overview.active_teachers?.value || 0}
-        subtitle="instructors"
+        title={t("activeInstructors")}
+        value={format.number(Number(overview.active_teachers?.value) || 0)}
+        subtitle={t("instructors")}
         trend={{
           value: String(overview.active_teachers?.trend || ""),
           positive: !!overview.active_teachers?.positive,
@@ -370,9 +377,9 @@ export default function DashboardPage() {
     ),
     unpaid_invoices: (
       <MetricCard
-        title="Unpaid Invoices"
-        value={overview.unpaid_invoices?.value || 0}
-        subtitle="overdue"
+        title={t("unpaidInvoices")}
+        value={format.number(Number(overview.unpaid_invoices?.value) || 0)}
+        subtitle={t("overdue")}
         trend={{
           value: String(overview.unpaid_invoices?.trend || ""),
           positive: !!overview.unpaid_invoices?.positive,
@@ -385,9 +392,9 @@ export default function DashboardPage() {
     ),
     avg_attendance: (
       <MetricCard
-        title="Avg Attendance"
-        value={overview.avg_attendance?.value || "0%"}
-        subtitle="engagement"
+        title={t("avgAttendance")}
+        value={overview.avg_attendance?.value || format.number(0, { style: "percent" })}
+        subtitle={t("engagement")}
         trend={{
           value: String(overview.avg_attendance?.trend || ""),
           positive: !!overview.avg_attendance?.positive,
@@ -399,9 +406,9 @@ export default function DashboardPage() {
     ),
     new_enquiries: (
       <MetricCard
-        title="New Enquiries"
-        value={overview.new_enquiries?.value || 0}
-        subtitle="new leads"
+        title={t("newEnquiries")}
+        value={format.number(Number(overview.new_enquiries?.value) || 0)}
+        subtitle={t("newLeads")}
         trend={{
           value: String(overview.new_enquiries?.trend || ""),
           positive: !!overview.new_enquiries?.positive,
@@ -415,9 +422,9 @@ export default function DashboardPage() {
     // Teacher Widgets
     my_students: (
       <MetricCard
-        title="My Students"
-        value={overview.my_students?.value || 0}
-        subtitle="active"
+        title={t("myStudents")}
+        value={format.number(Number(overview.my_students?.value) || 0)}
+        subtitle={t("active")}
         color="blue"
         icon={<Users className="w-6 h-6" />}
         onClick={() => !isEditing && router.push("/dashboard/students")}
@@ -426,9 +433,9 @@ export default function DashboardPage() {
     ),
     lessons_today: (
       <MetricCard
-        title="Today's Schedule"
-        value={overview.lessons_today?.value || 0}
-        subtitle="lessons"
+        title={t("todaysSchedule")}
+        value={format.number(Number(overview.lessons_today?.value) || 0)}
+        subtitle={t("lessons")}
         color="blue"
         icon={<Calendar className="w-6 h-6" />}
         onClick={() => !isEditing && router.push("/dashboard/schedule")}
@@ -437,9 +444,9 @@ export default function DashboardPage() {
     ),
     hours_taught: (
       <MetricCard
-        title="Hours This Month"
-        value={overview.hours_taught?.value || 0}
-        subtitle="hours"
+        title={t("hoursMonth")}
+        value={format.number(Number(overview.hours_taught?.value) || 0)}
+        subtitle={t("hours")}
         color="blue"
         icon={<TrendingUp className="w-6 h-6" />}
         className={isEditing ? "pointer-events-none" : ""}
@@ -449,8 +456,8 @@ export default function DashboardPage() {
     // Student Widgets
     next_lesson: (
       <MetricCard
-        title="Next Lesson"
-        value={overview.next_lesson?.value || "None"}
+        title={t("nextLesson")}
+        value={overview.next_lesson?.value || t("none")}
         subtitle={overview.next_lesson?.label || ""}
         color="blue"
         icon={<Music className="w-6 h-6" />}
@@ -459,13 +466,13 @@ export default function DashboardPage() {
     ),
     practice_goal: (
       <MetricCard
-        title="Practice Goal"
+        title={t("practiceGoal")}
         value={overview.practice_goal?.value || "3/5"}
-        subtitle={overview.practice_goal?.label || "days this week"}
+        subtitle={overview.practice_goal?.label || t("daysThisWeek")}
         trend={
           String(overview.practice_goal?.value || "").includes("100")
-            ? { value: "Goal Achieved!", positive: true }
-            : { value: "Keep it up!", positive: true }
+            ? { value: t("goalAchieved"), positive: true }
+            : { value: t("keepItUp"), positive: true }
         }
         color="blue"
         icon={<Check className="w-6 h-6" />}
@@ -474,9 +481,12 @@ export default function DashboardPage() {
     ),
     balance_due: (
       <MetricCard
-        title="Balance Due"
-        value={overview.balance_due?.value || "$0.00"}
-        subtitle={overview.balance_due?.label || "All paid up!"}
+        title={t("balanceDue")}
+        value={
+          overview.balance_due?.value ??
+          format.number(0, { style: "currency", currency })
+        }
+        subtitle={overview.balance_due?.label || t("allPaid")}
         color={String(overview.balance_due?.value || "").includes("$0") ? "blue" : "red"}
         icon={<DollarSignIcon className="w-6 h-6" />}
         onClick={() => !isEditing && router.push("/dashboard/billing")}
@@ -491,10 +501,12 @@ export default function DashboardPage() {
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4">
         <div className="space-y-2">
           <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">
-            Dashboard
+            {t("title")}
           </h1>
           <p className="text-gray-500 font-medium max-w-lg">
-            Welcome back, {currentUser?.first_name || "User"}! Here's your studio overview.
+            {t(currentUser?.role === "parent" ? "welcomeParent" : "welcome", {
+              name: currentUser?.first_name || t("userFallback"),
+            })}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -529,13 +541,13 @@ export default function DashboardPage() {
                 }}
                 className="px-5 py-3 bg-white border-2 border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-all font-bold text-sm active:scale-95"
               >
-                Cancel
+                {t("cancel")}
               </button>
               <button
                 onClick={handleSaveLayout}
                 className="px-5 py-3 bg-primary text-white rounded-xl hover:bg-primary-hover transition-all font-bold text-sm shadow-lg active:scale-95"
               >
-                Save Layout
+                {t("saveLayout")}
               </button>
             </>
           ) : (
@@ -544,7 +556,7 @@ export default function DashboardPage() {
               className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-all font-bold text-sm shadow-sm active:scale-95"
             >
               <Settings className="w-4 h-4" />
-              Customize
+              {t("customize")}
             </button>
           )}
         </div>
@@ -557,8 +569,7 @@ export default function DashboardPage() {
             <Settings className="w-5 h-5 text-blue-600" />
           </div>
           <p className="text-sm font-medium text-blue-800">
-            <strong>Customization Mode:</strong> Drag cards to reorder, toggle visibility with the
-            eye icon.
+            <strong>{t("customizeMode")}</strong> {t("customizeHelp")}
           </p>
         </div>
       )}
@@ -585,7 +596,7 @@ export default function DashboardPage() {
       {currentUser?.role === "admin" && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-black text-gray-900 tracking-tight">Analytics Overview</h2>
+            <h2 className="text-2xl font-black text-gray-900 tracking-tight">{t("analytics")}</h2>
           </div>
 
           {/* Charts Grid */}
@@ -599,8 +610,8 @@ export default function DashboardPage() {
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Revenue Trend</h3>
-                  <p className="text-sm text-gray-500 font-medium">Last 6 months</p>
+                  <h3 className="text-lg font-bold text-gray-900">{t("revenueTrend")}</h3>
+                  <p className="text-sm text-gray-500 font-medium">{t("lastSixMonths")}</p>
                 </div>
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-md">
                   <DollarSignIcon className="w-6 h-6 text-white" />
@@ -620,8 +631,8 @@ export default function DashboardPage() {
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Student Growth</h3>
-                  <p className="text-sm text-gray-500 font-medium">Monthly enrollment</p>
+                  <h3 className="text-lg font-bold text-gray-900">{t("studentGrowth")}</h3>
+                  <p className="text-sm text-gray-500 font-medium">{t("monthlyEnrollment")}</p>
                 </div>
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-md">
                   <Users className="w-6 h-6 text-white" />
@@ -641,8 +652,8 @@ export default function DashboardPage() {
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Lesson Attendance</h3>
-                  <p className="text-sm text-gray-500 font-medium">This month breakdown</p>
+                  <h3 className="text-lg font-bold text-gray-900">{t("attendance")}</h3>
+                  <p className="text-sm text-gray-500 font-medium">{t("thisMonth")}</p>
                 </div>
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-md">
                   <TrendingUp className="w-6 h-6 text-white" />
@@ -659,7 +670,7 @@ export default function DashboardPage() {
       {/* Recent Activity */}
       {(currentUser?.role === "admin" || currentUser?.role === "teacher") && (
         <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
-          <h3 className="text-2xl font-black text-gray-900 mb-6">Recent Activity</h3>
+          <h3 className="text-2xl font-black text-gray-900 mb-6">{t("recentActivity")}</h3>
           <ActivityList activities={stats.recent_activity} />
         </div>
       )}
@@ -667,18 +678,18 @@ export default function DashboardPage() {
       {/* Student Specific Content */}
       {currentUser?.role === "student" && (
         <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
-          <h3 className="text-2xl font-black text-gray-900 mb-6">Current Assignments</h3>
+          <h3 className="text-2xl font-black text-gray-900 mb-6">{t("assignments")}</h3>
           <div className="space-y-4">
             <div className="p-6 bg-gray-50 rounded-xl border border-gray-100">
-              <h4 className="font-bold text-gray-900 mb-2">Recent Lessons</h4>
+              <h4 className="font-bold text-gray-900 mb-2">{t("recentLessons")}</h4>
               <p className="text-sm text-gray-600 mb-4 font-medium">
-                Visit your lessons page to see full notes and assignments.
+                {t("recentLessonsBody")}
               </p>
               <button
                 onClick={() => router.push("/dashboard/lessons")}
                 className="text-sm text-primary font-bold hover:text-primary-hover transition-colors flex items-center gap-1"
               >
-                View All Lessons →
+                {t("viewLessons")} →
               </button>
             </div>
           </div>
@@ -690,13 +701,18 @@ export default function DashboardPage() {
 
 // Helper for Activity List
 function ActivityList({ activities }: { activities: any[] }) {
+  const t = useTranslations("Dashboard");
+  const format = useFormatter();
+  const { currentUser } = useUser();
+  const timeZone = currentUser?.timezone || "UTC";
+
   if (!activities || activities.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center border-2 border-dashed border-gray-200 mb-4">
           <Calendar className="w-8 h-8 text-gray-300" />
         </div>
-        <p className="text-sm text-gray-400 font-semibold">No recent activity found.</p>
+        <p className="text-sm text-gray-400 font-semibold">{t("noActivity")}</p>
       </div>
     );
   }
@@ -723,7 +739,9 @@ function ActivityList({ activities }: { activities: any[] }) {
             <span className="text-sm font-semibold text-gray-900">{activity.text}</span>
           </div>
           <span className="text-xs text-gray-500 font-bold">
-            {new Date(activity.time).toLocaleDateString()}
+            {activity.time
+              ? format.dateTime(new Date(activity.time), { dateStyle: "medium", timeZone })
+              : ""}
           </span>
         </div>
       ))}

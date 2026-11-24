@@ -1,5 +1,6 @@
+{% load i18n %}
 <!DOCTYPE html>
-<html>
+<html lang="{{ LANGUAGE_CODE|default:'en' }}">
 
 <head>
     <meta charset="UTF-8">
@@ -101,7 +102,7 @@
     <div class="container">
         <div class="header">
             <h1>{% block header %}{{ site_name|default:"StudioSync" }}{% endblock %}</h1>
-            {% block subheader %}<p>Your Music Studio Companion</p>{% endblock %}
+            {% block subheader %}<p>{% trans "Your Music Studio Companion" %}</p>{% endblock %}
         </div>
 
         <div class="content">
@@ -110,7 +111,7 @@
         </div>
 
         <div class="footer">
-            <p>&copy; {% now "Y" %} {{ site_name|default:"StudioSync" }}. All rights reserved.</p>
+            <p>&copy; {% now "Y" %} {{ site_name|default:"StudioSync" }}. {% trans "All rights reserved." %}</p>
             {% block footer_extra %}
             {% endblock %}
         </div>

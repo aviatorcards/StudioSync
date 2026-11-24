@@ -1,13 +1,16 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Lock, Loader2, AlertCircle, CheckCircle, Eye, EyeOff, ShieldCheck, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { Logo } from '@/components/Logo'
-import { motion, AnimatePresence } from 'framer-motion'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
+import { motion } from 'framer-motion'
 
 function ResetPasswordForm() {
+    const t = useTranslations('Auth')
     const router = useRouter()
     const searchParams = useSearchParams()
     const uid = searchParams.get('uid')
@@ -28,14 +31,14 @@ function ResetPasswordForm() {
 
     useEffect(() => {
         if (!uid || !token) {
-            setError('Invalid or missing reset token. Please request a new link.')
+            setError(t('invalidToken'))
         }
-    }, [uid, token])
+    }, [uid, token, t])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!passwordsMatch) {
-            setError('Passwords do not match')
+            setError(t('passwordsMismatch'))
             return
         }
 
@@ -51,13 +54,13 @@ function ResetPasswordForm() {
 
             const data = await res.json()
             if (!res.ok) {
-                throw new Error(data.error || data.detail || 'Failed to reset password. The link may have expired.')
+                throw new Error(data.error || data.detail || t('failedReset'))
             }
 
             setSuccess(true)
             setTimeout(() => router.push('/login'), 3000)
         } catch (err: any) {
-            setError(err.message || 'Something went wrong. Please try again.')
+            setError(err.message || t('errorGeneric'))
         } finally {
             setIsLoading(false)
         }
@@ -70,10 +73,10 @@ function ResetPasswordForm() {
                     <CheckCircle className="w-10 h-10" />
                 </div>
                 <div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Password Updated</h3>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('passwordUpdated')}</h3>
                     <p className="text-gray-500 text-sm leading-relaxed">
-                        Your password has been changed successfully. <br />
-                        Redirecting you to login...
+                        {t('passwordUpdatedBody')} <br />
+                        {t('redirecting')}
                     </p>
                 </div>
             </div>
@@ -87,9 +90,9 @@ function ResetPasswordForm() {
                     <AlertCircle className="w-10 h-10" />
                 </div>
                 <div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Invalid Link</h3>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('invalidLink')}</h3>
                     <p className="text-gray-500 text-sm leading-relaxed">
-                        This recovery link is invalid or has expired.
+                        {t('invalidLinkBody')}
                     </p>
                 </div>
                 <div className="pt-4">
@@ -97,7 +100,7 @@ function ResetPasswordForm() {
                         href="/forgot-password"
                         className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-all"
                     >
-                        Request new link
+                        {t('requestNew')}
                         <ArrowRight className="w-4 h-4" />
                     </Link>
                 </div>
@@ -116,7 +119,7 @@ function ResetPasswordForm() {
 
             <div className="space-y-4">
                 <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-700 ml-1">New Password</label>
+                    <label className="text-sm font-bold text-gray-700 ml-1">{t('newPassword')}</label>
                     <div className="relative group">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
@@ -127,11 +130,12 @@ function ResetPasswordForm() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className="w-full pl-11 pr-12 py-3 bg-gray-50 border border-gray-200 focus:border-indigo-600 focus:bg-white rounded-xl outline-none font-medium text-gray-900 text-sm transition-all shadow-sm"
-                            placeholder="Min 8 characters"
+                            placeholder={t('minPlaceholder')}
                         />
                         <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
+                            aria-label={showPassword ? t('hidePassword') : t('showPassword')}
                             className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
                         >
                             {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -140,7 +144,7 @@ function ResetPasswordForm() {
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-700 ml-1">Confirm New Password</label>
+                    <label className="text-sm font-bold text-gray-700 ml-1">{t('confirmPassword')}</label>
                     <div className="relative group">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <ShieldCheck className="h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
@@ -151,7 +155,7 @@ function ResetPasswordForm() {
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 focus:border-indigo-600 focus:bg-white rounded-xl outline-none font-medium text-gray-900 text-sm transition-all shadow-sm"
-                            placeholder="Repeat password"
+                            placeholder={t('repeatPlaceholder')}
                         />
                     </div>
                 </div>
@@ -160,10 +164,10 @@ function ResetPasswordForm() {
             {/* Password Rules */}
             <div className="grid grid-cols-2 gap-2 p-4 bg-gray-50 rounded-xl border border-gray-100">
                 {[
-                    { label: '8+ Characters', met: hasMinLength },
-                    { label: 'Uppercase', met: hasUpperCase },
-                    { label: 'Number', met: hasNumber },
-                    { label: 'Matches', met: passwordsMatch }
+                    { label: t('ruleLength'), met: hasMinLength },
+                    { label: t('ruleUpper'), met: hasUpperCase },
+                    { label: t('ruleNumber'), met: hasNumber },
+                    { label: t('ruleMatch'), met: passwordsMatch }
                 ].map((rule, i) => (
                     <div key={i} className="flex items-center gap-2">
                         <div className={`w-1.5 h-1.5 rounded-full ${rule.met ? 'bg-emerald-500' : 'bg-gray-300'}`} />
@@ -182,10 +186,10 @@ function ResetPasswordForm() {
                 {isLoading ? (
                     <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Saving...</span>
+                        <span>{t('saving')}</span>
                     </>
                 ) : (
-                    <span>Reset Password</span>
+                    <span>{t('resetPassword')}</span>
                 )}
             </button>
         </form>
@@ -193,6 +197,7 @@ function ResetPasswordForm() {
 }
 
 export default function ResetPasswordPage() {
+    const t = useTranslations('Auth')
     return (
         <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
             {/* Background Orbs */}
@@ -211,10 +216,10 @@ export default function ResetPasswordPage() {
                         transition={{ duration: 0.5 }}
                     >
                         <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-3">
-                            Set new password
+                            {t('setNewTitle')}
                         </h1>
                         <p className="text-gray-500 font-medium">
-                            Choose a strong password to protect your account.
+                            {t('setNewSubtitle')}
                         </p>
                     </motion.div>
                 </div>
@@ -228,7 +233,7 @@ export default function ResetPasswordPage() {
                     <Suspense fallback={
                         <div className="flex flex-col items-center justify-center py-20 gap-4">
                             <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Initializing...</p>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t('initializing')}</p>
                         </div>
                     }>
                         <ResetPasswordForm />
@@ -236,8 +241,10 @@ export default function ResetPasswordPage() {
                 </motion.div>
 
                 <p className="mt-8 text-center text-xs text-gray-400">
-                    Remember your password?{' '}
-                    <Link href="/login" className="text-indigo-600 font-bold hover:underline">Sign in</Link>
+                    {t('rememberPassword')}{' '}
+                    <Link href="/login" className="text-indigo-600 font-bold hover:underline">{t('signIn')}</Link>
+                    <span className="mx-3">·</span>
+                    <LanguageSwitcher />
                 </p>
             </div>
         </div>

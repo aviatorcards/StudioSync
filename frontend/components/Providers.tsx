@@ -3,6 +3,7 @@
 import { ReactNode } from 'react'
 import { UserProvider } from '@/contexts/UserContext'
 import { FeatureFlagProvider } from '@/contexts/FeatureFlagContext'
+import { LocaleSync } from '@/components/LocaleSync'
 
 /**
  * Combined providers component for the application.
@@ -11,6 +12,7 @@ import { FeatureFlagProvider } from '@/contexts/FeatureFlagContext'
 export function Providers({ children }: { children: ReactNode }) {
     return (
         <UserProvider>
+            <LocaleSync />
             <FeatureFlagProvider>
                 {children}
             </FeatureFlagProvider>

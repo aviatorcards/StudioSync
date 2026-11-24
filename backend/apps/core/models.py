@@ -54,6 +54,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=20, blank=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default="student")
     timezone = models.CharField(max_length=50, default="UTC")
+    # Empty means "no saved preference" — the UI cookie decides until the user picks one.
+    language = models.CharField(
+        max_length=8,
+        blank=True,
+        default="",
+        choices=[("en", "English"), ("de", "German")],
+        help_text="Preferred UI language. Blank follows the browser cookie.",
+    )
     avatar = models.FileField(
         upload_to="avatars/",
         blank=True,

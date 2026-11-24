@@ -4,8 +4,10 @@ Handles in-app notifications for students, teachers, and admins
 """
 
 from django.db import models
-from django.utils import timezone
+from django.utils import timezone, translation
+from django.utils.translation import gettext as _
 
+from apps.core.i18n import format_when, language_for_user
 from apps.core.models import User
 
 
@@ -85,11 +87,18 @@ class Notification(models.Model):
         if lesson.student and lesson.student.user:
             user = lesson.student.user
             if user.wants_notification("lesson_scheduled", "push"):
+                with translation.override(language_for_user(user)):
+                    when = format_when(lesson.scheduled_start, user)
+                    title = _("New Lesson Scheduled")
+                    message = _("Your %(instrument)s lesson is scheduled for %(when)s") % {
+                        "instrument": lesson.student.instrument,
+                        "when": when,
+                    }
                 cls.create_notification(
                     user=user,
                     notification_type="lesson_scheduled",
-                    title="New Lesson Scheduled",
-                    message=f'Your {lesson.student.instrument} lesson is scheduled for {lesson.scheduled_start.strftime("%B %d at %I:%M %p")}',
+                    title=title,
+                    message=message,
                     link=f"/dashboard/lessons/{lesson.id}",
                     related_lesson_id=lesson.id,
                 )
@@ -98,14 +107,23 @@ class Notification(models.Model):
         if lesson.teacher and lesson.teacher.user:
             user = lesson.teacher.user
             if user.wants_notification("lesson_scheduled", "push"):
+                with translation.override(language_for_user(user)):
+                    who = (
+                        lesson.student.user.get_full_name()
+                        if lesson.student_id
+                        else (lesson.band.name if lesson.band_id else _("a group"))
+                    )
+                    when = format_when(lesson.scheduled_start, user)
+                    title = _("New Lesson Scheduled")
+                    message = _("Lesson with %(who)s scheduled for %(when)s") % {
+                        "who": who,
+                        "when": when,
+                    }
                 cls.create_notification(
                     user=user,
                     notification_type="lesson_scheduled",
-                    title="New Lesson Scheduled",
-                    message=(
-                f'Lesson with {lesson.student.user.get_full_name() if lesson.student_id else (lesson.band.name if lesson.band_id else "a group")} '
-                f'scheduled for {lesson.scheduled_start.strftime("%B %d at %I:%M %p")}'
-            ),
+                    title=title,
+                    message=message,
                     link=f"/dashboard/lessons/{lesson.id}",
                     related_lesson_id=lesson.id,
                 )
@@ -114,11 +132,16 @@ class Notification(models.Model):
     def notify_new_student(cls, teacher_user, student):
         """Notify teacher of new student assignment"""
         if teacher_user.wants_notification("new_student", "push"):
+            with translation.override(language_for_user(teacher_user)):
+                title = _("New Student Assigned")
+                message = _("%(name)s has been added to your students") % {
+                    "name": student.user.get_full_name()
+                }
             cls.create_notification(
                 user=teacher_user,
                 notification_type="new_student",
-                title="New Student Assigned",
-                message=f"{student.user.get_full_name()} has been added to your students",
+                title=title,
+                message=message,
                 link=f"/dashboard/students/{student.id}",
                 related_student_id=student.id,
             )
@@ -130,11 +153,18 @@ class Notification(models.Model):
         if lesson.student and lesson.student.user:
             user = lesson.student.user
             if user.wants_notification("lesson_reminder", "push"):
+                with translation.override(language_for_user(user)):
+                    when = format_when(lesson.scheduled_start, user)
+                    title = _("Upcoming Lesson Reminder")
+                    message = _("Your %(instrument)s lesson is tomorrow at %(when)s") % {
+                        "instrument": lesson.student.instrument,
+                        "when": when,
+                    }
                 cls.create_notification(
                     user=user,
                     notification_type="lesson_reminder",
-                    title="Upcoming Lesson Reminder",
-                    message=f'Your {lesson.student.instrument} lesson is tomorrow at {lesson.scheduled_start.strftime("%I:%M %p")}',
+                    title=title,
+                    message=message,
                     link=f"/dashboard/lessons/{lesson.id}",
                     related_lesson_id=lesson.id,
                 )
@@ -143,11 +173,18 @@ class Notification(models.Model):
         if lesson.teacher and lesson.teacher.user:
             user = lesson.teacher.user
             if user.wants_notification("lesson_reminder", "push"):
+                with translation.override(language_for_user(user)):
+                    when = format_when(lesson.scheduled_start, user)
+                    title = _("Upcoming Lesson Reminder")
+                    message = _("Lesson with %(name)s tomorrow at %(when)s") % {
+                        "name": lesson.student.user.get_full_name(),
+                        "when": when,
+                    }
                 cls.create_notification(
                     user=user,
                     notification_type="lesson_reminder",
-                    title="Upcoming Lesson Reminder",
-                    message=f'Lesson with {lesson.student.user.get_full_name()} tomorrow at {lesson.scheduled_start.strftime("%I:%M %p")}',
+                    title=title,
+                    message=message,
                     link=f"/dashboard/lessons/{lesson.id}",
                     related_lesson_id=lesson.id,
                 )
@@ -155,11 +192,14 @@ class Notification(models.Model):
     @classmethod
     def notify_document_pending(cls, user, document_name):
         """Notify user of document requiring signature"""
+        with translation.override(language_for_user(user)):
+            title = _("Document Requires Signature")
+            message = _("Please review and sign: %(name)s") % {"name": document_name}
         cls.create_notification(
             user=user,
             notification_type="document_pending",
-            title="Document Requires Signature",
-            message=f"Please review and sign: {document_name}",
+            title=title,
+            message=message,
             link="/dashboard/resources",
         )
 
@@ -168,11 +208,17 @@ class Notification(models.Model):
         """Notify all admins that a user requested instructor role"""
         admin_users = User.objects.filter(role="admin")
         for admin in admin_users:
+            with translation.override(language_for_user(admin)):
+                title = _("Instructor Role Requested")
+                message = _("%(name)s (%(email)s) has requested to be an instructor.") % {
+                    "name": requester_user.get_full_name(),
+                    "email": requester_user.email,
+                }
             cls.create_notification(
                 user=admin,
                 notification_type="instructor_request",
-                title="Instructor Role Requested",
-                message=f"{requester_user.get_full_name()} ({requester_user.email}) has requested to be an instructor.",
+                title=title,
+                message=message,
                 link="/dashboard/users",
             )
 
@@ -181,10 +227,15 @@ class Notification(models.Model):
         """Notify all admins that a new student has registered and needs approval"""
         admin_users = User.objects.filter(role="admin")
         for admin in admin_users:
+            with translation.override(language_for_user(admin)):
+                title = _("New Student Registration")
+                message = _(
+                    "New student %(name)s (%(email)s) has registered and is pending approval."
+                ) % {"name": student_user.get_full_name(), "email": student_user.email}
             cls.create_notification(
                 user=admin,
                 notification_type="new_student",
-                title="New Student Registration",
-                message=f"New student {student_user.get_full_name()} ({student_user.email}) has registered and is pending approval.",
+                title=title,
+                message=message,
                 link="/dashboard/users",
             )

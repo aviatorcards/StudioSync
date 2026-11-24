@@ -1,7 +1,10 @@
+'use client'
+
 import Link from 'next/link'
 import { Github } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { Logo } from '@/components/Logo'
-import CurrentYear from './CurrentYear'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
 const C = {
   bg: '#1c1309',
@@ -24,6 +27,9 @@ const staffLines: React.CSSProperties = {
 }
 
 export default function Footer() {
+  const t = useTranslations('Footer')
+  const year = new Date().getFullYear()
+
   return (
     <footer style={{ backgroundColor: C.bg, ...staffLines }}>
       <div className="max-w-6xl mx-auto px-6 pt-14 pb-10">
@@ -43,8 +49,7 @@ export default function Footer() {
               className="text-sm leading-relaxed max-w-xs"
               style={{ color: C.muted, fontFamily: 'Manrope, sans-serif' }}
             >
-              Open-source platform for musicians and studios. Gigs, scheduling,
-              billing, and communication — all in one place.
+              {t('tagline')}
             </p>
           </div>
 
@@ -54,14 +59,14 @@ export default function Footer() {
               className="text-xs font-semibold uppercase tracking-widest mb-5"
               style={{ color: C.amber }}
             >
-              Product
+              {t('product')}
             </p>
             <ul className="space-y-3">
               {[
-                { href: '/login', label: 'Sign in' },
-                { href: '/signup', label: 'Get started' },
-                { href: '/pricing', label: 'Pricing' },
-                { href: '/about', label: 'About' },
+                { href: '/login', label: t('signIn') },
+                { href: '/signup', label: t('getStarted') },
+                { href: '/pricing', label: t('pricing') },
+                { href: '/about', label: t('about') },
               ].map(({ href, label }) => (
                 <li key={href}>
                   <Link
@@ -84,7 +89,7 @@ export default function Footer() {
               className="text-xs font-semibold uppercase tracking-widest mb-5"
               style={{ color: C.amber }}
             >
-              Resources
+              {t('resources')}
             </p>
             <ul className="space-y-3">
               <li>
@@ -98,12 +103,12 @@ export default function Footer() {
                   onMouseLeave={(e) => (e.currentTarget.style.color = C.muted)}
                 >
                   <Github className="w-3.5 h-3.5" />
-                  GitHub
+                  {t('github')}
                 </a>
               </li>
               {[
-                { href: '/docs', label: 'Documentation' },
-                { href: '/support', label: 'Support' },
+                { href: '/docs', label: t('documentation') },
+                { href: '/support', label: t('support') },
               ].map(({ href, label }) => (
                 <li key={href}>
                   <Link
@@ -127,12 +132,13 @@ export default function Footer() {
           style={{ borderTop: `1px solid ${C.border}` }}
         >
           <p className="text-xs" style={{ color: C.faint }}>
-            © <CurrentYear /> StudioSync · Open source software · GPL-3.0
+            {t('copyright', { year })}
           </p>
+          <LanguageSwitcher />
           <div className="flex gap-6">
             {[
-              { href: '/privacy', label: 'Privacy Policy' },
-              { href: '/terms', label: 'Terms of Service' },
+              { href: '/privacy', label: t('privacy') },
+              { href: '/terms', label: t('terms') },
             ].map(({ href, label }) => (
               <Link
                 key={href}

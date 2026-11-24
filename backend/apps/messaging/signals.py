@@ -3,7 +3,10 @@ import logging
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import translation
+from django.utils.translation import gettext as _
 
+from apps.core.i18n import language_for_user
 from apps.core.tasks import send_email_async
 
 from .models import Message
@@ -57,24 +60,33 @@ def notify_new_message(sender, instance, created, **kwargs):
                 # Create in-app notification
                 if recipient.wants_notification("new_message", "push"):
                     from apps.notifications.models import Notification
+
+                    with translation.override(language_for_user(recipient)):
+                        title = _("New Message from %(name)s") % {
+                            "name": message_sender.get_full_name()
+                        }
                     Notification.objects.create(
                         user=recipient,
                         notification_type="new_message",
-                        title=f"New Message from {message_sender.get_full_name()}",
+                        title=title,
                         message=instance.body[:100],
                         link=f"/dashboard/messages?thread={thread.id}",
-                        related_message_id=None # Integer field, but message id is UUID. We'll use link.
+                        related_message_id=None,  # Integer field, but message id is UUID. We'll use link.
                     )
 
                 # Send Email Notifications
                 if recipient.wants_notification("new_message", "email"):
-                    subject = f"New Message from {message_sender.get_full_name()}"
+                    with translation.override(language_for_user(recipient)):
+                        subject = _("New Message from %(name)s") % {
+                            "name": message_sender.get_full_name()
+                        }
 
                     context = {
                         "first_name": recipient.first_name,
                         "sender": message_sender,
                         "message_preview": instance.body,
                         "message_url": f"{settings.FRONTEND_BASE_URL}/dashboard/messages/{thread.id}",
+                        "language": language_for_user(recipient),
                     }
 
                     from django_q.tasks import async_task

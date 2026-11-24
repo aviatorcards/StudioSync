@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Mail, Loader2, AlertCircle, CheckCircle, ArrowLeft, Send } from 'lucide-react'
 import Link from 'next/link'
 import { Logo } from '@/components/Logo'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { motion } from 'framer-motion'
 
 const A = {
@@ -29,6 +31,7 @@ const staffLines: React.CSSProperties = {
 }
 
 export default function ForgotPasswordPage() {
+    const t = useTranslations('Auth')
     const [email, setEmail] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState('')
@@ -44,10 +47,10 @@ export default function ForgotPasswordPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email }),
             })
-            if (!res.ok) throw new Error('No account found with this email address')
+            if (!res.ok) throw new Error(t('errorNotFound'))
             setSuccess(true)
         } catch (err: any) {
-            setError(err.message || 'Something went wrong. Please try again.')
+            setError(err.message || t('errorGeneric'))
         } finally {
             setIsLoading(false)
         }
@@ -78,10 +81,10 @@ export default function ForgotPasswordPage() {
                         transition={{ duration: 0.45 }}
                     >
                         <h1 className="text-2xl font-bold mb-2" style={{ color: A.text, fontFamily: 'Outfit, sans-serif', letterSpacing: '-0.02em' }}>
-                            Reset your password
+                            {t('resetTitle')}
                         </h1>
                         <p className="text-sm" style={{ color: A.muted }}>
-                            We&apos;ll send you a link to get back into your account.
+                            {t('resetSubtitle')}
                         </p>
                     </motion.div>
                 </div>
@@ -102,9 +105,9 @@ export default function ForgotPasswordPage() {
                                 <CheckCircle className="w-8 h-8" style={{ color: '#3d9e3d' }} />
                             </div>
                             <div>
-                                <h3 className="text-lg font-bold mb-2" style={{ color: A.text }}>Check your email</h3>
+                                <h3 className="text-lg font-bold mb-2" style={{ color: A.text }}>{t('checkEmail')}</h3>
                                 <p className="text-sm leading-relaxed" style={{ color: A.muted }}>
-                                    We&apos;ve sent a reset link to{' '}
+                                    {t('sentTo')}{' '}
                                     <span className="font-semibold" style={{ color: A.text }}>{email}</span>
                                 </p>
                             </div>
@@ -116,7 +119,7 @@ export default function ForgotPasswordPage() {
                                 onMouseLeave={e => (e.currentTarget.style.color = A.amber)}
                             >
                                 <ArrowLeft className="w-4 h-4" />
-                                Back to sign in
+                                {t('backToSignIn')}
                             </Link>
                         </div>
                     ) : (
@@ -130,7 +133,7 @@ export default function ForgotPasswordPage() {
 
                             <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: A.muted }}>
-                                    Email address
+                                    {t('email')}
                                 </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -143,7 +146,7 @@ export default function ForgotPasswordPage() {
                                         style={{ backgroundColor: A.bg, borderColor: A.border, color: A.text }}
                                         onFocus={e => { e.currentTarget.style.borderColor = A.amber; e.currentTarget.style.backgroundColor = '#fff'; e.currentTarget.style.boxShadow = `0 0 0 3px rgba(193,124,46,0.12)` }}
                                         onBlur={e => { e.currentTarget.style.borderColor = A.border; e.currentTarget.style.backgroundColor = A.bg; e.currentTarget.style.boxShadow = 'none' }}
-                                        placeholder="you@example.com"
+                                        placeholder={t('emailPlaceholder')}
                                     />
                                 </div>
                             </div>
@@ -155,7 +158,7 @@ export default function ForgotPasswordPage() {
                                 onMouseEnter={e => { if (!isLoading) e.currentTarget.style.backgroundColor = A.amberDark }}
                                 onMouseLeave={e => { e.currentTarget.style.backgroundColor = A.amber }}
                             >
-                                {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Sending…</> : <><Send className="w-4 h-4" /> Send reset link</>}
+                                {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> {t('sending')}</> : <><Send className="w-4 h-4" /> {t('sendLink')}</>}
                             </button>
 
                             <div className="text-center">
@@ -166,7 +169,7 @@ export default function ForgotPasswordPage() {
                                     onMouseEnter={e => (e.currentTarget.style.color = A.muted)}
                                     onMouseLeave={e => (e.currentTarget.style.color = A.faint)}
                                 >
-                                    ← Back to sign in
+                                    ← {t('backToSignIn')}
                                 </Link>
                             </div>
                         </form>
@@ -174,7 +177,7 @@ export default function ForgotPasswordPage() {
                 </motion.div>
 
                 <p className="mt-6 text-center text-xs" style={{ color: A.faint }}>
-                    Don&apos;t have an account?{' '}
+                    {t('noAccount')}{' '}
                     <Link
                         href="/signup"
                         className="font-semibold transition-colors"
@@ -182,8 +185,10 @@ export default function ForgotPasswordPage() {
                         onMouseEnter={e => (e.currentTarget.style.color = A.amberDark)}
                         onMouseLeave={e => (e.currentTarget.style.color = A.amber)}
                     >
-                        Sign up
+                        {t('signUp')}
                     </Link>
+                    <span className="mx-3">·</span>
+                    <LanguageSwitcher />
                 </p>
             </div>
         </div>

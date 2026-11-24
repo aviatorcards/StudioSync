@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, use } from 'react'
+import { useFormatter, useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import {
     ArrowLeft, User, Mail, Phone, Music,
@@ -11,10 +12,15 @@ import { Button } from '@/components/ui/button'
 import api from '@/services/api'
 import { toast } from 'react-hot-toast'
 import { formatPhoneNumber } from '@/lib/utils'
+import { useUser } from '@/contexts/UserContext'
 
 export default function StudentProfilePage({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
     const params = use(paramsPromise)
     const studentId = params.id
+    const t = useTranslations('StudentProfile')
+    const format = useFormatter()
+    const { currentUser } = useUser()
+    const timeZone = currentUser?.timezone || 'UTC'
     const router = useRouter()
     const [student, setStudent] = useState<any>(null)
     const [loading, setLoading] = useState(true)
@@ -26,7 +32,7 @@ export default function StudentProfilePage({ params: paramsPromise }: { params: 
                 setStudent(response.data)
             } catch (error) {
                 console.error('Failed to load student:', error)
-                toast.error('Failed to load student profile')
+                toast.error(t('loadError'))
                 router.push('/dashboard/students')
             } finally {
                 setLoading(false)
@@ -46,8 +52,8 @@ export default function StudentProfilePage({ params: paramsPromise }: { params: 
                         </div>
                     </div>
                     <div className="space-y-1 text-center">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Profile Access</p>
-                        <p className="text-sm font-bold text-gray-900">Gathering the student details...</p>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">{t('loadingKicker')}</p>
+                        <p className="text-sm font-bold text-gray-900">{t('loading')}</p>
                     </div>
                 </div>
             </div>
@@ -58,8 +64,8 @@ export default function StudentProfilePage({ params: paramsPromise }: { params: 
 
     const firstName = student.first_name || student.user?.first_name || (student.name ? student.name.split(' ')[0] : 'Member')
     const lastName = student.last_name || student.user?.last_name || (student.name ? student.name.split(' ').slice(1).join(' ') : '')
-    const email = student.email || student.user?.email || 'No email provided'
-    const phone = student.phone || student.user?.phone || 'No phone provided'
+    const email = student.email || student.user?.email || t('noEmail')
+    const phone = student.phone || student.user?.phone || t('noPhone')
     const fullName = `${firstName} ${lastName}`.trim()
     const instruments = student.instruments || (student.instrument ? [student.instrument] : [])
 
@@ -76,7 +82,7 @@ export default function StudentProfilePage({ params: paramsPromise }: { params: 
                             <ArrowLeft className="w-4 h-4 text-gray-400 group-hover:text-white" />
                         </div>
                         <span className="text-[10px] font-black text-gray-400 group-hover:text-gray-900 uppercase tracking-[0.2em] transition-colors">
-                            Return to Student Roster
+                            {t('back')}
                         </span>
                     </button>
                     <div className="flex items-center gap-4">
@@ -86,7 +92,7 @@ export default function StudentProfilePage({ params: paramsPromise }: { params: 
                             className="h-12 rounded-2xl gap-3 font-bold px-8 border-gray-200 hover:border-primary hover:text-primary transition-all shadow-sm"
                         >
                             <Edit className="w-4 h-4" />
-                            Update Profile
+                            {t('update')}
                         </Button>
                     </div>
                 </div>
@@ -117,11 +123,11 @@ export default function StudentProfilePage({ params: paramsPromise }: { params: 
                                     {student.is_active ? (
                                         <div className="flex items-center gap-1.5 px-4 py-1.5 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-emerald-100 shadow-sm shadow-emerald-100/50">
                                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                            Active Member
+                                            {t('active')}
                                         </div>
                                     ) : (
                                         <span className="px-4 py-1.5 bg-gray-50 text-gray-400 text-[10px] font-black uppercase tracking-widest rounded-full border border-gray-200">
-                                            Currently Away
+                                            {t('away')}
                                         </span>
                                     )}
                                 </div>
@@ -136,7 +142,7 @@ export default function StudentProfilePage({ params: paramsPromise }: { params: 
                                     ) : (
                                         <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-500 rounded-xl border border-gray-100">
                                             <Music className="w-4 h-4 text-gray-300" />
-                                            <span className="text-sm font-bold uppercase tracking-wider">Foundation Scholar</span>
+                                            <span className="text-sm font-bold uppercase tracking-wider">{t('noInstrument')}</span>
                                         </div>
                                     )}
                                 </div>
@@ -154,12 +160,12 @@ export default function StudentProfilePage({ params: paramsPromise }: { params: 
                                 <div className="w-10 h-10 bg-blue-50/50 rounded-2xl flex items-center justify-center text-blue-600 shadow-sm">
                                     <User className="w-5 h-5" />
                                 </div>
-                                The Essentials
+                                {t('essentials')}
                             </h2>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                                 <div className="space-y-2 group">
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest group-hover:text-primary transition-colors">Reach out at</p>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest group-hover:text-primary transition-colors">{t('email')}</p>
                                     <p className="font-bold text-lg text-gray-900 flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
                                             <Mail className="w-4 h-4 text-gray-300 group-hover:text-blue-400" />
@@ -168,7 +174,7 @@ export default function StudentProfilePage({ params: paramsPromise }: { params: 
                                     </p>
                                 </div>
                                 <div className="space-y-2 group">
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest group-hover:text-primary transition-colors">Call or Text</p>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest group-hover:text-primary transition-colors">{t('phone')}</p>
                                     <p className="font-bold text-lg text-gray-900 flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
                                             <Phone className="w-4 h-4 text-gray-300 group-hover:text-blue-400" />
@@ -177,12 +183,12 @@ export default function StudentProfilePage({ params: paramsPromise }: { params: 
                                     </p>
                                 </div>
                                 <div className="space-y-2 group">
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest group-hover:text-primary transition-colors">Celebration Day</p>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest group-hover:text-primary transition-colors">{t('birthday')}</p>
                                     <p className="font-bold text-lg text-gray-900 flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
                                             <Calendar className="w-4 h-4 text-gray-300 group-hover:text-blue-400" />
                                         </div>
-                                        {student.birth_date ? new Date(student.birth_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Waiting to be updated'}
+                                        {student.birth_date ? format.dateTime(new Date(student.birth_date), { year: 'numeric', month: 'long', day: 'numeric', timeZone }) : t('birthdayMissing')}
                                     </p>
                                 </div>
                             </div>
@@ -196,17 +202,17 @@ export default function StudentProfilePage({ params: paramsPromise }: { params: 
                                         <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-amber-600 shadow-sm">
                                             <AlertCircle className="w-5 h-5" />
                                         </div>
-                                        Family & Safety
+                                        {t('family')}
                                     </h2>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                                     <div className="space-y-2">
-                                        <p className="text-[10px] font-black text-amber-700/50 uppercase tracking-widest">Primary Guardian</p>
-                                        <p className="text-xl font-black text-gray-900">{student.emergency_contact_name || 'Not listed yet'}</p>
+                                        <p className="text-[10px] font-black text-amber-700/50 uppercase tracking-widest">{t('guardian')}</p>
+                                        <p className="text-xl font-black text-gray-900">{student.emergency_contact_name || t('notListed')}</p>
                                     </div>
                                     <div className="space-y-2">
-                                        <p className="text-[10px] font-black text-amber-700/50 uppercase tracking-widest">Emergency Line</p>
-                                        <p className="text-xl font-black text-gray-900">{formatPhoneNumber(student.emergency_contact_phone) || 'Not listed yet'}</p>
+                                        <p className="text-[10px] font-black text-amber-700/50 uppercase tracking-widest">{t('emergency')}</p>
+                                        <p className="text-xl font-black text-gray-900">{formatPhoneNumber(student.emergency_contact_phone) || t('notListed')}</p>
                                     </div>
                                 </div>
                             </section>
@@ -219,17 +225,17 @@ export default function StudentProfilePage({ params: paramsPromise }: { params: 
                             {/* Decorative element */}
                             <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/20 rounded-full blur-2xl group-hover:bg-primary/30 transition-all duration-700" />
 
-                            <h2 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] relative z-10">Studio Journey</h2>
+                            <h2 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] relative z-10">{t('journey')}</h2>
                             <div className="space-y-8 relative z-10">
                                 <div className="space-y-2">
-                                    <span className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Part of the family since</span>
-                                    <p className="text-2xl font-black">{student.created_at ? new Date(student.created_at).getFullYear() : '2024'}</p>
+                                    <span className="text-gray-500 text-[10px] font-black uppercase tracking-widest">{t('memberSince')}</span>
+                                    <p className="text-2xl font-black">{student.created_at ? format.dateTime(new Date(student.created_at), { year: 'numeric', timeZone }) : format.dateTime(new Date(), { year: 'numeric', timeZone })}</p>
                                 </div>
                                 <div className="space-y-2">
-                                    <span className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Milestones Achieved</span>
+                                    <span className="text-gray-500 text-[10px] font-black uppercase tracking-widest">{t('milestones')}</span>
                                     <div className="flex items-baseline gap-2">
-                                        <span className="text-4xl font-black text-primary">12</span>
-                                        <span className="text-xs font-bold text-gray-400 lowercase tracking-normal italic">shared lessons</span>
+                                        <span className="text-4xl font-black text-primary">{format.number(12)}</span>
+                                        <span className="text-xs font-bold text-gray-400 lowercase tracking-normal italic">{t('sharedLessons')}</span>
                                     </div>
                                 </div>
                                 <div className="pt-8 border-t border-white/5 space-y-4">
@@ -237,11 +243,11 @@ export default function StudentProfilePage({ params: paramsPromise }: { params: 
                                         <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
                                             <Clock className="w-4 h-4" />
                                         </div>
-                                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Upcoming Lesson</span>
+                                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">{t('upcoming')}</span>
                                     </div>
                                     <div className="bg-white/5 p-5 rounded-2xl border border-white/5 group-hover:border-primary/20 transition-all">
-                                        <p className="font-black text-lg">Next Tuesday</p>
-                                        <p className="text-primary text-sm font-bold">4:00 PM Sharp</p>
+                                        <p className="font-black text-lg">{t('upcomingDay')}</p>
+                                        <p className="text-primary text-sm font-bold">{t('upcomingTime')}</p>
                                     </div>
                                 </div>
                             </div>

@@ -1,7 +1,10 @@
 import logging
 
 from django.conf import settings
+from django.utils import translation
+from django.utils.translation import gettext as _
 
+from apps.core.i18n import language_for_user
 from apps.core.models import User
 
 logger = logging.getLogger(__name__)
@@ -87,6 +90,17 @@ def get_frontend_url(request=None):
     return base_url.rstrip("/")
 
 
+def _language_for_email(email):
+    user = User.objects.filter(email=email).only("language").first()
+    return language_for_user(user)
+
+
+def _with_language(email, context):
+    context = dict(context)
+    context["language"] = _language_for_email(email)
+    return context
+
+
 def send_welcome_email(user_email, first_name, temp_password=None, request=None):
     """
     Trigger the async welcome email task.
@@ -94,13 +108,17 @@ def send_welcome_email(user_email, first_name, temp_password=None, request=None)
     from apps.core.tasks import send_email_async
 
     base_url = get_frontend_url(request)
-    subject = "Welcome to StudioSync! 🎵"
-    context = {
-        "first_name": first_name,
-        "user_email": user_email,
-        "dashboard_url": f"{base_url}/login",
-        "temp_password": temp_password,
-    }
+    with translation.override(_language_for_email(user_email)):
+        subject = _("Welcome to StudioSync! 🎵")
+    context = _with_language(
+        user_email,
+        {
+            "first_name": first_name,
+            "user_email": user_email,
+            "dashboard_url": f"{base_url}/login",
+            "temp_password": temp_password,
+        },
+    )
     # Call the background task
     from django_q.tasks import async_task
 
@@ -114,11 +132,15 @@ def send_registration_pending_email(user_email, first_name):
     """
     from apps.core.tasks import send_email_async
 
-    subject = "Account Registration Received 🎵"
-    context = {
-        "first_name": first_name,
-        "site_name": getattr(settings, "SITE_NAME", "StudioSync"),
-    }
+    with translation.override(_language_for_email(user_email)):
+        subject = _("Account Registration Received 🎵")
+    context = _with_language(
+        user_email,
+        {
+            "first_name": first_name,
+            "site_name": getattr(settings, "SITE_NAME", "StudioSync"),
+        },
+    )
     from django_q.tasks import async_task
 
     async_task(send_email_async, subject, user_email, "emails/registration_pending.html", context)
@@ -130,7 +152,7 @@ def send_admin_approval_notification(student_user, request=None):
     """
     from apps.core.tasks import send_email_async
 
-    subject = "New Student Pending Approval 🚀"
+    # Subject is translated per recipient inside the loop below.
     # Notify admins and instructors?
     # Usually instructors are only notified if they are assigned.
     # For now, let's notify all admins and optionally teachers if relevant.
@@ -139,14 +161,19 @@ def send_admin_approval_notification(student_user, request=None):
         return
 
     base_url = get_frontend_url(request)
-    context = {
-        "student_name": student_user.get_full_name(),
-        "student_email": student_user.email,
-        "dashboard_url": f"{base_url}/dashboard/users",
-    }
     from django_q.tasks import async_task
 
     for email in admin_emails:
+        with translation.override(_language_for_email(email)):
+            subject = _("New Student Pending Approval 🚀")
+        context = _with_language(
+            email,
+            {
+                "student_name": student_user.get_full_name(),
+                "student_email": student_user.email,
+                "dashboard_url": f"{base_url}/dashboard/users",
+            },
+        )
         async_task(send_email_async, subject, email, "emails/admin_approval_request.html", context)
 
 
@@ -157,11 +184,15 @@ def send_account_approved_email(user_email, first_name, request=None):
     from apps.core.tasks import send_email_async
 
     base_url = get_frontend_url(request)
-    subject = "Account Approved! Welcome to StudioSync 🎵"
-    context = {
-        "first_name": first_name,
-        "login_url": f"{base_url}/login",
-    }
+    with translation.override(_language_for_email(user_email)):
+        subject = _("Account Approved! Welcome to StudioSync 🎵")
+    context = _with_language(
+        user_email,
+        {
+            "first_name": first_name,
+            "login_url": f"{base_url}/login",
+        },
+    )
     from django_q.tasks import async_task
 
     async_task(send_email_async, subject, user_email, "emails/account_approved.html", context)

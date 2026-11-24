@@ -1,25 +1,27 @@
 {% extends "emails/base.html" %}
+{% load i18n %}
 
-{% block subheader %}<p>Lesson Reminder</p>{% endblock %}
+{% block subheader %}<p>{% trans "Lesson Reminder" %}</p>{% endblock %}
 
 {% block content %}
-<div class="greeting">Upcoming Lesson with {{ instructor_name }}</div>
+<div class="greeting">{% blocktrans with instructor_name=instructor_name %}Upcoming Lesson with {{ instructor_name }}{% endblocktrans %}</div>
 
+{% trans "Main Studio" as fallback_location %}
 <div class="alert-box">
-    <strong>⏰ Time:</strong> {{ lesson_start_time }}<br>
-    <strong>📍 Location:</strong> {{ location|default:"Main Studio" }}
+    <strong>{% trans "Time:" %}</strong> {{ lesson_start_time }}<br>
+    <strong>{% trans "Location:" %}</strong> {{ location|default:fallback_location }}
 </div>
 
-<h3>Lesson Details:</h3>
+<h3>{% trans "Lesson Details:" %}</h3>
 <ul>
-    <li><strong>Student:</strong> {{ student_name }}</li>
-    <li><strong>Instrument:</strong> {{ instrument }}</li>
-    <li><strong>Duration:</strong> {{ duration_minutes }} minutes</li>
+    <li><strong>{% trans "Student:" %}</strong> {{ student_name }}</li>
+    <li><strong>{% trans "Instrument:" %}</strong> {{ instrument }}</li>
+    <li><strong>{% trans "Duration:" %}</strong> {% blocktrans with duration_minutes=duration_minutes %}{{ duration_minutes }} minutes{% endblocktrans %}</li>
 </ul>
 
 <div style="text-align: center;">
-    <a href="{{ lesson_url }}" class="button">View Lesson Details</a>
+    <a href="{{ lesson_url }}" class="button">{% trans "View Lesson Details" %}</a>
 </div>
 
-<p>Need to reschedule? Please contact your instructor as soon as possible.</p>
+<p>{% trans "Need to reschedule? Please contact your instructor as soon as possible." %}</p>
 {% endblock %}
